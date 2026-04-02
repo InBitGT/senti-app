@@ -8,7 +8,7 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
-
+console.log(API_BASE_URL, "url")
 const handleRequest = async <T>(
   request: Promise<AxiosResponse<ApiResponse<T>>>
 ): Promise<ApiResponse<T>> => {
@@ -47,10 +47,19 @@ export const post = async <T>(
   url: string,
   data: any,
   token?: string
-): Promise<ApiResponse<T>> =>
-  handleRequest<T>(
+): Promise<ApiResponse<T>> => {
+  console.log("POST URL:", url);
+  console.log("POST Body:", JSON.stringify(data, null, 2));
+  console.log("POST Token:", token);
+  
+  const response = await handleRequest<T>(
     api.post<ApiResponse<T>>(url, data, createRequestConfig(token))
   );
+  
+  console.log("POST Response:", JSON.stringify(response, null, 2));
+  
+  return response;
+};
 
 export const put = async <T>(
   url: string,
