@@ -1,1 +1,2 @@
-export * from "./secureStorage";
+export { default } from "./secureStorage";
+

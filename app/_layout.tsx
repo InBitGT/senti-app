@@ -1,5 +1,6 @@
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
+import { ToastProvider } from '@gluestack-ui/core/toast/creator';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -34,6 +35,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ToastProvider>
       <GluestackUIProvider mode="dark">
         <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
           <Stack>
@@ -43,6 +45,7 @@ export default function RootLayout() {
           <StatusBar style="dark" />
         </View>
       </GluestackUIProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }
