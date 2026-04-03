@@ -1,4 +1,5 @@
 import { loginFn } from '@/src/service';
+import { useAuthStore } from '@/src/store';
 import { LoginCredentials, LoginResponse } from '@/src/types';
 import store from '@/src/utils';
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
@@ -12,6 +13,7 @@ interface Props {
 export const useLogin = (): Props => {
   const router = useRouter();
   const { showToast } = useCustomToast();
+  const { setClaims } = useAuthStore.getState();
     
   const login = useMutation({
     mutationFn: loginFn,
@@ -20,7 +22,12 @@ export const useLogin = (): Props => {
         console.log("No token received"); 
         return;
       }
-      await store.save({ name: 'auth_token', value: data.access_token });
+      setClaims(data.access_token);
+      await Promise.all([
+        store.save({ name: 'access_token', value: data.access_token }),
+        store.save({ name: 'refresh_token', value: data.refresh_token }),
+        store.save({ name: 'expires_in', value: String(data.expires_in) }),
+      ]);
       showToast({message: "Bienvenido", type:"success"})
       router.replace("/(drawer)/explore");
     },

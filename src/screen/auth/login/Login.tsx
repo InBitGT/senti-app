@@ -56,16 +56,13 @@ export const LoginScreen = () => {
         >
           <Box style={styles.card}>
 
-            {/* Header */}
             <VStack space="xs" style={styles.header}>
               <Heading size="2xl" style={styles.title}>Bienvenido</Heading>
               <Text size="sm" style={styles.subtitle}>Inicia sesión para continuar</Text>
             </VStack>
 
-            {/* Form */}
             <VStack space="md" style={styles.form}>
 
-              {/* Email */}
               <Controller
                 control={control}
                 name="email"
@@ -103,7 +100,6 @@ export const LoginScreen = () => {
                 )}
               />
 
-              {/* Password */}
               <Controller
                 control={control}
                 name="password"
@@ -148,7 +144,6 @@ export const LoginScreen = () => {
                 )}
               />
 
-              {/* Submit */}
               <Button
                 size="md"
                 variant="solid"
