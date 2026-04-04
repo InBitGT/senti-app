@@ -3,32 +3,83 @@ import { Box } from "@/components/ui/box"
 import { Button, ButtonText } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
-    FormControl,
-    FormControlHelper,
-    FormControlHelperText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlHelper,
+  FormControlHelperText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control"
 import { Heading } from "@/components/ui/heading"
 import { HStack } from "@/components/ui/hstack"
 import { Input, InputField } from "@/components/ui/input"
 import { Text } from "@/components/ui/text"
 import { VStack } from "@/components/ui/vstack"
-import { Calendar, Mail, Phone, User } from "lucide-react-native"
-import { useState } from "react"
+import { useProfile } from "@/src/hooks"
+import { useProfileStore } from "@/src/store"
+import { UserUpdate } from "@/src/types"
+import { getInitials } from "@/src/utils"
+import { Mail, Phone, User } from "lucide-react-native"
+import { useEffect, useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+
+interface PersonalInfoFormData {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  username:string
+}
 
 export function PersonalInfoSection() {
+  const user = useProfileStore((state) => state.user)
+  const {updateUser} = useProfile()
   const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
-    firstName: "Carlos",
-    lastName: "Mendoza",
-    email: "carlos.mendoza@email.com",
-    phone: "+52 55 1234 5678",
-    birthDate: "1990-05-15",
+
+  const { control, handleSubmit, reset } = useForm<PersonalInfoFormData>({
+    defaultValues: {
+      firstName: user?.first_name ?? "",
+      lastName: user?.last_name ?? "",
+      email: user?.email ?? "",
+      phone: user?.phone ?? "",
+      username:user?.username ?? ""
+    },
   })
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  useEffect(() => {
+    if (user) {
+      reset({
+        firstName: user.first_name ?? "",
+        lastName: user.last_name ?? "",
+        email: user.email ?? "",
+        phone: user.phone ?? "",
+        username: user.username ?? "",
+      })
+    }
+  }, [user, reset])
+
+  const onSubmit = (data: PersonalInfoFormData) => {
+    if(!user) return
+
+    const formData:UserUpdate={
+      username: data.username,
+      email: data.email,
+      phone: data.phone,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      address_id: user.address_id,
+      role_id: user.role_id,
+      is_active: user.is_active,
+      two_fa_enabled: user.two_fa_enabled,
+      status: user.status
+    }
+
+    updateUser.mutate({ idUser: user?.id, data: formData })
+    setIsEditing(false)
+  }
+
+  const handleCancel = () => {
+    reset()
+    setIsEditing(false)
   }
 
   return (
@@ -45,40 +96,39 @@ export function PersonalInfoSection() {
             Gestiona tu informacion basica de perfil
           </Text>
         </VStack>
-        <Button
-          size="sm"
-          className="bg-indigo-500 rounded-lg"
-          onPress={() => setIsEditing(!isEditing)}
-        >
-          <ButtonText className="text-white">
-            {isEditing ? "Guardar" : "Editar"}
-          </ButtonText>
-        </Button>
+        <HStack className="gap-2">
+          {isEditing && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-gray-300 rounded-lg"
+              onPress={handleCancel}
+            >
+              <ButtonText className="text-gray-700">Cancelar</ButtonText>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            className="bg-indigo-500 rounded-lg"
+            onPress={isEditing ? handleSubmit(onSubmit) : () => setIsEditing(true)}
+          >
+            <ButtonText className="text-white">
+              {isEditing ? "Guardar" : "Editar"}
+            </ButtonText>
+          </Button>
+        </HStack>
       </HStack>
 
       <Box className="mt-5">
         <HStack className="gap-8 flex-wrap md:flex-nowrap">
-          {/* Avatar Section */}
           <VStack className="items-center gap-3">
-            <Avatar className="size-24 border-4 border-gray-100 bg-indigo-100">
+            <Avatar className="size-24 border-1 border-gray-100 bg-indigo-100">
               <AvatarFallbackText className="text-2xl text-indigo-600">
-                CM
+                {getInitials(user?.username ?? "user")}
               </AvatarFallbackText>
             </Avatar>
-            {isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-gray-300 rounded-lg"
-              >
-                <ButtonText className="text-gray-700">
-                  Cambiar foto
-                </ButtonText>
-              </Button>
-            )}
           </VStack>
 
-          {/* Form Fields */}
           <VStack className="flex-1 gap-4">
             <HStack className="gap-4 flex-wrap sm:flex-nowrap">
               <FormControl className="flex-1">
@@ -87,16 +137,22 @@ export function PersonalInfoSection() {
                     Nombre
                   </FormControlLabelText>
                 </FormControlLabel>
-                <Input
-                  isDisabled={!isEditing}
-                  className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                >
-                  <InputField
-                    value={formData.firstName}
-                    onChangeText={(value) => handleChange("firstName", value)}
-                    className="text-gray-900 placeholder:text-gray-400"
-                  />
-                </Input>
+                <Controller
+                  control={control}
+                  name="firstName"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      isDisabled={!isEditing}
+                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
+                    >
+                      <InputField
+                        value={value}
+                        onChangeText={onChange}
+                        className="text-gray-900 placeholder:text-gray-400"
+                      />
+                    </Input>
+                  )}
+                />
               </FormControl>
 
               <FormControl className="flex-1">
@@ -105,16 +161,22 @@ export function PersonalInfoSection() {
                     Apellido
                   </FormControlLabelText>
                 </FormControlLabel>
-                <Input
-                  isDisabled={!isEditing}
-                  className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                >
-                  <InputField
-                    value={formData.lastName}
-                    onChangeText={(value) => handleChange("lastName", value)}
-                    className="text-gray-900 placeholder:text-gray-400"
-                  />
-                </Input>
+                <Controller
+                  control={control}
+                  name="lastName"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      isDisabled={!isEditing}
+                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
+                    >
+                      <InputField
+                        value={value}
+                        onChangeText={onChange}
+                        className="text-gray-900 placeholder:text-gray-400"
+                      />
+                    </Input>
+                  )}
+                />
               </FormControl>
             </HStack>
 
@@ -127,21 +189,26 @@ export function PersonalInfoSection() {
                   </FormControlLabelText>
                 </HStack>
               </FormControlLabel>
-              <Input
-                isDisabled={!isEditing}
-                className="bg-gray-50 border-gray-200 rounded-lg h-11"
-              >
-                <InputField
-                  value={formData.email}
-                  onChangeText={(value) => handleChange("email", value)}
-                  keyboardType="email-address"
-                  className="text-gray-900 placeholder:text-gray-400"
-                />
-              </Input>
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    isDisabled={!isEditing}
+                    className="bg-gray-50 border-gray-200 rounded-lg h-11"
+                  >
+                    <InputField
+                      value={value}
+                      onChangeText={onChange}
+                      keyboardType="email-address"
+                      className="text-gray-900 placeholder:text-gray-400"
+                    />
+                  </Input>
+                )}
+              />
               <FormControlHelper>
                 <FormControlHelperText className="text-gray-400 text-xs">
-                  Este correo se usa para notificaciones y recuperacion de
-                  cuenta
+                  Este correo se usa para notificaciones y recuperacion de cuenta
                 </FormControlHelperText>
               </FormControlHelper>
             </FormControl>
@@ -156,39 +223,48 @@ export function PersonalInfoSection() {
                     </FormControlLabelText>
                   </HStack>
                 </FormControlLabel>
-                <Input
-                  isDisabled={!isEditing}
-                  className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                >
-                  <InputField
-                    value={formData.phone}
-                    onChangeText={(value) => handleChange("phone", value)}
-                    keyboardType="phone-pad"
-                    className="text-gray-900 placeholder:text-gray-400"
-                  />
-                </Input>
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      isDisabled={!isEditing}
+                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
+                    >
+                      <InputField
+                        value={value}
+                        onChangeText={onChange}
+                        keyboardType="phone-pad"
+                        className="text-gray-900 placeholder:text-gray-400"
+                      />
+                    </Input>
+                  )}
+                />
               </FormControl>
-
               <FormControl className="flex-1">
                 <FormControlLabel>
-                  <HStack className="items-center gap-2">
-                    <Calendar size={16} color="#9ca3af" />
-                    <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                      Fecha de nacimiento
-                    </FormControlLabelText>
-                  </HStack>
+                  <FormControlLabelText className="text-gray-700 text-sm font-medium">
+                    Username
+                  </FormControlLabelText>
                 </FormControlLabel>
-                <Input
-                  isDisabled={!isEditing}
-                  className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                >
-                  <InputField
-                    value={formData.birthDate}
-                    onChangeText={(value) => handleChange("birthDate", value)}
-                    className="text-gray-900 placeholder:text-gray-400"
-                  />
-                </Input>
+                <Controller
+                  control={control}
+                  name="username"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      isDisabled={!isEditing}
+                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
+                    >
+                      <InputField
+                        value={value}
+                        onChangeText={onChange}
+                        className="text-gray-900 placeholder:text-gray-400"
+                      />
+                    </Input>
+                  )}
+                />
               </FormControl>
+
             </HStack>
           </VStack>
         </HStack>

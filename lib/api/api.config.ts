@@ -6,5 +6,9 @@ export const ENDPOINT ={
     },
     drawer:{
         detail:(idRol: string|number)=> `module-service/api/role-permission-module/menu/${idRol}`
+    },
+    profile:{
+        infoUser:(idUser:string|number)=>`user-service/api/user/${idUser}`,
+        Address:(idAddress:string| number)=>`user-service/api/address/${idAddress}`
     }
 }

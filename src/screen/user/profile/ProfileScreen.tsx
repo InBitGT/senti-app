@@ -5,7 +5,7 @@ import { HStack } from "@/components/ui/hstack"
 import { Text } from "@/components/ui/text"
 import { VStack } from "@/components/ui/vstack"
 import { useState } from "react"
-import { ScrollView } from "react-native"
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 const sectionTitles: Record<string, { title: string; description: string }> = {
@@ -32,6 +32,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
 }
 
 export function ProfileScreen() {
+
   const [activeSection, setActiveSection] = useState("personal")
 
   const renderSection = () => {
@@ -53,7 +54,10 @@ export function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }} className="bg-background-700">
-
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView className="flex-1">
         <Box className="mx-auto max-w-7xl w-full px-4 py-8 sm:px-6 lg:px-8">
           <HStack className="gap-8">
@@ -79,6 +83,7 @@ export function ProfileScreen() {
           </HStack>
         </Box>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }

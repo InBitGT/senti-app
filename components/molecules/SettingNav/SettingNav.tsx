@@ -1,6 +1,8 @@
 import { Divider } from "@/components/ui/divider"
 import { Text } from "@/components/ui/text"
 import { VStack } from "@/components/ui/vstack"
+import { useLogin } from "@/src/hooks"
+import { useAuthStore } from "@/src/store"
 import { Bell, LogOut, MapPin, Shield, User } from "lucide-react-native"
 import { Pressable } from "react-native"
 
@@ -20,6 +22,8 @@ export function SettingsNav({
   activeSection,
   onSectionChange,
 }: SettingsNavProps) {
+  const {logout} = useLogin()
+  const {claims}= useAuthStore.getState()
   return (
     <VStack className="gap-1 bg-white rounded-xl p-2">
       <VStack className="mb-2 px-3 py-2">
@@ -75,7 +79,8 @@ export function SettingsNav({
 
       <Pressable
         onPress={() => {
-          /* handle logout */
+          if(!claims?.sub)return
+          logout.mutate(claims?.sub)
         }}
         style={{
           flexDirection: "row",
