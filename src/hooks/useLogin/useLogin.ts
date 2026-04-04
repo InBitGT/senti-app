@@ -1,4 +1,4 @@
-import { loginFn } from '@/src/service';
+import { loginFn, logoutFn } from '@/src/service';
 import { useAuthStore } from '@/src/store';
 import { LoginCredentials, LoginResponse } from '@/src/types';
 import store from '@/src/utils';
@@ -8,12 +8,14 @@ import { useCustomToast } from '../useCustomToast';
 
 interface Props {
   login: UseMutationResult<LoginResponse | undefined, Error, LoginCredentials>;
+  logout: UseMutationResult<LoginResponse | undefined, Error, number>;
+
 }
 
 export const useLogin = (): Props => {
   const router = useRouter();
   const { showToast } = useCustomToast();
-  const { setClaims } = useAuthStore.getState();
+  const { setClaims, clearClaims } = useAuthStore.getState();
     
   const login = useMutation({
     mutationFn: loginFn,
@@ -36,5 +38,21 @@ export const useLogin = (): Props => {
     },
   });
 
-  return { login };
+
+  const logout = useMutation({
+    mutationFn: logoutFn,
+    onSuccess: async ()=>{
+      clearClaims()
+      await Promise.all([
+        store.remove({ name: 'access_token' }),
+        store.remove({ name: 'refresh_token' }),
+        store.remove({ name: 'expires_in' }),
+      ]);
+    },
+    onError: async (error)=>{
+      console.log(error);
+    }
+  })
+
+  return { login , logout};
 };

@@ -1,6 +1,6 @@
 import { post } from "@/apis";
 import { ENDPOINT } from "@/lib";
-import { LoginCredentials, LoginResponse, RefreshTokenRequest } from "@/src/types";
+import { LoginCredentials, LoginResponse } from "@/src/types";
 
 export async function loginFn(credentials: LoginCredentials) {
   const response = await post<LoginResponse>(ENDPOINT.auth.login, credentials);
@@ -12,13 +12,12 @@ export async function loginFn(credentials: LoginCredentials) {
   return response.data;
 }
 
+export async function logoutFn(idUser: number) {
+  const response = await post<LoginResponse>(ENDPOINT.auth.logout, idUser);
 
-export async function refreshTokenFn(data: RefreshTokenRequest) {
-    const response = await post<LoginResponse>(ENDPOINT.auth.refreshToken, data)
-    
-    if (response.code !== "200") {
-        throw new Error(response.message);
-    }
+  if (response.code !== "200") {
+    throw new Error(response.message);
+  }
 
-    return response.data;
+  return response.data;
 }

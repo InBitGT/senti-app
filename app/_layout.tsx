@@ -1,5 +1,6 @@
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
+import { useAuthStore } from '@/src/store/useAuthStore'; // ajusta la ruta
 import { ToastProvider } from '@gluestack-ui/core/toast/creator';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen, Stack, useRouter } from 'expo-router';
@@ -11,11 +12,10 @@ import 'react-native-reanimated';
 LogBox.ignoreAllLogs();
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient()
-
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const auth = false;
+  const claims = useAuthStore((state) => state.claims);
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
 
@@ -26,25 +26,25 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady) return;
 
-    if (auth) {
+    if (claims) {
       router.replace('/(drawer)');
     } else {
       router.replace('/(auth)/Login');
     }
-  }, [isReady, auth, router]);
+  }, [isReady, claims, router]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-      <GluestackUIProvider mode="dark">
-        <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
-          <Stack>
-            <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)/Login" options={{ headerShown: false }} />
-          </Stack>
-          <StatusBar style="dark" />
-        </View>
-      </GluestackUIProvider>
+        <GluestackUIProvider mode="dark">
+          <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
+            <Stack>
+              <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)/Login" options={{ headerShown: false }} />
+            </Stack>
+            <StatusBar style="dark" />
+          </View>
+        </GluestackUIProvider>
       </ToastProvider>
     </QueryClientProvider>
   );

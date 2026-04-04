@@ -3,10 +3,11 @@ import { PerfilDrawer } from "@/components/atom/PerfilDrawer/PerfilDrawer";
 import { Divider } from "@/components/ui/divider";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { useLogin } from "@/src/hooks";
 import { Claims, Module } from "@/src/types";
 import {
-    DrawerContentComponentProps,
-    DrawerContentScrollView,
+  DrawerContentComponentProps,
+  DrawerContentScrollView,
 } from "@react-navigation/drawer";
 import { Href, router } from "expo-router";
 import { View } from "react-native";
@@ -22,12 +23,15 @@ export function DrawerContent({
   claims,
   ...drawerProps
 }: DrawerContentProps) {
+  const { logout } = useLogin()
   const handleNavigate = (path: string) => {
     router.push(path as Href);
   };
 
   const handleLogout = () => {
-    // lógica de cierre de sesión
+    if(!claims?.sub) return
+    logout.mutate(claims.sub)
+    router.replace("/(auth)/Login");
   };
 
   return (
