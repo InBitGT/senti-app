@@ -39,6 +39,11 @@ export default function DrawerLayout() {
           name="explore"
           options={{ title: 'Explore' }}
         />
+        <Drawer.Screen
+          name="profile"
+          options={{ title: 'Perfil' }}
+        />
+        
       </Drawer>
     </GestureHandlerRootView>
   );

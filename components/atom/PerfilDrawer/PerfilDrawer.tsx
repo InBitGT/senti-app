@@ -2,9 +2,10 @@ import { Avatar, AvatarFallbackText } from '@/components/ui/avatar'
 import { HStack } from '@/components/ui/hstack'
 import { VStack } from '@/components/ui/vstack'
 import { getInitials } from '@/src/utils'
+import { useRouter } from 'expo-router'
 import { Mail } from 'lucide-react-native'
 import React from 'react'
-import { Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { styles } from './PerfilDrawer.styles'
 
 interface Props{
@@ -13,8 +14,9 @@ interface Props{
 }
 
 export const PerfilDrawer:React.FC<Props> = ({name, email}) => {
+  const router = useRouter()
   return (
-      <View style={styles.profileSection}>
+      <Pressable style={styles.profileSection} onPress={()=>router.navigate("/(drawer)/profile")}>
         <View style={styles.avatarWrapper}>
           <Avatar style={styles.avatar}>
             <AvatarFallbackText>{getInitials(name ? name : "user")}</AvatarFallbackText>
@@ -29,7 +31,7 @@ export const PerfilDrawer:React.FC<Props> = ({name, email}) => {
             <Text style={styles.profileEmail}>{email}</Text>
           </HStack>
         </VStack>
-      </View>
+      </Pressable>
   )
 }
 
