@@ -2,35 +2,34 @@ import { Box } from "@/components/ui/box"
 import { Card } from "@/components/ui/card"
 import { Divider } from "@/components/ui/divider"
 import {
-    FormControl,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control"
 import { Heading } from "@/components/ui/heading"
 import { HStack } from "@/components/ui/hstack"
 import { RadioGroup } from "@/components/ui/radio"
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectIcon,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectIcon,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Text } from "@/components/ui/text"
 import { VStack } from "@/components/ui/vstack"
 import {
-    Bell,
-    ChevronDown,
-    CreditCard,
-    Languages,
-    Moon,
-    Sun,
+  Bell,
+  ChevronDown,
+  CreditCard,
+  Languages,
+  Moon,
+  Sun,
 } from "lucide-react-native"
 import { useState } from "react"
 import { Pressable } from "react-native"
@@ -70,75 +69,6 @@ export function PreferencesSection() {
 
       <Box className="mt-5">
         <VStack className="gap-6">
-          {/* ── Notifications ── */}
-          <VStack className="gap-4">
-            <Text
-              size="xs"
-              className="font-semibold uppercase tracking-wider text-gray-400"
-            >
-              Notificaciones
-            </Text>
-
-            <VStack className="gap-5">
-              {/* Email Notifications */}
-              <HStack className="items-center justify-between">
-                <VStack className="flex-1 mr-4">
-                  <Text className="font-medium text-gray-900">
-                    Notificaciones por correo
-                  </Text>
-                  <Text size="sm" className="text-gray-500">
-                    Recibe actualizaciones importantes en tu correo
-                  </Text>
-                </VStack>
-                <Switch
-                  value={preferences.emailNotifications}
-                  onToggle={() => handleToggle("emailNotifications")}
-                  trackColor={{ false: "#d1d5db", true: "#6366f1" }}
-                  thumbColor="#ffffff"
-                />
-              </HStack>
-
-              {/* Push Notifications */}
-              <HStack className="items-center justify-between">
-                <VStack className="flex-1 mr-4">
-                  <Text className="font-medium text-gray-900">
-                    Notificaciones push
-                  </Text>
-                  <Text size="sm" className="text-gray-500">
-                    Alertas en tiempo real en tu navegador
-                  </Text>
-                </VStack>
-                <Switch
-                  value={preferences.pushNotifications}
-                  onToggle={() => handleToggle("pushNotifications")}
-                  trackColor={{ false: "#d1d5db", true: "#6366f1" }}
-                  thumbColor="#ffffff"
-                />
-              </HStack>
-
-              {/* Marketing Emails */}
-              <HStack className="items-center justify-between">
-                <VStack className="flex-1 mr-4">
-                  <Text className="font-medium text-gray-900">
-                    Correos de marketing
-                  </Text>
-                  <Text size="sm" className="text-gray-500">
-                    Ofertas, novedades y promociones especiales
-                  </Text>
-                </VStack>
-                <Switch
-                  value={preferences.marketingEmails}
-                  onToggle={() => handleToggle("marketingEmails")}
-                  trackColor={{ false: "#d1d5db", true: "#6366f1" }}
-                  thumbColor="#ffffff"
-                />
-              </HStack>
-            </VStack>
-          </VStack>
-
-          <Divider className="bg-gray-200" />
-
-          {/* ── Appearance ── */}
           <VStack className="gap-4">
             <Text
               size="xs"
@@ -255,6 +185,7 @@ export function PreferencesSection() {
                   </HStack>
                 </FormControlLabel>
                 <Select
+                  isDisabled
                   selectedValue={preferences.language}
                   onValueChange={(value) => handleChange("language", value)}
                 >
@@ -273,8 +204,6 @@ export function PreferencesSection() {
                       </SelectDragIndicatorWrapper>
                       <SelectItem label="Espanol" value="es" />
                       <SelectItem label="English" value="en" />
-                      <SelectItem label="Portugues" value="pt" />
-                      <SelectItem label="Francais" value="fr" />
                     </SelectContent>
                   </SelectPortal>
                 </Select>
@@ -290,6 +219,7 @@ export function PreferencesSection() {
                   </HStack>
                 </FormControlLabel>
                 <Select
+                  isDisabled
                   selectedValue={preferences.currency}
                   onValueChange={(value) => handleChange("currency", value)}
                 >
@@ -306,10 +236,7 @@ export function PreferencesSection() {
                       <SelectDragIndicatorWrapper>
                         <SelectDragIndicator />
                       </SelectDragIndicatorWrapper>
-                      <SelectItem label="MXN - Peso Mexicano" value="MXN" />
-                      <SelectItem label="USD - Dolar Americano" value="USD" />
-                      <SelectItem label="EUR - Euro" value="EUR" />
-                      <SelectItem label="COP - Peso Colombiano" value="COP" />
+                      <SelectItem label="Quetzales" value="GTQ" />
                     </SelectContent>
                   </SelectPortal>
                 </Select>

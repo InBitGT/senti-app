@@ -5,11 +5,11 @@ import { Card } from "@/components/ui/card"
 import { Center } from "@/components/ui/center"
 import { Divider } from "@/components/ui/divider"
 import {
-    FormControl,
-    FormControlHelper,
-    FormControlHelperText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlHelper,
+  FormControlHelperText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control"
 import { Heading } from "@/components/ui/heading"
 import { HStack } from "@/components/ui/hstack"
@@ -17,7 +17,7 @@ import { Input, InputField } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Text } from "@/components/ui/text"
 import { VStack } from "@/components/ui/vstack"
-import { History, Key, Shield, Smartphone } from "lucide-react-native"
+import { Key, Shield, Smartphone } from "lucide-react-native"
 import { useState } from "react"
 
 export function SecuritySection() {
@@ -133,7 +133,6 @@ export function SecuritySection() {
 
           <Divider className="bg-gray-200" />
 
-          {/* ── Two-Factor Authentication ── */}
           <HStack className="items-center justify-between">
             <HStack className="items-center gap-3 flex-1">
               <Center className="size-10 rounded-lg bg-gray-100">
@@ -168,74 +167,14 @@ export function SecuritySection() {
               </VStack>
             </HStack>
             <Switch
+              isDisabled
               value={twoFactor}
               onToggle={() => setTwoFactor(!twoFactor)}
               trackColor={{ false: "#d1d5db", true: "#6366f1" }}
               thumbColor="#ffffff"
             />
           </HStack>
-
-          <Divider className="bg-gray-200" />
-
-          {/* ── Recent Sessions ── */}
-          <VStack className="gap-4">
-            <HStack className="items-center gap-3">
-              <Center className="size-10 rounded-lg bg-gray-100">
-                <History size={20} color="#4b5563" />
-              </Center>
-              <VStack>
-                <Text className="font-medium text-gray-900">
-                  Sesiones activas
-                </Text>
-                <Text size="sm" className="text-gray-500">
-                  Dispositivos donde has iniciado sesion
-                </Text>
-              </VStack>
-            </HStack>
-
-            <VStack className="ml-13 gap-3">
-              {/* Current Device */}
-              <HStack className="items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <HStack className="items-center gap-3">
-                  <Box className="size-2 rounded-full bg-green-500" />
-                  <VStack>
-                    <Text size="sm" className="font-medium text-gray-900">
-                      Chrome - macOS
-                    </Text>
-                    <Text size="xs" className="text-gray-400">
-                      Ciudad de Mexico • Ahora
-                    </Text>
-                  </VStack>
-                </HStack>
-                <Badge
-                  variant="outline"
-                  className="border-gray-300 rounded-full"
-                >
-                  <BadgeText className="text-gray-600">
-                    Este dispositivo
-                  </BadgeText>
-                </Badge>
-              </HStack>
-
-              {/* Other Device */}
-              <HStack className="items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <HStack className="items-center gap-3">
-                  <Box className="size-2 rounded-full bg-gray-400" />
-                  <VStack>
-                    <Text size="sm" className="font-medium text-gray-900">
-                      Safari - iPhone
-                    </Text>
-                    <Text size="xs" className="text-gray-400">
-                      Ciudad de Mexico • Hace 2 dias
-                    </Text>
-                  </VStack>
-                </HStack>
-                <Button variant="link" size="sm">
-                  <ButtonText className="text-red-500">Cerrar</ButtonText>
-                </Button>
-              </HStack>
-            </VStack>
-          </VStack>
+          
         </VStack>
       </Box>
     </Card>

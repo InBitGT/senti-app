@@ -30,10 +30,11 @@ export const useLogin = (): Props => {
         store.save({ name: 'refresh_token', value: data.refresh_token }),
         store.save({ name: 'expires_in', value: String(data.expires_in) }),
       ]);
-      showToast({message: "Bienvenido", type:"success"})
+      showToast({ message: "¡Inicio de sesión exitoso!", type: "success" })
       router.replace("/(drawer)/explore");
     },
     onError: async (error) => {
+      showToast({ message: "No se pudo iniciar sesión. Verifica tus credenciales.", type: "error" })
       console.log(error);
     },
   });
@@ -48,8 +49,11 @@ export const useLogin = (): Props => {
         store.remove({ name: 'refresh_token' }),
         store.remove({ name: 'expires_in' }),
       ]);
+      showToast({ message: "Sesión cerrada correctamente.", type: "success" })
+
     },
     onError: async (error)=>{
+      showToast({ message: "No se pudo cerrar sesión. Intenta de nuevo.", type: "error" })
       console.log(error);
     }
   })

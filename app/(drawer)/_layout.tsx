@@ -1,4 +1,4 @@
-import { DrawerContent } from '@/components';
+import { DrawerContent, HeaderRight } from '@/components';
 import { useDrawer } from '@/src/hooks';
 import { useAuthStore } from '@/src/store';
 import { Drawer } from 'expo-router/drawer';
@@ -29,11 +29,12 @@ export default function DrawerLayout() {
         screenOptions={{
           headerShown: true,
           drawerType: 'front',
+          headerRight: () => (<HeaderRight name={claims?.tenant_name ?? "Mi Empresa"} />),
         }}
       >
         <Drawer.Screen
           name="index"
-          options={{ title: 'Hola' }}
+          options={{ title: 'Home' }}
         />
         <Drawer.Screen
           name="explore"

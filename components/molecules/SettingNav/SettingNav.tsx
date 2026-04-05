@@ -3,8 +3,9 @@ import { Text } from "@/components/ui/text"
 import { VStack } from "@/components/ui/vstack"
 import { useLogin } from "@/src/hooks"
 import { useAuthStore } from "@/src/store"
+import { router } from "expo-router"
 import { Bell, LogOut, MapPin, Shield, User } from "lucide-react-native"
-import { Pressable } from "react-native"
+import { Pressable, TouchableOpacity } from "react-native"
 
 interface SettingsNavProps {
   activeSection: string
@@ -77,10 +78,12 @@ export function SettingsNav({
 
       <Divider className="my-3 bg-gray-100" />
 
-      <Pressable
+      <TouchableOpacity
         onPress={() => {
           if(!claims?.sub)return
           logout.mutate(claims?.sub)
+          router.dismissAll()
+          router.navigate("/(auth)/Login")
         }}
         style={{
           flexDirection: "row",
@@ -95,7 +98,7 @@ export function SettingsNav({
         <Text size="sm" className="font-medium text-red-500">
           Cerrar sesion
         </Text>
-      </Pressable>
+      </TouchableOpacity>
     </VStack>
   )
 }

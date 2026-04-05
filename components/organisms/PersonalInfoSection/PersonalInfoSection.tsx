@@ -32,16 +32,16 @@ interface PersonalInfoFormData {
 
 export function PersonalInfoSection() {
   const user = useProfileStore((state) => state.user)
-  const {updateUser} = useProfile()
+  const { updateUser } = useProfile()
   const [isEditing, setIsEditing] = useState(false)
 
-  const { control, handleSubmit, reset } = useForm<PersonalInfoFormData>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<PersonalInfoFormData>({
     defaultValues: {
       firstName: user?.first_name ?? "",
       lastName: user?.last_name ?? "",
       email: user?.email ?? "",
       phone: user?.phone ?? "",
-      username:user?.username ?? ""
+      username: user?.username ?? "",
     },
   })
 
@@ -58,9 +58,9 @@ export function PersonalInfoSection() {
   }, [user, reset])
 
   const onSubmit = (data: PersonalInfoFormData) => {
-    if(!user) return
+    if (!user || updateUser.isPending) return
 
-    const formData:UserUpdate={
+    const formData: UserUpdate = {
       username: data.username,
       email: data.email,
       phone: data.phone,
@@ -70,11 +70,15 @@ export function PersonalInfoSection() {
       role_id: user.role_id,
       is_active: user.is_active,
       two_fa_enabled: user.two_fa_enabled,
-      status: user.status
+      status: user.status,
     }
 
-    updateUser.mutate({ idUser: user?.id, data: formData })
-    setIsEditing(false)
+    updateUser.mutate(
+      { idUser: user.id, data: formData },
+      {
+        onSuccess: () => setIsEditing(false),
+      }
+    )
   }
 
   const handleCancel = () => {
@@ -103,6 +107,7 @@ export function PersonalInfoSection() {
               variant="outline"
               className="border-gray-300 rounded-lg"
               onPress={handleCancel}
+              isDisabled={updateUser.isPending}
             >
               <ButtonText className="text-gray-700">Cancelar</ButtonText>
             </Button>
@@ -111,9 +116,10 @@ export function PersonalInfoSection() {
             size="sm"
             className="bg-indigo-500 rounded-lg"
             onPress={isEditing ? handleSubmit(onSubmit) : () => setIsEditing(true)}
+            isDisabled={updateUser.isPending}
           >
             <ButtonText className="text-white">
-              {isEditing ? "Guardar" : "Editar"}
+              {updateUser.isPending ? "Guardando..." : isEditing ? "Guardar" : "Editar"}
             </ButtonText>
           </Button>
         </HStack>
@@ -131,7 +137,7 @@ export function PersonalInfoSection() {
 
           <VStack className="flex-1 gap-4">
             <HStack className="gap-4 flex-wrap sm:flex-nowrap">
-              <FormControl className="flex-1">
+              <FormControl className="flex-1" isInvalid={!!errors.firstName}>
                 <FormControlLabel>
                   <FormControlLabelText className="text-gray-700 text-sm font-medium">
                     Nombre
@@ -140,6 +146,7 @@ export function PersonalInfoSection() {
                 <Controller
                   control={control}
                   name="firstName"
+                  rules={{ required: "El nombre es obligatorio" }}
                   render={({ field: { onChange, value } }) => (
                     <Input
                       isDisabled={!isEditing}
@@ -153,9 +160,16 @@ export function PersonalInfoSection() {
                     </Input>
                   )}
                 />
+                {errors.firstName && (
+                  <FormControlHelper>
+                    <FormControlHelperText className="text-red-500 text-xs">
+                      {errors.firstName.message}
+                    </FormControlHelperText>
+                  </FormControlHelper>
+                )}
               </FormControl>
 
-              <FormControl className="flex-1">
+              <FormControl className="flex-1" isInvalid={!!errors.lastName}>
                 <FormControlLabel>
                   <FormControlLabelText className="text-gray-700 text-sm font-medium">
                     Apellido
@@ -164,6 +178,7 @@ export function PersonalInfoSection() {
                 <Controller
                   control={control}
                   name="lastName"
+                  rules={{ required: "El apellido es obligatorio" }}
                   render={({ field: { onChange, value } }) => (
                     <Input
                       isDisabled={!isEditing}
@@ -177,10 +192,17 @@ export function PersonalInfoSection() {
                     </Input>
                   )}
                 />
+                {errors.lastName && (
+                  <FormControlHelper>
+                    <FormControlHelperText className="text-red-500 text-xs">
+                      {errors.lastName.message}
+                    </FormControlHelperText>
+                  </FormControlHelper>
+                )}
               </FormControl>
             </HStack>
 
-            <FormControl>
+            <FormControl isInvalid={!!errors.email}>
               <FormControlLabel>
                 <HStack className="items-center gap-2">
                   <Mail size={16} color="#9ca3af" />
@@ -192,6 +214,13 @@ export function PersonalInfoSection() {
               <Controller
                 control={control}
                 name="email"
+                rules={{
+                  required: "El correo es obligatorio",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Correo no valido",
+                  },
+                }}
                 render={({ field: { onChange, value } }) => (
                   <Input
                     isDisabled={!isEditing}
@@ -206,15 +235,23 @@ export function PersonalInfoSection() {
                   </Input>
                 )}
               />
-              <FormControlHelper>
-                <FormControlHelperText className="text-gray-400 text-xs">
-                  Este correo se usa para notificaciones y recuperacion de cuenta
-                </FormControlHelperText>
-              </FormControlHelper>
+              {errors.email ? (
+                <FormControlHelper>
+                  <FormControlHelperText className="text-red-500 text-xs">
+                    {errors.email.message}
+                  </FormControlHelperText>
+                </FormControlHelper>
+              ) : (
+                <FormControlHelper>
+                  <FormControlHelperText className="text-gray-400 text-xs">
+                    Este correo se usa para notificaciones y recuperacion de cuenta
+                  </FormControlHelperText>
+                </FormControlHelper>
+              )}
             </FormControl>
 
             <HStack className="gap-4 flex-wrap sm:flex-nowrap">
-              <FormControl className="flex-1">
+              <FormControl className="flex-1" isInvalid={!!errors.phone}>
                 <FormControlLabel>
                   <HStack className="items-center gap-2">
                     <Phone size={16} color="#9ca3af" />
@@ -226,6 +263,7 @@ export function PersonalInfoSection() {
                 <Controller
                   control={control}
                   name="phone"
+                  rules={{ required: "El telefono es obligatorio" }}
                   render={({ field: { onChange, value } }) => (
                     <Input
                       isDisabled={!isEditing}
@@ -240,8 +278,16 @@ export function PersonalInfoSection() {
                     </Input>
                   )}
                 />
+                {errors.phone && (
+                  <FormControlHelper>
+                    <FormControlHelperText className="text-red-500 text-xs">
+                      {errors.phone.message}
+                    </FormControlHelperText>
+                  </FormControlHelper>
+                )}
               </FormControl>
-              <FormControl className="flex-1">
+
+              <FormControl className="flex-1" isInvalid={!!errors.username}>
                 <FormControlLabel>
                   <FormControlLabelText className="text-gray-700 text-sm font-medium">
                     Username
@@ -250,6 +296,10 @@ export function PersonalInfoSection() {
                 <Controller
                   control={control}
                   name="username"
+                  rules={{
+                    required: "El username es obligatorio",
+                    minLength: { value: 3, message: "Minimo 3 caracteres" },
+                  }}
                   render={({ field: { onChange, value } }) => (
                     <Input
                       isDisabled={!isEditing}
@@ -263,8 +313,14 @@ export function PersonalInfoSection() {
                     </Input>
                   )}
                 />
+                {errors.username && (
+                  <FormControlHelper>
+                    <FormControlHelperText className="text-red-500 text-xs">
+                      {errors.username.message}
+                    </FormControlHelperText>
+                  </FormControlHelper>
+                )}
               </FormControl>
-
             </HStack>
           </VStack>
         </HStack>

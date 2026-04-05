@@ -6,5 +6,6 @@ export interface Claims {
   role_name: string;
   sub: number;
   tenant_id: number;
+  tenant_name: string;
   username: string;
 }

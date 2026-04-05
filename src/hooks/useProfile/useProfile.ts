@@ -2,6 +2,7 @@ import { profileAddressUpdateFn, profileUserInfoFn, profileUserUpdatefoFn } from
 import { useProfileStore } from "@/src/store";
 import { UpdateAddress, UserInfo, UserUpdate } from "@/src/types";
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
+import { useCustomToast } from "../useCustomToast";
 
 interface Props {
   userInfo: UseMutationResult<UserInfo | undefined, Error, string | number, unknown>;
@@ -11,6 +12,8 @@ interface Props {
 
 export const useProfile = (): Props => {
   const { setUser, user } = useProfileStore()
+    const { showToast } = useCustomToast();
+  
   const userInfo = useMutation({
     mutationFn: profileUserInfoFn,
     onSuccess: async (data) => {
@@ -29,9 +32,11 @@ export const useProfile = (): Props => {
     onSuccess: async () => {
         if(!user) return
         userInfo.mutate(user?.id)
+        showToast({ message: "Información actualizada correctamente.", type: "success" })
         return 
      },
     onError: async (error) => {
+      showToast({ message: "No se pudo actualizar tu información. Intenta de nuevo.", type: "error" })
         console.log(error)
     },
    })
@@ -42,10 +47,12 @@ export const useProfile = (): Props => {
     onSuccess: async () => {
         if(!user) return
         userInfo.mutate(user?.id)
+        showToast({ message: "Información actualizada correctamente.", type: "success" })
         return 
     },
     onError: (error) => {
-        console.log(error)
+      showToast({ message: "No se pudo actualizar tu dirección. Intenta de nuevo.", type: "error" })
+      console.log(error)
     },
    })
 
