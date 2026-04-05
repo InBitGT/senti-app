@@ -1,6 +1,7 @@
 import { DrawerContent, HeaderRight } from '@/components';
 import { useDrawer } from '@/src/hooks';
 import { useAuthStore } from '@/src/store';
+import { getGroupTitle } from '@/src/utils';
 import { Drawer } from 'expo-router/drawer';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -44,7 +45,22 @@ export default function DrawerLayout() {
           name="profile"
           options={{ title: 'Perfil' }}
         />
-        
+        <Drawer.Screen
+          name="dashboard"
+          options={{ title: 'Dashboard' }}
+        />
+        <Drawer.Screen
+          name="(inventory)"
+          options={({ route }) => ({
+            title: getGroupTitle('(inventory)', route, 'Inventario'),
+          })}
+        />
+        <Drawer.Screen
+          name="(config)"
+          options={({ route }) => ({
+            title: getGroupTitle('(config)', route, 'Configuraciones'),
+          })}
+        />
       </Drawer>
     </GestureHandlerRootView>
   );

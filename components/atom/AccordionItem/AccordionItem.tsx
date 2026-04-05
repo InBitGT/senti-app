@@ -3,18 +3,13 @@ import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Module } from "@/src/types";
+import { getIcon } from "@/src/utils";
 import { usePathname } from "expo-router";
-import { BarChart2, ChevronDown, ChevronRight, Grid2x2, LayoutDashboard } from "lucide-react-native";
+import { ChevronDown, ChevronRight } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable } from "react-native";
 import { DrawerItem } from "../DrawerItem";
 import { styles } from "./AccordionItem.style";
-
-const iconMap: Record<string, any> = {
-  dashboard: LayoutDashboard,
-  bar_chart: BarChart2,
-  '': Grid2x2,
-};
 
 export function AccordionItem({
   mod,
@@ -28,7 +23,7 @@ export function AccordionItem({
   const isChildActive = mod.children?.some((c:any) => pathname === c.path) ?? false;
   const [open, setOpen] = useState(isChildActive);
 
-  const IconComponent = iconMap[mod.icon] ?? iconMap[''];
+  const IconComponent = getIcon(mod.icon);
 
   const handlePress = () => {
     if (hasChildren) {

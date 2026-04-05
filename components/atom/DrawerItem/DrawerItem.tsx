@@ -1,17 +1,11 @@
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Module } from '@/src/types';
+import { getIcon } from '@/src/utils';
 import { usePathname } from 'expo-router';
-import { BarChart2, Grid2x2, LayoutDashboard, LucideIcon } from 'lucide-react-native';
 import { Pressable } from 'react-native';
 import { styles } from './DrawerItem.styles';
 
-
-const iconMap: Record<string, LucideIcon> = {
-  dashboard: LayoutDashboard,
-  bar_chart: BarChart2,
-  '': Grid2x2,
-};
 
 export function DrawerItem({
   mod,
@@ -24,7 +18,7 @@ export function DrawerItem({
 }) {
   const pathname = usePathname();
   const isActive = pathname === mod.path;
-  const IconComponent = iconMap[mod.icon] ?? iconMap[''];
+  const IconComponent = getIcon(mod.icon);
 
   return (
     <Pressable onPress={() => onNavigate(mod.path)}>

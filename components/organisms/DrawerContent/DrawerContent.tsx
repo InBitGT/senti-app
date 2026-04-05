@@ -24,8 +24,10 @@ export function DrawerContent({
   ...drawerProps
 }: DrawerContentProps) {
   const { logout } = useLogin()
+
   const handleNavigate = (path: string) => {
     router.push(path as Href);
+    drawerProps.navigation.closeDrawer();
   };
 
   const handleLogout = () => {
