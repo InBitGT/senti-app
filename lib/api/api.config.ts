@@ -10,5 +10,9 @@ export const ENDPOINT ={
     profile:{
         infoUser:(idUser:string|number)=>`user-service/api/user/${idUser}`,
         Address:(idAddress:string| number)=>`user-service/api/address/${idAddress}`
+    },
+    categorie:{
+        info: 'inventory-service/api/category',
+        detail: (idTenant:string | number)=>`inventory-service/api/category?tenant_id=${idTenant}`
     }
 }
