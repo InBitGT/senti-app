@@ -12,7 +12,6 @@ export const useProfileStore = create<States>()(
     (set, get) => ({
       user: null,
       setUser: (data: UserInfo) => {
-        console.log(data, "user")
         set({ user: data });
       },
        getUser: () => get().user,

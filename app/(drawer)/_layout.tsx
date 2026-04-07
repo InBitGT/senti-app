@@ -2,6 +2,7 @@ import { DrawerContent, HeaderRight } from '@/components';
 import { useDrawer } from '@/src/hooks';
 import { useAuthStore } from '@/src/store';
 import { getGroupTitle } from '@/src/utils';
+import { useSegments } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -9,6 +10,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 export default function DrawerLayout() {
   const { drawer } = useDrawer();
   const claims = useAuthStore.getState().claims;
+
+  const segments = useSegments();
+  const isForm = segments.some((s) => s.includes('(form)'));
+
 
   useEffect(() => {
     if (claims?.role_id) {
@@ -52,6 +57,7 @@ export default function DrawerLayout() {
         <Drawer.Screen
           name="(inventory)"
           options={({ route }) => ({
+            headerShown: !isForm,
             title: getGroupTitle('(inventory)', route, 'Inventario'),
           })}
         />

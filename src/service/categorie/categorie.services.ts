@@ -19,7 +19,8 @@ export async function categorieFn() {
 
 export async function PostCategorie(data: CategoryDetail) {
   const response = await post<CategoryDetail>(ENDPOINT.categorie.info, data);
-  if (response.code !== "200") {
+  console.log(response,"post")
+  if (response.code !== "201") {
     throw new Error(response.message);
   }
 
@@ -27,8 +28,10 @@ export async function PostCategorie(data: CategoryDetail) {
 }
 
 
-export async function PutCategorie(data: CategoryDetail) {
-  const response = await put<CategoryDetail>(ENDPOINT.categorie.info, data);
+export async function PutCategorie({id, data}:{id: number,data: CategoryDetail}) {
+  const response = await put<CategoryDetail>(ENDPOINT.categorie.info+"/"+id, data);
+  console.log(response,"put")
+
   if (response.code !== "200") {
     throw new Error(response.message);
   }
@@ -38,6 +41,8 @@ export async function PutCategorie(data: CategoryDetail) {
 
 export async function DeleteCategorie(IdCategorie: string | number) {
   const response = await remove<CategoryDetail>(ENDPOINT.categorie.info+"/"+ IdCategorie);
+  console.log(response,"remove")
+
   if (response.code !== "200") {
     throw new Error(response.message);
   }

@@ -8,9 +8,10 @@ export interface Category {
 }
 
 export interface CategoryDetail {
+  id?:number
   tenant_id: number
   name: string
   description: string
-  parent_id: null | number
-  sort_order: number
+  parent_id?: null | number
+  sort_order?: number
 }

@@ -1,54 +1,34 @@
 import { categorieFn, DeleteCategorie, PostCategorie, PutCategorie } from "@/src/service";
-import { Category, CategoryDetail } from "@/src/types";
-import { useMutation, UseMutationResult } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface Props {
-  categorie: UseMutationResult<Category[] | undefined, Error, void, unknown>;
-  post: UseMutationResult<CategoryDetail | undefined, Error, CategoryDetail, unknown>;
-  put: UseMutationResult<CategoryDetail | undefined, Error, CategoryDetail, unknown>;
-  remove: UseMutationResult<CategoryDetail | undefined, Error, string | number, unknown>; 
-}
+export const useCategorie = () => {
+  const queryClient = useQueryClient();
 
-export const useCategorie = ():Props => {
-
-  const categorie = useMutation({
-    mutationFn: categorieFn,
-    onSuccess: async (data) => {
-      if(!data) return
-      return data;
-    },
-    onError: async (error) => {
-      console.log(error);
-    },
+  const categorie = useQuery({
+    queryKey: ["categories"],
+    queryFn: categorieFn,
   });
 
   const post = useMutation({
     mutationFn: PostCategorie,
-    onSuccess: async () => {
-      categorie.mutate()
-    },
-    onError: async (error) => {
-      console.log(error);
+    onSuccess: async() => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
+
   const put = useMutation({
     mutationFn: PutCategorie,
-    onSuccess: async () => {
-        categorie.mutate()
-    },
-    onError: async (error) => {
-      console.log(error);
+    onSuccess: async() => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
+
   const remove = useMutation({
     mutationFn: DeleteCategorie,
-    onSuccess: async () => {
-      categorie.mutate()
-    },
-    onError: async (error) => {
-      console.log(error);
+    onSuccess: async() => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
-  return { categorie, post, put, remove }
-}
 
+  return { categorie, post, put, remove };
+};

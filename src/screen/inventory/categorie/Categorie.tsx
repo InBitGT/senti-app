@@ -1,47 +1,57 @@
-import { Action, Buttons, ColumnDef, CustomTable } from '@/components';
+import { Action, Buttons, ColumnDef, CustomTable, ModalDelete } from '@/components';
 import { useCategorie } from '@/src/hooks';
-import { Category } from '@/src/types';
-import React, { useEffect } from 'react';
-
-
+import { useCategorieStore } from '@/src/store/useCategorieStore';
+import { Category, CategoryDetail } from '@/src/types';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { View } from 'react-native';
 
 export const Categorie: React.FC = () => {
-  const { categorie } = useCategorie()
+  const [showModal,setShowModal] = useState<boolean>(false)
+  const [modal,setmodal] = useState<Category| undefined>(undefined)
+  const { categorie, remove } = useCategorie()
+  const {setData, setIsEdit}= useCategorieStore.getState()
 
-  useEffect(() => {
-    categorie.mutate()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleEdit = (data: Category) => {
+    setIsEdit(true)
+    setData(data as unknown as CategoryDetail)
+    router.navigate("/(drawer)/(inventory)/(form)/categorie_form")
+  }
+
+  const hadleModal = (data:Category)=>{
+    setShowModal(true)
+    setmodal(data)
+  }
+
+  const handleDelete = ()=>{
+    if(!modal) return
+    remove.mutate(modal.id)
+    setShowModal(false)
+  }
 
   const columns: ColumnDef<Category>[] = [
     { key: 'id', title: 'ID' },
     { key: 'name', title: 'Nombre' },
     { key: 'description', title: 'Descripción' },
-    { key: 'sort_order', title: 'Orden', numeric: true },
   ];
 
   const actions: Action<Category>[] = [
     {
       icon: 'pencil',
       label: 'Editar',
-      onPress: (row) => console.log('Editar:', row.id),
+      onPress: (row) => handleEdit(row),
     },
     {
       icon: 'delete',
       label: 'Eliminar',
-      onPress: (row) => console.log("press")
+      onPress: (row) => hadleModal(row)
     },
   ];
 
   const dataButton :Buttons[]=[
     {
       name: "Crear Categoria", 
-      onPress: ()=> console.log("press"),
-      variant: "solid" 
-    },
-    {
-      name: "Crear Categoria", 
-      onPress: ()=> console.log("press2"),
+      onPress: ()=> router.navigate("/(drawer)/(inventory)/(form)/categorie_form"),
       variant: "solid" 
     },
   ]
@@ -51,13 +61,16 @@ export const Categorie: React.FC = () => {
   }
 
   return (
-    <CustomTable<Category>
-      columns={columns}
-      data={categorie.data}
-      keyExtractor={(row) => row.id}
-      actions={actions}
-      itemsPerPage={5}
-      button={dataButton}
-    />
+    <View style={{ flex: 1 }}>
+      <CustomTable<Category>
+        columns={columns}
+        data={categorie.data}
+        keyExtractor={(row) => row.id}
+        actions={actions}
+        itemsPerPage={5}
+        button={dataButton}
+      />
+      <ModalDelete isOpen={showModal} onClose={()=>setShowModal(false)} onSuccess={handleDelete}/>
+    </View>
   );
 };
