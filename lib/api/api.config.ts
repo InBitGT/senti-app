@@ -14,5 +14,14 @@ export const ENDPOINT ={
     categorie:{
         info: 'inventory-service/api/category',
         detail: (idTenant:string | number)=>`inventory-service/api/category?tenant_id=${idTenant}`
+    },
+    supplier:{
+        info: 'inventory-service/api/supplier',
+    },
+    stock:{
+        detail: (idTenant:string | number)=>`inventory-service/api/inventory-stock/summary?tenant_id=${idTenant}`
+    },
+    movement:{
+        detail: (idTenant:string | number)=>`inventory-service/api/inventory-movement?tenant_id=${idTenant}`
     }
 }

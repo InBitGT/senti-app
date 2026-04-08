@@ -33,6 +33,10 @@ export default function InventoryLayout() {
         name="product"
         options={{ title: 'Productos' }}   
       />
+      <Stack.Screen
+        name="inventory_stock"
+        options={{ title: 'Stock de inventario' }}   
+      />
     </Stack>
   );
 }

@@ -9,6 +9,7 @@ const routeTitles: Record<string, Record<string, string>> = {
     inventory_adjustment: 'Ajuste de inventario',
     inventory_movement: 'Inventario movimientos',
     product: 'Productos',
+    inventory_stock: "Stock de inventario"
   },
   '(config)': {
     tenant: 'Empresa',

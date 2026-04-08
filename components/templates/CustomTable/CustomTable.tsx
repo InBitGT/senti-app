@@ -34,6 +34,7 @@ export interface CustomTableProps<T> {
   style?: StyleProp<ViewStyle>;
   button?: Buttons[];
   searchKeys?: string[];
+  onRowPress?: (row: T) => void; 
 }
 
 export function CustomTable<T extends Record<string, any>>({
@@ -46,6 +47,7 @@ export function CustomTable<T extends Record<string, any>>({
   style,
   button,
   searchKeys,
+  onRowPress, 
 }: CustomTableProps<T>) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
@@ -134,7 +136,7 @@ export function CustomTable<T extends Record<string, any>>({
           </DataTable.Row>
         ) : (
           paginatedData.map((row) => (
-            <DataTable.Row key={keyExtractor(row)} style={rowBorder}>
+            <DataTable.Row key={keyExtractor(row)} style={rowBorder} onPress={onRowPress ? () => onRowPress(row) : undefined}>
               {columns.map((col) => (
                 <DataTable.Cell key={col.key} numeric={col.numeric}>
                   {col.render ? col.render(row) : (row[col.key] ?? '—')}
