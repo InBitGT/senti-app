@@ -2,27 +2,27 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -49,7 +49,7 @@ interface FormValues {
 export default function CategoryForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
-  const { post, categorie, put } = useCategorie();
+  const { post, data: categorie, put, isLoading } = useCategorie();
   const data = useCategorieStore((state) => state.data);
   const isEdit = useCategorieStore((state) => state.isEdit);
   const clearData = useCategorieStore((state) => state.clearData);
@@ -98,7 +98,7 @@ export default function CategoryForm() {
     }
   };
 
-  if (categorie.isLoading) {
+  if (isLoading) {
     return (
       <Center style={{ flex: 1 }}>
         <ActivityIndicator size="large" />
@@ -220,7 +220,7 @@ export default function CategoryForm() {
                 control={control}
                 name="parent_id"
                 render={({ field: { onChange, value } }) => {
-                    const selectedLabel = categorie.data?.find(
+                    const selectedLabel = categorie?.find(
                     (cat) => String(cat.id) === value
                     )?.name || "Sin categoría padre";
 
@@ -246,7 +246,7 @@ export default function CategoryForm() {
                                 <SelectDragIndicator />
                             </SelectDragIndicatorWrapper>
                             <SelectItem label="Sin categoría padre" value="" />
-                            {(categorie.data ?? []).map((cat) => (
+                            {(categorie ?? []).map((cat) => (
                                 <SelectItem
                                 key={cat.id}
                                 label={cat.name}

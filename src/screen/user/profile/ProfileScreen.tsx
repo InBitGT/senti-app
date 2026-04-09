@@ -1,4 +1,6 @@
-import { AddressSection, PersonalInfoSection, PreferencesSection, SecuritySection, SettingsNav } from "@/components"
+import { AddressSection, PreferencesSection, SecuritySection } from "@/components"
+import { SettingsNav } from "@/components/molecules/SettingNav"
+import { PersonalInfoSection } from "@/components/organisms/PersonalInfoSection"
 import { Box } from "@/components/ui/box"
 import { Heading } from "@/components/ui/heading"
 import { HStack } from "@/components/ui/hstack"
