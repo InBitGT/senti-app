@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
-SplashScreen.preventAutoHideAsync(); // 👈 mantiene splash visible
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
@@ -46,7 +46,7 @@ function RootLayoutNav() {
       router.replace('/(auth)/Login');
     }
 
-    SplashScreen.hideAsync(); // 👈 oculta splash cuando ya sabe a dónde ir
+    SplashScreen.hideAsync();
   }, [claims, segments]);
 
   return <Slot />;
