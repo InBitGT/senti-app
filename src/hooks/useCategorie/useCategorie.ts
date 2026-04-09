@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export const useCategorie = () => {
   const queryClient = useQueryClient();
 
-  const categorie = useQuery({
+  const {data, isLoading} = useQuery({
     queryKey: ["categories"],
     queryFn: categorieFn,
   });
@@ -30,5 +30,5 @@ export const useCategorie = () => {
     },
   });
 
-  return { categorie, post, put, remove };
+  return { data, isLoading, post, put, remove };
 };

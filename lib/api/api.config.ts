@@ -23,5 +23,19 @@ export const ENDPOINT ={
     },
     movement:{
         detail: (idTenant:string | number)=>`inventory-service/api/inventory-movement?tenant_id=${idTenant}`
+    },
+    product:{
+        info: "inventory-service/api/product",
+        detail: (idTenant:string | number)=>`inventory-service/api/product?tenant_id=${idTenant}&type=ingredient`
+    },
+    user:{
+        info: "user-service/api/user",
+        detail: (idTenant:string | number)=>`user-service/api/user/tenant/${idTenant}`
+    },
+    address:{
+        info: "user-service/api/address"
+    },
+    role:{
+        info: "user-service/api/roles"
     }
 }

@@ -1,4 +1,5 @@
 import { Action, Buttons, ColumnDef, CustomTable, ModalDelete } from '@/components';
+import { TableSkeleton } from '@/components/atom/TableSkeleton/TableSkeleton';
 import { useCategorie } from '@/src/hooks';
 import { useCategorieStore } from '@/src/store/useCategorieStore';
 import { Category, CategoryDetail } from '@/src/types';
@@ -9,7 +10,7 @@ import { View } from 'react-native';
 export const Categorie: React.FC = () => {
   const [showModal,setShowModal] = useState<boolean>(false)
   const [modal,setmodal] = useState<Category| undefined>(undefined)
-  const { categorie, remove } = useCategorie()
+  const { data:categorie, isLoading, remove } = useCategorie()
   const {setData, setIsEdit}= useCategorieStore.getState()
 
   const handleEdit = (data: Category) => {
@@ -56,15 +57,15 @@ export const Categorie: React.FC = () => {
     },
   ]
 
-  if(!categorie?.data){
-    return
+  if(isLoading){
+    return <TableSkeleton/>
   }
 
   return (
     <View style={{ flex: 1 }}>
       <CustomTable<Category>
         columns={columns}
-        data={categorie.data}
+        data={categorie || []}
         keyExtractor={(row) => row.id}
         actions={actions}
         itemsPerPage={5}

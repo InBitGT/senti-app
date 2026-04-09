@@ -148,7 +148,7 @@ export const ModalMovementDetail: React.FC<Props> = ({ isOpen, onClose, data }) 
 }
 
 const styles = StyleSheet.create({
-  container:    { backgroundColor: '#fff' },
+  container:    { backgroundColor: '#fff', maxHeight: '85%', },
   headerRow:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1 },
   title:        { color: '#000' },
   badge:        { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },

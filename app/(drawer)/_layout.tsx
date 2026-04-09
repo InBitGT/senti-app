@@ -64,6 +64,7 @@ export default function DrawerLayout() {
         <Drawer.Screen
           name="(config)"
           options={({ route }) => ({
+            headerShown: !isForm,
             title: getGroupTitle('(config)', route, 'Configuraciones'),
           })}
         />

@@ -1,11 +1,10 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 
-export const Inventory_movement = () => {
+export default function tenant_form() {
   return (
     <View>
-      <Text>Inventory_movement</Text>
+      <Text>tenant_form</Text>
     </View>
   )
 }
-

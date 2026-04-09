@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useInventoryStock = () => {
 
-  const stockData = useQuery({
+  const {data, isLoading} = useQuery({
     queryKey: ["stock"],
     queryFn: StockFn,
   });
 
-  return { stockData };
+  return { data, isLoading };
 };

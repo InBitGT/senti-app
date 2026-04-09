@@ -1,14 +1,15 @@
 import { ColumnDef, CustomTable } from '@/components';
+import { TableSkeleton } from '@/components/atom/TableSkeleton/TableSkeleton';
 import { ModalInventoryStockDetail } from '@/components/molecules/ModalInventoryStock/ModalInventoryStock';
 import { useInventoryStock } from '@/src/hooks/useInventoryStock/useInventoryStock';
 import { InventoryStockDetail } from '@/src/types/inventory_stock/inventory_stock.types';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 export const InventoryStock: React.FC = () => {
   const [showModal,setShowModal] = useState<boolean>(false)
   const [modal,setmodal] = useState<InventoryStockDetail| undefined>(undefined)
-    const { stockData } = useInventoryStock()
+    const { data: stockData, isLoading } = useInventoryStock()
   const hadleModal = (data:InventoryStockDetail)=>{
     setShowModal(true)
     setmodal(data)
@@ -28,17 +29,13 @@ export const InventoryStock: React.FC = () => {
         { key: 'batch_lines', title: 'Líneas de Lote' },
     ];
 
-
-
-  if(!stockData?.data){
-  return <Text style={{color:"#000000"}}>Cargando...</Text>
-  }
+    if(isLoading) return <TableSkeleton/>
 
   return (
     <View style={{ flex: 1 }}>
       <CustomTable<InventoryStockDetail>
         columns={columns}
-        data={stockData.data}
+        data={stockData || []}
         keyExtractor={(row) => `${row.warehouse_id}-${row.product_id}`}
         itemsPerPage={5}
         onRowPress={hadleModal} 
