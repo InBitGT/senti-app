@@ -46,7 +46,7 @@ interface FormValues {
 export default function SupplierForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
-  const { post, supplier, put } = useSupplier();
+  const { post, put, isLoading } = useSupplier();
   const data = useSupplierStore((state) => state.data);
   const isEdit = useSupplierStore((state) => state.isEdit);
   const clearData = useSupplierStore((state) => state.clearData);
@@ -100,7 +100,7 @@ export default function SupplierForm() {
     }
   };
 
-  if (supplier.isLoading) {
+  if (isLoading) {
     return (
       <Center style={{ flex: 1 }}>
         <ActivityIndicator size="large" />
