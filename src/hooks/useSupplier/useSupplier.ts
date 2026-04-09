@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export const useSupplier = () => {
   const queryClient = useQueryClient();
 
-  const supplier = useQuery({
+  const {data, isLoading} = useQuery({
     queryKey: ["supplier"],
     queryFn: SupplierFn,
   });
@@ -30,5 +30,5 @@ export const useSupplier = () => {
     },
   });
 
-  return { supplier, post, put, remove };
+  return { data, isLoading, post, put, remove };
 };

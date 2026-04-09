@@ -1,25 +1,34 @@
-import { Action, Buttons, ColumnDef, CustomTable, ModalDelete } from '@/components';
+import { Action, Buttons, ModalDelete } from '@/components';
 import { TableSkeleton } from '@/components/atom/TableSkeleton/TableSkeleton';
+import { ModalProductDetail, ProductDetail } from '@/components/molecules/ModalProductDetail/ModalProductDetail';
+import { MenuIngredientsTable } from '@/components/templates/MenuIngredientsTable/MenuIngredientsTable';
 import { useProduct } from '@/src/hooks/useProduct/useProduct';
 import { useProductStore } from '@/src/store/useProductStore/useProductStore';
-import { Ingredien } from '@/src/types/product/product.types';
+import { MenuIngredient } from '@/src/types/product/product.types';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView } from 'react-native';
 
 export const Product: React.FC = () => {
   const [showModal,setShowModal] = useState<boolean>(false)
-  const [modal,setmodal] = useState<Ingredien| undefined>(undefined)
-  const { data:categorie, isLoading, remove } = useProduct()
+  const [modal,setmodal] = useState<MenuIngredient| undefined>(undefined)
+  const [showModalData,setShowModalData] = useState<boolean>(false)
+  const [modalData,setmodalData] = useState<MenuIngredient>()
+  const { data:ingredients, isLoading, remove } = useProduct()
   const {setData, setIsEdit}= useProductStore.getState()
 
-  const handleEdit = (data: Ingredien) => {
+  const hadleModalData = (data:MenuIngredient)=>{
+      setShowModalData(true)
+      setmodalData(data)
+    }
+
+  const handleEdit = (data: MenuIngredient) => {
     setIsEdit(true)
     setData(data)
     router.navigate("/(drawer)/(inventory)/(form)/product_form")
   }
 
-  const hadleModal = (data:Ingredien)=>{
+  const hadleModal = (data:MenuIngredient)=>{
     setShowModal(true)
     setmodal(data)
   }
@@ -30,13 +39,8 @@ export const Product: React.FC = () => {
     setShowModal(false)
   }
 
-  const columns: ColumnDef<Ingredien>[] = [
-    { key: 'id', title: 'ID' },
-    { key: 'name', title: 'Nombre' },
-    { key: 'description', title: 'Descripción' },
-  ];
 
-  const actions: Action<Ingredien>[] = [
+  const actions: Action<MenuIngredient>[] = [
     {
       icon: 'pencil',
       label: 'Editar',
@@ -62,16 +66,16 @@ export const Product: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomTable<Ingredien>
-        columns={columns}
-        data={categorie || []}
-        keyExtractor={(row) => row.id}
-        actions={actions}
-        itemsPerPage={5}
-        button={dataButton}
-      />
+    <ScrollView style={{ flex: 1 }}>
+    <MenuIngredientsTable
+      data={ingredients || []}
+      itemsPerPage={8}
+      button={dataButton}
+      actions={actions}
+      onRowPress={hadleModalData}
+    />
+    <ModalProductDetail isOpen={showModalData} onClose={()=>setShowModalData(false)} data={modalData as ProductDetail}/>
       <ModalDelete isOpen={showModal} onClose={()=>setShowModal(false)} onSuccess={handleDelete}/>
-    </View>
+    </ScrollView>
   );
 };

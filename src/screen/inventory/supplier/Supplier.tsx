@@ -1,4 +1,5 @@
 import { Action, Buttons, ColumnDef, CustomTable, ModalDelete } from '@/components';
+import { TableSkeleton } from '@/components/atom/TableSkeleton/TableSkeleton';
 import { useSupplier } from '@/src/hooks/useSupplier/useSupplier';
 import { useSupplierStore } from '@/src/store/useSupplierStore/useSupplierStore';
 import { SupplierDetail } from '@/src/types/supplier/supplier.types';
@@ -10,7 +11,7 @@ export const Supplier: React.FC = () => {
   const [showModal,setShowModal] = useState<boolean>(false)
   const [modal,setmodal] = useState<SupplierDetail| undefined>(undefined)
   const {setData, setIsEdit}= useSupplierStore.getState()
-  const {remove, supplier} = useSupplier()
+  const {remove, data: supplier, isLoading} = useSupplier()
 
   const handleEdit = (data: SupplierDetail) => {
     setIsEdit(true)
@@ -58,15 +59,15 @@ export const Supplier: React.FC = () => {
     },
   ]
 
-  if(!supplier?.data){
-    return
+  if(isLoading){
+    return <TableSkeleton/>
   }
 
   return (
     <View style={{ flex: 1 }}>
       <CustomTable<SupplierDetail>
         columns={columns}
-        data={supplier.data}
+        data={supplier || []}
         keyExtractor={(row) => row.id ?? 0}
         actions={actions}
         itemsPerPage={5}

@@ -37,5 +37,10 @@ export const ENDPOINT ={
     },
     role:{
         info: "user-service/api/roles"
+    },
+    stockEntry:{
+        info: "inventory-service/api/stock-entry",
+        adjustment: "inventory-service/api/inventory-adjustment",
+        detail: (idTenant:string | number)=>`inventory-service/api/stock-entry?tenant_id=${idTenant}`
     }
 }

@@ -1,14 +1,14 @@
 import { get, post, put, remove } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import { useAuthStore } from "@/src/store";
-import { CreateIngredient, Ingredien } from "@/src/types/product/product.types";
+import { CreateIngredient, MenuIngredient } from "@/src/types/product/product.types";
 
 export async function productIngredientFn() {
   const { claims } = useAuthStore.getState()  
   if (!claims){
     throw new Error();
   }
-  const response = await get<Ingredien[]>(ENDPOINT.product.detail(claims?.tenant_id));
+  const response = await get<MenuIngredient[]>(ENDPOINT.product.detail(claims?.tenant_id));
   if (response.code !== "200") {
     throw new Error(response.message);
   }

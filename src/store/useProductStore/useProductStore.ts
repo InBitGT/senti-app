@@ -1,9 +1,9 @@
-import { Ingredien } from '@/src/types/product/product.types';
+import { MenuIngredient } from '@/src/types/product/product.types';
 import { create } from 'zustand';
 
 interface States {
-  data: Ingredien | null;
-  setData: (data: Ingredien) => void;
+  data: MenuIngredient | null;
+  setData: (data: MenuIngredient) => void;
   clearData: () => void;
   isEdit: boolean;
   setIsEdit: (data:boolean)=>void
@@ -13,7 +13,7 @@ interface States {
 export const useProductStore = create<States>()(
     (set, get) => ({
       data: null,
-      setData: (data: Ingredien) => {
+      setData: (data: MenuIngredient) => {
         console.log(data, "data")
         set({ data: data });
       },
