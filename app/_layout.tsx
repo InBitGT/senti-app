@@ -3,14 +3,12 @@ import '@/global.css';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { ToastProvider } from '@gluestack-ui/core/toast/creator';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { SplashScreen, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
-
-SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
@@ -31,35 +29,36 @@ const paperTheme = {
     },
   },
 };
-
-function RootLayoutNav() {
-  const claims = useAuthStore((state) => state.claims);
-  const router = useRouter();
-  const segments = useSegments();
-
-  useEffect(() => {
-    const inAuth = segments[0] === '(auth)';
-
-    if (claims && inAuth) {
-      router.replace('/(drawer)');
-    } else if (!claims && !inAuth) {
-      router.replace('/(auth)/Login');
-    }
-
-    SplashScreen.hideAsync();
-  }, [claims, segments]);
-
-  return <Slot />;
-}
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const claims = useAuthStore((state) => state.claims);
+  const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (!isReady) return;
+
+    if (claims) {
+      router.replace('/(drawer)');
+    } else {
+      router.replace('/(auth)/Login');
+    }
+    SplashScreen.hideAsync();
+  }, [isReady, claims, router]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <GluestackUIProvider mode="dark">
           <PaperProvider theme={paperTheme}>
-            <RootLayoutNav />
-            <StatusBar style="dark" />
+            <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
+              <Stack>
+                <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)/Login" options={{ headerShown: false }} />
+              </Stack>
+              <StatusBar style="dark" />
+            </View>
           </PaperProvider>
         </GluestackUIProvider>
       </ToastProvider>
