@@ -1,4 +1,5 @@
-import { DrawerContent, HeaderRight } from '@/components';
+import { HeaderRight } from '@/components/molecules/HeaderRight';
+import { DrawerContent } from '@/components/organisms/DrawerContent';
 import { useDrawer } from '@/src/hooks';
 import { useAuthStore } from '@/src/store';
 import { getGroupTitle } from '@/src/utils';
