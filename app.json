@@ -19,6 +19,7 @@
       "package": "com.asofimp.sentiapp"
     },
     "web": {
+      "bundler": "metro",
       "output": "static"
     },
     "plugins": [
@@ -26,6 +27,7 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/Senti.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
@@ -39,6 +41,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c1d9c5f2-2d38-4875-b2ed-fd7a647aeec7"
+      }
     }
   }
 }
