@@ -3,15 +3,12 @@ import '@/global.css';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { ToastProvider } from '@gluestack-ui/core/toast/creator';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SplashScreen, Stack, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { LogBox, View } from 'react-native';
+import { View } from 'react-native';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
-
-LogBox.ignoreAllLogs();
-SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
@@ -37,10 +34,6 @@ export default function RootLayout() {
   const claims = useAuthStore((state) => state.claims);
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
 
   useEffect(() => {
     if (!isReady) return;
