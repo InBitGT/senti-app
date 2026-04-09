@@ -3,12 +3,14 @@ import '@/global.css';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { ToastProvider } from '@gluestack-ui/core/toast/creator';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useRouter } from 'expo-router';
+import { Slot, useRouter, useSegments } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { useEffect } from 'react';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
+
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
@@ -30,33 +32,34 @@ const paperTheme = {
   },
 };
 
-export default function RootLayout() {
+function RootLayoutNav() {
   const claims = useAuthStore((state) => state.claims);
   const router = useRouter();
-  const [isReady, setIsReady] = useState(false);
+  const segments = useSegments();
 
   useEffect(() => {
-    if (!isReady) return;
+    const inAuth = segments[0] === '(auth)';
 
-    if (claims) {
+    if (claims && inAuth) {
       router.replace('/(drawer)');
-    } else {
+    } else if (!claims && !inAuth) {
       router.replace('/(auth)/Login');
     }
-  }, [isReady, claims, router]);
 
+    SplashScreen.hideAsync();
+  }, [claims, segments]);
+
+  return <Slot />;
+}
+
+export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <GluestackUIProvider mode="dark">
           <PaperProvider theme={paperTheme}>
-            <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
-              <Stack>
-                <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)/Login" options={{ headerShown: false }} />
-              </Stack>
-              <StatusBar style="dark" />
-            </View>
+            <RootLayoutNav />
+            <StatusBar style="dark" />
           </PaperProvider>
         </GluestackUIProvider>
       </ToastProvider>
