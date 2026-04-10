@@ -9,7 +9,7 @@ export async function entryStockFn() {
   if (!claims){
     throw new Error();
   }
-  const response = await get<StockEntry[]>(ENDPOINT.stockEntry.detail(1));
+  const response = await get<StockEntry[]>(ENDPOINT.stockEntry.detail(claims.tenant_id));
   if (response.code !== "200") {
     throw new Error(response.message);
   }
