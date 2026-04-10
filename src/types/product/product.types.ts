@@ -62,5 +62,6 @@ export interface Product {
 // Para cuando el endpoint devuelve solo ingredientes del menú
 export type MenuIngredient = Product & {
   type: 'ingredient'
-  is_modifier: true
+  is_modifier: true,
+  product_modifier_id: number
 }

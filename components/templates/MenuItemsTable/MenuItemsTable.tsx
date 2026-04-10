@@ -1,3 +1,4 @@
+// MenuItemsTable.tsx
 import { Action, ActionsMenu } from '@/components/atom'
 import { Button, ButtonText } from '@/components/ui/button'
 import { HStack } from '@/components/ui/hstack'
@@ -9,38 +10,32 @@ import { SearchIcon } from 'lucide-react-native'
 import React, { useMemo, useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { DataTable } from 'react-native-paper'
-import { Buttons } from '../CustomTable'
 
 // ── Paleta dinámica ───────────────────────────────────────────────────────────
 
 const COLOR_PALETTE = [
-  { bg: '#EAF3DE', color: '#27500A' },
-  { bg: '#FAEEDA', color: '#633806' },
-  { bg: '#E6F1FB', color: '#0C447C' },
-  { bg: '#EEEDFE', color: '#3C3489' },
-  { bg: '#FCEBEB', color: '#791F1F' },
-  { bg: '#E1F5EE', color: '#085041' },
-  { bg: '#FBEAF0', color: '#72243E' },
+  { bg: '#EAF3DE', color: '#27500A' }, // verde  — receta
+  { bg: '#FAEEDA', color: '#633806' }, // naranja — precio
+  { bg: '#E6F1FB', color: '#0C447C' }, // azul   — variantes
+  { bg: '#EEEDFE', color: '#3C3489' }, // morado  — modificadores
+  { bg: '#FCEBEB', color: '#791F1F' }, // rojo
+  { bg: '#E1F5EE', color: '#085041' }, // teal
+  { bg: '#FBEAF0', color: '#72243E' }, // rosa
 ]
+
+type ActiveFilter = 'all' | 'with_recipe' | 'with_price' | 'with_variants' | 'with_modifiers'
 
 // ── Subcomponentes ────────────────────────────────────────────────────────────
 
-interface FilterPillProps {
-  label: string
-  active: boolean
-  color?: string
-  bg?: string
-  onPress: () => void
-}
-
-function FilterPill({ label, active, color, bg, onPress }: FilterPillProps) {
+function FilterPill({
+  label, active, color, bg, onPress,
+}: {
+  label: string; active: boolean; color?: string; bg?: string; onPress: () => void
+}) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={[
-        styles.pill,
-        active && { backgroundColor: bg ?? '#EEEDFE', borderColor: color ?? '#3C3489' },
-      ]}
+      style={[styles.pill, active && { backgroundColor: bg ?? '#EEEDFE', borderColor: color ?? '#3C3489' }]}
     >
       <Text style={[styles.pillText, active && { color: color ?? '#3C3489', fontWeight: '600' }]}>
         {label}
@@ -49,11 +44,10 @@ function FilterPill({ label, active, color, bg, onPress }: FilterPillProps) {
   )
 }
 
-function CountBadge({ count, bg, color }: { count: number; bg: string; color: string }) {
-  if (count === 0) return <Text style={styles.muted}>—</Text>
+function Pill({ label, bg, color }: { label: string; bg: string; color: string }) {
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
-      <Text style={[styles.badgeText, { color }]}>{count}</Text>
+      <Text style={[styles.badgeText, { color }]}>{label}</Text>
     </View>
   )
 }
@@ -67,14 +61,23 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-function StatusDot({ active }: { active: boolean }) {
+function CountChip({ count, bg, color }: { count: number; bg: string; color: string }) {
+  if (count === 0) return <Text style={styles.muted}>—</Text>
   return (
-    <View style={[styles.dot, { backgroundColor: active ? '#1D9E75' : '#d4d4d4' }]} />
+    <View style={[styles.chip, { backgroundColor: bg }]}>
+      <Text style={[styles.chipText, { color }]}>{count}</Text>
+    </View>
   )
 }
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
+export interface Buttons {
+  key?: string
+  name: string
+  onPress: () => void
+  variant?: 'link' | 'solid' | 'outline'
+}
 
 interface MenuItemsTableProps {
   data: MenuItem[]
@@ -84,7 +87,7 @@ interface MenuItemsTableProps {
   actions?: Action<MenuItem>[]
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 export function MenuItemsTable({
   data,
@@ -93,14 +96,19 @@ export function MenuItemsTable({
   button,
   actions,
 }: MenuItemsTableProps) {
-  const [page, setPage]                   = useState(0)
-  const [search, setSearch]               = useState('')
-  const [activeFilter, setActiveFilter]   = useState<'all' | 'with_recipe' | 'with_price' | 'with_variants' | 'with_modifiers'>('all')
+  const [page, setPage]               = useState(0)
+  const [search, setSearch]           = useState('')
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all')
 
-  // ── Datos válidos ───────────────────────────────────────────────────────────
   const validData = useMemo(() => data.filter((r) => r?.product != null), [data])
 
-  // ── Filtrado combinado ──────────────────────────────────────────────────────
+  const counts = useMemo(() => ({
+    with_recipe:    validData.filter((r) => r.recipe != null).length,
+    with_price:     validData.filter((r) => r.price != null).length,
+    with_variants:  validData.filter((r) => r.variants.length > 0).length,
+    with_modifiers: validData.filter((r) => r.modifiers.length > 0).length,
+  }), [validData])
+
   const filtered = useMemo(() => {
     let rows = validData
 
@@ -115,7 +123,6 @@ export function MenuItemsTable({
         (r) =>
           r.product.name.toLowerCase().includes(term) ||
           r.product.sku.toLowerCase().includes(term)  ||
-          r.product.brand.toLowerCase().includes(term) ||
           (r.recipe?.name ?? '').toLowerCase().includes(term)
       )
     }
@@ -130,7 +137,15 @@ export function MenuItemsTable({
   const to         = Math.min(from + itemsPerPage, filtered.length)
   const paginated  = filtered.slice(from, to)
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const avgPrice = useMemo(() => {
+    const withPrice = filtered.filter((r) => r.price)
+    if (!withPrice.length) return '—'
+    const avg = withPrice.reduce((a, r) => a + (r.price?.amount ?? 0), 0) / withPrice.length
+    return `Q${avg.toFixed(2)}`
+  }, [filtered])
+
+  const toggle = (f: ActiveFilter) => setActiveFilter(activeFilter === f ? 'all' : f)
+
   return (
     <VStack style={styles.container}>
 
@@ -146,7 +161,7 @@ export function MenuItemsTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
-            placeholder="Buscar producto, SKU, marca, receta…"
+            placeholder="Buscar por nombre, SKU, receta…"
             value={search}
             onChangeText={setSearch}
           />
@@ -167,7 +182,7 @@ export function MenuItemsTable({
         </HStack>
       </HStack>
 
-      {/* Pills de filtro */}
+      {/* Pills */}
       <HStack style={styles.pillRow}>
         <FilterPill
           label={`Todos (${validData.length})`}
@@ -175,52 +190,28 @@ export function MenuItemsTable({
           onPress={() => setActiveFilter('all')}
         />
         <FilterPill
-          label={`Con receta (${validData.filter((r) => r.recipe).length})`}
+          label={`Con receta (${counts.with_recipe})`}
           active={activeFilter === 'with_recipe'}
-          color={COLOR_PALETTE[0].color}
-          bg={COLOR_PALETTE[0].bg}
-          onPress={() => setActiveFilter(activeFilter === 'with_recipe' ? 'all' : 'with_recipe')}
+          color={COLOR_PALETTE[0].color} bg={COLOR_PALETTE[0].bg}
+          onPress={() => toggle('with_recipe')}
         />
         <FilterPill
-          label={`Con precio (${validData.filter((r) => r.price).length})`}
+          label={`Con precio (${counts.with_price})`}
           active={activeFilter === 'with_price'}
-          color={COLOR_PALETTE[1].color}
-          bg={COLOR_PALETTE[1].bg}
-          onPress={() => setActiveFilter(activeFilter === 'with_price' ? 'all' : 'with_price')}
+          color={COLOR_PALETTE[1].color} bg={COLOR_PALETTE[1].bg}
+          onPress={() => toggle('with_price')}
         />
         <FilterPill
-          label={`Con variantes (${validData.filter((r) => r.variants.length > 0).length})`}
+          label={`Con variantes (${counts.with_variants})`}
           active={activeFilter === 'with_variants'}
-          color={COLOR_PALETTE[2].color}
-          bg={COLOR_PALETTE[2].bg}
-          onPress={() => setActiveFilter(activeFilter === 'with_variants' ? 'all' : 'with_variants')}
+          color={COLOR_PALETTE[2].color} bg={COLOR_PALETTE[2].bg}
+          onPress={() => toggle('with_variants')}
         />
         <FilterPill
-          label={`Con modificadores (${validData.filter((r) => r.modifiers.length > 0).length})`}
+          label={`Con modificadores (${counts.with_modifiers})`}
           active={activeFilter === 'with_modifiers'}
-          color={COLOR_PALETTE[3].color}
-          bg={COLOR_PALETTE[3].bg}
-          onPress={() => setActiveFilter(activeFilter === 'with_modifiers' ? 'all' : 'with_modifiers')}
-        />
-      </HStack>
-
-      {/* Resumen */}
-      <HStack style={[styles.summaryRow, { marginBottom: 12 }]}>
-        <SummaryCard label="Items"       value={String(filtered.length)} />
-        <SummaryCard label="Con receta"  value={String(filtered.filter((r) => r.recipe).length)} />
-        <SummaryCard label="Con precio"  value={String(filtered.filter((r) => r.price).length)} />
-        <SummaryCard
-          label="Precio prom."
-          value={
-            filtered.filter((r) => r.price).length
-              ? `Q${(
-                  filtered
-                    .filter((r) => r.price)
-                    .reduce((a, r) => a + (r.price?.amount ?? 0), 0) /
-                  filtered.filter((r) => r.price).length
-                ).toFixed(2)}`
-              : '—'
-          }
+          color={COLOR_PALETTE[3].color} bg={COLOR_PALETTE[3].bg}
+          onPress={() => toggle('with_modifiers')}
         />
       </HStack>
 
@@ -232,7 +223,7 @@ export function MenuItemsTable({
           <DataTable.Title style={{ flex: 1.5, justifyContent: 'center' }}>Receta</DataTable.Title>
           <DataTable.Title numeric style={{ justifyContent: 'center' }}>Variantes</DataTable.Title>
           <DataTable.Title numeric style={{ justifyContent: 'center' }}>Mods.</DataTable.Title>
-          <DataTable.Title style={{ justifyContent: 'center' }}>Activo</DataTable.Title>
+          <DataTable.Title style={{ justifyContent: 'center' }}>Estado</DataTable.Title>
           {actions && actions.length > 0 && (
             <DataTable.Title style={{ marginLeft: 10 }}>Acciones</DataTable.Title>
           )}
@@ -267,11 +258,11 @@ export function MenuItemsTable({
               {/* Precio */}
               <DataTable.Cell style={{ flex: 1.5, justifyContent: 'center', alignItems: 'center' }}>
                 {row.price ? (
-                  <View style={[styles.badge, { backgroundColor: COLOR_PALETTE[1].bg }]}>
-                    <Text style={[styles.badgeText, { color: COLOR_PALETTE[1].color }]}>
-                      Q{row.price.amount.toFixed(2)}
-                    </Text>
-                  </View>
+                  <Pill
+                    label={`Q${row.price.amount.toFixed(2)}`}
+                    bg={COLOR_PALETTE[1].bg}
+                    color={COLOR_PALETTE[1].color}
+                  />
                 ) : (
                   <Text style={styles.muted}>Sin precio</Text>
                 )}
@@ -280,13 +271,15 @@ export function MenuItemsTable({
               {/* Receta */}
               <DataTable.Cell style={{ flex: 1.5, justifyContent: 'center', alignItems: 'center' }}>
                 {row.recipe ? (
-                  <View style={{ alignItems: 'center' }}>
-                    <View style={[styles.badge, { backgroundColor: COLOR_PALETTE[0].bg }]}>
-                      <Text style={[styles.badgeText, { color: COLOR_PALETTE[0].color }]}>
-                        {row.recipe.name}
-                      </Text>
-                    </View>
-                    <Text style={styles.version}>v{row.recipe.version} · {row.recipe.ingredients.length} ing.</Text>
+                  <View style={{ alignItems: 'center', gap: 2 }}>
+                    <Pill
+                      label={`v${row.recipe.version}`}
+                      bg={COLOR_PALETTE[0].bg}
+                      color={COLOR_PALETTE[0].color}
+                    />
+                    <Text style={styles.version}>
+                      {row.recipe.ingredients.length} ingrediente{row.recipe.ingredients.length !== 1 ? 's' : ''}
+                    </Text>
                   </View>
                 ) : (
                   <Text style={styles.muted}>Sin receta</Text>
@@ -295,7 +288,7 @@ export function MenuItemsTable({
 
               {/* Variantes */}
               <DataTable.Cell numeric style={{ justifyContent: 'center' }}>
-                <CountBadge
+                <CountChip
                   count={row.variants.length}
                   bg={COLOR_PALETTE[2].bg}
                   color={COLOR_PALETTE[2].color}
@@ -304,16 +297,16 @@ export function MenuItemsTable({
 
               {/* Modificadores */}
               <DataTable.Cell numeric style={{ justifyContent: 'center' }}>
-                <CountBadge
+                <CountChip
                   count={row.modifiers.length}
                   bg={COLOR_PALETTE[3].bg}
                   color={COLOR_PALETTE[3].color}
                 />
               </DataTable.Cell>
 
-              {/* Activo */}
+              {/* Estado */}
               <DataTable.Cell style={{ justifyContent: 'center', alignItems: 'center' }}>
-                <StatusDot active={row.product.status} />
+                <View style={[styles.dot, { backgroundColor: row.product.status ? '#1D9E75' : '#d4d4d4' }]} />
               </DataTable.Cell>
 
               {/* Acciones */}
@@ -335,6 +328,14 @@ export function MenuItemsTable({
           showFastPaginationControls
         />
       </DataTable>
+
+        {/* Resumen */}
+      <HStack style={[styles.summaryRow, { marginBottom: 12 }]}>
+        <SummaryCard label="Items"        value={String(filtered.length)} />
+        <SummaryCard label="Con receta"   value={String(filtered.filter((r) => r.recipe).length)} />
+        <SummaryCard label="Con precio"   value={String(filtered.filter((r) => r.price).length)} />
+        <SummaryCard label="Precio prom." value={avgPrice} />
+      </HStack>
 
     </VStack>
   )
@@ -359,9 +360,14 @@ const styles = StyleSheet.create({
   row:          { borderBottomWidth: 0.5, borderBottomColor: '#d4d4d4', minHeight: 64 },
   badge: {
     paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 20, alignSelf: 'flex-start',
+    borderRadius: 20, alignSelf: 'center',
   },
   badgeText:    { fontSize: 11, fontWeight: '500' },
+  chip: {
+    width: 24, height: 24, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  chipText:     { fontSize: 11, fontWeight: '600' },
   productName:  { fontSize: 13, fontWeight: '500', color: '#1a1a1a' },
   sku:          { fontSize: 11, color: '#888' },
   brand:        { fontSize: 10, color: '#0C447C', marginTop: 1 },
