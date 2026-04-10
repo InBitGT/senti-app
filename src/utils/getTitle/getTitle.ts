@@ -15,6 +15,9 @@ const routeTitles: Record<string, Record<string, string>> = {
     tenant: 'Empresa',
     users: 'Usuarios',
   },
+  '(menu)': {
+    recipe: 'Productos del Menú',
+  },
 };
 
 export const getGroupTitle = (groupName: string, route: any, fallback = 'Inicio') => {

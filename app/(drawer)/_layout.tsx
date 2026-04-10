@@ -69,6 +69,13 @@ export default function DrawerLayout() {
             title: getGroupTitle('(config)', route, 'Configuraciones'),
           })}
         />
+        <Drawer.Screen
+          name="(menu)"
+          options={({ route }) => ({
+            headerShown: !isForm,
+            title: getGroupTitle('(menu)', route, 'Configuraciones'),
+          })}
+        />
       </Drawer>
     </GestureHandlerRootView>
   );
