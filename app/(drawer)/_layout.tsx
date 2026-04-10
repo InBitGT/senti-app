@@ -56,6 +56,10 @@ export default function DrawerLayout() {
           options={{ title: 'Dashboard' }}
         />
         <Drawer.Screen
+          name="order"
+          options={{ title: 'Orden' }}
+        />
+        <Drawer.Screen
           name="(inventory)"
           options={({ route }) => ({
             headerShown: !isForm,

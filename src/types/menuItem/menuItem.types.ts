@@ -77,7 +77,7 @@ export interface MenuItem {
 
 export interface MenuItemDetail {
   product: {
-    tenant_id: number;
+    tenant_id?: number;
     category_id: number;
     name: string;
     sku: string;

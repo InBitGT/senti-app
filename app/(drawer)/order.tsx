@@ -1,10 +1,10 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 
-export default function dashboard() {
+export default function order() {
   return (
     <View>
-      <Text>dashboard78</Text>
+      <Text>order</Text>
     </View>
   )
 }
