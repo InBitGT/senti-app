@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
@@ -30,6 +30,7 @@ const paperTheme = {
   },
 };
 SplashScreen.preventAutoHideAsync();
+LogBox.ignoreAllLogs()
 
 export default function RootLayout() {
   const claims = useAuthStore((state) => state.claims);
