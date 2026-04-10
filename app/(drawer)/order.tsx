@@ -1,10 +1,8 @@
+import { Order } from '@/src/screen/workspace/order/Order'
 import React from 'react'
-import { Text, View } from 'react-native'
 
 export default function order() {
   return (
-    <View>
-      <Text>order</Text>
-    </View>
+    <Order/>
   )
 }

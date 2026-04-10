@@ -103,3 +103,11 @@ export interface MenuItemDetail {
   }[];
   modifiers: number[];
 }
+
+
+export interface ModalMenuItemResult {
+  item: MenuItem
+  variant: MenuItemVariant | null
+  modifiers: MenuItemModifier[]
+  totalPrice: number
+}
