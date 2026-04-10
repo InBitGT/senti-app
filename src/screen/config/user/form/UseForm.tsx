@@ -3,12 +3,12 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
@@ -26,14 +26,14 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -216,7 +216,7 @@ export default function UserForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. Sofia"
+                              placeholder="Ej. Camilo"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -243,7 +243,7 @@ export default function UserForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. Mejia"
+                              placeholder="Ej. Suarez"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -302,7 +302,7 @@ export default function UserForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. +50241209427"
+                              placeholder="Ej. +50211222211"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -335,7 +335,7 @@ export default function UserForm() {
                       <Input>
                         <InputField
                           style={{ color: "#171717" }}
-                          placeholder="Ej. smejia@gmail.com"
+                          placeholder="Ej. usuario@gmail.com"
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
@@ -526,12 +526,11 @@ export default function UserForm() {
                   render={({ field: { onChange, onBlur, value } }) => (
                     <FormControl isInvalid={!!errors.line1}>
                       <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>Dirección línea 1</FormControlLabelText>
+                        <FormControlLabelText style={{ color: "#000" }}>Dirección</FormControlLabelText>
                       </FormControlLabel>
                       <Input>
                         <InputField
                           style={{ color: "#171717" }}
-                          placeholder="Ej. Pueblo Nuevo Viñas, Santa Rosa"
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
@@ -553,14 +552,13 @@ export default function UserForm() {
                     <FormControl>
                       <FormControlLabel>
                         <FormControlLabelText style={{ color: "#000" }}>
-                          Dirección línea 2{" "}
+                          Dirección {" "}
                           <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
                         </FormControlLabelText>
                       </FormControlLabel>
                       <Input>
                         <InputField
                           style={{ color: "#171717" }}
-                          placeholder="Ej. Aldea el cuje"
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}
@@ -585,7 +583,6 @@ export default function UserForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. Pueblo Nuevo Viñas"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -612,7 +609,6 @@ export default function UserForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. Santa Rosa"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -641,7 +637,7 @@ export default function UserForm() {
                       <Input>
                         <InputField
                           style={{ color: "#171717" }}
-                          placeholder="Ej. 060013"
+                          placeholder="Ej. 01001"
                           value={value}
                           onChangeText={onChange}
                           onBlur={onBlur}

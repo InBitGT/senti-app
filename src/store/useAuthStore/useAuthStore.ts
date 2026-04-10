@@ -26,7 +26,10 @@ export const useAuthStore = create<AuthState>()(
         set({ claims: decoded });
       },
        getClaims: () => get().claims,
-      clearClaims: () => set({ claims: null }),
+      clearClaims: () =>{
+        set({ claims: null })
+        secureStorage.removeItem('auth-claims')
+      },
     }),
     {
       name: 'auth-claims',

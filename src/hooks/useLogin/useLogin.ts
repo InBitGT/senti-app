@@ -22,11 +22,9 @@ export const useLogin = (): Props => {
     onSuccess: async (data) => {
       if (!data?.access_token) {
         console.log("No token received"); 
-        showToast({ message: `${data}`, type: "error" })
         return;
       }
       setClaims(data.access_token);
-        showToast({ message: `${data} llega antes del promise`, type: "error" })
       await Promise.all([
         store.save({ name: 'access_token', value: data.access_token }),
         store.save({ name: 'refresh_token', value: data.refresh_token }),
@@ -38,7 +36,6 @@ export const useLogin = (): Props => {
     onError: async (error) => {
       showToast({ message: "No se pudo iniciar sesión. Verifica tus credenciales.", type: "error" })
       console.log(error);
-      showToast({ message: `${error}`, type: "error" })
     },
   });
 
