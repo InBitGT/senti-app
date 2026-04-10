@@ -3,47 +3,48 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AddIcon, AlertCircleIcon, ArrowLeftIcon, Icon, TrashIcon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCategorie } from "@/src/hooks";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useMenuItem } from "@/src/hooks/useMenuItem/useMenuItem";
-import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useAuthStore } from "@/src/store";
+import { useMenuItemStore } from "@/src/store/useMenuItemStore/useMenuItemStore";
 import { MenuItemDetail } from "@/src/types/menuItem/menuItem.types";
+import { MenuIngredient } from "@/src/types/product/product.types";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -62,7 +63,6 @@ interface VariantForm {
 }
 
 interface FormValues {
-  // Product
   category_id: string;
   name: string;
   sku: string;
@@ -70,13 +70,10 @@ interface FormValues {
   availability_status: string;
   price: string;
   currency: string;
-  // Recipe
   recipe_version: string;
   ingredients: IngredientForm[];
-  // Variants
   variants: VariantForm[];
-  // Modifiers (ids como strings)
-  modifiers: { modifier_id: string }[];
+  modifiers: { product_modifier_id: string }[];
 }
 
 const EMPTY_INGREDIENT: IngredientForm = {
@@ -92,9 +89,9 @@ const EMPTY_VARIANT: VariantForm = {
   adjustment_type: "fixed",
 };
 
-const EMPTY_MODIFIER = { modifier_id: "" };
+const EMPTY_MODIFIER = { product_modifier_id: "" };
 
-// ── Sub-componentes ───────────────────────────────────────────────────────────
+// ── IngredientRow ─────────────────────────────────────────────────────────────
 function IngredientRow({
   index,
   control,
@@ -111,7 +108,7 @@ function IngredientRow({
   isLarge: boolean;
 }) {
   const row = isLarge ? { flexDirection: "row" as const, gap: 12 } : {};
-  const quarter = isLarge ? { flex: 1, minWidth: 0 } : {};
+  const third = isLarge ? { flex: 1, minWidth: 0 } : {};
 
   return (
     <Box style={styles.subCard}>
@@ -172,7 +169,7 @@ function IngredientRow({
 
         {/* Cantidad + Unidad + Merma */}
         <View style={row}>
-          <View style={quarter}>
+          <View style={third}>
             <Controller
               control={control}
               name={`ingredients.${index}.quantity`}
@@ -203,7 +200,7 @@ function IngredientRow({
             />
           </View>
 
-          <View style={quarter}>
+          <View style={third}>
             <Controller
               control={control}
               name={`ingredients.${index}.unit`}
@@ -240,7 +237,7 @@ function IngredientRow({
             />
           </View>
 
-          <View style={quarter}>
+          <View style={third}>
             <Controller
               control={control}
               name={`ingredients.${index}.waste_factor`}
@@ -276,6 +273,7 @@ function IngredientRow({
   );
 }
 
+// ── VariantRow ────────────────────────────────────────────────────────────────
 function VariantRow({
   index,
   control,
@@ -304,109 +302,112 @@ function VariantRow({
         </Pressable>
       </HStack>
 
-      <View style={row}>
-        {/* Nombre */}
-        <View style={third}>
-          <Controller
-            control={control}
-            name={`variants.${index}.name`}
-            rules={{ required: "El nombre es obligatorio." }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormControl isInvalid={!!errors?.variants?.[index]?.name}>
-                <FormControlLabel>
-                  <FormControlLabelText style={{ color: "#000" }}>Nombre</FormControlLabelText>
-                </FormControlLabel>
-                <Input>
-                  <InputField
-                    style={{ color: "#171717" }}
-                    placeholder="Ej. Grande"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
-                </Input>
-                <FormControlError>
-                  <FormControlErrorIcon as={AlertCircleIcon} />
-                  <FormControlErrorText>
-                    {errors?.variants?.[index]?.name?.message}
-                  </FormControlErrorText>
-                </FormControlError>
-              </FormControl>
-            )}
-          />
-        </View>
+      <VStack space="sm">
+        <View style={row}>
+          {/* Nombre */}
+          <View style={third}>
+            <Controller
+              control={control}
+              name={`variants.${index}.name`}
+              rules={{ required: "El nombre es obligatorio." }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <FormControl isInvalid={!!errors?.variants?.[index]?.name}>
+                  <FormControlLabel>
+                    <FormControlLabelText style={{ color: "#000" }}>Nombre</FormControlLabelText>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      style={{ color: "#171717" }}
+                      placeholder="Ej. Grande"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </Input>
+                  <FormControlError>
+                    <FormControlErrorIcon as={AlertCircleIcon} />
+                    <FormControlErrorText>
+                      {errors?.variants?.[index]?.name?.message}
+                    </FormControlErrorText>
+                  </FormControlError>
+                </FormControl>
+              )}
+            />
+          </View>
 
-        {/* Ajuste de precio */}
-        <View style={third}>
-          <Controller
-            control={control}
-            name={`variants.${index}.price_adjustment`}
-            rules={{ required: "El ajuste es obligatorio." }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormControl isInvalid={!!errors?.variants?.[index]?.price_adjustment}>
-                <FormControlLabel>
-                  <FormControlLabelText style={{ color: "#000" }}>Ajuste de precio</FormControlLabelText>
-                </FormControlLabel>
-                <Input>
-                  <InputField
-                    style={{ color: "#171717" }}
-                    placeholder="Ej. 5"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    keyboardType="decimal-pad"
-                  />
-                </Input>
-                <FormControlError>
-                  <FormControlErrorIcon as={AlertCircleIcon} />
-                  <FormControlErrorText>
-                    {errors?.variants?.[index]?.price_adjustment?.message}
-                  </FormControlErrorText>
-                </FormControlError>
-              </FormControl>
-            )}
-          />
-        </View>
+          {/* Ajuste de precio */}
+          <View style={third}>
+            <Controller
+              control={control}
+              name={`variants.${index}.price_adjustment`}
+              rules={{ required: "El ajuste es obligatorio." }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <FormControl isInvalid={!!errors?.variants?.[index]?.price_adjustment}>
+                  <FormControlLabel>
+                    <FormControlLabelText style={{ color: "#000" }}>Ajuste de precio</FormControlLabelText>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      style={{ color: "#171717" }}
+                      placeholder="Ej. 5"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="decimal-pad"
+                    />
+                  </Input>
+                  <FormControlError>
+                    <FormControlErrorIcon as={AlertCircleIcon} />
+                    <FormControlErrorText>
+                      {errors?.variants?.[index]?.price_adjustment?.message}
+                    </FormControlErrorText>
+                  </FormControlError>
+                </FormControl>
+              )}
+            />
+          </View>
 
-        {/* Tipo de ajuste */}
-        <View style={third}>
-          <Controller
-            control={control}
-            name={`variants.${index}.adjustment_type`}
-            rules={{ required: "Requerido." }}
-            render={({ field: { onChange, value } }) => (
-              <FormControl isInvalid={!!errors?.variants?.[index]?.adjustment_type}>
-                <FormControlLabel>
-                  <FormControlLabelText style={{ color: "#000" }}>Tipo</FormControlLabelText>
-                </FormControlLabel>
-                <Select selectedValue={value} onValueChange={onChange}>
-                  <SelectTrigger>
-                    <SelectInput style={{ color: "#000" }} placeholder="Tipo" value={value} />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                      <SelectItem label="Fijo" value="fixed" />
-                      <SelectItem label="Porcentaje" value="percentage" />
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
-                <FormControlError>
-                  <FormControlErrorIcon as={AlertCircleIcon} />
-                  <FormControlErrorText>
-                    {errors?.variants?.[index]?.adjustment_type?.message}
-                  </FormControlErrorText>
-                </FormControlError>
-              </FormControl>
-            )}
-          />
+          {/* Tipo de ajuste */}
+          <View style={third}>
+            <Controller
+              control={control}
+              name={`variants.${index}.adjustment_type`}
+              rules={{ required: "Requerido." }}
+              render={({ field: { onChange, value } }) => (
+                <FormControl isInvalid={!!errors?.variants?.[index]?.adjustment_type}>
+                  <FormControlLabel>
+                    <FormControlLabelText style={{ color: "#000" }}>Tipo</FormControlLabelText>
+                  </FormControlLabel>
+                  <Select selectedValue={value} onValueChange={onChange}>
+                    <SelectTrigger>
+                      <SelectInput style={{ color: "#000" }} placeholder="Tipo" value={value} />
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectBackdrop />
+                      <SelectContent>
+                        <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                        <SelectItem label="Fijo" value="fixed" />
+                        <SelectItem label="Porcentaje" value="percentage" />
+                      </SelectContent>
+                    </SelectPortal>
+                  </Select>
+                  <FormControlError>
+                    <FormControlErrorIcon as={AlertCircleIcon} />
+                    <FormControlErrorText>
+                      {errors?.variants?.[index]?.adjustment_type?.message}
+                    </FormControlErrorText>
+                  </FormControlError>
+                </FormControl>
+              )}
+            />
+          </View>
         </View>
-      </View>
+      </VStack>
     </Box>
   );
 }
 
+// ── ModifierRow ───────────────────────────────────────────────────────────────
 function ModifierRow({
   index,
   control,
@@ -418,20 +419,20 @@ function ModifierRow({
   control: any;
   errors: any;
   remove: (i: number) => void;
-  modifierOptions: any[];
+  modifierOptions: MenuIngredient[];
 }) {
   return (
     <HStack style={{ alignItems: "center", gap: 8 }}>
       <View style={{ flex: 1 }}>
         <Controller
           control={control}
-          name={`modifiers.${index}.modifier_id`}
+          name={`modifiers.${index}.product_modifier_id`}
           rules={{ required: "Selecciona un modificador." }}
           render={({ field: { onChange, value } }) => {
-            const selectedLabel =
-              modifierOptions?.find((m) => String(m.id) === value)?.name || "";
-            return (
-              <FormControl isInvalid={!!errors?.modifiers?.[index]?.modifier_id}>
+              const selectedLabel =
+              modifierOptions?.find((m) => String(m.id) === value)?.modifier_name ||
+              modifierOptions?.find((m) => String(m.id) === value)?.name || "";            return (
+              <FormControl isInvalid={!!errors?.modifiers?.[index]?.product_modifier_id}>
                 <Select selectedValue={value} onValueChange={onChange}>
                   <SelectTrigger>
                     <SelectInput
@@ -445,7 +446,11 @@ function ModifierRow({
                     <SelectContent>
                       <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
                       {modifierOptions.map((m) => (
-                        <SelectItem key={m.id} label={m.name} value={String(m.id)} />
+                        <SelectItem
+                          key={m.id}
+                          label={m.modifier_name || ""}
+                          value={String(m.product_modifier_id)}
+                        />
                       ))}
                     </SelectContent>
                   </SelectPortal>
@@ -453,7 +458,7 @@ function ModifierRow({
                 <FormControlError>
                   <FormControlErrorIcon as={AlertCircleIcon} />
                   <FormControlErrorText>
-                    {errors?.modifiers?.[index]?.modifier_id?.message}
+                    {errors?.modifiers?.[index]?.product_modifier_id?.message}
                   </FormControlErrorText>
                 </FormControlError>
               </FormControl>
@@ -472,24 +477,22 @@ function ModifierRow({
 export default function MenuItemForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
-  const { post } = useMenuItem();
-  const { data: productData, isLoading } = useProduct("menuItem");
+  const { post, put, dataIngredient: productData } = useMenuItem();
   const { data: categorie } = useCategorie();
   const { showToast } = useCustomToast();
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
 
+  const data = useMenuItemStore((state) => state.data);
+  const isEdit = useMenuItemStore((state) => state.isEdit);
+  const clearData = useMenuItemStore((state) => state.clearData);
+  const setIsEdit = useMenuItemStore((state) => state.setIsEdit);
+
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
-  console.log(productData, "valores", isLoading)
 
-  // Ingredientes: productos con type === "ingredient"
-  const ingredientOptions = productData
-
-  // Modificadores: productos con is_modifier === true
-  const modifierOptions = (productData ?? []).filter(
-    (p: any) => p.is_modifier === true
-  );
+  const ingredientOptions = productData ?? [];
+  const modifierOptions = (productData ?? []).filter((p: any) => p.is_modifier === true);
 
   const {
     control,
@@ -497,17 +500,28 @@ export default function MenuItemForm() {
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      category_id: "",
-      name: "",
-      sku: "",
-      unit_of_measure: "unit",
-      availability_status: "available",
-      price: "",
-      currency: "GTQ",
-      recipe_version: "1",
-      ingredients: [EMPTY_INGREDIENT],
-      variants: [],
-      modifiers: [],
+      category_id: data?.product?.category_id ? String(data.product.category_id) : "",
+      name: data?.product?.name || "",
+      sku: data?.product?.sku || "",
+      unit_of_measure: data?.product?.unit_of_measure || "unit",
+      availability_status: data?.product?.availability_status || "available",
+      price: data?.price?.amount ? String(data.price.amount) : "",
+      currency: data?.price?.currency || "GTQ",
+      recipe_version: data?.recipe?.version ? String(data.recipe.version) : "1",
+      ingredients: data?.recipe?.ingredients?.map((ing) => ({
+        ingredient_id: String(ing.ingredient_id),
+        quantity: String(ing.quantity),
+        unit: ing.unit,
+        waste_factor: String(ing.waste_factor),
+      })) ?? [EMPTY_INGREDIENT],
+      variants: data?.variants?.map((v) => ({
+        name: v.name,
+        price_adjustment: String(v.price_adjustment),
+        adjustment_type: v.adjustment_type,
+      })) ?? [],
+      modifiers: data?.modifiers?.map((id) => ({
+        product_modifier_id: String(id.modifier_product_id),
+      })) ?? [],
     },
   });
 
@@ -558,12 +572,20 @@ export default function MenuItemForm() {
         price_adjustment: parseFloat(v.price_adjustment),
         adjustment_type: v.adjustment_type,
       })),
-      modifiers: values.modifiers.map((m) => parseInt(m.modifier_id)),
+      modifiers: values.modifiers.map((m) => parseInt(m.product_modifier_id)),
     };
 
     try {
-      await post.mutateAsync(payload);
-      showToast({ message: "Ítem de menú creado correctamente", type: "success" });
+      if (!isEdit) {
+        await post.mutateAsync(payload);
+        showToast({ message: "Ítem creado correctamente", type: "success" });
+      } else {
+        if (!data?.product?.id) return;
+        await put.mutateAsync({ id: data.product.id, data: payload });
+        showToast({ message: "Ítem editado correctamente", type: "success" });
+        setIsEdit(false);
+      }
+      clearData();
       router.back();
     } catch (error) {
       console.log(error);
@@ -571,7 +593,7 @@ export default function MenuItemForm() {
     }
   };
 
-  const isPending = post.isPending;
+  const isPending = post.isPending || put.isPending;
 
   return (
     <KeyboardAvoidingView
@@ -584,7 +606,7 @@ export default function MenuItemForm() {
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => { clearData(); setIsEdit(false); router.back(); }}
             style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
           >
             <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
@@ -594,15 +616,15 @@ export default function MenuItemForm() {
           <Center>
             <Box style={styles.card}>
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                Nuevo Ítem de Menú
+                {isEdit ? "Editar Ítem de Menú" : "Nuevo Ítem de Menú"}
               </Heading>
               <Text size="sm" className="text-typography-400 mb-6">
-                Llena los campos para crear un ítem del menú
+                {isEdit
+                  ? "Modifica los campos para editar el ítem"
+                  : "Llena los campos para crear un ítem del menú"}
               </Text>
 
               <VStack space="lg">
-
-                {/* ── PRODUCTO ── */}
                 <Text style={styles.sectionLabel}>DATOS DEL PRODUCTO</Text>
 
                 {/* Nombre + Categoría */}
@@ -738,7 +760,7 @@ export default function MenuItemForm() {
                   </View>
                 </View>
 
-                {/* Unidad + Moneda + Estado */}
+                {/* Unidad + Estado */}
                 <View style={row}>
                   <View style={half}>
                     <Controller
@@ -772,16 +794,44 @@ export default function MenuItemForm() {
                     />
                   </View>
 
-                  <View style={half}/>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="availability_status"
+                      rules={{ required: "El estado es obligatorio." }}
+                      render={({ field: { onChange, value } }) => (
+                        <FormControl isInvalid={!!errors.availability_status}>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>Estado</FormControlLabelText>
+                          </FormControlLabel>
+                          <Select selectedValue={value} onValueChange={onChange}>
+                            <SelectTrigger>
+                              <SelectInput style={{ color: "#000" }} placeholder="Estado" value={value} />
+                            </SelectTrigger>
+                            <SelectPortal>
+                              <SelectBackdrop />
+                              <SelectContent>
+                                <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                                <SelectItem label="Disponible" value="available" />
+                                <SelectItem label="No disponible" value="unavailable" />
+                              </SelectContent>
+                            </SelectPortal>
+                          </Select>
+                          <FormControlError>
+                            <FormControlErrorIcon as={AlertCircleIcon} />
+                            <FormControlErrorText>{errors.availability_status?.message}</FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      )}
+                    />
+                  </View>
                 </View>
 
                 <Divider className="my-2" />
 
                 {/* ── INGREDIENTES ── */}
                 <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={styles.sectionLabel}>
-                    INGREDIENTES ({ingredientFields.length})
-                  </Text>
+                  <Text style={styles.sectionLabel}>INGREDIENTES ({ingredientFields.length})</Text>
                   <Button size="sm" onPress={() => appendIngredient(EMPTY_INGREDIENT)}>
                     <Icon as={AddIcon} size="sm" style={{ color: "#000", marginRight: 4 }} />
                     <ButtonText>Agregar</ButtonText>
@@ -796,25 +846,25 @@ export default function MenuItemForm() {
                   </Box>
                 )}
 
-                {ingredientFields.map((field, index) => (
-                  <IngredientRow
-                    key={field.id}
-                    index={index}
-                    control={control}
-                    errors={errors}
-                    remove={removeIngredient}
-                    ingredientOptions={ingredientOptions || []}
-                    isLarge={isLarge}
-                  />
-                ))}
+                <VStack space="sm">
+                  {ingredientFields.map((field, index) => (
+                    <IngredientRow
+                      key={field.id}
+                      index={index}
+                      control={control}
+                      errors={errors}
+                      remove={removeIngredient}
+                      ingredientOptions={ingredientOptions}
+                      isLarge={isLarge}
+                    />
+                  ))}
+                </VStack>
 
                 <Divider className="my-2" />
 
                 {/* ── VARIANTES ── */}
                 <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={styles.sectionLabel}>
-                    VARIANTES ({variantFields.length})
-                  </Text>
+                  <Text style={styles.sectionLabel}>VARIANTES ({variantFields.length})</Text>
                   <Button size="sm" onPress={() => appendVariant(EMPTY_VARIANT)}>
                     <Icon as={AddIcon} size="sm" style={{ color: "#000", marginRight: 4 }} />
                     <ButtonText>Agregar</ButtonText>
@@ -829,24 +879,24 @@ export default function MenuItemForm() {
                   </Box>
                 )}
 
-                {variantFields.map((field, index) => (
-                  <VariantRow
-                    key={field.id}
-                    index={index}
-                    control={control}
-                    errors={errors}
-                    remove={removeVariant}
-                    isLarge={isLarge}
-                  />
-                ))}
+                <VStack space="sm">
+                  {variantFields.map((field, index) => (
+                    <VariantRow
+                      key={field.id}
+                      index={index}
+                      control={control}
+                      errors={errors}
+                      remove={removeVariant}
+                      isLarge={isLarge}
+                    />
+                  ))}
+                </VStack>
 
                 <Divider className="my-2" />
 
                 {/* ── MODIFICADORES ── */}
                 <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={styles.sectionLabel}>
-                    MODIFICADORES ({modifierFields.length})
-                  </Text>
+                  <Text style={styles.sectionLabel}>MODIFICADORES ({modifierFields.length})</Text>
                   <Button size="sm" onPress={() => appendModifier(EMPTY_MODIFIER)}>
                     <Icon as={AddIcon} size="sm" style={{ color: "#000", marginRight: 4 }} />
                     <ButtonText>Agregar</ButtonText>
@@ -879,7 +929,7 @@ export default function MenuItemForm() {
                   <Button
                     size="lg"
                     className="mt-4"
-                    onPress={() => router.back()}
+                    onPress={() => { clearData(); setIsEdit(false); router.back(); }}
                   >
                     <ButtonText>Cancelar</ButtonText>
                   </Button>

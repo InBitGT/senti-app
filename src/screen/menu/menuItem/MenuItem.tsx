@@ -15,7 +15,7 @@ export const MenuItemScreen: React.FC = () => {
   const [showModalData,setShowModalData] = useState<boolean>(false)
   const [modalData,setmodalData] = useState<MenuItem>()
   const { data:menuItems, isLoading, remove } = useMenuItem()
-  const {setData, setIsEdit}= useMenuItemStore.getState()
+  const {setData, setIsEdit, clearData}= useMenuItemStore.getState()
 
   const hadleModalData = (data:MenuItem)=>{
       setShowModalData(true)
@@ -56,7 +56,7 @@ export const MenuItemScreen: React.FC = () => {
   const dataButton :Buttons[]=[
     {
       name: "Crear Producto", 
-      onPress: ()=> router.navigate("/(drawer)/(menu)/(form)/recipe_form"),
+      onPress: ()=>{ router.navigate("/(drawer)/(menu)/(form)/recipe_form"); clearData() },
       variant: "solid" 
     },
   ]
