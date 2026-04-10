@@ -201,7 +201,6 @@ export function StockEntryTable({
           <DataTable.Title style={{ flex: 1.5 }}>Documento</DataTable.Title>
           <DataTable.Title style={{ flex: 2 }}>Proveedor</DataTable.Title>
           <DataTable.Title style={{ flex: 2 }}>Bodega</DataTable.Title>
-          <DataTable.Title style={{ flex: 1.5, justifyContent: 'center' }}>Estado</DataTable.Title>
           <DataTable.Title numeric style={{ justifyContent: 'center' }}>Total</DataTable.Title>
           <DataTable.Title style={{ flex: 1.5, justifyContent: 'center' }}>Fecha</DataTable.Title>
           {actions && actions.length > 0 && (
@@ -254,11 +253,6 @@ export function StockEntryTable({
                     {row.warehouse.type}
                   </Text>
                 </View>
-              </DataTable.Cell>
-
-              {/* Estado */}
-              <DataTable.Cell style={{ flex: 1.5, justifyContent: 'center', alignItems: 'center', alignSelf:"center" }}>
-                <StatusBadge status={row.entry_status} />
               </DataTable.Cell>
 
               {/* Total */}
