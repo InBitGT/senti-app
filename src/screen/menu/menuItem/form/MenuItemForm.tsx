@@ -237,36 +237,7 @@ function IngredientRow({
             />
           </View>
 
-          <View style={third}>
-            <Controller
-              control={control}
-              name={`ingredients.${index}.waste_factor`}
-              rules={{ required: "Requerido." }}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <FormControl isInvalid={!!errors?.ingredients?.[index]?.waste_factor}>
-                  <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Merma</FormControlLabelText>
-                  </FormControlLabel>
-                  <Input>
-                    <InputField
-                      style={{ color: "#171717" }}
-                      placeholder="Ej. 0"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      keyboardType="decimal-pad"
-                    />
-                  </Input>
-                  <FormControlError>
-                    <FormControlErrorIcon as={AlertCircleIcon} />
-                    <FormControlErrorText>
-                      {errors?.ingredients?.[index]?.waste_factor?.message}
-                    </FormControlErrorText>
-                  </FormControlError>
-                </FormControl>
-              )}
-            />
-          </View>
+          <View style={third}></View>
         </View>
       </VStack>
     </Box>
@@ -421,6 +392,7 @@ function ModifierRow({
   remove: (i: number) => void;
   modifierOptions: MenuIngredient[];
 }) {
+  console.log(modifierOptions, "modifierOptions en el componente" )
   return (
     <HStack style={{ alignItems: "center", gap: 8 }}>
       <View style={{ flex: 1 }}>
@@ -429,9 +401,11 @@ function ModifierRow({
           name={`modifiers.${index}.product_modifier_id`}
           rules={{ required: "Selecciona un modificador." }}
           render={({ field: { onChange, value } }) => {
+              console.log("value actual:", value);
               const selectedLabel =
-              modifierOptions?.find((m) => String(m.id) === value)?.modifier_name ||
-              modifierOptions?.find((m) => String(m.id) === value)?.name || "";            return (
+              modifierOptions?.find((m) => String(m.product_modifier_id) === value)?.modifier_name || "";
+              console.log(selectedLabel, "selectedLabel", )
+              return (
               <FormControl isInvalid={!!errors?.modifiers?.[index]?.product_modifier_id}>
                 <Select selectedValue={value} onValueChange={onChange}>
                   <SelectTrigger>
@@ -492,7 +466,11 @@ export default function MenuItemForm() {
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
   const ingredientOptions = productData ?? [];
-  const modifierOptions = (productData ?? []).filter((p: any) => p.is_modifier === true);
+  const modifierOptions = (productData ?? []).filter(
+    (p: any) => p.is_modifier === true && p.product_modifier_id !== null
+  );
+  console.log("modifiers data:", JSON.stringify(data?.modifiers));
+console.log("modifierOptions:", modifierOptions);
 
   const {
     control,
@@ -519,8 +497,8 @@ export default function MenuItemForm() {
         price_adjustment: String(v.price_adjustment),
         adjustment_type: v.adjustment_type,
       })) ?? [],
-      modifiers: data?.modifiers?.map((id) => ({
-        product_modifier_id: String(id.modifier_product_id),
+      modifiers: data?.modifiers?.map((data) => ({
+        product_modifier_id: String(data.product_modifier_id),
       })) ?? [],
     },
   });
@@ -545,41 +523,68 @@ export default function MenuItemForm() {
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
-
-    const payload: MenuItemDetail = {
-      product: {
-        tenant_id: claims.tenant_id,
-        category_id: parseInt(values.category_id),
-        name: values.name.trim(),
-        sku: values.sku.trim(),
-        type: "menu_item",
-        unit_of_measure: values.unit_of_measure,
-        availability_status: values.availability_status,
-        price: parseFloat(values.price),
-        currency: values.currency,
-      },
-      recipe: {
-        version: parseInt(values.recipe_version),
-        ingredients: values.ingredients.map((ing) => ({
-          ingredient_id: parseInt(ing.ingredient_id),
-          quantity: parseFloat(ing.quantity),
-          unit: ing.unit,
-          waste_factor: parseFloat(ing.waste_factor),
-        })),
-      },
-      variants: values.variants.map((v) => ({
-        name: v.name.trim(),
-        price_adjustment: parseFloat(v.price_adjustment),
-        adjustment_type: v.adjustment_type,
-      })),
-      modifiers: values.modifiers.map((m) => parseInt(m.product_modifier_id)),
-    };
-
     try {
       if (!isEdit) {
+        const payload: MenuItemDetail = {
+          product: {
+            tenant_id: claims.tenant_id,
+            category_id: parseInt(values.category_id),
+            name: values.name.trim(),
+            sku: values.sku.trim(),
+            type: "menu_item",
+            unit_of_measure: values.unit_of_measure,
+            availability_status: values.availability_status,
+            price: parseFloat(values.price),
+            currency: values.currency,
+          },
+          recipe: {
+            version: parseInt(values.recipe_version),
+            ingredients: values.ingredients.map((ing) => ({
+              ingredient_id: parseInt(ing.ingredient_id),
+              quantity: parseFloat(ing.quantity),
+              unit: ing.unit,
+              waste_factor: parseFloat(ing.waste_factor),
+            })),
+          },
+          variants: values.variants.map((v) => ({
+            name: v.name.trim(),
+            price_adjustment: parseFloat(v.price_adjustment),
+            adjustment_type: v.adjustment_type,
+          })),
+          modifiers: values.modifiers.map((m) => parseInt(m.product_modifier_id)),
+        };
+
         await post.mutateAsync(payload);
         showToast({ message: "Ítem creado correctamente", type: "success" });
       } else {
+            const payload: MenuItemDetail = {
+              product: {
+                category_id: parseInt(values.category_id),
+                name: values.name.trim(),
+                sku: values.sku.trim(),
+                type: "menu_item",
+                unit_of_measure: values.unit_of_measure,
+                availability_status: values.availability_status,
+                price: parseFloat(values.price),
+                currency: values.currency,
+              },
+              recipe: {
+                version: parseInt(values.recipe_version),
+                ingredients: values.ingredients.map((ing) => ({
+                  ingredient_id: parseInt(ing.ingredient_id),
+                  quantity: parseFloat(ing.quantity),
+                  unit: ing.unit,
+                  waste_factor: parseFloat(ing.waste_factor),
+                })),
+              },
+              variants: values.variants.map((v) => ({
+                name: v.name.trim(),
+                price_adjustment: parseFloat(v.price_adjustment),
+                adjustment_type: v.adjustment_type,
+              })),
+              modifiers: values.modifiers.map((m) => parseInt(m.product_modifier_id)),
+            };
+
         if (!data?.product?.id) return;
         await put.mutateAsync({ id: data.product.id, data: payload });
         showToast({ message: "Ítem editado correctamente", type: "success" });
@@ -794,37 +799,7 @@ export default function MenuItemForm() {
                     />
                   </View>
 
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="availability_status"
-                      rules={{ required: "El estado es obligatorio." }}
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl isInvalid={!!errors.availability_status}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Estado</FormControlLabelText>
-                          </FormControlLabel>
-                          <Select selectedValue={value} onValueChange={onChange}>
-                            <SelectTrigger>
-                              <SelectInput style={{ color: "#000" }} placeholder="Estado" value={value} />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                                <SelectItem label="Disponible" value="available" />
-                                <SelectItem label="No disponible" value="unavailable" />
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.availability_status?.message}</FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
+                  <View style={half}></View>
                 </View>
 
                 <Divider className="my-2" />

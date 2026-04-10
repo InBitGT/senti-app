@@ -41,7 +41,7 @@ export default function RootLayout() {
     if (!isReady) return;
 
     if (claims) {
-      router.replace('/(drawer)');
+      router.replace('/(drawer)/dashboard');
     } else {
       router.replace('/(auth)/Login');
     }
