@@ -424,7 +424,7 @@ export default function InventoryForm() {
       supplier_id: "",
       document_number: "",
       document_date: new Date().toISOString().split("T")[0],
-      entry_status: "pending",
+      entry_status: "confirmed",
       notes: "",
       items: [EMPTY_ITEM],
     },
