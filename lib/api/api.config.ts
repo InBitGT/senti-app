@@ -42,5 +42,9 @@ export const ENDPOINT ={
         info: "inventory-service/api/stock-entry",
         adjustment: "inventory-service/api/inventory-adjustment",
         detail: (idTenant:string | number)=>`inventory-service/api/stock-entry?tenant_id=${idTenant}`
-    }
+    },
+    menuItem:{
+        info: "menu-service/api/menu-item/full",
+        detail: (idTenant:string | number)=>`menu-service/api/menu-item/full?tenant_id=${idTenant}`
+    },
 }

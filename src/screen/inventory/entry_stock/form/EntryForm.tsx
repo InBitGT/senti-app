@@ -3,27 +3,27 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AddIcon, AlertCircleIcon, ArrowLeftIcon, Icon, TrashIcon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -38,13 +38,13 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -59,7 +59,7 @@ interface ItemFormValues {
 }
 
 interface FormValues {
-  warehouse_id: string;
+  warehouse_id: number;
   supplier_id: string;
   document_number: string;
   document_date: string;
@@ -420,7 +420,7 @@ export default function InventoryForm() {
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      warehouse_id: "",
+      warehouse_id: claims?.warehouse_id ?? 0,
       supplier_id: "",
       document_number: "",
       document_date: new Date().toISOString().split("T")[0],
@@ -444,7 +444,7 @@ export default function InventoryForm() {
 
     const payload: InventoryDetail = {
       tenant_id: claims.tenant_id,
-      warehouse_id: parseInt(values.warehouse_id),
+      warehouse_id: claims.warehouse_id,
       supplier_id: parseInt(values.supplier_id),
       user_id: claims.sub,
       document_number: values.document_number.trim(),

@@ -17,7 +17,6 @@ export async function logoutFn(idUser: number) {
     user_id: idUser
   }
   const response = await post<LoginResponse>(ENDPOINT.auth.logout, data);
-  console.log(response, "valores de logout")
 
   if (response.code !== "200") {
     throw new Error(response.message);

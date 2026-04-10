@@ -3,27 +3,27 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
@@ -38,13 +38,13 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -450,40 +450,6 @@ export default function ProductForm() {
                 {/* Tipo + Unidad de medida */}
                 <View style={row}>
                   <View style={half}>
-                     {/* Estado de disponibilidad */}
-                    <Controller
-                    control={control}
-                    name="availability_status"
-                    rules={{ required: "El estado es obligatorio." }}
-                    render={({ field: { onChange, value } }) => (
-                        <FormControl isInvalid={!!errors.availability_status}>
-                        <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Estado de disponibilidad</FormControlLabelText>
-                        </FormControlLabel>
-                        <Select selectedValue={value} onValueChange={onChange}>
-                            <SelectTrigger>
-                            <SelectInput style={{ color: "#000" }} placeholder="Selecciona estado" value={value} />
-                            </SelectTrigger>
-                            <SelectPortal>
-                            <SelectBackdrop />
-                            <SelectContent>
-                                <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                                <SelectItem label="Disponible" value="available" />
-                                <SelectItem label="No disponible" value="unavailable" />
-                                <SelectItem label="Agotado" value="out_of_stock" />
-                            </SelectContent>
-                            </SelectPortal>
-                        </Select>
-                        <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.availability_status?.message}</FormControlErrorText>
-                        </FormControlError>
-                        </FormControl>
-                    )}
-                    />
-                  </View>
-
-                  <View style={half}>
                     <Controller
                       control={control}
                       name="unit_of_measure"
@@ -517,6 +483,7 @@ export default function ProductForm() {
                       )}
                     />
                   </View>
+                  <View style={half}/>
                 </View>
 
                 {/* Switches: requires_batch + is_modifier */}
