@@ -4,6 +4,7 @@ import { Divider } from "@/components/ui/divider";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useLogin } from "@/src/hooks";
+import { useAuthStore } from "@/src/store";
 import { Claims, Module } from "@/src/types";
 import {
   DrawerContentComponentProps,
@@ -24,15 +25,19 @@ export function DrawerContent({
   ...drawerProps
 }: DrawerContentProps) {
   const { logout } = useLogin()
+  const { clearClaims}= useAuthStore.getState()
+  
 
   const handleNavigate = (path: string) => {
     router.push(path as Href);
     drawerProps.navigation.closeDrawer();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async() => {
     if(!claims?.sub) return
-    logout.mutate(claims.sub)
+    await logout.mutateAsync(claims.sub)
+    clearClaims()
+    router.dismissAll()
     router.replace("/(auth)/Login");
   };
 

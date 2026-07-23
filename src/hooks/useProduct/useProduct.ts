@@ -7,6 +7,10 @@ export const useProduct = () => {
   const {data, isLoading} = useQuery({
     queryKey: ["ingredient"],
     queryFn: productIngredientFn,
+    retry: 3,
+    refetchOnMount: true,
+    staleTime: 0,        
+    gcTime: 0
   });
 
   const post = useMutation({

@@ -9,7 +9,7 @@ export async function MovementFn() {
   if (!claims){
     throw new Error();
   }
-  const response = await get<InventoryMovement[]>(ENDPOINT.movement.detail(1));
+  const response = await get<InventoryMovement[]>(ENDPOINT.movement.detail(claims.tenant_id));
   if (response.code !== "200") {
     throw new Error(response.message);
   }

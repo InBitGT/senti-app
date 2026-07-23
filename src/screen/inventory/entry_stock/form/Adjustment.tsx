@@ -2,27 +2,27 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -36,18 +36,17 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface FormValues {
-  warehouse_id: string;
   product_id: string;
   batch_id: string;
   movement_type: string;
@@ -77,7 +76,6 @@ export default function AdjustmentForm() {
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      warehouse_id: "",
       product_id: "",
       batch_id: "",
       movement_type: "",
@@ -98,7 +96,7 @@ export default function AdjustmentForm() {
     if (!claims) return;
 
     const payload: Adjustment = {
-      warehouse_id: parseInt(values.warehouse_id),
+      warehouse_id: claims.warehouse_id,
       product_id: parseInt(values.product_id),
       batch_id: requiresBatch ? parseInt(values.batch_id) : null,
       user_id: claims.sub,
@@ -198,28 +196,29 @@ export default function AdjustmentForm() {
                   </View>
 
                   <View style={half}>
+                     {/* N° Referencia */}
                     <Controller
                       control={control}
-                      name="warehouse_id"
-                      rules={{ required: "La bodega es obligatoria." }}
+                      name="reference_number"
+                      rules={{ required: "El número de referencia es obligatorio." }}
                       render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.warehouse_id}>
+                        <FormControl isInvalid={!!errors.reference_number}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Bodega</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>N° Referencia</FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="ID de bodega"
+                              placeholder="Ej. ADJ-BATCH-002"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
-                              keyboardType="number-pad"
+                              autoCapitalize="characters"
                             />
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.warehouse_id?.message}</FormControlErrorText>
+                            <FormControlErrorText>{errors.reference_number?.message}</FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -373,34 +372,6 @@ export default function AdjustmentForm() {
                     />
                   </View>
                 </View>
-
-                {/* N° Referencia */}
-                <Controller
-                  control={control}
-                  name="reference_number"
-                  rules={{ required: "El número de referencia es obligatorio." }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.reference_number}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>N° Referencia</FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. ADJ-BATCH-002"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          autoCapitalize="characters"
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>{errors.reference_number?.message}</FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
 
                 {/* Lote — solo si el producto requiere batch */}
                 {requiresBatch && (

@@ -8,4 +8,6 @@ export interface Claims {
   tenant_id: number;
   tenant_name: string;
   username: string;
+  branch_id: number;
+  warehouse_id: number;
 }
