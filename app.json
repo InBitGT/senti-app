@@ -16,7 +16,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.asofimp.sentiapp"
+      "package": "senti.app"
     },
     "web": {
       "bundler": "metro",
