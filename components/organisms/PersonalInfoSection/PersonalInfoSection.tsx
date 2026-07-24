@@ -1,41 +1,46 @@
-import { Avatar, AvatarFallbackText } from "@/components/ui/avatar"
-import { Box } from "@/components/ui/box"
-import { Button, ButtonText } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   FormControl,
   FormControlHelper,
   FormControlHelperText,
   FormControlLabel,
   FormControlLabelText,
-} from "@/components/ui/form-control"
-import { Heading } from "@/components/ui/heading"
-import { HStack } from "@/components/ui/hstack"
-import { Input, InputField } from "@/components/ui/input"
-import { Text } from "@/components/ui/text"
-import { VStack } from "@/components/ui/vstack"
-import { useProfile } from "@/src/hooks"
-import { useProfileStore } from "@/src/store"
-import { UserUpdate } from "@/src/types"
-import { getInitials } from "@/src/utils"
-import { Mail, Phone, User } from "lucide-react-native"
-import { useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+} from "@/components/ui/form-control";
+import { Heading } from "@/components/ui/heading";
+import { HStack } from "@/components/ui/hstack";
+import { Input, InputField } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { useProfile } from "@/src/hooks";
+import { useProfileStore } from "@/src/store";
+import { UserUpdate } from "@/src/types";
+import { getInitials } from "@/src/utils";
+import { Mail, Phone, User } from "lucide-react-native";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 
 interface PersonalInfoFormData {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  username:string
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  username: string;
 }
 
 export function PersonalInfoSection() {
-  const user = useProfileStore((state) => state.user)
-  const { updateUser } = useProfile()
-  const [isEditing, setIsEditing] = useState(false)
+  const user = useProfileStore((state) => state.user);
+  const { updateUser } = useProfile();
+  const [isEditing, setIsEditing] = useState(false);
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<PersonalInfoFormData>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PersonalInfoFormData>({
     defaultValues: {
       firstName: user?.first_name ?? "",
       lastName: user?.last_name ?? "",
@@ -43,7 +48,7 @@ export function PersonalInfoSection() {
       phone: user?.phone ?? "",
       username: user?.username ?? "",
     },
-  })
+  });
 
   useEffect(() => {
     if (user) {
@@ -53,12 +58,12 @@ export function PersonalInfoSection() {
         email: user.email ?? "",
         phone: user.phone ?? "",
         username: user.username ?? "",
-      })
+      });
     }
-  }, [user, reset])
+  }, [user, reset]);
 
   const onSubmit = (data: PersonalInfoFormData) => {
-    if (!user || updateUser.isPending) return
+    if (!user || updateUser.isPending) return;
 
     const formData: UserUpdate = {
       username: data.username,
@@ -71,20 +76,20 @@ export function PersonalInfoSection() {
       is_active: user.is_active,
       two_fa_enabled: user.two_fa_enabled,
       status: user.status,
-    }
+    };
 
     updateUser.mutate(
       { idUser: user.id, data: formData },
       {
         onSuccess: () => setIsEditing(false),
-      }
-    )
-  }
+      },
+    );
+  };
 
   const handleCancel = () => {
-    reset()
-    setIsEditing(false)
-  }
+    reset();
+    setIsEditing(false);
+  };
 
   return (
     <Card className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -100,41 +105,17 @@ export function PersonalInfoSection() {
             Gestiona tu informacion basica de perfil
           </Text>
         </VStack>
-        <HStack className="gap-2">
-          {isEditing && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-gray-300 rounded-lg"
-              onPress={handleCancel}
-              isDisabled={updateUser.isPending}
-            >
-              <ButtonText className="text-gray-700">Cancelar</ButtonText>
-            </Button>
-          )}
-          <Button
-            size="sm"
-            className="bg-indigo-500 rounded-lg"
-            onPress={isEditing ? handleSubmit(onSubmit) : () => setIsEditing(true)}
-            isDisabled={updateUser.isPending}
-          >
-            <ButtonText className="text-white">
-              {updateUser.isPending ? "Guardando..." : isEditing ? "Guardar" : "Editar"}
-            </ButtonText>
-          </Button>
-        </HStack>
+        <VStack className="items-center gap-3">
+          <Avatar className="size-24 border-1 border-gray-100 bg-indigo-100">
+            <AvatarFallbackText className="text-2xl text-indigo-600">
+              {getInitials(user?.username ?? "user")}
+            </AvatarFallbackText>
+          </Avatar>
+        </VStack>
       </HStack>
 
       <Box className="mt-5">
         <HStack className="gap-8 flex-wrap md:flex-nowrap">
-          <VStack className="items-center gap-3">
-            <Avatar className="size-24 border-1 border-gray-100 bg-indigo-100">
-              <AvatarFallbackText className="text-2xl text-indigo-600">
-                {getInitials(user?.username ?? "user")}
-              </AvatarFallbackText>
-            </Avatar>
-          </VStack>
-
           <VStack className="flex-1 gap-4">
             <HStack className="gap-4 flex-wrap sm:flex-nowrap">
               <FormControl className="flex-1" isInvalid={!!errors.firstName}>
@@ -229,6 +210,8 @@ export function PersonalInfoSection() {
                     <InputField
                       value={value}
                       onChangeText={onChange}
+                      autoCapitalize="none"
+                      autoCorrect={false}
                       keyboardType="email-address"
                       className="text-gray-900 placeholder:text-gray-400"
                     />
@@ -244,7 +227,8 @@ export function PersonalInfoSection() {
               ) : (
                 <FormControlHelper>
                   <FormControlHelperText className="text-gray-400 text-xs">
-                    Este correo se usa para notificaciones y recuperacion de cuenta
+                    Este correo se usa para notificaciones y recuperacion de
+                    cuenta
                   </FormControlHelperText>
                 </FormControlHelper>
               )}
@@ -324,7 +308,36 @@ export function PersonalInfoSection() {
             </HStack>
           </VStack>
         </HStack>
+        <HStack className="gap-2 mt-4 justify-end">
+          {isEditing && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-gray-300 rounded-lg"
+              onPress={handleCancel}
+              isDisabled={updateUser.isPending}
+            >
+              <ButtonText className="text-gray-700">Cancelar</ButtonText>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            className="bg-indigo-500 rounded-lg"
+            onPress={
+              isEditing ? handleSubmit(onSubmit) : () => setIsEditing(true)
+            }
+            isDisabled={updateUser.isPending}
+          >
+            <ButtonText className="text-white">
+              {updateUser.isPending
+                ? "Guardando..."
+                : isEditing
+                  ? "Guardar"
+                  : "Editar"}
+            </ButtonText>
+          </Button>
+        </HStack>
       </Box>
     </Card>
-  )
+  );
 }
