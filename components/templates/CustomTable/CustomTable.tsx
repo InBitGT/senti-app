@@ -1,20 +1,26 @@
-import { Action, ActionsMenu } from '@/components/atom';
-import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
-import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { SearchIcon } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { StyleProp, ViewStyle } from 'react-native';
-import { DataTable } from 'react-native-paper';
+import { Action, ActionsMenu } from "@/components/atom";
+import { Button, ButtonText } from "@/components/ui/button";
+import { HStack } from "@/components/ui/hstack";
+import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import {
+  LucideIcon,
+  Plus,
+  SearchIcon,
+  SlidersHorizontal,
+} from "lucide-react-native";
+import React, { useMemo, useState } from "react";
+import { StyleProp, View, ViewStyle } from "react-native";
+import { Checkbox, DataTable, Menu } from "react-native-paper";
 
 export interface Buttons {
   key?: string;
   name: string;
   onPress: () => void;
-  variant?: 'link' | 'solid' | 'outline' | undefined;
+  variant?: "link" | "solid" | "outline" | undefined;
   style?: StyleProp<ViewStyle>;
+  icon?: LucideIcon;
 }
 
 export interface ColumnDef<T> {
@@ -22,6 +28,8 @@ export interface ColumnDef<T> {
   title: string;
   numeric?: boolean;
   render?: (row: T) => React.ReactNode;
+  optional?: boolean;
+  defaultVisible?: boolean;
 }
 
 export interface CustomTableProps<T> {
@@ -34,7 +42,8 @@ export interface CustomTableProps<T> {
   style?: StyleProp<ViewStyle>;
   button?: Buttons[];
   searchKeys?: string[];
-  onRowPress?: (row: T) => void; 
+  getSearchableText?: (row: T) => string; // usar cuando los datos vienen anidados
+  onRowPress?: (row: T) => void;
 }
 
 export function CustomTable<T extends Record<string, any>>({
@@ -43,23 +52,61 @@ export function CustomTable<T extends Record<string, any>>({
   keyExtractor,
   actions,
   itemsPerPage = 5,
-  emptyLabel = 'Sin datos',
+  emptyLabel = "Sin datos",
   style,
   button,
   searchKeys,
-  onRowPress, 
+  getSearchableText,
+  onRowPress,
 }: CustomTableProps<T>) {
   const [page, setPage] = useState(0);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const optionalColumns = useMemo(
+    () => columns.filter((c) => c.optional),
+    [columns],
+  );
+
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+    () =>
+      optionalColumns.reduce(
+        (acc, col) => {
+          acc[col.key] = col.defaultVisible ?? true;
+          return acc;
+        },
+        {} as Record<string, boolean>,
+      ),
+  );
+
+  const toggleColumn = (key: string) => {
+    setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const displayedColumns = useMemo(
+    () => columns.filter((col) => !col.optional || visibleColumns[col.key]),
+    [columns, visibleColumns],
+  );
 
   const filteredData = React.useMemo(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
+
+    if (getSearchableText) {
+      return data.filter((row) =>
+        getSearchableText(row).toLowerCase().includes(term),
+      );
+    }
+
     const keys = searchKeys ?? columns.map((c) => c.key);
     return data.filter((row) =>
-      keys.some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+      keys.some((key) =>
+        String(row[key] ?? "")
+          .toLowerCase()
+          .includes(term),
+      ),
     );
-  }, [data, search, searchKeys, columns]);
+  }, [data, search, searchKeys, columns, getSearchableText]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const from = page * itemsPerPage;
@@ -75,23 +122,28 @@ export function CustomTable<T extends Record<string, any>>({
   }, [filteredData.length, totalPages, page]);
 
   const defaultStyle: ViewStyle = {
-    backgroundColor: '#ffffff',
-    borderColor: '#d4d4d4',
+    backgroundColor: "#ffffff",
+    borderColor: "#d4d4d4",
     borderWidth: 0.5,
     borderRadius: 15,
-    marginTop:15
+    marginTop: 15,
   };
 
   const rowBorder: ViewStyle = {
     borderBottomWidth: 0.5,
-    borderBottomColor: '#d4d4d4',
+    borderBottomColor: "#d4d4d4",
   };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
       <HStack className="justify-between items-center mb-4">
-        <Input className="w-64 bg-white rounded-lg" variant="outline" size="md">
-          <InputSlot style={{marginLeft:10}}>
+        <Input
+          className="bg-white rounded-lg flex-1"
+          variant="outline"
+          size="md"
+          style={{ marginRight: 12 }}
+        >
+          <InputSlot style={{ marginLeft: 10 }}>
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
@@ -101,30 +153,82 @@ export function CustomTable<T extends Record<string, any>>({
           />
         </Input>
 
-        <HStack className="gap-3">
-          {button?.map((btn) => (
-            <Button
-              key={btn.key}
-              size="md"
-              variant={btn.variant}
-              style={[btn.style, {borderColor: "#d4d4d4", borderWidth: 1}]}
-              onPress={btn.onPress}
+        <HStack className="gap-3 items-center">
+          {optionalColumns.length > 0 && (
+            <Menu
+              visible={menuVisible}
+              onDismiss={() => setMenuVisible(false)}
+              anchor={
+                <Button
+                  size="md"
+                  variant="outline"
+                  className="px-3 sm:px-4"
+                  style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
+                  onPress={() => setMenuVisible(true)}
+                >
+                  <SlidersHorizontal size={16} color="#374151" />
+                  <ButtonText className="hidden sm:flex sm:ml-1.5">
+                    Columnas
+                  </ButtonText>
+                </Button>
+              }
+              contentStyle={{ backgroundColor: "#ffffff" }}
             >
-              <ButtonText>{btn.name}</ButtonText>
-            </Button>
-          ))}
+              {optionalColumns.map((col) => (
+                <Menu.Item
+                  key={col.key}
+                  onPress={() => toggleColumn(col.key)}
+                  title={col.title}
+                  leadingIcon={() => (
+                    <View style={{ transform: [{ scale: 0.8 }] }}>
+                      <Checkbox
+                        status={
+                          visibleColumns[col.key] ? "checked" : "unchecked"
+                        }
+                        onPress={() => toggleColumn(col.key)}
+                      />
+                    </View>
+                  )}
+                />
+              ))}
+            </Menu>
+          )}
+
+          {button?.map((btn) => {
+            const Icon = btn.icon ?? Plus;
+            return (
+              <Button
+                key={btn.key}
+                size="md"
+                variant={btn.variant}
+                className="px-3 sm:px-4"
+                style={[btn.style, { borderColor: "#d4d4d4", borderWidth: 1 }]}
+                onPress={btn.onPress}
+              >
+                <Icon
+                  size={16}
+                  color={btn.variant === "solid" ? "#ffffff" : "#374151"}
+                />
+                <ButtonText className="hidden sm:flex sm:ml-1.5">
+                  {btn.name}
+                </ButtonText>
+              </Button>
+            );
+          })}
         </HStack>
       </HStack>
 
       <DataTable style={[defaultStyle, style]}>
         <DataTable.Header style={rowBorder}>
-          {columns.map((col) => (
+          {displayedColumns.map((col) => (
             <DataTable.Title key={col.key} numeric={col.numeric}>
               {col.title}
             </DataTable.Title>
           ))}
           {actions && actions.length > 0 && (
-            <DataTable.Title style={{ marginLeft: 10 }}>Acciones</DataTable.Title>
+            <DataTable.Title style={{ marginLeft: 10 }}>
+              Acciones
+            </DataTable.Title>
           )}
         </DataTable.Header>
 
@@ -136,10 +240,14 @@ export function CustomTable<T extends Record<string, any>>({
           </DataTable.Row>
         ) : (
           paginatedData.map((row) => (
-            <DataTable.Row key={keyExtractor(row)} style={rowBorder} onPress={onRowPress ? () => onRowPress(row) : undefined}>
-              {columns.map((col) => (
+            <DataTable.Row
+              key={keyExtractor(row)}
+              style={rowBorder}
+              onPress={onRowPress ? () => onRowPress(row) : undefined}
+            >
+              {displayedColumns.map((col) => (
                 <DataTable.Cell key={col.key} numeric={col.numeric}>
-                  {col.render ? col.render(row) : (row[col.key] ?? '—')}
+                  {col.render ? col.render(row) : (row[col.key] ?? "—")}
                 </DataTable.Cell>
               ))}
               {actions && actions.length > 0 && (
@@ -158,7 +266,7 @@ export function CustomTable<T extends Record<string, any>>({
           label={
             filteredData.length > 0
               ? `${from + 1}-${to} de ${filteredData.length}`
-              : '0 de 0'
+              : "0 de 0"
           }
           numberOfItemsPerPage={itemsPerPage}
           showFastPaginationControls
