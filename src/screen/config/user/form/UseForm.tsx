@@ -12,9 +12,25 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, ArrowLeftIcon, EyeIcon, EyeOffIcon, Icon } from "@/components/ui/icon";
+import {
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  EyeIcon,
+  EyeOffIcon,
+  Icon,
+} from "@/components/ui/icon";
 import { Input, InputField, InputSlot } from "@/components/ui/input";
-import { Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectInput, SelectItem, SelectPortal, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -51,13 +67,22 @@ interface FormValues {
   state: string;
   country: string;
   postal_code: string;
-  role_id: string; 
+  role_id: string;
+  branch_id: string;
 }
 
 export default function UserForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
-  const { post, put, postAddress, putAddress, roleData, isLoadingData } = useUser();
+  const {
+    post,
+    put,
+    postAddress,
+    putAddress,
+    roleData,
+    isLoadingData,
+    postUserBranch,
+  } = useUser();
   const data = useUserStore((state) => state.data);
   const isEdit = useUserStore((state) => state.isEdit);
   const clearData = useUserStore((state) => state.clearData);
@@ -66,12 +91,14 @@ export default function UserForm() {
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
 
-  // 👁 estados para mostrar/ocultar contraseñas
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
+
+  const hasMultipleBranches = (claims?.branches?.length ?? 0) > 1;
+  const defaultBranchId = claims?.branches?.[0]?.branch_id;
 
   const {
     control,
@@ -94,6 +121,7 @@ export default function UserForm() {
       country: data?.address?.country || "GT",
       postal_code: data?.address?.postal_code || "",
       role_id: data?.role_id ? String(data.role_id) : "",
+      branch_id: "",
     },
   });
 
@@ -126,7 +154,20 @@ export default function UserForm() {
           address_id: newAddress?.id ?? 0,
           role_id: parseInt(values.role_id),
         };
-        await post.mutateAsync(userPayload);
+        const newUser = await post.mutateAsync(userPayload);
+
+        // Asignar sucursal: la elegida si hay varias, o la única disponible por defecto
+        const branchId = hasMultipleBranches
+          ? parseInt(values.branch_id)
+          : defaultBranchId;
+
+        if (newUser?.id && branchId) {
+          await postUserBranch.mutateAsync({
+            user_id: newUser.id,
+            branch_id: branchId,
+          });
+        }
+
         showToast({ message: "Usuario creado correctamente", type: "success" });
       } else {
         if (!data?.id) return;
@@ -145,15 +186,21 @@ export default function UserForm() {
               address_id: data.address_id,
               role_id: parseInt(values.role_id),
             },
-          })
+          }),
         );
         if (data?.address?.id) {
           updatePromises.push(
-            putAddress.mutateAsync({ id: data.address.id, data: addressPayload })
+            putAddress.mutateAsync({
+              id: data.address.id,
+              data: addressPayload,
+            }),
           );
         }
         await Promise.all(updatePromises);
-        showToast({ message: "Usuario editado correctamente", type: "success" });
+        showToast({
+          message: "Usuario editado correctamente",
+          type: "success",
+        });
         setIsEdit(false);
       }
       clearData();
@@ -165,7 +212,11 @@ export default function UserForm() {
   };
 
   const isPending =
-    post.isPending || put.isPending || postAddress.isPending || putAddress.isPending;
+    post.isPending ||
+    put.isPending ||
+    postAddress.isPending ||
+    putAddress.isPending ||
+    postUserBranch.isPending;
 
   return (
     <KeyboardAvoidingView
@@ -178,11 +229,21 @@ export default function UserForm() {
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
           <Pressable
-            onPress={() => { clearData(); setIsEdit(false); router.back(); }}
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
           >
             <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>Regresar</Text>
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
           </Pressable>
 
           <Center>
@@ -197,7 +258,9 @@ export default function UserForm() {
               </Text>
 
               <VStack space="lg">
-                <Text style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}>
+                <Text
+                  style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
+                >
                   DATOS DEL USUARIO
                 </Text>
 
@@ -211,7 +274,9 @@ export default function UserForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.first_name}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Nombre</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Nombre
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -224,7 +289,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.first_name?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.first_name?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -238,7 +305,9 @@ export default function UserForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.last_name}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Apellido</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Apellido
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -251,7 +320,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.last_name?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.last_name?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -269,7 +340,9 @@ export default function UserForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.username}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Username</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Username
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -283,7 +356,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.username?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.username?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -297,7 +372,9 @@ export default function UserForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.phone}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Teléfono</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Teléfono
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -311,7 +388,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.phone?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.phone?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -325,12 +404,17 @@ export default function UserForm() {
                   name="email"
                   rules={{
                     required: "El email es obligatorio.",
-                    pattern: { value: /\S+@\S+\.\S+/, message: "Email inválido." },
+                    pattern: {
+                      value: /\S+@\S+\.\S+/,
+                      message: "Email inválido.",
+                    },
                   }}
                   render={({ field: { onChange, onBlur, value } }) => (
                     <FormControl isInvalid={!!errors.email}>
                       <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>Email</FormControlLabelText>
+                        <FormControlLabelText style={{ color: "#000" }}>
+                          Email
+                        </FormControlLabelText>
                       </FormControlLabel>
                       <Input>
                         <InputField
@@ -345,7 +429,9 @@ export default function UserForm() {
                       </Input>
                       <FormControlError>
                         <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>{errors.email?.message}</FormControlErrorText>
+                        <FormControlErrorText>
+                          {errors.email?.message}
+                        </FormControlErrorText>
                       </FormControlError>
                     </FormControl>
                   )}
@@ -362,9 +448,17 @@ export default function UserForm() {
                         !isEdit
                           ? {
                               required: "La contraseña es obligatoria.",
-                              minLength: { value: 6, message: "Mínimo 6 caracteres." },
+                              minLength: {
+                                value: 6,
+                                message: "Mínimo 6 caracteres.",
+                              },
                             }
-                          : { minLength: { value: 6, message: "Mínimo 6 caracteres." } }
+                          : {
+                              minLength: {
+                                value: 6,
+                                message: "Mínimo 6 caracteres.",
+                              },
+                            }
                       }
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.password}>
@@ -400,7 +494,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.password?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.password?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -417,7 +513,8 @@ export default function UserForm() {
                         validate: (val) => {
                           if (!passwordValue && isEdit) return true; // edición sin cambio de pass
                           if (!val) return "Confirma la contraseña.";
-                          if (val !== passwordValue) return "Las contraseñas no coinciden.";
+                          if (val !== passwordValue)
+                            return "Las contraseñas no coinciden.";
                           return true;
                         },
                       }}
@@ -450,7 +547,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.confirm_password?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.confirm_password?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -460,61 +559,128 @@ export default function UserForm() {
 
                 {/* Rol */}
                 <Controller
-                control={control}
-                name="role_id"
-                rules={{ required: "El rol es obligatorio." }}
-                render={({ field: { onChange, value } }) => {
+                  control={control}
+                  name="role_id"
+                  rules={{ required: "El rol es obligatorio." }}
+                  render={({ field: { onChange, value } }) => {
                     const selectedLabel =
-                    roleData?.find((r) => String(r.id) === value)?.name || "";
+                      roleData?.find((r) => String(r.id) === value)?.name || "";
 
                     return (
-                    <FormControl isInvalid={!!errors.role_id}>
+                      <FormControl isInvalid={!!errors.role_id}>
                         <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>Rol</FormControlLabelText>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Rol
+                          </FormControlLabelText>
                         </FormControlLabel>
                         {isLoadingData ? (
-                        <View style={{ paddingVertical: 10 }}>
+                          <View style={{ paddingVertical: 10 }}>
                             <ActivityIndicator size="small" />
-                        </View>
+                          </View>
                         ) : (
-                        <Select selectedValue={value} onValueChange={onChange}>
+                          <Select
+                            selectedValue={value}
+                            onValueChange={onChange}
+                          >
                             <SelectTrigger>
-                            <SelectInput
+                              <SelectInput
                                 style={{ color: "#000" }}
                                 placeholder="Selecciona un rol"
                                 value={selectedLabel}
-                            />
+                              />
                             </SelectTrigger>
                             <SelectPortal>
-                            <SelectBackdrop />
-                            <SelectContent>
+                              <SelectBackdrop />
+                              <SelectContent>
                                 <SelectDragIndicatorWrapper>
-                                <SelectDragIndicator />
+                                  <SelectDragIndicator />
                                 </SelectDragIndicatorWrapper>
                                 {(roleData ?? []).map((r) => (
-                                <SelectItem
+                                  <SelectItem
                                     key={r.id}
                                     label={r.name}
                                     value={String(r.id)}
-                                />
+                                  />
                                 ))}
-                            </SelectContent>
+                              </SelectContent>
                             </SelectPortal>
-                        </Select>
+                          </Select>
                         )}
                         <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>{errors.role_id?.message}</FormControlErrorText>
+                          <FormControlErrorIcon as={AlertCircleIcon} />
+                          <FormControlErrorText>
+                            {errors.role_id?.message}
+                          </FormControlErrorText>
                         </FormControlError>
-                    </FormControl>
+                      </FormControl>
                     );
-                }}
+                  }}
                 />
+
+                {/* Sucursal (solo si el usuario que crea tiene más de una) */}
+                {!isEdit && hasMultipleBranches && (
+                  <Controller
+                    control={control}
+                    name="branch_id"
+                    rules={{ required: "La sucursal es obligatoria." }}
+                    render={({ field: { onChange, value } }) => {
+                      const selectedLabel =
+                        claims?.branches?.find(
+                          (b) => String(b.branch_id) === value,
+                        )?.branch_name || "";
+
+                      return (
+                        <FormControl isInvalid={!!errors.branch_id}>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Sucursal
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          <Select
+                            selectedValue={value}
+                            onValueChange={onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectInput
+                                style={{ color: "#000" }}
+                                placeholder="Selecciona una sucursal"
+                                value={selectedLabel}
+                              />
+                            </SelectTrigger>
+                            <SelectPortal>
+                              <SelectBackdrop />
+                              <SelectContent>
+                                <SelectDragIndicatorWrapper>
+                                  <SelectDragIndicator />
+                                </SelectDragIndicatorWrapper>
+                                {(claims?.branches ?? []).map((b) => (
+                                  <SelectItem
+                                    key={b.branch_id}
+                                    label={b.branch_name}
+                                    value={String(b.branch_id)}
+                                  />
+                                ))}
+                              </SelectContent>
+                            </SelectPortal>
+                          </Select>
+                          <FormControlError>
+                            <FormControlErrorIcon as={AlertCircleIcon} />
+                            <FormControlErrorText>
+                              {errors.branch_id?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      );
+                    }}
+                  />
+                )}
 
                 <Divider className="my-2" />
 
                 {/* ── Dirección ── */}
-                <Text style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}>
+                <Text
+                  style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
+                >
                   DIRECCIÓN
                 </Text>
 
@@ -526,7 +692,9 @@ export default function UserForm() {
                   render={({ field: { onChange, onBlur, value } }) => (
                     <FormControl isInvalid={!!errors.line1}>
                       <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>Dirección</FormControlLabelText>
+                        <FormControlLabelText style={{ color: "#000" }}>
+                          Dirección
+                        </FormControlLabelText>
                       </FormControlLabel>
                       <Input>
                         <InputField
@@ -538,7 +706,9 @@ export default function UserForm() {
                       </Input>
                       <FormControlError>
                         <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>{errors.line1?.message}</FormControlErrorText>
+                        <FormControlErrorText>
+                          {errors.line1?.message}
+                        </FormControlErrorText>
                       </FormControlError>
                     </FormControl>
                   )}
@@ -552,8 +722,10 @@ export default function UserForm() {
                     <FormControl>
                       <FormControlLabel>
                         <FormControlLabelText style={{ color: "#000" }}>
-                          Dirección {" "}
-                          <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
+                          Dirección{" "}
+                          <Text size="xs" style={{ color: "#999" }}>
+                            (opcional)
+                          </Text>
                         </FormControlLabelText>
                       </FormControlLabel>
                       <Input>
@@ -578,7 +750,9 @@ export default function UserForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.city}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Ciudad</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Ciudad
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -590,7 +764,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.city?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.city?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -604,7 +780,9 @@ export default function UserForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.state}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Departamento</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Departamento
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -616,7 +794,9 @@ export default function UserForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.state?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.state?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -632,7 +812,9 @@ export default function UserForm() {
                   render={({ field: { onChange, onBlur, value } }) => (
                     <FormControl isInvalid={!!errors.postal_code}>
                       <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>Código Postal</FormControlLabelText>
+                        <FormControlLabelText style={{ color: "#000" }}>
+                          Código Postal
+                        </FormControlLabelText>
                       </FormControlLabel>
                       <Input>
                         <InputField
@@ -646,7 +828,9 @@ export default function UserForm() {
                       </Input>
                       <FormControlError>
                         <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>{errors.postal_code?.message}</FormControlErrorText>
+                        <FormControlErrorText>
+                          {errors.postal_code?.message}
+                        </FormControlErrorText>
                       </FormControlError>
                     </FormControl>
                   )}
@@ -657,7 +841,11 @@ export default function UserForm() {
                   <Button
                     size="lg"
                     className="mt-4"
-                    onPress={() => { clearData(); setIsEdit(false); router.back(); }}
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
                   >
                     <ButtonText>Cancelar</ButtonText>
                   </Button>
@@ -668,7 +856,9 @@ export default function UserForm() {
                     onPress={handleSubmit(onSubmit)}
                     disabled={isPending}
                   >
-                    <ButtonText>{isPending ? "Guardando..." : "Guardar"}</ButtonText>
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
                   </Button>
                 </HStack>
               </VStack>

@@ -30,7 +30,10 @@ export function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} className="bg-background-700">
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#f5f5f5" }}
+      className="bg-background-700"
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

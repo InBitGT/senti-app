@@ -3,6 +3,7 @@ import {
   DeleteUser,
   PostAddress,
   PostUser,
+  PostUserBranch,
   PutAddress,
   PutUser,
   rolesFn,
@@ -65,6 +66,13 @@ export const useUser = () => {
     queryFn: rolesFn,
   });
 
+  const postUserBranch = useMutation({
+    mutationFn: PostUserBranch,
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+
   return {
     data,
     isLoading,
@@ -76,5 +84,6 @@ export const useUser = () => {
     removeAddress,
     roleData,
     isLoadingData,
+    postUserBranch,
   };
 };

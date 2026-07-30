@@ -1,8 +1,12 @@
-import { View } from 'react-native';
+import { useAuthStore } from "@/src/store/useAuthStore";
+import { Redirect } from "expo-router";
 
+export default function Index() {
+  const claims = useAuthStore((state) => state.claims);
 
-export default function HomeScreen() {
-  return (
-   <View></View>
+  return claims ? (
+    <Redirect href="/(drawer)/dashboard" />
+  ) : (
+    <Redirect href="/(auth)/Login" />
   );
 }

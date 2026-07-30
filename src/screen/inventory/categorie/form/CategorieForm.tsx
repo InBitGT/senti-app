@@ -35,7 +35,14 @@ import { CategoryDetail } from "@/src/types";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface FormValues {
@@ -83,7 +90,10 @@ export default function CategoryForm() {
     try {
       if (!isEdit) {
         await post.mutateAsync(payload);
-        showToast({ message: "Se Agrego una nueva categoria", type: "success" });
+        showToast({
+          message: "Se Agrego una nueva categoria",
+          type: "success",
+        });
       } else {
         if (!data?.id) return;
         await put.mutateAsync({ id: data.id, data: payload });
@@ -93,7 +103,7 @@ export default function CategoryForm() {
       clearData();
       router.back();
     } catch (error) {
-      console.log(error)
+      console.log(error);
       showToast({ message: "Error al guardar la categoria", type: "error" });
     }
   };
@@ -217,54 +227,57 @@ export default function CategoryForm() {
 
                 {/* Categoría Padre (Select) */}
                 <Controller
-                control={control}
-                name="parent_id"
-                render={({ field: { onChange, value } }) => {
-                    const selectedLabel = categorie?.find(
-                    (cat) => String(cat.id) === value
-                    )?.name || "Sin categoría padre";
+                  control={control}
+                  name="parent_id"
+                  render={({ field: { onChange, value } }) => {
+                    const selectedLabel =
+                      categorie?.find((cat) => String(cat.id) === value)
+                        ?.name || "Sin categoría padre";
 
                     return (
-                    <FormControl isInvalid={!!errors.parent_id}>
+                      <FormControl isInvalid={!!errors.parent_id}>
                         <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                            Subcategoria
-                        </FormControlLabelText>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Categoria Padre (opcional)
+                          </FormControlLabelText>
                         </FormControlLabel>
                         <Select selectedValue={value} onValueChange={onChange}>
-                        <SelectTrigger>
+                          <SelectTrigger>
                             <SelectInput
-                            style={{ color: "#000" }}
-                            placeholder="Sin categoría padre"
-                            value={selectedLabel}
+                              style={{ color: "#000" }}
+                              placeholder="Sin categoría padre"
+                              value={selectedLabel}
                             />
-                        </SelectTrigger>
-                        <SelectPortal>
+                          </SelectTrigger>
+                          <SelectPortal>
                             <SelectBackdrop />
                             <SelectContent>
-                            <SelectDragIndicatorWrapper>
+                              <SelectDragIndicatorWrapper>
                                 <SelectDragIndicator />
-                            </SelectDragIndicatorWrapper>
-                            <SelectItem label="Sin categoría padre" value="" />
-                            {(categorie ?? []).map((cat) => (
+                              </SelectDragIndicatorWrapper>
+                              <SelectItem
+                                label="Sin categoría padre"
+                                value=""
+                              />
+                              {(categorie ?? []).map((cat) => (
                                 <SelectItem
-                                key={cat.id}
-                                label={cat.name}
-                                value={String(cat.id)}
+                                  key={cat.id}
+                                  label={cat.name}
+                                  value={String(cat.id)}
                                 />
-                            ))}
+                              ))}
                             </SelectContent>
-                        </SelectPortal>
+                          </SelectPortal>
                         </Select>
                         <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
+                          <FormControlErrorIcon as={AlertCircleIcon} />
+                          <FormControlErrorText>
                             {errors.parent_id?.message}
-                        </FormControlErrorText>
+                          </FormControlErrorText>
                         </FormControlError>
-                    </FormControl>
+                      </FormControl>
                     );
-                }}
+                  }}
                 />
 
                 {/* Botones */}

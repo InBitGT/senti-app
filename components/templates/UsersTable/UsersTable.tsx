@@ -38,8 +38,8 @@ export function UsersTable({
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
-    username: true,
-    role: true,
+    username: false,
+    role: false,
   });
 
   const toggleColumn = (key: OptionalColumnKey) => {
