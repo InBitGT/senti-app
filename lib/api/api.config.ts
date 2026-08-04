@@ -134,4 +134,9 @@ export const ENDPOINT = {
     detail: (idBranch: string | number) =>
       `payment-client-service/api/fiscal-document?branch_id=${idBranch}`,
   },
+  wholesale: {
+    info: `/inventory-service/api/wholesale-rule`,
+    detail: (idTenant: number | string) =>
+      `inventory-service/api/wholesale-rule?tenant_id=${idTenant}`,
+  },
 };

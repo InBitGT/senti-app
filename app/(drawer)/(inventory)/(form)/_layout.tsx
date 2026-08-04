@@ -16,6 +16,8 @@ export default function InventoryFormLayout() {
       <Stack.Screen name="stock_count_form" />
       <Stack.Screen name="unit_measure_form" />
       <Stack.Screen name="warehouse_zone_form" />
+      <Stack.Screen name="wholesale_form" />
+      <Stack.Screen name="inventory_form" />
     </Stack>
   );
 }

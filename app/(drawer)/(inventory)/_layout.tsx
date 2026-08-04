@@ -41,6 +41,14 @@ export default function InventoryLayout() {
         name="warehouse_zone"
         options={{ title: "Zonas de almacenes" }}
       />
+      <Stack.Screen
+        name="wholesale"
+        options={{ title: "Zonas de almacenes" }}
+      />
+      <Stack.Screen
+        name="inventory"
+        options={{ title: "Zonas de almacenes" }}
+      />
     </Stack>
   );
 }
