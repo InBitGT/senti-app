@@ -182,6 +182,16 @@ export function CountScreen() {
     [payload.items],
   );
 
+  const resetForm = () => {
+    setScopeNotes("");
+    setSelectedIds([]);
+    setLines(new Map());
+    setSelectedBranchId(
+      !hasMultipleBranches ? String(branches[0]?.branch_id ?? "") : "",
+    );
+    setSelectedWarehouseId("");
+  };
+
   const handleSubmit = () => {
     if (!selectedWarehouseId) {
       showToast({
@@ -204,6 +214,7 @@ export function CountScreen() {
           type: "success",
           message: `Conteo enviado (${payload.items.length} artículos)`,
         });
+        resetForm();
       },
       onError: (err) => {
         showToast({

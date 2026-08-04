@@ -135,6 +135,11 @@ export function ProductPicker({
                           {item.sku} · {item.category_name}
                         </Text>
                       </View>
+                      <View style={styles.stockBadge}>
+                        <Text style={styles.stockBadgeText}>
+                          Stock: {item.system_qty}
+                        </Text>
+                      </View>
                     </Pressable>
                   );
                 }}
@@ -196,6 +201,13 @@ const styles = StyleSheet.create({
   },
   productName: { fontSize: 13, fontWeight: "500", color: "#1a1a1a" },
   sku: { fontSize: 11, color: "#888" },
+  stockBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    backgroundColor: "#f2f2f2",
+  },
+  stockBadgeText: { fontSize: 11, fontWeight: "500", color: "#374151" },
   muted: { fontSize: 13, color: "#aaa", textAlign: "center", padding: 32 },
   footer: {
     justifyContent: "space-between",

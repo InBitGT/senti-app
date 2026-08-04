@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function PosLayout() {
+export default function PosFormLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
@@ -12,7 +12,7 @@ export default function PosLayout() {
         options={{ title: "Conteo de articulos en almacen " }}
       />
       <Stack.Screen
-        name="punto_venta"
+        name="point_of_sales"
         options={{ title: "Unidades de medida" }}
       />
     </Stack>

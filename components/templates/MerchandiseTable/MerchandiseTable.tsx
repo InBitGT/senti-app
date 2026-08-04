@@ -26,12 +26,18 @@ const TYPE_CONFIG: Record<
   menu_item: { label: "Ítem de menú", color: "#3C3489", bg: "#EEEDFE" },
 };
 
-type OptionalColumnKey = "category" | "brand" | "barcode" | "modifier";
+type OptionalColumnKey =
+  | "category"
+  | "brand"
+  | "barcode"
+  | "price"
+  | "modifier";
 
 const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
   { key: "category", label: "Categoría" },
   { key: "brand", label: "Marca" },
   { key: "barcode", label: "Código de barras" },
+  { key: "price", label: "Precio" },
 ];
 
 function TypeBadge({ type }: { type: string }) {
@@ -80,6 +86,7 @@ export function MerchandiseTable({
     category: false,
     brand: false,
     barcode: false,
+    price: false,
     modifier: false,
   });
   const { width } = useWindowDimensions();
@@ -114,6 +121,7 @@ export function MerchandiseTable({
           r.sku.toLowerCase().includes(term) ||
           (r.brand ?? "").toLowerCase().includes(term) ||
           (r.barcode ?? "").toLowerCase().includes(term) ||
+          (r.category_name ?? "").toLowerCase().includes(term) ||
           (r.modifier_name ?? "").toLowerCase().includes(term),
       );
     }
@@ -143,7 +151,7 @@ export function MerchandiseTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
-            placeholder="Buscar producto, SKU, marca…"
+            placeholder="Buscar producto, SKU, marca, categoría…"
             value={search}
             onChangeText={setSearch}
           />
@@ -234,7 +242,7 @@ export function MerchandiseTable({
             Tipo
           </DataTable.Title>
           {visibleColumns.category && (
-            <DataTable.Title numeric style={{ justifyContent: "center" }}>
+            <DataTable.Title style={{ flex: 1.3, justifyContent: "center" }}>
               Categoría
             </DataTable.Title>
           )}
@@ -246,6 +254,11 @@ export function MerchandiseTable({
           {visibleColumns.barcode && (
             <DataTable.Title style={{ flex: 1.2, justifyContent: "center" }}>
               Cód. barras
+            </DataTable.Title>
+          )}
+          {visibleColumns.price && (
+            <DataTable.Title numeric style={{ justifyContent: "center" }}>
+              Precio
             </DataTable.Title>
           )}
 
@@ -301,8 +314,10 @@ export function MerchandiseTable({
               </DataTable.Cell>
 
               {visibleColumns.category && (
-                <DataTable.Cell numeric style={{ justifyContent: "center" }}>
-                  <Text style={styles.cell}>{row.category_id}</Text>
+                <DataTable.Cell style={{ flex: 1.3, justifyContent: "center" }}>
+                  <Text style={styles.cell} numberOfLines={1}>
+                    {row.category_name ?? "—"}
+                  </Text>
                 </DataTable.Cell>
               )}
 
@@ -318,6 +333,16 @@ export function MerchandiseTable({
                 <DataTable.Cell style={{ flex: 1.2, justifyContent: "center" }}>
                   <Text style={styles.cell} numberOfLines={1}>
                     {row.barcode ?? "—"}
+                  </Text>
+                </DataTable.Cell>
+              )}
+
+              {visibleColumns.price && (
+                <DataTable.Cell numeric style={{ justifyContent: "center" }}>
+                  <Text style={styles.cost}>
+                    {row.sale_price != null
+                      ? `${row.sale_price_currency ?? ""} ${row.sale_price.toFixed(2)}`
+                      : "—"}
                   </Text>
                 </DataTable.Cell>
               )}

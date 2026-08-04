@@ -1,10 +1,6 @@
+import { FiscalDocumentScreen } from "@/src/screen/pos/fiscal_document/fiscal_document";
 import React from "react";
-import { Text, View } from "react-native";
 
 export default function invoices() {
-  return (
-    <View>
-      <Text>invoices</Text>
-    </View>
-  );
+  return <FiscalDocumentScreen />;
 }

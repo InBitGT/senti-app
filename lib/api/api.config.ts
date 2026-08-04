@@ -76,7 +76,8 @@ export const ENDPOINT = {
   },
   warehouse: {
     info: "inventory-service/api/warehouse/",
-    detail: (idTenant: string | number) => `inventory-service/api/warehouse`,
+    detail: (idTenant: string | number) =>
+      `inventory-service/api/warehouse?tenant_id=${idTenant}`,
   },
   stock_count: {
     info: "inventory-service/api/stock-count",
@@ -90,11 +91,47 @@ export const ENDPOINT = {
   },
   stock_count_adjustment: {
     info: "inventory-service/api/stock-adjustment",
+    changesStatus: (
+      adjustment_id: string | number,
+      status: StatusAdjustmentStock,
+    ) => `inventory-service/api/stock-adjustment/${adjustment_id}/${status}`,
     detailInfo: (
       idTenant: string | number,
-      idWarehouse: string | null,
+      idWarehouse: string | number,
       status: StatusAdjustmentStock,
     ) =>
       `inventory-service/api/stock-adjustment?tenant_id=${idTenant}&warehouse_id=${idWarehouse}&adjustment_status=${status}`,
+  },
+  customerType: {
+    info: `customer-service/api/type`,
+    detail: (idTenant: string | number) =>
+      `customer-service/api/type/tenant/${idTenant}`,
+  },
+  customer: {
+    info: `customer-service/api/customer`,
+    detail: (idTenant: string | number) =>
+      `customer-service/api/customer/tenant/${idTenant}`,
+  },
+  loanPayments: {
+    loan: (idCustomer: string | number) =>
+      `customer-service/api/customer-credit/customer/${idCustomer}/payment`,
+  },
+  credit: {
+    info: `customer-service/api/customer-credit`,
+    detail: (idTenant: string | number) =>
+      `customer-service/api/customer-credit?tenant_id=${idTenant}`,
+  },
+  warehouse_zone: {
+    info: `inventory-service/api/warehouse-zone`,
+    detail: (idWarehouse: string | number) =>
+      `inventory-service/api/warehouse-zone?warehouse_id=${idWarehouse}`,
+  },
+  movement_credit: {
+    detail: (idTenant: string | number) =>
+      `customer-service/api/customer-credit/movements?tenant_id=${idTenant}`,
+  },
+  fiscalDocument: {
+    detail: (idBranch: string | number) =>
+      `payment-client-service/api/fiscal-document?branch_id=${idBranch}`,
   },
 };

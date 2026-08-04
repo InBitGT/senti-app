@@ -4,52 +4,75 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCategorie } from "@/src/hooks";
+import { useCustomerType } from "@/src/hooks/useCustomerType/useCustomerType";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useMerchandise } from "@/src/hooks/useMerchandise/useMerchandise";
 import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
-import { useUnitConversion } from "@/src/hooks/useUnitConvertion/useUnitConvertion";
 import { useAuthStore } from "@/src/store";
 import { useMerchandiseStore } from "@/src/store/useMerchandiseStore/useMerchandiseStore";
+import type {
+  MerchandiseDetail,
+  MerchandiseListItem,
+} from "@/src/types/merchandise/merchandise.types";
 import { useRouter } from "expo-router";
+import { Plus, Trash2 } from "lucide-react-native";
 import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+interface ConversionRow {
+  from_uom_id: string;
+  to_uom_id: string;
+  factor: string;
+  // Precio específico para esta conversión (opcional).
+  has_price_per_uom: boolean;
+  price_per_uom_amount: string;
+  price_per_uom_currency: string;
+  price_per_uom_wholesale_min_qty: string;
+  price_per_uom_wholesale_amount: string;
+}
+
+interface CustomerTypePriceRow {
+  customer_type_id: string;
+  amount: string;
+  currency: string;
+}
 
 interface FormValues {
   category_id: string;
@@ -63,26 +86,17 @@ interface FormValues {
   average_cost: string;
   requires_batch: boolean;
   availability_status: string;
-  // Conversión manual (solo si la unidad elegida lo requiere)
-  to_uom_id: string;
-  conversion_factor: string;
-}
-
-export interface MerchandiseDetail {
-  tenant_id: number;
-  category_id: number;
-  name: string;
-  description: string;
-  sku: string;
-  barcode: string;
-  brand: string | null;
-  type: string;
-  unit_of_measure_id: number;
-  average_cost: number;
-  requires_batch: boolean;
-  availability_status: string;
-  picture: string | null;
-  is_modifier: boolean;
+  // Precio base
+  price_amount: string;
+  price_currency: string;
+  // Conversiones de unidad (0..n), cada una con su propio precio opcional
+  conversions: ConversionRow[];
+  // Precios por tipo de cliente (0..n)
+  customer_type_prices: CustomerTypePriceRow[];
+  // Regla de mayoreo general del producto (única, opcional)
+  has_wholesale_rule: boolean;
+  wholesale_min_quantity: string;
+  wholesale_discount_percentage: string;
 }
 
 const PRODUCT_TYPES = [
@@ -91,14 +105,28 @@ const PRODUCT_TYPES = [
   { label: "Material de empaque", value: "packing" },
 ];
 
+const CURRENCIES = [
+  { label: "GTQ", value: "GTQ" },
+  { label: "USD", value: "USD" },
+];
+
 export default function MerchandiseForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
   const { post, put } = useMerchandise();
-  const { post: postConversion } = useUnitConversion();
   const { data: categorie } = useCategorie();
   const { data: units } = useUnit();
-  const data = useMerchandiseStore((state) => state.data);
+  const { data: customerTypes } = useCustomerType();
+  // "data" es la respuesta completa del GET al editar:
+  // { product, price, conversions, customer_type_prices, price_per_uom, wholesale_rule }
+  // El store aún tipa "data" como Merchandise (fila plana de la tabla),
+  // pero en modo edición lo que realmente guarda/recibe es el shape
+  // completo del GET: { product, price, conversions, ... }.
+  // TODO: actualizar el tipo de "data" en useMerchandiseStore a
+  // MerchandiseListItem para no necesitar este cast.
+  const data = useMerchandiseStore(
+    (state) => state.data,
+  ) as unknown as MerchandiseListItem | null;
   const isEdit = useMerchandiseStore((state) => state.isEdit);
   const clearData = useMerchandiseStore((state) => state.clearData);
   const setIsEdit = useMerchandiseStore((state) => state.setIsEdit);
@@ -109,6 +137,8 @@ export default function MerchandiseForm() {
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
+  const product = data?.product;
+
   const {
     control,
     handleSubmit,
@@ -116,35 +146,76 @@ export default function MerchandiseForm() {
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      category_id: data?.category_id ? String(data.category_id) : "",
-      name: data?.name || "",
-      description: data?.description || "",
-      sku: data?.sku || "",
-      barcode: data?.barcode || "",
-      brand: data?.brand || "",
-      type: data?.type || "finished_product",
-      unit_of_measure_id: data?.unit_of_measure_id
-        ? String(data.unit_of_measure_id)
+      category_id: product?.category_id ? String(product.category_id) : "",
+      name: product?.name || "",
+      description: product?.description || "",
+      sku: product?.sku || "",
+      barcode: product?.barcode || "",
+      brand: product?.brand || "",
+      type: product?.type || "finished_product",
+      unit_of_measure_id: product?.unit_of_measure_id
+        ? String(product.unit_of_measure_id)
         : "",
-      average_cost: data?.average_cost ? String(data.average_cost) : "",
-      requires_batch: data?.requires_batch ?? false,
-      availability_status: data?.availability_status || "available",
-      to_uom_id: "",
-      conversion_factor: "",
+      average_cost:
+        product?.average_cost != null ? String(product.average_cost) : "",
+      requires_batch: product?.requires_batch ?? false,
+      availability_status: product?.availability_status || "available",
+      price_amount:
+        data?.price?.amount != null ? String(data.price.amount) : "",
+      price_currency: data?.price?.currency || "GTQ",
+      conversions: data?.conversions?.length
+        ? data.conversions.map((c) => ({
+            from_uom_id: String(c.from_uom_id),
+            to_uom_id: String(c.to_uom_id),
+            factor: String(c.factor),
+            has_price_per_uom: !!c.price_per_uom,
+            price_per_uom_amount:
+              c.price_per_uom?.amount != null
+                ? String(c.price_per_uom.amount)
+                : "",
+            price_per_uom_currency: c.price_per_uom?.currency || "GTQ",
+            price_per_uom_wholesale_min_qty:
+              c.price_per_uom?.wholesale_min_qty != null
+                ? String(c.price_per_uom.wholesale_min_qty)
+                : "",
+            price_per_uom_wholesale_amount:
+              c.price_per_uom?.wholesale_amount != null
+                ? String(c.price_per_uom.wholesale_amount)
+                : "",
+          }))
+        : [],
+      customer_type_prices: data?.customer_type_prices?.length
+        ? data.customer_type_prices.map((c) => ({
+            customer_type_id: String(c.customer_type_id),
+            amount: String(c.amount),
+            currency: c.currency,
+          }))
+        : [],
+      has_wholesale_rule: !!data?.wholesale_rule,
+      wholesale_min_quantity: data?.wholesale_rule?.min_quantity
+        ? String(data.wholesale_rule.min_quantity)
+        : "",
+      wholesale_discount_percentage: data?.wholesale_rule?.discount_percentage
+        ? String(data.wholesale_rule.discount_percentage)
+        : "",
     },
   });
 
-  const selectedUnitId = watch("unit_of_measure_id");
+  const {
+    fields: conversionFields,
+    append: appendConversion,
+    remove: removeConversion,
+  } = useFieldArray({ control, name: "conversions" });
 
-  const selectedUnit = (units ?? []).find(
-    (u) => String(u.id) === selectedUnitId,
-  );
-  const showConversion = !!selectedUnit?.is_conversion_manual;
+  const {
+    fields: customerPriceFields,
+    append: appendCustomerPrice,
+    remove: removeCustomerPrice,
+  } = useFieldArray({ control, name: "customer_type_prices" });
 
-  // opciones de "convertir a" excluyendo la unidad ya seleccionada
-  const conversionTargetUnits = (units ?? []).filter(
-    (u) => String(u.id) !== selectedUnitId,
-  );
+  const hasWholesaleRule = watch("has_wholesale_rule");
+  const conversionsValue = watch("conversions");
+  const priceCurrency = watch("price_currency");
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
@@ -164,43 +235,71 @@ export default function MerchandiseForm() {
       availability_status: values.availability_status,
       picture: null,
       is_modifier: false,
+      price: {
+        amount: parseFloat(values.price_amount),
+        currency: values.price_currency,
+      },
+      conversions: values.conversions
+        .filter((c) => c.from_uom_id && c.to_uom_id && c.factor)
+        .map((c) => ({
+          from_uom_id: parseInt(c.from_uom_id),
+          to_uom_id: parseInt(c.to_uom_id),
+          factor: parseFloat(c.factor),
+          ...(c.has_price_per_uom && c.price_per_uom_amount
+            ? {
+                price_per_uom: {
+                  amount: parseFloat(c.price_per_uom_amount),
+                  currency: c.price_per_uom_currency || values.price_currency,
+                  ...(c.price_per_uom_wholesale_min_qty
+                    ? {
+                        wholesale_min_qty: parseInt(
+                          c.price_per_uom_wholesale_min_qty,
+                        ),
+                      }
+                    : {}),
+                  ...(c.price_per_uom_wholesale_amount
+                    ? {
+                        wholesale_amount: parseFloat(
+                          c.price_per_uom_wholesale_amount,
+                        ),
+                      }
+                    : {}),
+                },
+              }
+            : {}),
+        })),
+      customer_type_prices: values.customer_type_prices
+        .filter((c) => c.customer_type_id && c.amount)
+        .map((c) => ({
+          customer_type_id: parseInt(c.customer_type_id),
+          amount: parseFloat(c.amount),
+          currency: c.currency,
+        })),
+      wholesale_rule: values.has_wholesale_rule
+        ? {
+            min_quantity: parseInt(values.wholesale_min_quantity),
+            discount_percentage: parseFloat(
+              values.wholesale_discount_percentage,
+            ),
+          }
+        : null,
     };
 
     try {
-      let productId: number | undefined = data?.id;
-
       if (!isEdit) {
-        const created = await post.mutateAsync(payload);
-        productId = created?.id; // ajustar según la forma real de la respuesta
+        await post.mutateAsync(payload);
         showToast({
           message: "Producto creado correctamente",
           type: "success",
         });
       } else {
-        if (!data?.id) return;
-        await put.mutateAsync({ id: data.id, data: payload });
-        productId = data.id;
+        if (!product?.id) return;
+        await put.mutateAsync({ id: product.id, data: payload });
         showToast({
           message: "Producto editado correctamente",
           type: "success",
         });
         setIsEdit(false);
-      }
-
-      // Si la unidad requiere conversión manual, se crea el registro de conversión
-      // usando el id del producto recién creado/editado.
-      if (
-        showConversion &&
-        values.to_uom_id &&
-        values.conversion_factor &&
-        productId
-      ) {
-        await postConversion.mutateAsync({
-          from_uom_id: parseInt(values.unit_of_measure_id),
-          to_uom_id: parseInt(values.to_uom_id),
-          factor: parseFloat(values.conversion_factor),
-          product_id: productId,
-        });
       }
 
       clearData();
@@ -211,7 +310,7 @@ export default function MerchandiseForm() {
     }
   };
 
-  const isPending = post.isPending || put.isPending || postConversion.isPending;
+  const isPending = post.isPending || put.isPending;
 
   return (
     <KeyboardAvoidingView
@@ -253,10 +352,8 @@ export default function MerchandiseForm() {
               </Text>
 
               <VStack space="lg">
-                {/* ── INFO GENERAL ── */}
                 <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
-                {/* Nombre + Categoría */}
                 <View style={row}>
                   <View style={half}>
                     <Controller
@@ -273,7 +370,7 @@ export default function MerchandiseForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. Pan"
+                              placeholder="Ej. Lápiz b1"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -346,7 +443,6 @@ export default function MerchandiseForm() {
                   </View>
                 </View>
 
-                {/* Descripción */}
                 <Controller
                   control={control}
                   name="description"
@@ -380,7 +476,6 @@ export default function MerchandiseForm() {
                   )}
                 />
 
-                {/* SKU + Barcode */}
                 <View style={row}>
                   <View style={half}>
                     <Controller
@@ -397,7 +492,7 @@ export default function MerchandiseForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. PAN-001"
+                              placeholder="Ej. LAP-001"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -445,7 +540,6 @@ export default function MerchandiseForm() {
                   </View>
                 </View>
 
-                {/* Brand + Costo promedio */}
                 <View style={row}>
                   <View style={half}>
                     <Controller
@@ -490,7 +584,7 @@ export default function MerchandiseForm() {
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. 0.50"
+                              placeholder="Ej. 0.60"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
@@ -509,7 +603,6 @@ export default function MerchandiseForm() {
                   </View>
                 </View>
 
-                {/* Tipo + Unidad de medida (real, desde useUnit) */}
                 <View style={row}>
                   <View style={half}>
                     <Controller
@@ -622,38 +715,484 @@ export default function MerchandiseForm() {
                   </View>
                 </View>
 
-                {/* ── CONVERSIÓN MANUAL (condicional según la unidad elegida) ── */}
-                {showConversion && (
-                  <>
-                    <Divider className="my-2" />
-                    <Text style={styles.sectionLabel}>
-                      CONVERSIÓN DE UNIDAD
-                    </Text>
-                    <Text size="xs" style={{ color: "#888" }}>
-                      La unidad seleccionada ({selectedUnit?.name}) requiere
-                      definir a qué unidad se convierte y el factor.
-                    </Text>
+                <Divider className="my-2" />
+                <Text style={styles.sectionLabel}>PRECIO</Text>
 
-                    <View style={row}>
-                      <View style={half}>
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="price_amount"
+                      rules={{ required: "El precio es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <FormControl isInvalid={!!errors.price_amount}>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Precio de venta
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          <Input>
+                            <InputField
+                              style={{ color: "#171717" }}
+                              placeholder="Ej. 1.00"
+                              value={value}
+                              onChangeText={onChange}
+                              onBlur={onBlur}
+                              keyboardType="decimal-pad"
+                            />
+                          </Input>
+                          <FormControlError>
+                            <FormControlErrorIcon as={AlertCircleIcon} />
+                            <FormControlErrorText>
+                              {errors.price_amount?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      )}
+                    />
+                  </View>
+
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="price_currency"
+                      render={({ field: { onChange, value } }) => (
+                        <FormControl>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Moneda
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          <Select
+                            selectedValue={value}
+                            onValueChange={onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectInput
+                                style={{ color: "#000" }}
+                                placeholder="Selecciona moneda"
+                                value={value}
+                              />
+                            </SelectTrigger>
+                            <SelectPortal>
+                              <SelectBackdrop />
+                              <SelectContent>
+                                <SelectDragIndicatorWrapper>
+                                  <SelectDragIndicator />
+                                </SelectDragIndicatorWrapper>
+                                {CURRENCIES.map((c) => (
+                                  <SelectItem
+                                    key={c.value}
+                                    label={c.label}
+                                    value={c.value}
+                                  />
+                                ))}
+                              </SelectContent>
+                            </SelectPortal>
+                          </Select>
+                        </FormControl>
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <Divider className="my-2" />
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    CONVERSIONES DE UNIDAD{" "}
+                    <Text size="xs" style={{ color: "#999" }}>
+                      (opcional)
+                    </Text>
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      appendConversion({
+                        from_uom_id: "",
+                        to_uom_id: "",
+                        factor: "",
+                        has_price_per_uom: false,
+                        price_per_uom_amount: "",
+                        price_per_uom_currency: priceCurrency || "GTQ",
+                        price_per_uom_wholesale_min_qty: "",
+                        price_per_uom_wholesale_amount: "",
+                      })
+                    }
+                    style={styles.addRowButton}
+                  >
+                    <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
+                    <Text style={styles.addRowText}>Agregar conversión</Text>
+                  </Pressable>
+                </HStack>
+
+                {conversionFields.map((field, index) => {
+                  const currentFromId = conversionsValue?.[index]?.from_uom_id;
+                  const toOptions = (units ?? []).filter(
+                    (u) => String(u.id) !== currentFromId,
+                  );
+                  const rowHasPrice =
+                    conversionsValue?.[index]?.has_price_per_uom;
+                  return (
+                    <View key={field.id} style={styles.dynamicRow}>
+                      <View style={row}>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name={`conversions.${index}.from_uom_id`}
+                            render={({ field: { onChange, value } }) => {
+                              const label =
+                                units?.find((u) => String(u.id) === value)
+                                  ?.name || "";
+                              return (
+                                <FormControl>
+                                  <FormControlLabel>
+                                    <FormControlLabelText
+                                      style={{ color: "#000" }}
+                                    >
+                                      De la unidad
+                                    </FormControlLabelText>
+                                  </FormControlLabel>
+                                  <Select
+                                    selectedValue={value}
+                                    onValueChange={onChange}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectInput
+                                        style={{ color: "#000" }}
+                                        placeholder="Unidad origen"
+                                        value={label}
+                                      />
+                                    </SelectTrigger>
+                                    <SelectPortal>
+                                      <SelectBackdrop />
+                                      <SelectContent>
+                                        <SelectDragIndicatorWrapper>
+                                          <SelectDragIndicator />
+                                        </SelectDragIndicatorWrapper>
+                                        {(units ?? []).map((u) => (
+                                          <SelectItem
+                                            key={u.id}
+                                            label={`${u.name} (${u.code})`}
+                                            value={String(u.id)}
+                                          />
+                                        ))}
+                                      </SelectContent>
+                                    </SelectPortal>
+                                  </Select>
+                                </FormControl>
+                              );
+                            }}
+                          />
+                        </View>
+
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name={`conversions.${index}.to_uom_id`}
+                            render={({ field: { onChange, value } }) => {
+                              const label =
+                                units?.find((u) => String(u.id) === value)
+                                  ?.name || "";
+                              return (
+                                <FormControl>
+                                  <FormControlLabel>
+                                    <FormControlLabelText
+                                      style={{ color: "#000" }}
+                                    >
+                                      A la unidad
+                                    </FormControlLabelText>
+                                  </FormControlLabel>
+                                  <Select
+                                    selectedValue={value}
+                                    onValueChange={onChange}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectInput
+                                        style={{ color: "#000" }}
+                                        placeholder="Unidad destino"
+                                        value={label}
+                                      />
+                                    </SelectTrigger>
+                                    <SelectPortal>
+                                      <SelectBackdrop />
+                                      <SelectContent>
+                                        <SelectDragIndicatorWrapper>
+                                          <SelectDragIndicator />
+                                        </SelectDragIndicatorWrapper>
+                                        {toOptions.map((u) => (
+                                          <SelectItem
+                                            key={u.id}
+                                            label={`${u.name} (${u.code})`}
+                                            value={String(u.id)}
+                                          />
+                                        ))}
+                                      </SelectContent>
+                                    </SelectPortal>
+                                  </Select>
+                                </FormControl>
+                              );
+                            }}
+                          />
+                        </View>
+                      </View>
+
+                      <Controller
+                        control={control}
+                        name={`conversions.${index}.factor`}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Factor
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 10"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                              />
+                            </Input>
+                          </FormControl>
+                        )}
+                      />
+
+                      <View style={styles.switchRow}>
+                        <Text style={{ color: "#000", fontSize: 13 }}>
+                          Definir precio para esta unidad
+                        </Text>
                         <Controller
                           control={control}
-                          name="to_uom_id"
-                          rules={{
-                            required: "Selecciona la unidad de destino.",
-                          }}
+                          name={`conversions.${index}.has_price_per_uom`}
+                          render={({ field: { onChange, value } }) => (
+                            <Switch value={value} onToggle={onChange} />
+                          )}
+                        />
+                      </View>
+
+                      {rowHasPrice && (
+                        <>
+                          <View style={row}>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_amount`}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <FormControl>
+                                    <FormControlLabel>
+                                      <FormControlLabelText
+                                        style={{ color: "#000" }}
+                                      >
+                                        Precio por unidad
+                                      </FormControlLabelText>
+                                    </FormControlLabel>
+                                    <Input>
+                                      <InputField
+                                        style={{ color: "#171717" }}
+                                        placeholder="Ej. 8.00"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        keyboardType="decimal-pad"
+                                      />
+                                    </Input>
+                                  </FormControl>
+                                )}
+                              />
+                            </View>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_currency`}
+                                render={({ field: { onChange, value } }) => (
+                                  <FormControl>
+                                    <FormControlLabel>
+                                      <FormControlLabelText
+                                        style={{ color: "#000" }}
+                                      >
+                                        Moneda
+                                      </FormControlLabelText>
+                                    </FormControlLabel>
+                                    <Select
+                                      selectedValue={value}
+                                      onValueChange={onChange}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectInput
+                                          style={{ color: "#000" }}
+                                          placeholder="Moneda"
+                                          value={value}
+                                        />
+                                      </SelectTrigger>
+                                      <SelectPortal>
+                                        <SelectBackdrop />
+                                        <SelectContent>
+                                          <SelectDragIndicatorWrapper>
+                                            <SelectDragIndicator />
+                                          </SelectDragIndicatorWrapper>
+                                          {CURRENCIES.map((c) => (
+                                            <SelectItem
+                                              key={c.value}
+                                              label={c.label}
+                                              value={c.value}
+                                            />
+                                          ))}
+                                        </SelectContent>
+                                      </SelectPortal>
+                                    </Select>
+                                  </FormControl>
+                                )}
+                              />
+                            </View>
+                          </View>
+
+                          <View style={row}>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_wholesale_min_qty`}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <FormControl>
+                                    <FormControlLabel>
+                                      <FormControlLabelText
+                                        style={{ color: "#000" }}
+                                      >
+                                        Cant. mínima mayoreo{" "}
+                                        <Text
+                                          size="xs"
+                                          style={{ color: "#999" }}
+                                        >
+                                          (opcional)
+                                        </Text>
+                                      </FormControlLabelText>
+                                    </FormControlLabel>
+                                    <Input>
+                                      <InputField
+                                        style={{ color: "#171717" }}
+                                        placeholder="Ej. 5"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        keyboardType="number-pad"
+                                      />
+                                    </Input>
+                                  </FormControl>
+                                )}
+                              />
+                            </View>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_wholesale_amount`}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <FormControl>
+                                    <FormControlLabel>
+                                      <FormControlLabelText
+                                        style={{ color: "#000" }}
+                                      >
+                                        Precio mayoreo{" "}
+                                        <Text
+                                          size="xs"
+                                          style={{ color: "#999" }}
+                                        >
+                                          (opcional)
+                                        </Text>
+                                      </FormControlLabelText>
+                                    </FormControlLabel>
+                                    <Input>
+                                      <InputField
+                                        style={{ color: "#171717" }}
+                                        placeholder="Ej. 7.50"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        keyboardType="decimal-pad"
+                                      />
+                                    </Input>
+                                  </FormControl>
+                                )}
+                              />
+                            </View>
+                          </View>
+                        </>
+                      )}
+
+                      <Pressable
+                        onPress={() => removeConversion(index)}
+                        style={styles.removeRowButtonFull}
+                      >
+                        <Icon
+                          as={Trash2}
+                          size="sm"
+                          style={{ color: "#7C1D1D" }}
+                        />
+                        <Text style={{ color: "#7C1D1D", fontSize: 12 }}>
+                          Quitar conversión
+                        </Text>
+                      </Pressable>
+                    </View>
+                  );
+                })}
+
+                <Divider className="my-2" />
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    PRECIOS POR TIPO DE CLIENTE{" "}
+                    <Text size="xs" style={{ color: "#999" }}>
+                      (opcional)
+                    </Text>
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      appendCustomerPrice({
+                        customer_type_id: "",
+                        amount: "",
+                        currency: priceCurrency || "GTQ",
+                      })
+                    }
+                    style={styles.addRowButton}
+                  >
+                    <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
+                    <Text style={styles.addRowText}>Agregar precio</Text>
+                  </Pressable>
+                </HStack>
+
+                {customerPriceFields.map((field, index) => (
+                  <View key={field.id} style={styles.dynamicRow}>
+                    <HStack style={{ gap: 10 }}>
+                      <View style={{ flex: 2 }}>
+                        <Controller
+                          control={control}
+                          name={`customer_type_prices.${index}.customer_type_id`}
                           render={({ field: { onChange, value } }) => {
                             const label =
-                              conversionTargetUnits.find(
-                                (u) => String(u.id) === value,
-                              )?.name || "";
+                              customerTypes?.find((c) => String(c.id) === value)
+                                ?.name || "";
                             return (
-                              <FormControl isInvalid={!!errors.to_uom_id}>
+                              <FormControl>
                                 <FormControlLabel>
                                   <FormControlLabelText
                                     style={{ color: "#000" }}
                                   >
-                                    Convertir a
+                                    Tipo de cliente
                                   </FormControlLabelText>
                                 </FormControlLabel>
                                 <Select
@@ -663,7 +1202,7 @@ export default function MerchandiseForm() {
                                   <SelectTrigger>
                                     <SelectInput
                                       style={{ color: "#000" }}
-                                      placeholder="Selecciona unidad destino"
+                                      placeholder="Selecciona tipo"
                                       value={label}
                                     />
                                   </SelectTrigger>
@@ -673,67 +1212,158 @@ export default function MerchandiseForm() {
                                       <SelectDragIndicatorWrapper>
                                         <SelectDragIndicator />
                                       </SelectDragIndicatorWrapper>
-                                      {conversionTargetUnits.map((u) => (
+                                      {(customerTypes ?? []).map((c) => (
                                         <SelectItem
-                                          key={u.id}
-                                          label={`${u.name} (${u.code})`}
-                                          value={String(u.id)}
+                                          key={c.id}
+                                          label={c.name}
+                                          value={String(c.id)}
                                         />
                                       ))}
                                     </SelectContent>
                                   </SelectPortal>
                                 </Select>
-                                <FormControlError>
-                                  <FormControlErrorIcon as={AlertCircleIcon} />
-                                  <FormControlErrorText>
-                                    {errors.to_uom_id?.message}
-                                  </FormControlErrorText>
-                                </FormControlError>
                               </FormControl>
                             );
                           }}
                         />
                       </View>
 
-                      <View style={half}>
+                      <View style={{ flex: 1.3 }}>
                         <Controller
                           control={control}
-                          name="conversion_factor"
-                          rules={{
-                            required: "El factor de conversión es obligatorio.",
-                          }}
+                          name={`customer_type_prices.${index}.amount`}
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl isInvalid={!!errors.conversion_factor}>
+                            <FormControl>
                               <FormControlLabel>
                                 <FormControlLabelText style={{ color: "#000" }}>
-                                  Factor
+                                  Precio
                                 </FormControlLabelText>
                               </FormControlLabel>
                               <Input>
                                 <InputField
                                   style={{ color: "#171717" }}
-                                  placeholder="Ej. 1000"
+                                  placeholder="Ej. 177.76"
                                   value={value}
                                   onChangeText={onChange}
                                   onBlur={onBlur}
                                   keyboardType="decimal-pad"
                                 />
                               </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.conversion_factor?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
                             </FormControl>
                           )}
                         />
                       </View>
+
+                      <Pressable
+                        onPress={() => removeCustomerPrice(index)}
+                        style={[styles.removeRowButton, { marginBottom: 2 }]}
+                      >
+                        <Icon
+                          as={Trash2}
+                          size="sm"
+                          style={{ color: "#7C1D1D" }}
+                        />
+                      </Pressable>
+                    </HStack>
+                  </View>
+                ))}
+
+                <Divider className="my-2" />
+                <View style={styles.switchRow}>
+                  <Text style={{ color: "#000" }}>
+                    Aplica regla de mayoreo general
+                  </Text>
+                  <Controller
+                    control={control}
+                    name="has_wholesale_rule"
+                    render={({ field: { onChange, value } }) => (
+                      <Switch value={value} onToggle={onChange} />
+                    )}
+                  />
+                </View>
+
+                {hasWholesaleRule && (
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="wholesale_min_quantity"
+                        rules={{
+                          required: hasWholesaleRule
+                            ? "La cantidad mínima es obligatoria."
+                            : false,
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl
+                            isInvalid={!!errors.wholesale_min_quantity}
+                          >
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Cantidad mínima
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 10"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="number-pad"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.wholesale_min_quantity?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
                     </View>
-                  </>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="wholesale_discount_percentage"
+                        rules={{
+                          required: hasWholesaleRule
+                            ? "El descuento es obligatorio."
+                            : false,
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl
+                            isInvalid={!!errors.wholesale_discount_percentage}
+                          >
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Descuento (%)
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 10"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.wholesale_discount_percentage?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
                 )}
 
-                {/* Switch: requires_batch */}
                 <View style={styles.switchRow}>
                   <Text style={{ color: "#000" }}>Requiere lote</Text>
                   <Controller
@@ -745,7 +1375,6 @@ export default function MerchandiseForm() {
                   />
                 </View>
 
-                {/* Botones */}
                 <HStack style={{ justifyContent: "flex-end" }}>
                   <Button
                     size="lg"
@@ -807,5 +1436,46 @@ export const styles = StyleSheet.create({
     borderColor: "#e5e5e5",
     borderRadius: 8,
     paddingRight: 12,
+  },
+  dynamicRow: {
+    gap: 10,
+    padding: 12,
+    borderWidth: 0.5,
+    borderColor: "#d4d4d4",
+    borderRadius: 12,
+    backgroundColor: "#fafafa",
+  },
+  addRowButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  addRowText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#0C447C",
+  },
+  removeRowButton: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    borderWidth: 0.5,
+    borderColor: "#d4d4d4",
+  },
+  removeRowButtonFull: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 0.5,
+    borderColor: "#d4d4d4",
   },
 });

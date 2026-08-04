@@ -1,15 +1,18 @@
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
-import { WarehouseDetail } from "@/src/types/warehouse/warehouse.types";
+import {
+  WarehouseDetail,
+  WarehouseZone,
+} from "@/src/types/warehouse/warehouse.types";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -51,17 +54,73 @@ const Avatar = ({ name }: { name: string }) => (
 
 const Badge = ({
   active,
-  label,
+  labels = ["Predeterminada", "Adicional"],
 }: {
   active: boolean;
-  label?: [string, string];
+  labels?: [string, string];
 }) => (
   <View
     style={[styles.badge, { backgroundColor: active ? "#dcfce7" : "#fee2e2" }]}
   >
     <Text style={[styles.badgeText, { color: active ? "#16a34a" : "#dc2626" }]}>
-      {active ? (label?.[0] ?? "Activo") : (label?.[1] ?? "Inactivo")}
+      {active ? labels[0] : labels[1]}
     </Text>
+  </View>
+);
+
+const ZONE_TYPE_LABELS: Record<string, string> = {
+  zone: "Zona",
+  aisle: "Pasillo",
+  shelf: "Estante",
+  rack: "Rack",
+  bin: "Contenedor",
+};
+
+// Arma el árbol a partir de la lista plana (n niveles vía parent_zone_id) y lo aplana
+// de nuevo en orden de profundidad para renderizar filas con indentación.
+const buildZoneRows = (
+  zones: WarehouseZone[],
+): { zone: WarehouseZone; depth: number }[] => {
+  const byParent = new Map<number | null, WarehouseZone[]>();
+  zones.forEach((z) => {
+    const key = z.parent_zone_id;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(z);
+  });
+
+  const rows: { zone: WarehouseZone; depth: number }[] = [];
+  const visit = (parentId: number | null, depth: number) => {
+    const children = byParent.get(parentId) ?? [];
+    children.forEach((z) => {
+      rows.push({ zone: z, depth });
+      visit(z.id, depth + 1);
+    });
+  };
+  visit(null, 0);
+
+  // Por si hay huérfanos (parent_zone_id apunta a algo que no llegó en la lista)
+  const visitedIds = new Set(rows.map((r) => r.zone.id));
+  zones.forEach((z) => {
+    if (!visitedIds.has(z.id)) rows.push({ zone: z, depth: 0 });
+  });
+
+  return rows;
+};
+
+const ZoneRow = ({ zone, depth }: { zone: WarehouseZone; depth: number }) => (
+  <View style={[styles.zoneRow, { paddingLeft: 8 + depth * 18 }]}>
+    <View style={styles.zoneBullet} />
+    <View style={{ flex: 1 }}>
+      <Text style={styles.zoneName}>{zone.name}</Text>
+      <Text style={styles.zoneMeta}>
+        {zone.code} · {ZONE_TYPE_LABELS[zone.zone_type] ?? zone.zone_type}
+      </Text>
+    </View>
+    {!zone.status && (
+      <View style={[styles.badge, { backgroundColor: "#fee2e2" }]}>
+        <Text style={[styles.badgeText, { color: "#dc2626" }]}>Inactiva</Text>
+      </View>
+    )}
   </View>
 );
 
@@ -70,6 +129,9 @@ export const ModalWarehouseDetail: React.FC<Props> = ({
   onClose,
   data,
 }) => {
+  const zoneRows =
+    data?.zones && data.zones.length > 0 ? buildZoneRows(data.zones) : [];
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalBackdrop />
@@ -81,19 +143,16 @@ export const ModalWarehouseDetail: React.FC<Props> = ({
               <Heading size="md" style={styles.name}>
                 {data?.name || "—"}
               </Heading>
-              <Text style={styles.code}>{data?.code}</Text>
+              <Text style={styles.code}>{data?.code ?? "Sin código"}</Text>
             </View>
-            <Badge
-              active={data?.is_default ?? false}
-              label={["Predeterminada", "Adicional"]}
-            />
+            <Badge active={data?.is_default ?? false} />
           </View>
         </ModalHeader>
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <SectionTitle title="Información general" />
-            <InfoRow label="Código" value={data?.code} />
+            <SectionTitle title="Información generalu" />
+            <InfoRow label="Código" value={data?.code ?? "—"} />
             <InfoRow label="Nombre" value={data?.name} />
             <InfoRow label="Tipo" value={data?.type} />
             <InfoRow label="Descripción" value={data?.description} />
@@ -102,6 +161,21 @@ export const ModalWarehouseDetail: React.FC<Props> = ({
 
             <SectionTitle title="Sucursal" />
             <InfoRow label="Nombre" value={data?.branch?.name} />
+            <InfoRow label="Descripción" value={data?.branch?.description} />
+            {data?.branch?.address && (
+              <InfoRow
+                label="Dirección"
+                value={[
+                  data.branch.address.line1,
+                  data.branch.address.line2,
+                  data.branch.address.city,
+                  data.branch.address.state,
+                  data.branch.address.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              />
+            )}
 
             <Divider />
 
@@ -109,25 +183,23 @@ export const ModalWarehouseDetail: React.FC<Props> = ({
             <InfoRow label="Por defecto" value={data?.is_default} />
             <InfoRow label="Usa zonas" value={data?.uses_zones} />
 
-            <Divider />
-
-            <SectionTitle title="Registro" />
-            <InfoRow
-              label="Creado"
-              value={
-                data?.created_at
-                  ? new Date(data.created_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
-            <InfoRow
-              label="Actualizado"
-              value={
-                data?.updated_at
-                  ? new Date(data.updated_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
+            {data?.uses_zones && (
+              <>
+                <Divider />
+                <SectionTitle title={`Zonas (${data.zones?.length ?? 0})`} />
+                {zoneRows.length === 0 ? (
+                  <Text style={{ color: "#9ca3af", fontSize: 13 }}>
+                    Esta bodega usa zonas pero aún no tiene ninguna registrada.
+                  </Text>
+                ) : (
+                  <View style={styles.zoneList}>
+                    {zoneRows.map(({ zone, depth }) => (
+                      <ZoneRow key={zone.id} zone={zone} depth={depth} />
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 
@@ -175,4 +247,27 @@ const styles = StyleSheet.create({
   label: { color: "#6b7280", fontSize: 13, flex: 1 },
   value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
   divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
+  zoneList: {
+    borderWidth: 1,
+    borderColor: "#f3f4f6",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  zoneRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingRight: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
+  },
+  zoneBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#c4b5fd",
+    marginRight: 8,
+  },
+  zoneName: { fontSize: 13, color: "#111827", fontWeight: "500" },
+  zoneMeta: { fontSize: 11, color: "#9ca3af", marginTop: 1 },
 });

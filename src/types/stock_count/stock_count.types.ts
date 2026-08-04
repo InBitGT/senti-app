@@ -65,9 +65,11 @@ export interface DataResponse {
 }
 
 export interface Difference {
+  stock_count_item_id: number;
   product_id: number;
   product_name: string;
   system_qty: number;
   counted_qty: number;
   difference: number;
+  unit_cost: number;
 }

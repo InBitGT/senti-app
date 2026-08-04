@@ -37,6 +37,10 @@ export default function InventoryLayout() {
         options={{ title: "Unidades de medida" }}
       />
       <Stack.Screen name="merchandise" options={{ title: "Mercaderia" }} />
+      <Stack.Screen
+        name="warehouse_zone"
+        options={{ title: "Zonas de almacenes" }}
+      />
     </Stack>
   );
 }

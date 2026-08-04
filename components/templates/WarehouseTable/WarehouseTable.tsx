@@ -40,10 +40,10 @@ export function WarehousesTable({
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
-    branch: true,
-    type: true,
-    default: true,
-    zones: true,
+    branch: false,
+    type: false,
+    default: false,
+    zones: false,
   });
 
   const toggleColumn = (key: OptionalColumnKey) => {
@@ -226,7 +226,9 @@ export function WarehousesTable({
               {visibleColumns.zones && (
                 <DataTable.Cell>
                   <Text style={{ color: "#000000" }}>
-                    {warehouse.uses_zones ? "Sí" : "No"}
+                    {warehouse.uses_zones
+                      ? `${warehouse.zones?.length ?? 0} zona${(warehouse.zones?.length ?? 0) === 1 ? "" : "s"}`
+                      : "No usa zonas"}
                   </Text>
                 </DataTable.Cell>
               )}

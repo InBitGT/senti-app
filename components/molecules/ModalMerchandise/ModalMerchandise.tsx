@@ -1,12 +1,12 @@
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { Merchandise } from "@/src/types/merchandise/merchandise.types";
@@ -55,6 +55,10 @@ const SectionTitle = ({ title }: { title: string }) => (
 );
 
 const Divider = () => <View style={styles.divider} />;
+
+const EmptySection = ({ text }: { text: string }) => (
+  <Text style={styles.emptyText}>{text}</Text>
+);
 
 const StatusBadge = ({ status }: { status?: string }) => {
   const map: Record<string, { bg: string; text: string; label: string }> = {
@@ -114,9 +118,16 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1 }}
           >
+            {/* ── GENERAL ── */}
             <SectionTitle title="General" />
             <InfoRow label="Descripción" value={data?.description} />
-            <InfoRow label="Categoría" value={data?.category_id} />
+            <InfoRow label="Categoría" value={data?.category_name} />
+            {data?.parent_category_name && (
+              <InfoRow
+                label="Categoría padre"
+                value={data.parent_category_name}
+              />
+            )}
             <InfoRow label="Marca" value={data?.brand} />
             <InfoRow label="Código de barras" value={data?.barcode} />
             <InfoRow
@@ -125,10 +136,69 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
             />
             <InfoRow
               label="Costo promedio"
-              value={`Q ${data?.average_cost?.toFixed(2)}`}
+              value={
+                data?.average_cost != null
+                  ? `Q ${data.average_cost.toFixed(2)}`
+                  : undefined
+              }
             />
             <InfoRow label="Requiere lote" value={data?.requires_batch} />
 
+            {/* ── PRECIO ── */}
+            <Divider />
+            <SectionTitle title="Precio" />
+            {data?.sale_price != null ? (
+              <InfoRow
+                label="Precio de venta"
+                value={`${data.sale_price_currency ?? ""} ${data.sale_price.toFixed(2)}`}
+              />
+            ) : (
+              <EmptySection text="Este producto no tiene precio de venta definido." />
+            )}
+
+            {/* ── CONVERSIONES Y PRECIOS POR CLIENTE (resumen) ── */}
+            <Divider />
+            <SectionTitle title="Conversiones y precios especiales" />
+            <InfoRow
+              label="Conversiones de unidad"
+              value={
+                data?.conversions_count
+                  ? `${data.conversions_count} configurada(s)`
+                  : "Sin conversiones"
+              }
+            />
+            <InfoRow
+              label="Precios por tipo de cliente"
+              value={
+                data?.customer_type_prices_count
+                  ? `${data.customer_type_prices_count} configurado(s)`
+                  : "Sin precios especiales"
+              }
+            />
+
+            {/* ── REGLA DE MAYOREO ── */}
+            <Divider />
+            <SectionTitle title="Regla de mayoreo" />
+            {data?.has_wholesale_rule ? (
+              <>
+                <InfoRow
+                  label="Cantidad mínima"
+                  value={data.has_wholesale_rule}
+                />
+                <InfoRow
+                  label="Descuento"
+                  value={
+                    data.wholesale_discount_percentage != null
+                      ? `${data.wholesale_discount_percentage}%`
+                      : undefined
+                  }
+                />
+              </>
+            ) : (
+              <EmptySection text="No aplica regla de mayoreo general." />
+            )}
+
+            {/* ── MODIFICADOR ── */}
             {data?.is_modifier && (
               <>
                 <Divider />
@@ -216,4 +286,10 @@ const styles = StyleSheet.create({
   label: { color: "#6b7280", fontSize: 13, flex: 1 },
   value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
   divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
+  emptyText: {
+    fontSize: 12,
+    color: "#9ca3af",
+    fontStyle: "italic",
+    marginBottom: 8,
+  },
 });
