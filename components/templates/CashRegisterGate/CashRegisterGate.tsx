@@ -4,8 +4,8 @@ import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { useCashRegisterSession } from "@/src/hooks/useCashRegisterSession/useCashRegisterSession";
 import { useAuthStore } from "@/src/store";
+import { CashRegisterSession } from "@/src/types/cash_register_session/cash_register_session";
 import { Lock } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 
@@ -14,12 +14,23 @@ import React, { useEffect, useState } from "react";
 // únicos que pueden abrir caja por su cuenta.
 const ROLES_THAT_CAN_OPEN_REGISTER = [1, 2];
 
-export const CashRegisterGate: React.FC<{ children: React.ReactNode }> = ({
+// La sesión ya la consulta Pos.tsx (una sola vez, con useCashRegisterSession)
+// y se la pasa acá como prop — el Gate NO vuelve a llamar el hook, así que
+// no hay pedido duplicado ni doble suscripción.
+interface CashRegisterGateProps {
+  children: React.ReactNode;
+  session: {
+    data: CashRegisterSession | null | undefined;
+    isLoading: boolean;
+    refetch: () => void;
+  };
+}
+
+export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
   children,
+  session,
 }) => {
   const claims = useAuthStore((s) => s.claims);
-  const { session } = useCashRegisterSession();
-  // const setSession = useCashRegisterSessionStore((s) => s.setSession);
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -35,15 +46,6 @@ export const CashRegisterGate: React.FC<{ children: React.ReactNode }> = ({
       claims,
     );
   }
-
-  // En cuanto la consulta trae una sesión abierta, la guardamos para que
-  // Checkout.tsx la use como cash_register_session_id real.
-  // useEffect(() => {
-  //   console.log(session, "valores de session");
-  //   if (session.data) {
-  //     setSession(session.data);
-  //   }
-  // }, [session, session.data, setSession]);
 
   useEffect(() => {
     if (!session.isLoading && !session.data && canOpenRegister) {
@@ -105,8 +107,7 @@ export const CashRegisterGate: React.FC<{ children: React.ReactNode }> = ({
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onOpened={() => {
-          // Vuelve a consultar para traer la sesión recién creada y
-          // guardarla en el store (ver el useEffect de arriba).
+          // Vuelve a consultar para traer la sesión recién creada.
           session.refetch();
         }}
       />

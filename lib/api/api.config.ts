@@ -155,6 +155,9 @@ export const ENDPOINT = {
     info: `payment-client-service/api/cash-register`,
     detail: (idTenant: number | string) =>
       `payment-client-service/api/cash-register?tenant_id=${idTenant}`,
+    closed: (idCashRegisterSession: number | string) =>
+      `payment-client-service/api/cash-register-session/${idCashRegisterSession}/close`,
+    movement: `payment-client-service/api/cash-register-movement`,
   },
   cash_register_session: {
     info: `payment-client-service/api/cash-register-session/open`,

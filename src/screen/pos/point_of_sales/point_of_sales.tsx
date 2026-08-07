@@ -1,3 +1,5 @@
+import { CashMovementModal } from "@/components/molecules/CashMovementModal/CashMovementModal";
+import { CashSessionInfoModal } from "@/components/molecules/CashSessionInfoModal/CashSessionInfoModal";
 import { CashRegisterGate } from "@/components/templates/CashRegisterGate/CashRegisterGate";
 import {
   formatCurrency,
@@ -33,11 +35,13 @@ import {
 import { router } from "expo-router";
 import {
   AlertCircle,
+  ArrowLeftRight,
   Minus,
   Plus,
   Search,
   ShoppingCart,
   Trash2,
+  Wallet,
   X,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
@@ -65,16 +69,19 @@ export const Pos: React.FC = () => {
   const { catalog, isLoading, isError, refetch } = useCatalog();
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
+
+  // Única consulta de la sesión de caja en toda la pantalla — se la
+  // pasamos a CashRegisterGate como prop en vez de que él también la pida.
   const { session } = useCashRegisterSession();
   const setSession = useCashRegisterSessionStore((s) => s.setSession);
+  const [cashInfoOpen, setCashInfoOpen] = useState(false);
+  const [cashMovementOpen, setCashMovementOpen] = useState(false);
 
   useEffect(() => {
-    console.log(session, "valores de session");
     if (session.data) {
       setSession(session.data);
     }
-  }, [session, session.data, setSession]);
-  console.log(catalog, "valores catalog");
+  }, [session.data, setSession]);
 
   const cart = useCartStore((s) => s.cart);
   const addLine = useCartStore((s) => s.addLine);
@@ -85,8 +92,6 @@ export const Pos: React.FC = () => {
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-
-  console.log(JSON.stringify(catalog));
 
   // Categorías únicas derivadas del JSON crudo (parent_category = genérica).
   // Se descartan nombres vacíos/nulos para no renderizar un chip en blanco.
@@ -164,10 +169,8 @@ export const Pos: React.FC = () => {
     onRemoveLine: removeLine,
   };
 
-  console.log(categories, "values categories");
-
   return (
-    <CashRegisterGate>
+    <CashRegisterGate session={session}>
       <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
         <HStack className="flex-1">
           <VStack className="flex-1 bg-gray-50">
@@ -175,22 +178,44 @@ export const Pos: React.FC = () => {
               space="sm"
               className="border-b border-gray-100 bg-white p-3"
             >
-              <Input
-                variant="outline"
-                size="md"
-                className="border-gray-300 bg-white"
-              >
-                <InputSlot className="pl-3">
-                  <InputIcon as={Search} className="text-gray-400" />
-                </InputSlot>
-                <InputField
-                  placeholder="Buscar por nombre o SKU..."
-                  placeholderTextColor="#9CA3AF"
-                  value={query}
-                  onChangeText={setQuery}
-                  className="text-gray-900"
-                />
-              </Input>
+              <HStack space="xs" className="items-center">
+                <Input
+                  variant="outline"
+                  size="md"
+                  className="flex-1 border-gray-300 bg-white"
+                >
+                  <InputSlot className="pl-3">
+                    <InputIcon as={Search} className="text-gray-400" />
+                  </InputSlot>
+                  <InputField
+                    placeholder="Buscar por nombre o SKU..."
+                    placeholderTextColor="#9CA3AF"
+                    value={query}
+                    onChangeText={setQuery}
+                    className="text-gray-900"
+                  />
+                </Input>
+
+                {/* Ambos solo aparecen si la persona tiene una caja abierta */}
+                {session.data && (
+                  <>
+                    <TouchableOpacity onPress={() => setCashInfoOpen(true)}>
+                      <Box className="h-11 w-11 items-center justify-center rounded-lg border border-gray-300 bg-white">
+                        <Icon as={Wallet} size="sm" className="text-blue-600" />
+                      </Box>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setCashMovementOpen(true)}>
+                      <Box className="h-11 w-11 items-center justify-center rounded-lg border border-gray-300 bg-white">
+                        <Icon
+                          as={ArrowLeftRight}
+                          size="sm"
+                          className="text-blue-600"
+                        />
+                      </Box>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </HStack>
 
               {categories.length > 0 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -270,6 +295,24 @@ export const Pos: React.FC = () => {
           )}
         </HStack>
       </SafeAreaView>
+
+      {session.data && (
+        <CashSessionInfoModal
+          isOpen={cashInfoOpen}
+          onClose={() => setCashInfoOpen(false)}
+          session={session.data}
+          onClosed={() => session.refetch()}
+        />
+      )}
+
+      {session.data && (
+        <CashMovementModal
+          isOpen={cashMovementOpen}
+          onClose={() => setCashMovementOpen(false)}
+          sessionId={session.data.id}
+          onDone={() => session.refetch()}
+        />
+      )}
     </CashRegisterGate>
   );
 };

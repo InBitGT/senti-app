@@ -2,6 +2,10 @@ import { get, post } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import { useAuthStore } from "@/src/store";
 import {
+  CashMovementPayload,
+  CloseCashRegisterPayload,
+} from "@/src/types/cash_register/cash_register";
+import {
   CashRegisterSession,
   OpenCashRegisterPayload,
 } from "@/src/types/cash_register_session/cash_register_session";
@@ -40,6 +44,50 @@ export async function OpenCashRegisterFn(payload: OpenCashRegisterPayload) {
 
   if (response.code !== "201" && response.code !== "200") {
     throw new Error(response.message);
+  }
+
+  return response.data;
+}
+
+export async function CloseCashRegisterFn(
+  sessionId: number,
+  payload: CloseCashRegisterPayload,
+) {
+  if (__DEV__) {
+    console.warn(
+      `[CloseCashRegisterFn] cerrando sesión ${sessionId} con payload:`,
+      payload,
+    );
+  }
+
+  const response = await post<CashRegisterSession>(
+    ENDPOINT.cash_register.closed(sessionId),
+    payload,
+  );
+
+  if (__DEV__) {
+    console.warn("[CloseCashRegisterFn] respuesta del backend:", response);
+  }
+
+  if (response.code !== "200" && response.code !== "201") {
+    throw new Error(response.message ?? `Error ${response.code}`);
+  }
+
+  return response.data;
+}
+
+export async function CashMovementFn(payload: CashMovementPayload) {
+  const response = await post<CashRegisterSession>(
+    ENDPOINT.cash_register.movement,
+    payload,
+  );
+
+  if (__DEV__) {
+    console.warn("[CashMovementFn] respuesta del backend:", response);
+  }
+
+  if (response.code !== "200" && response.code !== "201") {
+    throw new Error(response.message ?? `Error ${response.code}`);
   }
 
   return response.data;
