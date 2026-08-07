@@ -1,10 +1,6 @@
+import { Pos } from "@/src/screen/pos/point_of_sales/point_of_sales";
 import React from "react";
-import { Text, View } from "react-native";
 
 export default function point_of_sales() {
-  return (
-    <View>
-      <Text>point_of_sales</Text>
-    </View>
-  );
+  return <Pos />;
 }

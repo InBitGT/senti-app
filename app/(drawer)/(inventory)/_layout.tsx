@@ -49,6 +49,7 @@ export default function InventoryLayout() {
         name="inventory"
         options={{ title: "Zonas de almacenes" }}
       />
+      <Stack.Screen name="cachier" options={{ title: "Zonas de almacenes" }} />
     </Stack>
   );
 }

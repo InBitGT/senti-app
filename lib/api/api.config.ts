@@ -135,8 +135,34 @@ export const ENDPOINT = {
       `payment-client-service/api/fiscal-document?branch_id=${idBranch}`,
   },
   wholesale: {
-    info: `/inventory-service/api/wholesale-rule`,
+    info: `inventory-service/api/wholesale-rule`,
     detail: (idTenant: number | string) =>
       `inventory-service/api/wholesale-rule?tenant_id=${idTenant}`,
+  },
+  pos: {
+    detail: (
+      idWarehouse: string | number,
+      idtenant: string | number,
+      type: string,
+    ) =>
+      `inventory-service/api/pos/products?warehouse_id=${idWarehouse}&tenant_id=${idtenant}&type=${type}`,
+    checkout: `payment-client-service/api/order/pos`,
+  },
+  payments_methods: {
+    info: `payment-client-service/api/payment-method-config`,
+  },
+  cash_register: {
+    info: `payment-client-service/api/cash-register`,
+    detail: (idTenant: number | string) =>
+      `payment-client-service/api/cash-register?tenant_id=${idTenant}`,
+  },
+  cash_register_session: {
+    info: `payment-client-service/api/cash-register-session/open`,
+    detail: (idTenant: number | string) =>
+      `payment-client-service/api/cash-register-session?session_status=open&user_id=${idTenant}`,
+  },
+  cash_register_users: {
+    detail: (idTenant: number | string) =>
+      `payment-client-service/api/cash-register-session/available-users?tenant_id=${idTenant}`,
   },
 };
