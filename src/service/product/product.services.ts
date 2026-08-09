@@ -12,7 +12,7 @@ export async function productIngredientFn() {
     throw new Error();
   }
   const response = await get<MenuIngredient[]>(
-    ENDPOINT.product.detail(claims?.tenant_id, "ingredient"),
+    ENDPOINT.product.detail(claims?.tenant_id, "finished_product"),
   );
   if (response.code !== "200") {
     throw new Error(response.message);

@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/text";
 import type {
-    CountLine,
-    FlatProduct,
+  CountLine,
+  FlatProduct,
 } from "@/src/types/stock_count/stock_count.types";
 import { Minus, Package, Plus, Trash2 } from "lucide-react-native";
 import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   },
   stepButtonDisabled: { opacity: 0.4 },
   input: {
-    height: 32,
+    height: "auto",
     width: 52,
     borderRadius: 8,
     borderWidth: 0.5,
@@ -195,6 +195,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#1a1a1a",
+    paddingVertical: 10,
   },
   removeButton: {
     width: 32,

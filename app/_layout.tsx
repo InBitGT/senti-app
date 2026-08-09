@@ -7,8 +7,10 @@ import { SplashScreen, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { LogBox, View } from "react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const queryClient = new QueryClient();
 
@@ -49,26 +51,30 @@ export default function RootLayout() {
   }, [isReady, claims, router]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <GluestackUIProvider mode="dark">
-          <PaperProvider theme={paperTheme}>
-            <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
-              <Stack>
-                <Stack.Screen
-                  name="(drawer)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="(auth)/Login"
-                  options={{ headerShown: false }}
-                />
-              </Stack>
-              <StatusBar style="dark" />
-            </View>
-          </PaperProvider>
-        </GluestackUIProvider>
-      </ToastProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <KeyboardProvider>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <GluestackUIProvider mode="dark">
+              <PaperProvider theme={paperTheme}>
+                <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
+                  <Stack>
+                    <Stack.Screen
+                      name="(drawer)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(auth)/Login"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack>
+                  <StatusBar style="dark" />
+                </View>
+              </PaperProvider>
+            </GluestackUIProvider>
+          </ToastProvider>
+        </QueryClientProvider>
+      </KeyboardProvider>
+    </SafeAreaProvider>
   );
 }

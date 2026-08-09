@@ -2,27 +2,27 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -31,18 +31,18 @@ import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useAuthStore } from "@/src/store";
 import { useCashRegisterStore } from "@/src/store/useCashRegisterStore/useCashRegisterStore";
 import {
-    CashRegister,
-    CreateCashRegister,
+  CashRegister,
+  CreateCashRegister,
 } from "@/src/types/cash_register/cash_register";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -67,7 +67,7 @@ export default function CashRegisterForm() {
   const setIsEdit = useCashRegisterStore((state) => state.setIsEdit);
   const { showToast } = useCustomToast();
 
-  // Solo las bodegas a las que el usuario tiene acceso, según el token (claims.branches).
+  // Todas las bodegas a las que el usuario tiene acceso, según el token (claims.branches).
   const warehouseOptions: WarehouseOption[] = React.useMemo(() => {
     if (!claims?.branches) return [];
     return claims.branches.flatMap((branch) =>
@@ -78,6 +78,10 @@ export default function CashRegisterForm() {
     );
   }, [claims]);
 
+  // Si el usuario solo tiene acceso a 1 bodega en total (sin importar cuántas
+  // sucursales tenga), no se le muestra el select: se toma la única disponible.
+  const hideWarehouseInput = warehouseOptions.length === 1;
+
   const {
     control,
     handleSubmit,
@@ -86,7 +90,11 @@ export default function CashRegisterForm() {
     defaultValues: {
       name: data?.name || "",
       code: data?.code || "",
-      warehouse_id: data?.warehouse_id ? String(data.warehouse_id) : "",
+      warehouse_id: data?.warehouse_id
+        ? String(data.warehouse_id)
+        : hideWarehouseInput
+          ? String(warehouseOptions[0]?.id ?? "")
+          : "",
     },
   });
 
@@ -228,57 +236,62 @@ export default function CashRegisterForm() {
                   )}
                 />
 
-                {/* Bodega */}
-                <Controller
-                  control={control}
-                  name="warehouse_id"
-                  rules={{ required: "La bodega es obligatoria." }}
-                  render={({ field: { onChange, value } }) => {
-                    const selectedLabel =
-                      warehouseOptions.find((w) => String(w.id) === value)
-                        ?.label || "";
+                {/* Bodega — solo se muestra si el usuario tiene acceso a más de una */}
+                {!hideWarehouseInput && (
+                  <Controller
+                    control={control}
+                    name="warehouse_id"
+                    rules={{ required: "La bodega es obligatoria." }}
+                    render={({ field: { onChange, value } }) => {
+                      const selectedLabel =
+                        warehouseOptions.find((w) => String(w.id) === value)
+                          ?.label || "";
 
-                    return (
-                      <FormControl isInvalid={!!errors.warehouse_id}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Bodega
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Select selectedValue={value} onValueChange={onChange}>
-                          <SelectTrigger>
-                            <SelectInput
-                              style={{ color: "#000" }}
-                              placeholder="Selecciona una bodega"
-                              value={selectedLabel}
-                            />
-                          </SelectTrigger>
-                          <SelectPortal>
-                            <SelectBackdrop />
-                            <SelectContent>
-                              <SelectDragIndicatorWrapper>
-                                <SelectDragIndicator />
-                              </SelectDragIndicatorWrapper>
-                              {warehouseOptions.map((w) => (
-                                <SelectItem
-                                  key={w.id}
-                                  label={w.label}
-                                  value={String(w.id)}
-                                />
-                              ))}
-                            </SelectContent>
-                          </SelectPortal>
-                        </Select>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.warehouse_id?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    );
-                  }}
-                />
+                      return (
+                        <FormControl isInvalid={!!errors.warehouse_id}>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Bodega
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          <Select
+                            selectedValue={value}
+                            onValueChange={onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectInput
+                                style={{ color: "#000" }}
+                                placeholder="Selecciona una bodega"
+                                value={selectedLabel}
+                              />
+                            </SelectTrigger>
+                            <SelectPortal>
+                              <SelectBackdrop />
+                              <SelectContent>
+                                <SelectDragIndicatorWrapper>
+                                  <SelectDragIndicator />
+                                </SelectDragIndicatorWrapper>
+                                {warehouseOptions.map((w) => (
+                                  <SelectItem
+                                    key={w.id}
+                                    label={w.label}
+                                    value={String(w.id)}
+                                  />
+                                ))}
+                              </SelectContent>
+                            </SelectPortal>
+                          </Select>
+                          <FormControlError>
+                            <FormControlErrorIcon as={AlertCircleIcon} />
+                            <FormControlErrorText>
+                              {errors.warehouse_id?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      );
+                    }}
+                  />
+                )}
 
                 {/* Botones */}
                 <HStack style={{ justifyContent: "flex-end" }}>

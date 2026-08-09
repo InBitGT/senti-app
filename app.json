@@ -1,23 +1,26 @@
 {
   "expo": {
-    "name": "senti-app",
+    "name": "Senti",
     "slug": "senti-app",
     "version": "1.0.0",
     "orientation": "default",
     "scheme": "sentiapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/senti_brand.png",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "senti.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE"
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/senti_brand.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "senti.app"
+      "package": "senti.app",
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "bundler": "metro",

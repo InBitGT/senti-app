@@ -692,13 +692,18 @@ export default function MerchandiseForm() {
                                   <SelectDragIndicatorWrapper>
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
-                                  {(units ?? []).map((u) => (
-                                    <SelectItem
-                                      key={u.id}
-                                      label={`${u.name} (${u.code})`}
-                                      value={String(u.id)}
-                                    />
-                                  ))}
+                                  <ScrollView
+                                    style={{ maxHeight: 280, width: "100%" }}
+                                    nestedScrollEnabled
+                                  >
+                                    {(units ?? []).map((u) => (
+                                      <SelectItem
+                                        key={u.id}
+                                        label={`${u.name} (${u.code})`}
+                                        value={String(u.id)}
+                                      />
+                                    ))}
+                                  </ScrollView>
                                 </SelectContent>
                               </SelectPortal>
                             </Select>

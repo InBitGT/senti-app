@@ -2,8 +2,8 @@ import { get, post, put, remove } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import { useAuthStore } from "@/src/store";
 import {
-  CreateMerchandise,
   Merchandise,
+  MerchandiseDetail,
 } from "@/src/types/merchandise/merchandise.types";
 
 export async function merchandiseFn() {
@@ -21,8 +21,8 @@ export async function merchandiseFn() {
   return response.data;
 }
 
-export async function PostMerchandise(data: CreateMerchandise) {
-  const response = await post<CreateMerchandise>(
+export async function PostMerchandise(data: MerchandiseDetail) {
+  const response = await post<MerchandiseDetail>(
     ENDPOINT.merchandise.info,
     data,
   );
@@ -39,9 +39,9 @@ export async function PutMerchandise({
   data,
 }: {
   id: number;
-  data: CreateMerchandise;
+  data: MerchandiseDetail;
 }) {
-  const response = await put<CreateMerchandise>(
+  const response = await put<MerchandiseDetail>(
     ENDPOINT.merchandise.info + "/" + id,
     data,
   );
@@ -55,7 +55,7 @@ export async function PutMerchandise({
 }
 
 export async function DeleteMerchandise(IdCategorie: string | number) {
-  const response = await remove<CreateMerchandise>(
+  const response = await remove<MerchandiseDetail>(
     ENDPOINT.merchandise.info + "/" + IdCategorie,
   );
   console.log(response, "remove");

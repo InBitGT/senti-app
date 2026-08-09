@@ -3,27 +3,27 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -34,14 +34,14 @@ import { useLoanPayments } from "@/src/hooks/useLoanPayments/useLoanPayments";
 import { useAuthStore } from "@/src/store";
 import { CheckCircle2 } from "lucide-react-native";
 import React, { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -88,6 +88,14 @@ export default function LoanPaymentForm() {
       description: "",
     },
   });
+
+  // Cliente seleccionado actualmente, para saber su saldo pendiente (credit_used)
+  // y decidir si se puede confirmar el abono.
+  const selectedUserId = useWatch({ control, name: "user_id" });
+  const selectedClient = clients?.find(
+    (c) => String(c.customer_id) === selectedUserId,
+  );
+  const hasNoPendingDebt = !!selectedClient && selectedClient.credit_used === 0;
 
   const onSubmit = async (values: FormValues) => {
     const payload: PaymentDetail = {
@@ -222,9 +230,6 @@ export default function LoanPaymentForm() {
                     const selectedLabel =
                       clients?.find((c) => String(c.customer_id) === value)
                         ?.customer.name || "";
-                    const selectedClient = clients?.find(
-                      (c) => String(c.customer_id) === value,
-                    );
                     return (
                       <FormControl isInvalid={!!errors.user_id}>
                         <FormControlLabel>
@@ -272,11 +277,28 @@ export default function LoanPaymentForm() {
                           </FormControlErrorText>
                         </FormControlError>
                         {selectedClient && (
-                          <HStack style={styles.debtBox}>
-                            <Text style={styles.debtLabel}>
-                              Saldo pendiente
+                          <HStack
+                            style={[
+                              styles.debtBox,
+                              hasNoPendingDebt && styles.debtBoxOk,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.debtLabel,
+                                hasNoPendingDebt && styles.debtLabelOk,
+                              ]}
+                            >
+                              {hasNoPendingDebt
+                                ? "Este cliente no tiene saldo pendiente"
+                                : "Saldo pendiente"}
                             </Text>
-                            <Text style={styles.debtValue}>
+                            <Text
+                              style={[
+                                styles.debtValue,
+                                hasNoPendingDebt && styles.debtLabelOk,
+                              ]}
+                            >
                               {currencyFormat(selectedClient.credit_used)}
                             </Text>
                           </HStack>
@@ -391,12 +413,16 @@ export default function LoanPaymentForm() {
                   size="lg"
                   className="mt-2 w-full"
                   onPress={handleSubmit(onSubmit)}
-                  disabled={post.isPending}
+                  disabled={post.isPending || hasNoPendingDebt}
                 >
                   {post.isPending ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <ButtonText>Confirmar abono</ButtonText>
+                    <ButtonText>
+                      {hasNoPendingDebt
+                        ? "Sin saldo pendiente"
+                        : "Confirmar abono"}
+                    </ButtonText>
                   )}
                 </Button>
               </VStack>
@@ -458,6 +484,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 8,
   },
+  debtBoxOk: {
+    backgroundColor: "#dcfce7",
+  },
   debtLabel: { fontSize: 13, color: "#633806" },
+  debtLabelOk: { color: "#166534" },
   debtValue: { fontSize: 14, fontWeight: "600", color: "#633806" },
 });

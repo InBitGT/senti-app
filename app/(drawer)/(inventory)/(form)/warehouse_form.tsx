@@ -1,10 +1,6 @@
-import React from 'react'
-import { Text, View } from 'react-native'
+import WarehouseForm from "@/src/screen/inventory/warehouse/form/warehouse_form";
+import React from "react";
 
 export default function warehouse_form() {
-  return (
-    <View>
-      <Text>warehouse_form</Text>
-    </View>
-  )
+  return <WarehouseForm />;
 }

@@ -2,27 +2,27 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -32,20 +32,20 @@ import { useProductWholesale } from "@/src/hooks/useWholesale/useWholesale";
 import { useAuthStore } from "@/src/store";
 import { useProductWholesaleStore } from "@/src/store/useWholesaleStore/useWholesaleStore";
 import {
-    CreateProductWholesaleRule,
-    ProductWholesaleRule,
+  CreateProductWholesaleRule,
+  ProductWholesaleRule,
 } from "@/src/types/wholesale/wholesale";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -196,17 +196,22 @@ export default function ProductWholesaleForm() {
                             </SelectTrigger>
                             <SelectPortal>
                               <SelectBackdrop />
-                              <SelectContent>
+                              <SelectContent style={{ maxHeight: 320 }}>
                                 <SelectDragIndicatorWrapper>
                                   <SelectDragIndicator />
                                 </SelectDragIndicatorWrapper>
-                                {(productData ?? []).map((p) => (
-                                  <SelectItem
-                                    key={p.id}
-                                    label={`${p.name} (${p.sku})`}
-                                    value={String(p.id)}
-                                  />
-                                ))}
+                                <ScrollView
+                                  style={{ maxHeight: 280 }}
+                                  nestedScrollEnabled
+                                >
+                                  {(productData ?? []).map((p) => (
+                                    <SelectItem
+                                      key={p.id}
+                                      label={`${p.name} (${p.sku})`}
+                                      value={String(p.id)}
+                                    />
+                                  ))}
+                                </ScrollView>
                               </SelectContent>
                             </SelectPortal>
                           </Select>

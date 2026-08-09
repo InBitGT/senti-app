@@ -34,7 +34,6 @@ import {
 
 import { router } from "expo-router";
 import {
-  AlertCircle,
   ArrowLeftRight,
   Minus,
   Plus,
@@ -42,7 +41,7 @@ import {
   ShoppingCart,
   Trash2,
   Wallet,
-  X,
+  X
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -148,19 +147,19 @@ export const Pos: React.FC = () => {
     );
   }
 
-  if (isError) {
-    return (
-      <VStack className="flex-1 items-center justify-center px-6" space="sm">
-        <Icon as={AlertCircle} size="xl" className="text-red-600" />
-        <Text className="text-center text-gray-600">
-          No se pudo cargar el catálogo. Intenta de nuevo.
-        </Text>
-        <Button size="sm" variant="outline" onPress={() => refetch()}>
-          <ButtonText className="text-gray-900">Reintentar</ButtonText>
-        </Button>
-      </VStack>
-    );
-  }
+  // if (isError) {
+  //   return (
+  //     <VStack className="flex-1 items-center justify-center px-6" space="sm">
+  //       <Icon as={AlertCircle} size="xl" className="text-red-600" />
+  //       <Text className="text-center text-gray-600">
+  //         No se pudo cargar el catálogo. Intenta de nuevo.
+  //       </Text>
+  //       <Button size="sm" variant="outline" onPress={() => refetch()}>
+  //         <ButtonText className="text-gray-900">Reintentar</ButtonText>
+  //       </Button>
+  //     </VStack>
+  //   );
+  // }
 
   const cartProps = {
     cart,

@@ -2,49 +2,50 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useWarehouseZone } from "@/src/hooks/useWarehouseZone/useWarehouseZone";
+import { useAuthStore } from "@/src/store";
 import { useWarehouseZoneStore } from "@/src/store/useWahouseZoneStore/useWahouseZoneStore";
 import {
-    CreateWarehouseZone,
-    WarehouseZone,
-    ZONE_TYPE_OPTIONS,
+  CreateWarehouseZone,
+  WarehouseZone,
+  ZONE_TYPE_OPTIONS,
 } from "@/src/types/warehouse_zone/warehouse_zone";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
-    useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -57,18 +58,37 @@ interface FormValues {
 
 export default function WarehouseZoneForm() {
   const router = useRouter();
-  const warehouseId = useWarehouseZoneStore((state) => state.warehouseId);
+  const { claims } = useAuthStore();
+  const warehouseIdFromStore = useWarehouseZoneStore(
+    (state) => state.warehouseId,
+  );
   const data = useWarehouseZoneStore((state) => state.data);
   const isEdit = useWarehouseZoneStore((state) => state.isEdit);
   const clearData = useWarehouseZoneStore((state) => state.clearData);
   const setIsEdit = useWarehouseZoneStore((state) => state.setIsEdit);
-  const { post, put, data: zonesInWarehouse } = useWarehouseZone(warehouseId);
   const { showToast } = useCustomToast();
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
 
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
+
+  // Todas las bodegas a las que el usuario tiene acceso, según sus claims.
+  const claimsWarehouses = useMemo(() => {
+    if (!claims?.branches) return [];
+    return claims.branches.flatMap((b) => b.warehouses);
+  }, [claims]);
+
+  // Si el store no trae warehouseId (ej. se entró directo al form sin pasar por
+  // la pantalla de selección), y el usuario solo tiene acceso a 1 bodega, se
+  // toma esa automáticamente.
+  const warehouseId =
+    warehouseIdFromStore ??
+    (claimsWarehouses.length === 1
+      ? claimsWarehouses[0].warehouse_id
+      : undefined);
+
+  const { post, put, data: zonesInWarehouse } = useWarehouseZone(warehouseId);
 
   // Candidatas a "zona padre": zonas de la misma bodega, excluyendo la que se está editando
   // (para no poder elegirse a sí misma como su propio padre).
@@ -90,7 +110,13 @@ export default function WarehouseZoneForm() {
   });
 
   const onSubmit = async (values: FormValues) => {
-    if (!warehouseId) return;
+    if (!warehouseId) {
+      showToast({
+        message: "No se pudo determinar la bodega para esta zona.",
+        type: "error",
+      });
+      return;
+    }
 
     try {
       if (!isEdit) {

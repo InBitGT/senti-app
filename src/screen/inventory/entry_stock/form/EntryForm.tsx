@@ -12,7 +12,13 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AddIcon, AlertCircleIcon, ArrowLeftIcon, Icon, TrashIcon } from "@/components/ui/icon";
+import {
+  AddIcon,
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  Icon,
+  TrashIcon,
+} from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -35,7 +41,7 @@ import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
 import { useAuthStore } from "@/src/store";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -59,7 +65,8 @@ interface ItemFormValues {
 }
 
 interface FormValues {
-  warehouse_id: number;
+  branch_id: string;
+  warehouse_id: string;
   supplier_id: string;
   document_number: string;
   document_date: string;
@@ -105,20 +112,27 @@ function ItemRow({
   const selectedProduct = productData?.find((p) => String(p.id) === product_id);
   const requiresBatch = selectedProduct?.requires_batch ?? false;
 
-  const subtotal =
-    isNaN(parseFloat(quantity) * parseFloat(unit_cost))
-      ? "0.00"
-      : (parseFloat(quantity) * parseFloat(unit_cost)).toFixed(2);
+  const subtotal = isNaN(parseFloat(quantity) * parseFloat(unit_cost))
+    ? "0.00"
+    : (parseFloat(quantity) * parseFloat(unit_cost)).toFixed(2);
 
   return (
     <Box style={styles.itemCard}>
-      <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <HStack
+        style={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
         <Text style={{ fontWeight: "bold", color: "#333", fontSize: 14 }}>
           Producto #{index + 1}
         </Text>
         <Pressable onPress={() => remove(index)} style={styles.removeBtn}>
           <Icon as={TrashIcon} size="sm" style={{ color: "#ef4444" }} />
-          <Text style={{ color: "#ef4444", fontSize: 13, marginLeft: 4 }}>Eliminar</Text>
+          <Text style={{ color: "#ef4444", fontSize: 13, marginLeft: 4 }}>
+            Eliminar
+          </Text>
         </Pressable>
       </HStack>
 
@@ -134,7 +148,9 @@ function ItemRow({
             return (
               <FormControl isInvalid={!!errors?.items?.[index]?.product_id}>
                 <FormControlLabel>
-                  <FormControlLabelText style={{ color: "#000" }}>Producto</FormControlLabelText>
+                  <FormControlLabelText style={{ color: "#000" }}>
+                    Producto
+                  </FormControlLabelText>
                 </FormControlLabel>
                 <Select selectedValue={value} onValueChange={onChange}>
                   <SelectTrigger>
@@ -146,13 +162,22 @@ function ItemRow({
                   </SelectTrigger>
                   <SelectPortal>
                     <SelectBackdrop />
-                    <SelectContent>
+                    <SelectContent style={{ maxHeight: "50%" }}>
                       <SelectDragIndicatorWrapper>
                         <SelectDragIndicator />
                       </SelectDragIndicatorWrapper>
-                      {(productData ?? []).map((p) => (
-                        <SelectItem key={p.id} label={p.name} value={String(p.id)} />
-                      ))}
+                      <ScrollView
+                        style={{ width: "100%" }}
+                        showsVerticalScrollIndicator={false}
+                      >
+                        {(productData ?? []).map((p) => (
+                          <SelectItem
+                            key={p.id}
+                            label={p.name}
+                            value={String(p.id)}
+                          />
+                        ))}
+                      </ScrollView>
                     </SelectContent>
                   </SelectPortal>
                 </Select>
@@ -177,7 +202,9 @@ function ItemRow({
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormControl isInvalid={!!errors?.items?.[index]?.quantity}>
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Cantidad</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Cantidad
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Input>
                     <InputField
@@ -208,23 +235,34 @@ function ItemRow({
               render={({ field: { onChange, value } }) => (
                 <FormControl isInvalid={!!errors?.items?.[index]?.unit}>
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Unidad</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Unidad
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Select selectedValue={value} onValueChange={onChange}>
                     <SelectTrigger>
-                      <SelectInput style={{ color: "#000" }} placeholder="Unidad" value={value} />
+                      <SelectInput
+                        style={{ color: "#000" }}
+                        placeholder="Unidad"
+                        value={value}
+                      />
                     </SelectTrigger>
                     <SelectPortal>
                       <SelectBackdrop />
-                      <SelectContent>
+                      <SelectContent style={{ maxHeight: "50%" }}>
                         <SelectDragIndicatorWrapper>
                           <SelectDragIndicator />
                         </SelectDragIndicatorWrapper>
-                        <SelectItem label="Unidad" value="unit" />
-                        <SelectItem label="Kg" value="kg" />
-                        <SelectItem label="g" value="g" />
-                        <SelectItem label="L" value="l" />
-                        <SelectItem label="ml" value="ml" />
+                        <ScrollView
+                          style={{ width: "100%" }}
+                          showsVerticalScrollIndicator={false}
+                        >
+                          <SelectItem label="Unidad" value="unit" />
+                          <SelectItem label="Kg" value="kg" />
+                          <SelectItem label="g" value="g" />
+                          <SelectItem label="L" value="l" />
+                          <SelectItem label="ml" value="ml" />
+                        </ScrollView>
                       </SelectContent>
                     </SelectPortal>
                   </Select>
@@ -247,7 +285,9 @@ function ItemRow({
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormControl isInvalid={!!errors?.items?.[index]?.unit_cost}>
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Costo unitario</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Costo unitario
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Input>
                     <InputField
@@ -288,7 +328,9 @@ function ItemRow({
                 name={`items.${index}.batch_number`}
                 rules={{ required: "El lote es obligatorio." }}
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <FormControl isInvalid={!!errors?.items?.[index]?.batch_number}>
+                  <FormControl
+                    isInvalid={!!errors?.items?.[index]?.batch_number}
+                  >
                     <FormControlLabel>
                       <FormControlLabelText style={{ color: "#000" }}>
                         Número de lote
@@ -320,53 +362,55 @@ function ItemRow({
                 control={control}
                 name={`items.${index}.expiration_date`}
                 rules={{
-                    required: "La fecha es obligatoria.",
-                    pattern: {
+                  required: "La fecha es obligatoria.",
+                  pattern: {
                     value: /^\d{4}-\d{2}-\d{2}$/,
                     message: "Formato inválido. Usa YYYY-MM-DD.",
-                    },
+                  },
                 }}
                 render={({ field: { onChange, onBlur, value } }) => {
-                    const handleChange = (text: string) => {
+                  const handleChange = (text: string) => {
                     const cleaned = text.replace(/[^0-9]/g, "");
                     let formatted = cleaned;
                     if (cleaned.length > 4) {
-                        formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+                      formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
                     }
                     if (cleaned.length > 6) {
-                        formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
+                      formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
                     }
                     onChange(formatted);
-                    };
+                  };
 
-                    return (
-                    <FormControl isInvalid={!!errors?.items?.[index]?.expiration_date}>
-                        <FormControlLabel>
+                  return (
+                    <FormControl
+                      isInvalid={!!errors?.items?.[index]?.expiration_date}
+                    >
+                      <FormControlLabel>
                         <FormControlLabelText style={{ color: "#000" }}>
-                            Fecha de vencimiento
+                          Fecha de vencimiento
                         </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
+                      </FormControlLabel>
+                      <Input>
                         <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="YYYY-MM-DD"
-                            value={value}
-                            onChangeText={handleChange}
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                            maxLength={10}
+                          style={{ color: "#171717" }}
+                          placeholder="YYYY-MM-DD"
+                          value={value}
+                          onChangeText={handleChange}
+                          onBlur={onBlur}
+                          keyboardType="number-pad"
+                          maxLength={10}
                         />
-                        </Input>
-                        <FormControlError>
+                      </Input>
+                      <FormControlError>
                         <FormControlErrorIcon as={AlertCircleIcon} />
                         <FormControlErrorText>
-                            {errors?.items?.[index]?.expiration_date?.message}
+                          {errors?.items?.[index]?.expiration_date?.message}
                         </FormControlErrorText>
-                        </FormControlError>
+                      </FormControlError>
                     </FormControl>
-                    );
+                  );
                 }}
-                />
+              />
             </View>
           </View>
         )}
@@ -380,7 +424,9 @@ function ItemRow({
               <FormControlLabel>
                 <FormControlLabelText style={{ color: "#000" }}>
                   Notas{" "}
-                  <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
+                  <Text size="xs" style={{ color: "#999" }}>
+                    (opcional)
+                  </Text>
                 </FormControlLabelText>
               </FormControlLabel>
               <Input>
@@ -414,13 +460,40 @@ export default function InventoryForm() {
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
+  // Sucursales + bodegas a las que el usuario tiene acceso, según sus claims.
+  const branchOptions = useMemo(
+    () =>
+      (claims?.branches ?? []).map((b) => ({
+        id: b.branch_id,
+        name: b.branch_name,
+        warehouses: b.warehouses,
+      })),
+    [claims],
+  );
+
+  const totalWarehouses = useMemo(
+    () => branchOptions.reduce((acc, b) => acc + b.warehouses.length, 0),
+    [branchOptions],
+  );
+
+  // Si el usuario tiene exactamente 1 sucursal y 1 bodega, no se le muestra nada:
+  // se preselecciona automáticamente esa única combinación.
+  const hideBranchWarehouseInputs =
+    branchOptions.length === 1 && totalWarehouses === 1;
+
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      warehouse_id: claims?.warehouse_id ?? 0,
+      branch_id: hideBranchWarehouseInputs
+        ? String(branchOptions[0]?.id ?? "")
+        : "",
+      warehouse_id: hideBranchWarehouseInputs
+        ? String(branchOptions[0]?.warehouses[0]?.warehouse_id ?? "")
+        : "",
       supplier_id: "",
       document_number: "",
       document_date: new Date().toISOString().split("T")[0],
@@ -431,6 +504,24 @@ export default function InventoryForm() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
+
+  const selectedBranchId = useWatch({ control, name: "branch_id" });
+  const selectedBranch = branchOptions.find(
+    (b) => String(b.id) === selectedBranchId,
+  );
+  const warehouseOptionsForBranch = selectedBranch?.warehouses ?? [];
+
+  // Al cambiar de sucursal, se limpia la bodega seleccionada (pertenecía a la sucursal anterior).
+  const isFirstRender = React.useRef(true);
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (!hideBranchWarehouseInputs) {
+      setValue("warehouse_id", "");
+    }
+  }, [selectedBranchId, hideBranchWarehouseInputs, setValue]);
 
   const allItems = useWatch({ control, name: "items" });
   const totalGeneral = allItems.reduce((acc, item) => {
@@ -444,7 +535,7 @@ export default function InventoryForm() {
 
     const payload: InventoryDetail = {
       tenant_id: claims.tenant_id,
-      warehouse_id: claims.warehouse_id,
+      warehouse_id: parseInt(values.warehouse_id),
       supplier_id: parseInt(values.supplier_id),
       user_id: claims.sub,
       document_number: values.document_number.trim(),
@@ -487,10 +578,16 @@ export default function InventoryForm() {
         >
           <Pressable
             onPress={() => router.back()}
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
           >
             <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>Regresar</Text>
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
           </Pressable>
 
           <Center>
@@ -506,9 +603,139 @@ export default function InventoryForm() {
                 {/* ── DATOS DEL DOCUMENTO ── */}
                 <Text style={styles.sectionLabel}>DATOS DEL DOCUMENTO</Text>
 
+                {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
+                {!hideBranchWarehouseInputs && (
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="branch_id"
+                        rules={{ required: "La sucursal es obligatoria." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            branchOptions.find((b) => String(b.id) === value)
+                              ?.name || "";
+                          return (
+                            <FormControl isInvalid={!!errors.branch_id}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Sucursal
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder="Selecciona una sucursal"
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent style={{ maxHeight: "50%" }}>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    <ScrollView
+                                      style={{ width: "100%" }}
+                                      showsVerticalScrollIndicator={false}
+                                    >
+                                      {branchOptions.map((b) => (
+                                        <SelectItem
+                                          key={b.id}
+                                          label={b.name}
+                                          value={String(b.id)}
+                                        />
+                                      ))}
+                                    </ScrollView>
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.branch_id?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="warehouse_id"
+                        rules={{ required: "La bodega es obligatoria." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            warehouseOptionsForBranch.find(
+                              (w) => String(w.warehouse_id) === value,
+                            )?.warehouse_name || "";
+                          return (
+                            <FormControl isInvalid={!!errors.warehouse_id}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Bodega
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                                isDisabled={!selectedBranchId}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder={
+                                      selectedBranchId
+                                        ? "Selecciona una bodega"
+                                        : "Primero selecciona una sucursal"
+                                    }
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent style={{ maxHeight: "50%" }}>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    <ScrollView
+                                      style={{ width: "100%" }}
+                                      showsVerticalScrollIndicator={false}
+                                    >
+                                      {warehouseOptionsForBranch.map((w) => (
+                                        <SelectItem
+                                          key={w.warehouse_id}
+                                          label={w.warehouse_name}
+                                          value={String(w.warehouse_id)}
+                                        />
+                                      ))}
+                                    </ScrollView>
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.warehouse_id?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+                  </View>
+                )}
+
                 {/* Bodega + Proveedor */}
                 <View style={row}>
-
                   <View style={half}>
                     <Controller
                       control={control}
@@ -516,13 +743,19 @@ export default function InventoryForm() {
                       rules={{ required: "El proveedor es obligatorio." }}
                       render={({ field: { onChange, value } }) => {
                         const selectedLabel =
-                          supplierData?.find((s: any) => String(s.id) === value)?.name || "";
+                          supplierData?.find((s: any) => String(s.id) === value)
+                            ?.name || "";
                         return (
                           <FormControl isInvalid={!!errors.supplier_id}>
                             <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>Proveedor</FormControlLabelText>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Proveedor
+                              </FormControlLabelText>
                             </FormControlLabel>
-                            <Select selectedValue={value} onValueChange={onChange}>
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
                               <SelectTrigger>
                                 <SelectInput
                                   style={{ color: "#000" }}
@@ -532,34 +765,49 @@ export default function InventoryForm() {
                               </SelectTrigger>
                               <SelectPortal>
                                 <SelectBackdrop />
-                                <SelectContent>
+                                <SelectContent style={{ maxHeight: "50%" }}>
                                   <SelectDragIndicatorWrapper>
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
-                                  {(supplierData ?? []).map((s: any) => (
-                                    <SelectItem key={s.id} label={s.name} value={String(s.id)} />
-                                  ))}
+                                  <ScrollView
+                                    style={{ width: "100%" }}
+                                    showsVerticalScrollIndicator={false}
+                                  >
+                                    {(supplierData ?? []).map((s: any) => (
+                                      <SelectItem
+                                        key={s.id}
+                                        label={s.name}
+                                        value={String(s.id)}
+                                      />
+                                    ))}
+                                  </ScrollView>
                                 </SelectContent>
                               </SelectPortal>
                             </Select>
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>{errors.supplier_id?.message}</FormControlErrorText>
+                              <FormControlErrorText>
+                                {errors.supplier_id?.message}
+                              </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
                         );
                       }}
                     />
                   </View>
-                                    <View style={half}>
+                  <View style={half}>
                     <Controller
                       control={control}
                       name="document_number"
-                      rules={{ required: "El número de documento es obligatorio." }}
+                      rules={{
+                        required: "El número de documento es obligatorio.",
+                      }}
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.document_number}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>N° Documento</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              N° Documento
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -573,7 +821,9 @@ export default function InventoryForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.document_number?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.document_number?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -583,65 +833,66 @@ export default function InventoryForm() {
 
                 {/* N° Documento + Fecha */}
                 <View style={row}>
-
                   <View style={half}>
                     <Controller
-                        control={control}
-                        name="document_date"
-                        rules={{
-                            required: "La fecha es obligatoria.",
-                            pattern: {
-                            value: /^\d{4}-\d{2}-\d{2}$/,
-                            message: "Formato inválido. Usa YYYY-MM-DD.",
-                            },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => {
-                            const handleChange = (text: string) => {
-                            // Solo permitir números y guiones
-                            const cleaned = text.replace(/[^0-9]/g, "");
+                      control={control}
+                      name="document_date"
+                      rules={{
+                        required: "La fecha es obligatoria.",
+                        pattern: {
+                          value: /^\d{4}-\d{2}-\d{2}$/,
+                          message: "Formato inválido. Usa YYYY-MM-DD.",
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => {
+                        const handleChange = (text: string) => {
+                          // Solo permitir números y guiones
+                          const cleaned = text.replace(/[^0-9]/g, "");
 
-                            // Insertar guiones automáticamente
-                            let formatted = cleaned;
-                            if (cleaned.length > 4) {
-                                formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
-                            }
-                            if (cleaned.length > 6) {
-                                formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
-                            }
+                          // Insertar guiones automáticamente
+                          let formatted = cleaned;
+                          if (cleaned.length > 4) {
+                            formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+                          }
+                          if (cleaned.length > 6) {
+                            formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
+                          }
 
-                            onChange(formatted);
-                            };
+                          onChange(formatted);
+                        };
 
-                            return (
-                            <FormControl isInvalid={!!errors.document_date}>
-                                <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                    Fecha del documento
-                                </FormControlLabelText>
-                                </FormControlLabel>
-                                <Input>
-                                <InputField
-                                    style={{ color: "#171717" }}
-                                    placeholder="YYYY-MM-DD"
-                                    value={value}
-                                    onChangeText={handleChange}
-                                    onBlur={onBlur}
-                                    keyboardType="number-pad"
-                                    maxLength={10}
-                                />
-                                </Input>
-                                <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>{errors.document_date?.message}</FormControlErrorText>
-                                </FormControlError>
-                            </FormControl>
-                            );
-                        }}
-                        />
+                        return (
+                          <FormControl isInvalid={!!errors.document_date}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Fecha del documento
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="YYYY-MM-DD"
+                                value={value}
+                                onChangeText={handleChange}
+                                onBlur={onBlur}
+                                keyboardType="number-pad"
+                                maxLength={10}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.document_date?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        );
+                      }}
+                    />
                   </View>
                   <View style={half}></View>
                 </View>
-               
+
                 {/* Notas generales */}
                 <Controller
                   control={control}
@@ -651,7 +902,9 @@ export default function InventoryForm() {
                       <FormControlLabel>
                         <FormControlLabelText style={{ color: "#000" }}>
                           Notas{" "}
-                          <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
+                          <Text size="xs" style={{ color: "#999" }}>
+                            (opcional)
+                          </Text>
                         </FormControlLabelText>
                       </FormControlLabel>
                       <Textarea>
@@ -670,10 +923,21 @@ export default function InventoryForm() {
                 <Divider className="my-2" />
 
                 {/* ── PRODUCTOS ── */}
-                <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={styles.sectionLabel}>PRODUCTOS ({fields.length})</Text>
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    PRODUCTOS ({fields.length})
+                  </Text>
                   <Button size="sm" onPress={() => append(EMPTY_ITEM)}>
-                    <Icon as={AddIcon} size="sm" style={{ color: "#fff", marginRight: 4 }} />
+                    <Icon
+                      as={AddIcon}
+                      size="sm"
+                      style={{ color: "#fff", marginRight: 4 }}
+                    />
                     <ButtonText>Agregar</ButtonText>
                   </Button>
                 </HStack>
@@ -701,8 +965,16 @@ export default function InventoryForm() {
                 {/* Total general */}
                 {fields.length > 0 && (
                   <Box style={styles.totalBox}>
-                    <Text style={{ color: "#555", fontSize: 14 }}>Total general</Text>
-                    <Text style={{ color: "#000", fontWeight: "bold", fontSize: 20 }}>
+                    <Text style={{ color: "#555", fontSize: 14 }}>
+                      Total general
+                    </Text>
+                    <Text
+                      style={{
+                        color: "#000",
+                        fontWeight: "bold",
+                        fontSize: 20,
+                      }}
+                    >
                       Q {totalGeneral.toFixed(2)}
                     </Text>
                   </Box>
@@ -724,7 +996,9 @@ export default function InventoryForm() {
                     onPress={handleSubmit(onSubmit)}
                     disabled={isPending || fields.length === 0}
                   >
-                    <ButtonText>{isPending ? "Guardando..." : "Guardar"}</ButtonText>
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
                   </Button>
                 </HStack>
               </VStack>

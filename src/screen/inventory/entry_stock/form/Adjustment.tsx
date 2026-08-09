@@ -33,8 +33,8 @@ import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useAuthStore } from "@/src/store";
 import { Adjustment } from "@/src/types/entry_stock/entry_stock.types";
 import { useRouter } from "expo-router";
-import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import React, { useMemo } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -47,6 +47,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface FormValues {
+  branch_id: string;
+  warehouse_id: string;
   product_id: string;
   batch_id: string;
   movement_type: string;
@@ -57,11 +59,29 @@ interface FormValues {
   reference_number: string;
 }
 
+// ⚠️ Solo cambia el "label" (lo que ve el usuario). El "value" (lo que se guarda
+// en el form y se manda al backend) NO se toca.
+const MOVEMENT_TYPE_OPTIONS = [
+  { value: "adjustment_in", label: "Ajuste de entrada" },
+  { value: "adjustment_out", label: "Ajuste de salida" },
+];
+
+const REASON_OPTIONS = [
+  { value: "expired", label: "Vencido" },
+  { value: "damaged", label: "Dañado" },
+  { value: "theft", label: "Robo" },
+  { value: "correction", label: "Corrección" },
+  { value: "sale", label: "Venta" },
+  { value: "purchase", label: "Compra" },
+  { value: "return", label: "Devolución" },
+  { value: "other", label: "Otro" },
+];
+
 export default function AdjustmentForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
   const { data: productData } = useProduct();
-  const {postAdjustment}= useEntryStock()
+  const { postAdjustment } = useEntryStock();
   const { showToast } = useCustomToast();
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
@@ -69,13 +89,41 @@ export default function AdjustmentForm() {
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
+  // Sucursales + bodegas a las que el usuario tiene acceso, según sus claims.
+  const branchOptions = useMemo(
+    () =>
+      (claims?.branches ?? []).map((b) => ({
+        id: b.branch_id,
+        name: b.branch_name,
+        warehouses: b.warehouses,
+      })),
+    [claims],
+  );
+
+  const totalWarehouses = useMemo(
+    () => branchOptions.reduce((acc, b) => acc + b.warehouses.length, 0),
+    [branchOptions],
+  );
+
+  // Si el usuario tiene exactamente 1 sucursal y 1 bodega, no se le muestra nada:
+  // se preselecciona automáticamente esa única combinación.
+  const hideBranchWarehouseInputs =
+    branchOptions.length === 1 && totalWarehouses === 1;
+
   const {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
+      branch_id: hideBranchWarehouseInputs
+        ? String(branchOptions[0]?.id ?? "")
+        : "",
+      warehouse_id: hideBranchWarehouseInputs
+        ? String(branchOptions[0]?.warehouses[0]?.warehouse_id ?? "")
+        : "",
       product_id: "",
       batch_id: "",
       movement_type: "",
@@ -87,16 +135,36 @@ export default function AdjustmentForm() {
     },
   });
 
+  const selectedBranchId = useWatch({ control, name: "branch_id" });
+  const selectedBranch = branchOptions.find(
+    (b) => String(b.id) === selectedBranchId,
+  );
+  const warehouseOptionsForBranch = selectedBranch?.warehouses ?? [];
+
+  // Al cambiar de sucursal, se limpia la bodega seleccionada (pertenecía a la sucursal anterior).
+  const isFirstRender = React.useRef(true);
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (!hideBranchWarehouseInputs) {
+      setValue("warehouse_id", "");
+    }
+  }, [selectedBranchId, hideBranchWarehouseInputs, setValue]);
+
   // El batch_id solo aplica si el producto seleccionado requiere lote
   const product_id = watch("product_id");
-  const selectedProduct = productData?.find((p: any) => String(p.id) === product_id);
+  const selectedProduct = productData?.find(
+    (p: any) => String(p.id) === product_id,
+  );
   const requiresBatch = selectedProduct?.requires_batch ?? false;
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
-
+    console.log(values.movement_type);
     const payload: Adjustment = {
-      warehouse_id: claims.warehouse_id,
+      warehouse_id: parseInt(values.warehouse_id),
       product_id: parseInt(values.product_id),
       batch_id: requiresBatch ? parseInt(values.batch_id) : null,
       user_id: claims.sub,
@@ -110,7 +178,10 @@ export default function AdjustmentForm() {
 
     try {
       await postAdjustment.mutateAsync(payload);
-      showToast({ message: "Movimiento registrado correctamente", type: "success" });
+      showToast({
+        message: "Movimiento registrado correctamente",
+        type: "success",
+      });
       router.back();
     } catch (error) {
       console.log(error);
@@ -132,10 +203,16 @@ export default function AdjustmentForm() {
         >
           <Pressable
             onPress={() => router.back()}
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
           >
             <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>Regresar</Text>
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
           </Pressable>
 
           <Center>
@@ -150,7 +227,128 @@ export default function AdjustmentForm() {
               <VStack space="lg">
                 <Text style={styles.sectionLabel}>DATOS DEL MOVIMIENTO</Text>
 
-                {/* Producto + Bodega */}
+                {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
+                {!hideBranchWarehouseInputs && (
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="branch_id"
+                        rules={{ required: "La sucursal es obligatoria." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            branchOptions.find((b) => String(b.id) === value)
+                              ?.name || "";
+                          return (
+                            <FormControl isInvalid={!!errors.branch_id}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Sucursal
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder="Selecciona una sucursal"
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    {branchOptions.map((b) => (
+                                      <SelectItem
+                                        key={b.id}
+                                        label={b.name}
+                                        value={String(b.id)}
+                                      />
+                                    ))}
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.branch_id?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="warehouse_id"
+                        rules={{ required: "La bodega es obligatoria." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            warehouseOptionsForBranch.find(
+                              (w) => String(w.warehouse_id) === value,
+                            )?.warehouse_name || "";
+                          return (
+                            <FormControl isInvalid={!!errors.warehouse_id}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Bodega
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                                isDisabled={!selectedBranchId}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder={
+                                      selectedBranchId
+                                        ? "Selecciona una bodega"
+                                        : "Primero selecciona una sucursal"
+                                    }
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent style={{ maxHeight: 320 }}>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    {warehouseOptionsForBranch.map((w) => (
+                                      <SelectItem
+                                        key={w.warehouse_id}
+                                        label={w.warehouse_name}
+                                        value={String(w.warehouse_id)}
+                                      />
+                                    ))}
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.warehouse_id?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+                  </View>
+                )}
+
+                {/* Producto + N° Referencia */}
                 <View style={row}>
                   <View style={half}>
                     <Controller
@@ -159,13 +357,19 @@ export default function AdjustmentForm() {
                       rules={{ required: "El producto es obligatorio." }}
                       render={({ field: { onChange, value } }) => {
                         const selectedLabel =
-                          productData?.find((p: any) => String(p.id) === value)?.name || "";
+                          productData?.find((p: any) => String(p.id) === value)
+                            ?.name || "";
                         return (
                           <FormControl isInvalid={!!errors.product_id}>
                             <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>Producto</FormControlLabelText>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Producto
+                              </FormControlLabelText>
                             </FormControlLabel>
-                            <Select selectedValue={value} onValueChange={onChange}>
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
                               <SelectTrigger>
                                 <SelectInput
                                   style={{ color: "#000" }}
@@ -175,19 +379,30 @@ export default function AdjustmentForm() {
                               </SelectTrigger>
                               <SelectPortal>
                                 <SelectBackdrop />
-                                <SelectContent>
+                                <SelectContent style={{ maxHeight: 320 }}>
                                   <SelectDragIndicatorWrapper>
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
-                                  {(productData ?? []).map((p: any) => (
-                                    <SelectItem key={p.id} label={p.name} value={String(p.id)} />
-                                  ))}
+                                  <ScrollView
+                                    style={{ maxHeight: 280 }}
+                                    nestedScrollEnabled
+                                  >
+                                    {(productData ?? []).map((p: any) => (
+                                      <SelectItem
+                                        key={p.id}
+                                        label={p.name}
+                                        value={String(p.id)}
+                                      />
+                                    ))}
+                                  </ScrollView>
                                 </SelectContent>
                               </SelectPortal>
                             </Select>
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>{errors.product_id?.message}</FormControlErrorText>
+                              <FormControlErrorText>
+                                {errors.product_id?.message}
+                              </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
                         );
@@ -196,15 +411,19 @@ export default function AdjustmentForm() {
                   </View>
 
                   <View style={half}>
-                     {/* N° Referencia */}
+                    {/* N° Referencia */}
                     <Controller
                       control={control}
                       name="reference_number"
-                      rules={{ required: "El número de referencia es obligatorio." }}
+                      rules={{
+                        required: "El número de referencia es obligatorio.",
+                      }}
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.reference_number}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>N° Referencia</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              N° Referencia
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -218,7 +437,9 @@ export default function AdjustmentForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.reference_number?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.reference_number?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -233,39 +454,54 @@ export default function AdjustmentForm() {
                       control={control}
                       name="movement_type"
                       rules={{ required: "El tipo es obligatorio." }}
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl isInvalid={!!errors.movement_type}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Tipo de movimiento</FormControlLabelText>
-                          </FormControlLabel>
-                          <Select selectedValue={value} onValueChange={onChange}>
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona tipo"
-                                value={value}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                <SelectItem label="Entrada" value="entry" />
-                                <SelectItem label="Salida" value="exit" />
-                                <SelectItem label="Ajuste entrada" value="adjustment_in" />
-                                <SelectItem label="Ajuste salida" value="adjustment_out" />
-                                <SelectItem label="Transferencia" value="transfer" />
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.movement_type?.message}</FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
+                      render={({ field: { onChange, value } }) => {
+                        const selectedLabel =
+                          MOVEMENT_TYPE_OPTIONS.find((m) => m.value === value)
+                            ?.label || "";
+
+                        return (
+                          <FormControl isInvalid={!!errors.movement_type}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Tipo de movimiento
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectInput
+                                  style={{ color: "#000" }}
+                                  placeholder="Selecciona tipo"
+                                  value={selectedLabel}
+                                />
+                              </SelectTrigger>
+                              <SelectPortal>
+                                <SelectBackdrop />
+                                <SelectContent>
+                                  <SelectDragIndicatorWrapper>
+                                    <SelectDragIndicator />
+                                  </SelectDragIndicatorWrapper>
+                                  {MOVEMENT_TYPE_OPTIONS.map((m) => (
+                                    <SelectItem
+                                      key={m.value}
+                                      label={m.label}
+                                      value={m.value}
+                                    />
+                                  ))}
+                                </SelectContent>
+                              </SelectPortal>
+                            </Select>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.movement_type?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        );
+                      }}
                     />
                   </View>
 
@@ -274,42 +510,54 @@ export default function AdjustmentForm() {
                       control={control}
                       name="reason"
                       rules={{ required: "La razón es obligatoria." }}
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl isInvalid={!!errors.reason}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Razón</FormControlLabelText>
-                          </FormControlLabel>
-                          <Select selectedValue={value} onValueChange={onChange}>
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona razón"
-                                value={value}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                <SelectItem label="Vencido" value="expired" />
-                                <SelectItem label="Dañado" value="damaged" />
-                                <SelectItem label="Robo" value="theft" />
-                                <SelectItem label="Corrección" value="correction" />
-                                <SelectItem label="Venta" value="sale" />
-                                <SelectItem label="Compra" value="purchase" />
-                                <SelectItem label="Devolución" value="return" />
-                                <SelectItem label="Otro" value="other" />
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.reason?.message}</FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
+                      render={({ field: { onChange, value } }) => {
+                        const selectedLabel =
+                          REASON_OPTIONS.find((r) => r.value === value)
+                            ?.label || "";
+
+                        return (
+                          <FormControl isInvalid={!!errors.reason}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Razón
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectInput
+                                  style={{ color: "#000" }}
+                                  placeholder="Selecciona razón"
+                                  value={selectedLabel}
+                                />
+                              </SelectTrigger>
+                              <SelectPortal>
+                                <SelectBackdrop />
+                                <SelectContent>
+                                  <SelectDragIndicatorWrapper>
+                                    <SelectDragIndicator />
+                                  </SelectDragIndicatorWrapper>
+                                  {REASON_OPTIONS.map((r) => (
+                                    <SelectItem
+                                      key={r.value}
+                                      label={r.label}
+                                      value={r.value}
+                                    />
+                                  ))}
+                                </SelectContent>
+                              </SelectPortal>
+                            </Select>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.reason?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        );
+                      }}
                     />
                   </View>
                 </View>
@@ -324,7 +572,9 @@ export default function AdjustmentForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.qty}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Cantidad</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Cantidad
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -338,7 +588,9 @@ export default function AdjustmentForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.qty?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.qty?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -354,7 +606,9 @@ export default function AdjustmentForm() {
                           <FormControlLabel>
                             <FormControlLabelText style={{ color: "#000" }}>
                               Costo unitario{" "}
-                              <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
+                              <Text size="xs" style={{ color: "#999" }}>
+                                (opcional)
+                              </Text>
                             </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
@@ -382,7 +636,9 @@ export default function AdjustmentForm() {
                     render={({ field: { onChange, onBlur, value } }) => (
                       <FormControl isInvalid={!!errors.batch_id}>
                         <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>ID de lote</FormControlLabelText>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            ID de lote
+                          </FormControlLabelText>
                         </FormControlLabel>
                         <Input>
                           <InputField
@@ -396,7 +652,9 @@ export default function AdjustmentForm() {
                         </Input>
                         <FormControlError>
                           <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>{errors.batch_id?.message}</FormControlErrorText>
+                          <FormControlErrorText>
+                            {errors.batch_id?.message}
+                          </FormControlErrorText>
                         </FormControlError>
                       </FormControl>
                     )}
@@ -412,7 +670,9 @@ export default function AdjustmentForm() {
                       <FormControlLabel>
                         <FormControlLabelText style={{ color: "#000" }}>
                           Notas{" "}
-                          <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
+                          <Text size="xs" style={{ color: "#999" }}>
+                            (opcional)
+                          </Text>
                         </FormControlLabelText>
                       </FormControlLabel>
                       <Textarea>
@@ -444,7 +704,9 @@ export default function AdjustmentForm() {
                     onPress={handleSubmit(onSubmit)}
                     disabled={isPending}
                   >
-                    <ButtonText>{isPending ? "Guardando..." : "Guardar"}</ButtonText>
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
                   </Button>
                 </HStack>
               </VStack>
