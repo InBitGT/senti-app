@@ -1,9 +1,8 @@
-# .github/workflows/build-tauri.yml
 name: Build Tauri App
 
 on:
   push:
-    branches: [main]
+    branches: [version-desktop]
   workflow_dispatch:
 
 jobs:
@@ -13,9 +12,7 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: ""
           - platform: windows-latest
-            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -36,5 +33,4 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: ${{ matrix.args }}
+          EXPO_PUBLIC_PRODUCTION_API_URL: ${{ secrets.EXPO_PUBLIC_PRODUCTION_API_URL }}
