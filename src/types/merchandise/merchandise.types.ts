@@ -3,8 +3,10 @@
 // ── Sub-tipos compartidos ──
 
 export interface Price {
+  id?: number;
   amount: number;
   currency: string;
+  is_base?: boolean;
 }
 
 export interface PricePerUom {
@@ -18,7 +20,9 @@ export interface PricePerUom {
 export interface MerchandiseConversion {
   id?: number;
   from_uom_id: number;
+  from_uom_code?: string;
   to_uom_id: number;
+  to_uom_code?: string;
   factor: number;
   // Precio específico para esta conversión de unidad (opcional).
   price_per_uom?: PricePerUom | null;
@@ -47,12 +51,12 @@ export interface MerchandiseProduct {
   parent_category_id: number | null;
   parent_category_name: string | null;
   name: string;
-  description: string;
+  description: string | null;
   sku: string;
   barcode: string | null;
   brand: string | null;
   type: string;
-  unit_of_measure_id: number;
+  unit_of_measure_id: number | null;
   average_cost: number;
   requires_batch: boolean;
   availability_status: string;
@@ -112,12 +116,12 @@ export interface Merchandise {
   parent_category_id: number | null;
   parent_category_name: string | null;
   name: string;
-  description: string;
+  description: string | null;
   sku: string;
   barcode: string | null;
   brand: string | null;
   type: string;
-  unit_of_measure_id: number;
+  unit_of_measure_id: number | null;
   average_cost: number;
   requires_batch: boolean;
   availability_status: string;

@@ -1,9 +1,9 @@
-import { Merchandise } from "@/src/types/merchandise/merchandise.types";
+import { MerchandiseListItem } from "@/src/types/merchandise/merchandise.types";
 import { create } from "zustand";
 
 interface States {
-  data: Merchandise | null;
-  setData: (data: Merchandise) => void;
+  data: MerchandiseListItem | null;
+  setData: (data: MerchandiseListItem) => void;
   clearData: () => void;
   isEdit: boolean;
   setIsEdit: (data: boolean) => void;
@@ -11,7 +11,7 @@ interface States {
 
 export const useMerchandiseStore = create<States>()((set, get) => ({
   data: null,
-  setData: (data: Merchandise) => {
+  setData: (data: MerchandiseListItem) => {
     console.log(data, "data");
     set({ data: data });
   },

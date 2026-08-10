@@ -9,14 +9,14 @@ import {
   ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
-import { Merchandise } from "@/src/types/merchandise/merchandise.types";
+import { MerchandiseListItem } from "@/src/types/merchandise/merchandise.types";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  data?: Merchandise;
+  data?: MerchandiseListItem;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -91,6 +91,8 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
   onClose,
   data,
 }) => {
+  const product = data?.product;
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalBackdrop />
@@ -102,12 +104,12 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
             </View>
             <View style={{ marginLeft: 12, flex: 1 }}>
               <Heading size="md" style={styles.name}>
-                {data?.name ?? "—"}
+                {product?.name ?? "—"}
               </Heading>
-              <Text style={styles.sku}>SKU: {data?.sku ?? "—"}</Text>
+              <Text style={styles.sku}>SKU: {product?.sku ?? "—"}</Text>
               <View style={styles.badgeRow}>
-                <StatusBadge status={data?.availability_status} />
-                <TypeBadge type={data?.type} />
+                <StatusBadge status={product?.availability_status} />
+                <TypeBadge type={product?.type} />
               </View>
             </View>
           </View>
@@ -120,37 +122,37 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
           >
             {/* ── GENERAL ── */}
             <SectionTitle title="General" />
-            <InfoRow label="Descripción" value={data?.description} />
-            <InfoRow label="Categoría" value={data?.category_name} />
-            {data?.parent_category_name && (
+            <InfoRow label="Descripción" value={product?.description} />
+            <InfoRow label="Categoría" value={product?.category_name} />
+            {product?.parent_category_name && (
               <InfoRow
                 label="Categoría padre"
-                value={data.parent_category_name}
+                value={product.parent_category_name}
               />
             )}
-            <InfoRow label="Marca" value={data?.brand} />
-            <InfoRow label="Código de barras" value={data?.barcode} />
+            <InfoRow label="Marca" value={product?.brand} />
+            <InfoRow label="Código de barras" value={product?.barcode} />
             <InfoRow
               label="Unidad de medida"
-              value={data?.unit_of_measure_id}
+              value={product?.unit_of_measure_id}
             />
             <InfoRow
               label="Costo promedio"
               value={
-                data?.average_cost != null
-                  ? `Q ${data.average_cost.toFixed(2)}`
+                product?.average_cost != null
+                  ? `Q ${product.average_cost.toFixed(2)}`
                   : undefined
               }
             />
-            <InfoRow label="Requiere lote" value={data?.requires_batch} />
+            <InfoRow label="Requiere lote" value={product?.requires_batch} />
 
             {/* ── PRECIO ── */}
             <Divider />
             <SectionTitle title="Precio" />
-            {data?.sale_price != null ? (
+            {data?.price != null ? (
               <InfoRow
                 label="Precio de venta"
-                value={`${data.sale_price_currency ?? ""} ${data.sale_price.toFixed(2)}`}
+                value={`${data.price.currency ?? ""} ${data.price.amount.toFixed(2)}`}
               />
             ) : (
               <EmptySection text="Este producto no tiene precio de venta definido." />
@@ -162,16 +164,16 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
             <InfoRow
               label="Conversiones de unidad"
               value={
-                data?.conversions_count
-                  ? `${data.conversions_count} configurada(s)`
+                data?.conversions?.length
+                  ? `${data.conversions.length} configurada(s)`
                   : "Sin conversiones"
               }
             />
             <InfoRow
               label="Precios por tipo de cliente"
               value={
-                data?.customer_type_prices_count
-                  ? `${data.customer_type_prices_count} configurado(s)`
+                data?.customer_type_prices?.length
+                  ? `${data.customer_type_prices.length} configurado(s)`
                   : "Sin precios especiales"
               }
             />
@@ -179,19 +181,15 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
             {/* ── REGLA DE MAYOREO ── */}
             <Divider />
             <SectionTitle title="Regla de mayoreo" />
-            {data?.has_wholesale_rule ? (
+            {data?.wholesale_rule ? (
               <>
                 <InfoRow
                   label="Cantidad mínima"
-                  value={data.has_wholesale_rule}
+                  value={data.wholesale_rule.min_quantity}
                 />
                 <InfoRow
                   label="Descuento"
-                  value={
-                    data.wholesale_discount_percentage != null
-                      ? `${data.wholesale_discount_percentage}%`
-                      : undefined
-                  }
+                  value={`${data.wholesale_rule.discount_percentage}%`}
                 />
               </>
             ) : (
@@ -199,33 +197,33 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
             )}
 
             {/* ── MODIFICADOR ── */}
-            {data?.is_modifier && (
+            {product?.is_modifier && (
               <>
                 <Divider />
                 <SectionTitle title="Modificador" />
-                <InfoRow label="Es modificador" value={data?.is_modifier} />
-                <InfoRow label="Grupo" value={data?.modifier_group} />
-                <InfoRow label="Nombre" value={data?.modifier_name} />
-                <InfoRow label="Cantidad" value={data?.modifier_quantity} />
+                <InfoRow label="Es modificador" value={product?.is_modifier} />
+                <InfoRow label="Grupo" value={product?.modifier_group} />
+                <InfoRow label="Nombre" value={product?.modifier_name} />
+                <InfoRow label="Cantidad" value={product?.modifier_quantity} />
                 <InfoRow
                   label="Selec. mínima"
-                  value={data?.modifier_min_selection}
+                  value={product?.modifier_min_selection}
                 />
                 <InfoRow
                   label="Selec. máxima"
-                  value={data?.modifier_max_selection}
+                  value={product?.modifier_max_selection}
                 />
                 <InfoRow
                   label="Ajuste de precio"
                   value={
-                    data?.modifier_price_adjustment != null
-                      ? `Q ${data.modifier_price_adjustment.toFixed(2)}`
+                    product?.modifier_price_adjustment != null
+                      ? `Q ${product.modifier_price_adjustment.toFixed(2)}`
                       : undefined
                   }
                 />
                 <InfoRow
                   label="Por defecto"
-                  value={data?.modifier_is_default}
+                  value={product?.modifier_is_default}
                 />
               </>
             )}

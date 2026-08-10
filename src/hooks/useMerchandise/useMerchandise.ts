@@ -1,8 +1,8 @@
 import {
-    DeleteMerchandise,
-    merchandiseFn,
-    PostMerchandise,
-    PutMerchandise,
+  DeleteMerchandise,
+  merchandiseFn,
+  PostMerchandise,
+  PutMerchandise,
 } from "@/src/service/merchandise/merchandise";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -12,10 +12,6 @@ export const useMerchandise = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["merchandise"],
     queryFn: merchandiseFn,
-    retry: 3,
-    refetchOnMount: true,
-    staleTime: 0,
-    gcTime: 0,
   });
 
   const post = useMutation({
