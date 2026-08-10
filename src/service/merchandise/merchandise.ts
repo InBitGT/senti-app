@@ -2,8 +2,8 @@ import { get, post, put, remove } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import { useAuthStore } from "@/src/store";
 import {
-  Merchandise,
   MerchandiseDetail,
+  MerchandiseListItem
 } from "@/src/types/merchandise/merchandise.types";
 
 export async function merchandiseFn() {
@@ -11,7 +11,10 @@ export async function merchandiseFn() {
   if (!claims) {
     throw new Error();
   }
-  const response = await get<Merchandise[]>(
+  // Se devuelve tal cual llega del backend (shape anidado: product + price +
+  // conversions + wholesale_rule + ...). Los componentes que lo consumen leen
+  // directo de esta forma, sin pasar por un mapeo/aplanado previo.
+  const response = await get<MerchandiseListItem[]>(
     ENDPOINT.merchandise.detail(claims?.tenant_id),
   );
   if (response.code !== "200") {
@@ -20,7 +23,6 @@ export async function merchandiseFn() {
 
   return response.data;
 }
-
 export async function PostMerchandise(data: MerchandiseDetail) {
   const response = await post<MerchandiseDetail>(
     ENDPOINT.merchandise.info,

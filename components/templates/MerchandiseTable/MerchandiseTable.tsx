@@ -6,7 +6,7 @@ import { HStack } from "@/components/ui/hstack";
 import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { Merchandise } from "@/src/types/merchandise/merchandise.types";
+import { MerchandiseListItem } from "@/src/types/merchandise/merchandise.types";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
@@ -38,6 +38,7 @@ const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
   { key: "brand", label: "Marca" },
   { key: "barcode", label: "Código de barras" },
   { key: "price", label: "Precio" },
+  { key: "modifier", label: "Modificador" },
 ];
 
 function TypeBadge({ type }: { type: string }) {
@@ -62,11 +63,11 @@ function AvailabilityDot({ status }: { status: string }) {
 }
 
 interface MerchandiseTableProps {
-  data: Merchandise[];
-  onRowPress?: (row: Merchandise) => void;
+  data: MerchandiseListItem[];
+  onRowPress?: (row: MerchandiseListItem) => void;
   itemsPerPage?: number;
   button?: Buttons[];
-  actions?: Action<Merchandise>[];
+  actions?: Action<MerchandiseListItem>[];
 }
 
 export function MerchandiseTable({
@@ -96,12 +97,16 @@ export function MerchandiseTable({
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const validData = useMemo(() => data.filter((r) => r?.name != null), [data]);
+  // Se lee directo de item.product.* — sin mapear el array a otra forma antes.
+  const validData = useMemo(
+    () => data.filter((r) => r?.product?.name != null),
+    [data],
+  );
 
   const countByType = useMemo(() => {
     const map: Record<string, number> = {};
     validData.forEach((r) => {
-      map[r.type] = (map[r.type] ?? 0) + 1;
+      map[r.product.type] = (map[r.product.type] ?? 0) + 1;
     });
     return map;
   }, [validData]);
@@ -110,20 +115,22 @@ export function MerchandiseTable({
     let rows = validData;
 
     if (activeType) {
-      rows = rows.filter((r) => r.type === activeType);
+      rows = rows.filter((r) => r.product.type === activeType);
     }
 
     if (search.trim()) {
       const term = search.toLowerCase();
-      rows = rows.filter(
-        (r) =>
-          r.name.toLowerCase().includes(term) ||
-          r.sku.toLowerCase().includes(term) ||
-          (r.brand ?? "").toLowerCase().includes(term) ||
-          (r.barcode ?? "").toLowerCase().includes(term) ||
-          (r.category_name ?? "").toLowerCase().includes(term) ||
-          (r.modifier_name ?? "").toLowerCase().includes(term),
-      );
+      rows = rows.filter((r) => {
+        const p = r.product;
+        return (
+          p.name.toLowerCase().includes(term) ||
+          p.sku.toLowerCase().includes(term) ||
+          (p.brand ?? "").toLowerCase().includes(term) ||
+          (p.barcode ?? "").toLowerCase().includes(term) ||
+          (p.category_name ?? "").toLowerCase().includes(term) ||
+          (p.modifier_name ?? "").toLowerCase().includes(term)
+        );
+      });
     }
 
     return rows;
@@ -142,7 +149,7 @@ export function MerchandiseTable({
     <VStack style={styles.container}>
       <HStack className="justify-between items-center mb-4">
         <Input
-          className="bg-white rounded-lg"
+          className="bg-white rounded-lg text-black"
           variant="outline"
           size="md"
           style={{ flex: 1, marginRight: 12 }}
@@ -262,6 +269,11 @@ export function MerchandiseTable({
               Precio
             </DataTable.Title>
           )}
+          {visibleColumns.modifier && (
+            <DataTable.Title style={{ flex: 1.3, justifyContent: "center" }}>
+              Modificador
+            </DataTable.Title>
+          )}
 
           <DataTable.Title numeric style={{ justifyContent: "center" }}>
             Costo
@@ -283,98 +295,107 @@ export function MerchandiseTable({
             </DataTable.Cell>
           </DataTable.Row>
         ) : (
-          paginated.map((row) => (
-            <DataTable.Row
-              key={row.id}
-              style={styles.row}
-              onPress={onRowPress ? () => onRowPress(row) : undefined}
-            >
-              <DataTable.Cell style={{ flex: 2, marginVertical: 10 }}>
-                <View style={{ width: "100%" }}>
-                  <Text style={styles.productName} numberOfLines={1}>
-                    {row.name}
-                  </Text>
-                  <Text style={styles.sku} numberOfLines={1}>
-                    {row.sku}
-                  </Text>
-                  {row.requires_batch && (
-                    <Text style={styles.batchLabel}>Requiere lote</Text>
-                  )}
-                </View>
-              </DataTable.Cell>
-
-              <DataTable.Cell
-                style={{
-                  flex: 1.3,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  alignSelf: "center",
-                }}
+          paginated.map((row) => {
+            const p = row.product;
+            return (
+              <DataTable.Row
+                key={p.id}
+                style={styles.row}
+                onPress={onRowPress ? () => onRowPress(row) : undefined}
               >
-                <TypeBadge type={row.type} />
-              </DataTable.Cell>
-
-              {visibleColumns.category && (
-                <DataTable.Cell style={{ flex: 1.3, justifyContent: "center" }}>
-                  <Text style={styles.cell} numberOfLines={1}>
-                    {row.category_name ?? "—"}
-                  </Text>
+                <DataTable.Cell style={{ flex: 2, marginVertical: 10 }}>
+                  <View style={{ width: "100%" }}>
+                    <Text style={styles.productName} numberOfLines={1}>
+                      {p.name}
+                    </Text>
+                    <Text style={styles.sku} numberOfLines={1}>
+                      {p.sku}
+                    </Text>
+                    {p.requires_batch && (
+                      <Text style={styles.batchLabel}>Requiere lote</Text>
+                    )}
+                  </View>
                 </DataTable.Cell>
-              )}
 
-              {visibleColumns.brand && (
-                <DataTable.Cell style={{ flex: 1, justifyContent: "center" }}>
-                  <Text style={styles.cell} numberOfLines={1}>
-                    {row.brand ?? "—"}
-                  </Text>
+                <DataTable.Cell
+                  style={{
+                    flex: 1.3,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    alignSelf: "center",
+                  }}
+                >
+                  <TypeBadge type={p.type} />
                 </DataTable.Cell>
-              )}
 
-              {visibleColumns.barcode && (
-                <DataTable.Cell style={{ flex: 1.2, justifyContent: "center" }}>
-                  <Text style={styles.cell} numberOfLines={1}>
-                    {row.barcode ?? "—"}
-                  </Text>
-                </DataTable.Cell>
-              )}
+                {visibleColumns.category && (
+                  <DataTable.Cell
+                    style={{ flex: 1.3, justifyContent: "center" }}
+                  >
+                    <Text style={styles.cell} numberOfLines={1}>
+                      {p.category_name ?? "—"}
+                    </Text>
+                  </DataTable.Cell>
+                )}
 
-              {visibleColumns.price && (
+                {visibleColumns.brand && (
+                  <DataTable.Cell style={{ flex: 1, justifyContent: "center" }}>
+                    <Text style={styles.cell} numberOfLines={1}>
+                      {p.brand ?? "—"}
+                    </Text>
+                  </DataTable.Cell>
+                )}
+
+                {visibleColumns.barcode && (
+                  <DataTable.Cell
+                    style={{ flex: 1.2, justifyContent: "center" }}
+                  >
+                    <Text style={styles.cell} numberOfLines={1}>
+                      {p.barcode ?? "—"}
+                    </Text>
+                  </DataTable.Cell>
+                )}
+
+                {visibleColumns.price && (
+                  <DataTable.Cell numeric style={{ justifyContent: "center" }}>
+                    <Text style={styles.cost}>
+                      {row.price != null
+                        ? `${row.price.currency ?? ""} ${row.price.amount.toFixed(2)}`
+                        : "—"}
+                    </Text>
+                  </DataTable.Cell>
+                )}
+
+                {visibleColumns.modifier && (
+                  <DataTable.Cell
+                    style={{ flex: 1.3, justifyContent: "center" }}
+                  >
+                    <Text style={styles.cell} numberOfLines={1}>
+                      {p.is_modifier
+                        ? `${p.modifier_group ?? "—"} / ${p.modifier_name ?? "—"}`
+                        : "—"}
+                    </Text>
+                  </DataTable.Cell>
+                )}
+
                 <DataTable.Cell numeric style={{ justifyContent: "center" }}>
-                  <Text style={styles.cost}>
-                    {row.sale_price != null
-                      ? `${row.sale_price_currency ?? ""} ${row.sale_price.toFixed(2)}`
-                      : "—"}
-                  </Text>
+                  <Text style={styles.cost}>Q{p.average_cost.toFixed(2)}</Text>
                 </DataTable.Cell>
-              )}
 
-              {visibleColumns.modifier && (
-                <DataTable.Cell style={{ flex: 1.3, justifyContent: "center" }}>
-                  <Text style={styles.cell} numberOfLines={1}>
-                    {row.is_modifier
-                      ? `${row.modifier_group ?? "—"} / ${row.modifier_name ?? "—"}`
-                      : "—"}
-                  </Text>
+                <DataTable.Cell
+                  style={{ justifyContent: "center", alignItems: "center" }}
+                >
+                  <AvailabilityDot status={p.availability_status} />
                 </DataTable.Cell>
-              )}
 
-              <DataTable.Cell numeric style={{ justifyContent: "center" }}>
-                <Text style={styles.cost}>Q{row.average_cost.toFixed(2)}</Text>
-              </DataTable.Cell>
-
-              <DataTable.Cell
-                style={{ justifyContent: "center", alignItems: "center" }}
-              >
-                <AvailabilityDot status={row.availability_status} />
-              </DataTable.Cell>
-
-              {actions && actions.length > 0 && (
-                <DataTable.Cell>
-                  <ActionsMenu row={row} actions={actions} />
-                </DataTable.Cell>
-              )}
-            </DataTable.Row>
-          ))
+                {actions && actions.length > 0 && (
+                  <DataTable.Cell>
+                    <ActionsMenu row={row} actions={actions} />
+                  </DataTable.Cell>
+                )}
+              </DataTable.Row>
+            );
+          })
         )}
 
         <DataTable.Pagination

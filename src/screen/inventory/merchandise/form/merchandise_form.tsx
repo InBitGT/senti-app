@@ -110,6 +110,66 @@ const CURRENCIES = [
   { label: "USD", value: "USD" },
 ];
 
+// Extraída como función aparte para poder llamarla también desde reset(),
+// no solo desde el defaultValues inicial de useForm.
+function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
+  const product = data?.product;
+
+  return {
+    category_id: product?.category_id ? String(product.category_id) : "",
+    name: product?.name || "",
+    description: product?.description || "",
+    sku: product?.sku || "",
+    barcode: product?.barcode || "",
+    brand: product?.brand || "",
+    type: product?.type || "finished_product",
+    unit_of_measure_id: product?.unit_of_measure_id
+      ? String(product.unit_of_measure_id)
+      : "",
+    average_cost:
+      product?.average_cost != null ? String(product.average_cost) : "",
+    requires_batch: product?.requires_batch ?? false,
+    availability_status: product?.availability_status || "available",
+    price_amount: data?.price?.amount != null ? String(data.price.amount) : "",
+    price_currency: data?.price?.currency || "GTQ",
+    conversions: data?.conversions?.length
+      ? data.conversions.map((c) => ({
+          from_uom_id: String(c.from_uom_id),
+          to_uom_id: String(c.to_uom_id),
+          factor: String(c.factor),
+          has_price_per_uom: !!c.price_per_uom,
+          price_per_uom_amount:
+            c.price_per_uom?.amount != null
+              ? String(c.price_per_uom.amount)
+              : "",
+          price_per_uom_currency: c.price_per_uom?.currency || "GTQ",
+          price_per_uom_wholesale_min_qty:
+            c.price_per_uom?.wholesale_min_qty != null
+              ? String(c.price_per_uom.wholesale_min_qty)
+              : "",
+          price_per_uom_wholesale_amount:
+            c.price_per_uom?.wholesale_amount != null
+              ? String(c.price_per_uom.wholesale_amount)
+              : "",
+        }))
+      : [],
+    customer_type_prices: data?.customer_type_prices?.length
+      ? data.customer_type_prices.map((c) => ({
+          customer_type_id: String(c.customer_type_id),
+          amount: String(c.amount),
+          currency: c.currency,
+        }))
+      : [],
+    has_wholesale_rule: !!data?.wholesale_rule,
+    wholesale_min_quantity: data?.wholesale_rule?.min_quantity
+      ? String(data.wholesale_rule.min_quantity)
+      : "",
+    wholesale_discount_percentage: data?.wholesale_rule?.discount_percentage
+      ? String(data.wholesale_rule.discount_percentage)
+      : "",
+  };
+}
+
 export default function MerchandiseForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
@@ -119,14 +179,9 @@ export default function MerchandiseForm() {
   const { data: customerTypes } = useCustomerType();
   // "data" es la respuesta completa del GET al editar:
   // { product, price, conversions, customer_type_prices, price_per_uom, wholesale_rule }
-  // El store aún tipa "data" como Merchandise (fila plana de la tabla),
-  // pero en modo edición lo que realmente guarda/recibe es el shape
-  // completo del GET: { product, price, conversions, ... }.
-  // TODO: actualizar el tipo de "data" en useMerchandiseStore a
-  // MerchandiseListItem para no necesitar este cast.
-  const data = useMerchandiseStore(
-    (state) => state.data,
-  ) as unknown as MerchandiseListItem | null;
+  // El store ya está tipado como MerchandiseListItem, así que no hace falta
+  // ningún cast aquí.
+  const data = useMerchandiseStore((state) => state.data);
   const isEdit = useMerchandiseStore((state) => state.isEdit);
   const clearData = useMerchandiseStore((state) => state.clearData);
   const setIsEdit = useMerchandiseStore((state) => state.setIsEdit);
@@ -143,63 +198,25 @@ export default function MerchandiseForm() {
     control,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({
-    defaultValues: {
-      category_id: product?.category_id ? String(product.category_id) : "",
-      name: product?.name || "",
-      description: product?.description || "",
-      sku: product?.sku || "",
-      barcode: product?.barcode || "",
-      brand: product?.brand || "",
-      type: product?.type || "finished_product",
-      unit_of_measure_id: product?.unit_of_measure_id
-        ? String(product.unit_of_measure_id)
-        : "",
-      average_cost:
-        product?.average_cost != null ? String(product.average_cost) : "",
-      requires_batch: product?.requires_batch ?? false,
-      availability_status: product?.availability_status || "available",
-      price_amount:
-        data?.price?.amount != null ? String(data.price.amount) : "",
-      price_currency: data?.price?.currency || "GTQ",
-      conversions: data?.conversions?.length
-        ? data.conversions.map((c) => ({
-            from_uom_id: String(c.from_uom_id),
-            to_uom_id: String(c.to_uom_id),
-            factor: String(c.factor),
-            has_price_per_uom: !!c.price_per_uom,
-            price_per_uom_amount:
-              c.price_per_uom?.amount != null
-                ? String(c.price_per_uom.amount)
-                : "",
-            price_per_uom_currency: c.price_per_uom?.currency || "GTQ",
-            price_per_uom_wholesale_min_qty:
-              c.price_per_uom?.wholesale_min_qty != null
-                ? String(c.price_per_uom.wholesale_min_qty)
-                : "",
-            price_per_uom_wholesale_amount:
-              c.price_per_uom?.wholesale_amount != null
-                ? String(c.price_per_uom.wholesale_amount)
-                : "",
-          }))
-        : [],
-      customer_type_prices: data?.customer_type_prices?.length
-        ? data.customer_type_prices.map((c) => ({
-            customer_type_id: String(c.customer_type_id),
-            amount: String(c.amount),
-            currency: c.currency,
-          }))
-        : [],
-      has_wholesale_rule: !!data?.wholesale_rule,
-      wholesale_min_quantity: data?.wholesale_rule?.min_quantity
-        ? String(data.wholesale_rule.min_quantity)
-        : "",
-      wholesale_discount_percentage: data?.wholesale_rule?.discount_percentage
-        ? String(data.wholesale_rule.discount_percentage)
-        : "",
-    },
+    defaultValues: buildDefaultValues(data),
   });
+
+  // ⚠️ FIX CLAVE (edición): useForm's defaultValues solo se lee UNA VEZ, al
+  // montar el componente. Si esta pantalla ya estaba montada (ej. quedó en el
+  // stack de navegación de una visita anterior), cambiar de producto a editar
+  // NO repuebla el formulario solo — hay que forzarlo con reset().
+  //
+  // Blindado para modo creación: si "data" es undefined (estamos creando un
+  // producto nuevo, no editando), este efecto NO debe tocar el formulario en
+  // absoluto — así nunca corre el riesgo de resetear conversiones que el
+  // usuario ya agregó a mano con "Agregar conversión".
+  React.useEffect(() => {
+    if (!data) return;
+    reset(buildDefaultValues(data));
+  }, [data, reset]);
 
   const {
     fields: conversionFields,
@@ -284,6 +301,8 @@ export default function MerchandiseForm() {
           }
         : null,
     };
+
+    console.log(JSON.stringify(payload), "valores de payload ");
 
     try {
       if (!isEdit) {
@@ -830,9 +849,15 @@ export default function MerchandiseForm() {
                     style={styles.addRowButton}
                   >
                     <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                    <Text style={styles.addRowText}>Agregar conversión</Text>
+                    {/* <Text style={styles.addRowText}>Agregar conversión</Text> */}
                   </Pressable>
                 </HStack>
+
+                {conversionFields.length === 0 && (
+                  <Text style={{ color: "#9ca3af", fontSize: 12 }}>
+                    Este producto no tiene conversiones de unidad.
+                  </Text>
+                )}
 
                 {conversionFields.map((field, index) => {
                   const currentFromId = conversionsValue?.[index]?.from_uom_id;
@@ -874,17 +899,24 @@ export default function MerchandiseForm() {
                                     </SelectTrigger>
                                     <SelectPortal>
                                       <SelectBackdrop />
-                                      <SelectContent>
+                                      <SelectContent
+                                        style={{ maxHeight: "50%" }}
+                                      >
                                         <SelectDragIndicatorWrapper>
                                           <SelectDragIndicator />
                                         </SelectDragIndicatorWrapper>
-                                        {(units ?? []).map((u) => (
-                                          <SelectItem
-                                            key={u.id}
-                                            label={`${u.name} (${u.code})`}
-                                            value={String(u.id)}
-                                          />
-                                        ))}
+                                        <ScrollView
+                                          style={{ width: "100%" }}
+                                          showsVerticalScrollIndicator={false}
+                                        >
+                                          {(units ?? []).map((u) => (
+                                            <SelectItem
+                                              key={u.id}
+                                              label={`${u.name} (${u.code})`}
+                                              value={String(u.id)}
+                                            />
+                                          ))}
+                                        </ScrollView>
                                       </SelectContent>
                                     </SelectPortal>
                                   </Select>
@@ -924,17 +956,24 @@ export default function MerchandiseForm() {
                                     </SelectTrigger>
                                     <SelectPortal>
                                       <SelectBackdrop />
-                                      <SelectContent>
+                                      <SelectContent
+                                        style={{ maxHeight: "50%" }}
+                                      >
                                         <SelectDragIndicatorWrapper>
                                           <SelectDragIndicator />
                                         </SelectDragIndicatorWrapper>
-                                        {toOptions.map((u) => (
-                                          <SelectItem
-                                            key={u.id}
-                                            label={`${u.name} (${u.code})`}
-                                            value={String(u.id)}
-                                          />
-                                        ))}
+                                        <ScrollView
+                                          style={{ width: "100%" }}
+                                          showsVerticalScrollIndicator={false}
+                                        >
+                                          {toOptions.map((u) => (
+                                            <SelectItem
+                                              key={u.id}
+                                              label={`${u.name} (${u.code})`}
+                                              value={String(u.id)}
+                                            />
+                                          ))}
+                                        </ScrollView>
                                       </SelectContent>
                                     </SelectPortal>
                                   </Select>
@@ -977,7 +1016,7 @@ export default function MerchandiseForm() {
                           control={control}
                           name={`conversions.${index}.has_price_per_uom`}
                           render={({ field: { onChange, value } }) => (
-                            <Switch value={value} onToggle={onChange} />
+                            <Switch value={value} onValueChange={onChange} />
                           )}
                         />
                       </View>
@@ -1176,7 +1215,7 @@ export default function MerchandiseForm() {
                     style={styles.addRowButton}
                   >
                     <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                    <Text style={styles.addRowText}>Agregar precio</Text>
+                    {/* <Text style={styles.addRowText}>Agregar precio</Text> */}
                   </Pressable>
                 </HStack>
 
@@ -1282,7 +1321,7 @@ export default function MerchandiseForm() {
                     control={control}
                     name="has_wholesale_rule"
                     render={({ field: { onChange, value } }) => (
-                      <Switch value={value} onToggle={onChange} />
+                      <Switch value={value} onValueChange={onChange} />
                     )}
                   />
                 </View>
@@ -1375,7 +1414,7 @@ export default function MerchandiseForm() {
                     control={control}
                     name="requires_batch"
                     render={({ field: { onChange, value } }) => (
-                      <Switch value={value} onToggle={onChange} />
+                      <Switch value={value} onValueChange={onChange} />
                     )}
                   />
                 </View>
