@@ -94,10 +94,11 @@ export function UnitsTable({
               key={btn.key}
               size="md"
               variant={btn.variant}
-              style={[
-                { borderColor: "#949292", borderWidth: 1 },
-                isMobile && styles.buttonIconOnly,
-              ]}
+              style={{
+                borderColor: "#949292",
+                borderWidth: 1,
+                ...(isMobile ? styles.buttonIconOnly : {}),
+              }}
               onPress={btn.onPress}
             >
               {btn.icon && (

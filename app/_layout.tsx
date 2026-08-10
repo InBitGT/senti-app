@@ -50,6 +50,8 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
   }, [isReady, claims, router]);
 
+  console.log("se renderiza");
+
   return (
     <SafeAreaProvider>
       <KeyboardProvider>
@@ -59,6 +61,10 @@ export default function RootLayout() {
               <PaperProvider theme={paperTheme}>
                 <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
                   <Stack>
+                    <Stack.Screen
+                      name="index"
+                      options={{ headerShown: false }}
+                    />
                     <Stack.Screen
                       name="(drawer)"
                       options={{ headerShown: false }}

@@ -53,10 +53,10 @@ function AvailabilityDot({ status }: { status: string }) {
   const isAvailable = status === "available";
   return (
     <View
-      style={[
-        styles.availDot,
-        { backgroundColor: isAvailable ? "#1D9E75" : "#d4d4d4" },
-      ]}
+      style={{
+        backgroundColor: isAvailable ? "#1D9E75" : "#d4d4d4",
+        ...styles.availDot,
+      }}
     />
   );
 }
@@ -198,10 +198,11 @@ export function MerchandiseTable({
               key={btn.key ?? `btn-${index}`}
               size="md"
               variant={btn.variant}
-              style={[
-                { borderColor: "#949292", borderWidth: 1 },
-                isMobile && styles.buttonIconOnly,
-              ]}
+              style={{
+                borderColor: "#949292",
+                borderWidth: 1,
+                ...(isMobile && styles.buttonIconOnly),
+              }}
               onPress={btn.onPress}
             >
               {btn.icon && (

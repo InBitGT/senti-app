@@ -114,10 +114,11 @@ export function StockEntryTable({
                 key={btn.key}
                 size="md"
                 variant={btn.variant}
-                style={[
-                  { borderColor: "#949292", borderWidth: 1 },
-                  isMobile && styles.buttonIconOnly,
-                ]}
+                style={{
+                  borderColor: "#949292",
+                  borderWidth: 1,
+                  ...(isMobile && styles.buttonIconOnly),
+                }}
                 onPress={btn.onPress}
               >
                 {btn.icon && (
@@ -254,7 +255,7 @@ export function StockEntryTable({
         />
       </DataTable>
 
-      <HStack style={[styles.summaryRow, { marginBottom: 12 }]}>
+      <HStack style={{ ...styles.summaryRow, marginBottom: 12 }}>
         <SummaryCard label="Ingresos" value={String(filtered.length)} />
         <SummaryCard
           label="Confirmados"

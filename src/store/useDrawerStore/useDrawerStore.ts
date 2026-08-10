@@ -1,7 +1,7 @@
-import { Module } from '@/src/types';
-import * as SecureStore from 'expo-secure-store';
-import { create } from 'zustand';
-import { createJSONStorage, persist, StateStorage } from 'zustand/middleware';
+import { storage } from "@/lib/storage/storage";
+import { Module } from "@/src/types";
+import { create } from "zustand";
+import { createJSONStorage, persist, StateStorage } from "zustand/middleware";
 
 interface States {
   module: Module[] | null;
@@ -10,9 +10,9 @@ interface States {
 }
 
 const secureStorage: StateStorage = {
-  getItem: async (name) => await SecureStore.getItemAsync(name),
-  setItem: async (name, value) => await SecureStore.setItemAsync(name, value),
-  removeItem: async (name) => await SecureStore.deleteItemAsync(name),
+  getItem: async (name) => await storage.getItem(name),
+  setItem: async (name, value) => await storage.setItem(name, value),
+  removeItem: async (name) => await storage.removeItem(name),
 };
 
 export const useDrawerStore = create<States>()(
@@ -20,15 +20,14 @@ export const useDrawerStore = create<States>()(
     (set, get) => ({
       module: null,
       setModule: (data: Module[]) => {
-        console.log(data, "module")
         set({ module: data });
       },
-       getClaims: () => get().module,
+      getClaims: () => get().module,
       clearClaims: () => set({ module: null }),
     }),
     {
-      name: 'drawer-module',
+      name: "drawer-module",
       storage: createJSONStorage(() => secureStorage),
-    }
-  )
+    },
+  ),
 );

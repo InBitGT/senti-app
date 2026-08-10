@@ -1,4 +1,5 @@
 import { API_BASE_URL, ENDPOINT } from "@/lib";
+import { storage } from "@/lib/storage/storage";
 import { useAuthStore } from "@/src/store/useAuthStore";
 import { ApiResponse } from "@/src/types";
 import axios, {
@@ -6,8 +7,6 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import * as SecureStore from "expo-secure-store";
-
 
 interface RefreshResponse {
   access_token: string;
@@ -20,7 +19,6 @@ interface QueueItem {
   reject: (error: unknown) => void;
 }
 
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -28,9 +26,8 @@ const api = axios.create({
   },
 });
 
-
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  const token = await SecureStore.getItemAsync("access_token");
+  const token = await storage.getItem("access_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -75,7 +72,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = await SecureStore.getItemAsync("refresh_token");
+        const refreshToken = await storage.getItem("refresh_token");
         const claims = useAuthStore.getState().claims;
 
         const { data } = await axios.post<ApiResponse<RefreshResponse>>(
@@ -83,19 +80,19 @@ api.interceptors.response.use(
           {
             user_id: claims?.sub,
             refresh_token: refreshToken,
-          }
+          },
         );
 
         const newToken = data?.data?.access_token;
-        if(!newToken) return
-        await SecureStore.setItemAsync("access_token", newToken);
+        if (!newToken) return;
+        await storage.setItem("access_token", newToken);
 
         if (data?.data?.refresh_token) {
-          await SecureStore.setItemAsync("refresh_token", data.data.refresh_token);
+          await storage.setItem("refresh_token", data.data.refresh_token);
         }
 
         if (data?.data?.expires_in) {
-          await SecureStore.setItemAsync("expires_in", String(data.data.expires_in));
+          await storage.setItem("expires_in", String(data.data.expires_in));
         }
 
         // Actualiza claims con el nuevo token
@@ -108,9 +105,9 @@ api.interceptors.response.use(
       } catch (refreshError: unknown) {
         processQueue(refreshError, null);
 
-        await SecureStore.deleteItemAsync("access_token");
-        await SecureStore.deleteItemAsync("refresh_token");
-        await SecureStore.deleteItemAsync("expires_in");
+        await storage.removeItem("access_token");
+        await storage.removeItem("refresh_token");
+        await storage.removeItem("expires_in");
         useAuthStore.getState().clearClaims();
 
         return Promise.reject(refreshError);
@@ -120,13 +117,13 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // ---- HELPERS ----
 
 const handleRequest = async <T>(
-  request: Promise<AxiosResponse<ApiResponse<T>>>
+  request: Promise<AxiosResponse<ApiResponse<T>>>,
 ): Promise<ApiResponse<T>> => {
   try {
     const response = await request;
@@ -136,7 +133,7 @@ const handleRequest = async <T>(
       data: response.data.data,
     };
   } catch (error: any) {
-     return {
+    return {
       code: error.response?.status || 500,
       message:
         error.response?.data?.message || error.message || "An error occurred",
@@ -150,19 +147,19 @@ export const get = async <T>(url: string): Promise<ApiResponse<T>> =>
 
 export const post = async <TResponse, TBody = unknown>(
   url: string,
-  data: TBody
+  data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
   handleRequest<TResponse>(api.post<ApiResponse<TResponse>>(url, data));
 
 export const put = async <TResponse, TBody = unknown>(
   url: string,
-  data: TBody
+  data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
   handleRequest<TResponse>(api.put<ApiResponse<TResponse>>(url, data));
 
 export const patch = async <TResponse, TBody = unknown>(
   url: string,
-  data: TBody
+  data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
   handleRequest<TResponse>(api.patch<ApiResponse<TResponse>>(url, data));
 

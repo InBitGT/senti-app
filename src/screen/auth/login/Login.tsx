@@ -57,7 +57,10 @@ export const LoginScreen = () => {
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
-          <Box style={styles.card}>
+          <Box
+            style={styles.card}
+            className="w-full max-w-[400px] bg-white rounded-[20px] py-8 px-7"
+          >
             <VStack space="xs" style={styles.header}>
               <Heading size="2xl" style={styles.title}>
                 Bienvenido

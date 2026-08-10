@@ -9,8 +9,8 @@ import { useStockCounAdjustment } from "@/src/hooks/useStockCountAdjustment/useS
 import { useAuthStore } from "@/src/store";
 import { useStockCountStore } from "@/src/store/useStockCountStore/useStockCountStore";
 import {
-    CreateAdjustmentCount,
-    ItemCreateAdjustment,
+  CreateAdjustmentCount,
+  ItemCreateAdjustment,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
@@ -108,10 +108,10 @@ export default function StockCountDetail() {
                   </Text>
                 </VStack>
                 <Text
-                  style={[
-                    styles.diff,
-                    { color: d.difference < 0 ? "#dc2626" : "#16a34a" },
-                  ]}
+                  style={{
+                    ...styles.diff,
+                    color: d.difference < 0 ? "#dc2626" : "#16a34a",
+                  }}
                 >
                   {d.difference > 0 ? "+" : ""}
                   {d.difference}

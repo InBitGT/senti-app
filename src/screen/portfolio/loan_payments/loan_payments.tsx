@@ -166,7 +166,9 @@ export default function LoanPaymentForm() {
                       {result.clientName ?? `#${result.payment.user_id}`}
                     </Text>
                   </HStack>
-                  <HStack style={[styles.summaryRow, { borderBottomWidth: 0 }]}>
+                  <HStack
+                    style={{ ...styles.summaryRow, borderBottomWidth: 0 }}
+                  >
                     <Text style={styles.summaryLabel}>Nuevo plazo</Text>
                     <Text style={styles.summaryValue}>
                       {result.payment.payment_term_days} días
@@ -278,16 +280,16 @@ export default function LoanPaymentForm() {
                         </FormControlError>
                         {selectedClient && (
                           <HStack
-                            style={[
-                              styles.debtBox,
-                              hasNoPendingDebt && styles.debtBoxOk,
-                            ]}
+                            style={{
+                              ...styles.debtBox,
+                              ...(hasNoPendingDebt && styles.debtBoxOk),
+                            }}
                           >
                             <Text
-                              style={[
-                                styles.debtLabel,
-                                hasNoPendingDebt && styles.debtLabelOk,
-                              ]}
+                              style={{
+                                ...styles.debtLabel,
+                                ...(hasNoPendingDebt && styles.debtLabelOk),
+                              }}
                             >
                               {hasNoPendingDebt
                                 ? "Este cliente no tiene saldo pendiente"

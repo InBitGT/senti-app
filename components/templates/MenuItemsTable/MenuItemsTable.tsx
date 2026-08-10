@@ -334,14 +334,10 @@ export function MenuItemsTable({
                 style={{ justifyContent: "center", alignItems: "center" }}
               >
                 <View
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: row.product.status
-                        ? "#1D9E75"
-                        : "#d4d4d4",
-                    },
-                  ]}
+                  style={{
+                    ...styles.dot,
+                    backgroundColor: row.product.status ? "#1D9E75" : "#d4d4d4",
+                  }}
                 />
               </DataTable.Cell>
 
@@ -368,7 +364,7 @@ export function MenuItemsTable({
         />
       </DataTable>
 
-      <HStack style={[styles.summaryRow, { marginBottom: 12 }]}>
+      <HStack style={{ ...styles.summaryRow, marginBottom: 12 }}>
         <SummaryCard label="Items" value={String(filtered.length)} />
         <SummaryCard
           label="Con receta"

@@ -192,10 +192,11 @@ export function MenuIngredientsTable({
                 key={btn.key}
                 size="md"
                 variant={btn.variant}
-                style={[
-                  { borderColor: "#949292", borderWidth: 1 },
-                  isMobile && styles.buttonIconOnly,
-                ]}
+                style={{
+                  borderColor: "#949292",
+                  borderWidth: 1,
+                  ...(isMobile && styles.buttonIconOnly),
+                }}
                 onPress={btn.onPress}
               >
                 {btn.icon && (
@@ -348,7 +349,7 @@ export function MenuIngredientsTable({
         />
       </DataTable>
 
-      <HStack style={[styles.summaryRow, { marginBottom: 12 }]}>
+      <HStack style={{ ...styles.summaryRow, marginBottom: 12 }}>
         <SummaryCard label="Ingredientes" value={String(filtered.length)} />
         <SummaryCard
           label="Por defecto"

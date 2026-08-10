@@ -17,6 +17,7 @@
     "@gluestack-ui/utils": "^3.0.11",
     "@gorhom/bottom-sheet": "^5.0.0-alpha.11",
     "@legendapp/motion": "^2.4.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/drawer": "^7.5.0",
     "@react-navigation/elements": "^2.6.3",
@@ -63,6 +64,8 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@react-native-community/cli": "^20.2.0",
+    "@tauri-apps/cli": "^2.11.4",
     "@types/react": "~19.1.0",
     "babel-plugin-module-resolver": "^5.0.0",
     "eslint": "^9.25.0",
