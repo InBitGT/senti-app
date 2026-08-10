@@ -29,8 +29,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Tauri app
+      - name: Build and release Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EXPO_PUBLIC_PRODUCTION_API_URL: ${{ secrets.EXPO_PUBLIC_PRODUCTION_API_URL }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Senti v__VERSION__"
+          releaseDraft: true
+          prerelease: false
