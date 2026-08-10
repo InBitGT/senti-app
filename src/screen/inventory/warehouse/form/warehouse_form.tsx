@@ -1,3 +1,4 @@
+import { BotonBack } from "@/components/atom/BotonBack/BotonBack";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -13,9 +14,8 @@ import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import {
   AlertCircleIcon,
-  ArrowLeftIcon,
   Icon,
-  TrashIcon,
+  TrashIcon
 } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
@@ -195,23 +195,13 @@ export default function WarehouseForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
+          <BotonBack
             onPress={() => {
               clearData();
               setIsEdit(false);
               router.back();
             }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
+          />
 
           <Center>
             <Box style={styles.card}>

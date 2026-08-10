@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
+import { AlertCircleIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -341,7 +341,7 @@ export default function MerchandiseForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
+          {/* <Pressable
             onPress={() => {
               clearData();
               setIsEdit(false);
@@ -357,7 +357,7 @@ export default function MerchandiseForm() {
             <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
               Regresar
             </Text>
-          </Pressable>
+          </Pressable> */}
 
           <Center>
             <Box style={styles.card}>
