@@ -1,6 +1,6 @@
+import { InventoryStockScreen } from "@/src/screen/inventory/inventory/inventory";
 import React from "react";
-import { View } from "react-native";
 
 export default function inventory() {
-  return <View />;
+  return <InventoryStockScreen />;
 }

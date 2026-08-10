@@ -158,6 +158,7 @@ export function MerchandiseTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar producto, SKU, marca, categoría…"
             value={search}
             onChangeText={setSearch}

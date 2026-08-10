@@ -2,24 +2,24 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
 import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useFiscalDocument } from "@/src/hooks/useFicalDocument/useFicalDocument";
 import { useAuthStore } from "@/src/store";
 import {
-    DOCUMENT_STATUS_OPTIONS,
-    DOCUMENT_TYPE_LABELS,
-    FiscalDocument,
+  DOCUMENT_STATUS_OPTIONS,
+  DOCUMENT_TYPE_LABELS,
+  FiscalDocument,
 } from "@/src/types/fiscal_document/fiscal_document";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
@@ -219,6 +219,7 @@ export function FiscalDocumentsTable({
               <InputIcon as={SearchIcon} size="sm" />
             </InputSlot>
             <InputField
+              style={{ color: "#000" }}
               placeholder="Buscar documento, cliente o NIT..."
               value={search}
               onChangeText={setSearch}

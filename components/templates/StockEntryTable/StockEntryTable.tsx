@@ -101,6 +101,7 @@ export function StockEntryTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar documento, proveedor, bodega…"
             value={search}
             onChangeText={setSearch}

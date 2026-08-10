@@ -2,21 +2,21 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
 import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
-    CustomerCreditMovement,
-    MOVEMENT_TYPE_OPTIONS,
+  CustomerCreditMovement,
+  MOVEMENT_TYPE_OPTIONS,
 } from "@/src/types/movement_credit/movement_credit";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
 import React, { useState } from "react";
@@ -174,6 +174,7 @@ export function CustomerCreditMovementsTable({
               <InputIcon as={SearchIcon} size="sm" />
             </InputSlot>
             <InputField
+              style={{ color: "#000" }}
               placeholder="Buscar movimiento..."
               value={search}
               onChangeText={setSearch}
@@ -258,6 +259,7 @@ export function CustomerCreditMovementsTable({
             size="md"
           >
             <InputField
+              style={{ color: "#000" }}
               placeholder="Desde (AAAA-MM-DD)"
               value={dateFrom}
               onChangeText={setDateFrom}
@@ -271,6 +273,7 @@ export function CustomerCreditMovementsTable({
             size="md"
           >
             <InputField
+              style={{ color: "#000" }}
               placeholder="Hasta (AAAA-MM-DD)"
               value={dateTo}
               onChangeText={setDateTo}

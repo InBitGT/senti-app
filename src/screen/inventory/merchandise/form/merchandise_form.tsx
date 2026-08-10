@@ -1,4 +1,3 @@
-// merchandise_form.tsx
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";

@@ -78,6 +78,7 @@ export function ProductWholesaleTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar producto..."
             value={search}
             onChangeText={setSearch}

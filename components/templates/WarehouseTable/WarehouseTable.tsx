@@ -106,6 +106,7 @@ export function WarehousesTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar bodega..."
             value={search}
             onChangeText={setSearch}

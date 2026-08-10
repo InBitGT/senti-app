@@ -86,6 +86,7 @@ export function WarehouseZonesTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar zona..."
             value={search}
             onChangeText={setSearch}
