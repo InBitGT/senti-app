@@ -1,4 +1,5 @@
 import { Action, Buttons, ModalDelete } from "@/components";
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import {
   ModalProductDetail,
@@ -70,23 +71,25 @@ export const Product: React.FC = () => {
 
   return (
     <ScrollView style={{ flex: 1 }}>
-      <MenuIngredientsTable
-        data={ingredients || []}
-        itemsPerPage={8}
-        button={dataButton}
-        actions={actions}
-        onRowPress={hadleModalData}
-      />
-      <ModalProductDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData as ProductDetail}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
+      <DesktopScrollView>
+        <MenuIngredientsTable
+          data={ingredients || []}
+          itemsPerPage={8}
+          button={dataButton}
+          actions={actions}
+          onRowPress={hadleModalData}
+        />
+        <ModalProductDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData as ProductDetail}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </DesktopScrollView>
     </ScrollView>
   );
 };

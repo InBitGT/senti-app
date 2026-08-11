@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -245,39 +246,43 @@ export const OpenCashRegisterModal: React.FC<OpenCashRegisterModalProps> = ({
 
               {otherUsers.length > 0 && (
                 <ScrollView className="max-h-40">
-                  <VStack space="xs">
-                    {otherUsers.map((u) => {
-                      const active = !!coUsers[u.id];
-                      return (
-                        <TouchableOpacity
-                          key={u.id}
-                          onPress={() => toggleCoUser(u.id)}
-                        >
-                          <HStack className="items-center justify-between rounded-md border border-gray-200 px-3 py-2">
-                            <Text className="text-sm text-gray-900">
-                              {u.first_name}
-                            </Text>
-                            <HStack space="xs" className="items-center">
-                              <Text className="text-[10px] text-gray-400">
-                                puede cerrar
+                  <DesktopScrollView>
+                    <VStack space="xs">
+                      {otherUsers.map((u) => {
+                        const active = !!coUsers[u.id];
+                        return (
+                          <TouchableOpacity
+                            key={u.id}
+                            onPress={() => toggleCoUser(u.id)}
+                          >
+                            <HStack className="items-center justify-between rounded-md border border-gray-200 px-3 py-2">
+                              <Text className="text-sm text-gray-900">
+                                {u.first_name}
                               </Text>
-                              <Box
-                                className={`h-5 w-5 items-center justify-center rounded border ${
-                                  active
-                                    ? "border-blue-600 bg-blue-600"
-                                    : "border-gray-300 bg-white"
-                                }`}
-                              >
-                                {active && (
-                                  <Text className="text-xs text-white">✓</Text>
-                                )}
-                              </Box>
+                              <HStack space="xs" className="items-center">
+                                <Text className="text-[10px] text-gray-400">
+                                  puede cerrar
+                                </Text>
+                                <Box
+                                  className={`h-5 w-5 items-center justify-center rounded border ${
+                                    active
+                                      ? "border-blue-600 bg-blue-600"
+                                      : "border-gray-300 bg-white"
+                                  }`}
+                                >
+                                  {active && (
+                                    <Text className="text-xs text-white">
+                                      ✓
+                                    </Text>
+                                  )}
+                                </Box>
+                              </HStack>
                             </HStack>
-                          </HStack>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </VStack>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </VStack>
+                  </DesktopScrollView>
                 </ScrollView>
               )}
             </VStack>

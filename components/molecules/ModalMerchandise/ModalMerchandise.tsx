@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -120,113 +121,121 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1 }}
           >
-            {/* ── GENERAL ── */}
-            <SectionTitle title="General" />
-            <InfoRow label="Descripción" value={product?.description} />
-            <InfoRow label="Categoría" value={product?.category_name} />
-            {product?.parent_category_name && (
+            <DesktopScrollView>
+              {/* ── GENERAL ── */}
+              <SectionTitle title="General" />
+              <InfoRow label="Descripción" value={product?.description} />
+              <InfoRow label="Categoría" value={product?.category_name} />
+              {product?.parent_category_name && (
+                <InfoRow
+                  label="Categoría padre"
+                  value={product.parent_category_name}
+                />
+              )}
+              <InfoRow label="Marca" value={product?.brand} />
+              <InfoRow label="Código de barras" value={product?.barcode} />
               <InfoRow
-                label="Categoría padre"
-                value={product.parent_category_name}
+                label="Unidad de medida"
+                value={product?.unit_of_measure_id}
               />
-            )}
-            <InfoRow label="Marca" value={product?.brand} />
-            <InfoRow label="Código de barras" value={product?.barcode} />
-            <InfoRow
-              label="Unidad de medida"
-              value={product?.unit_of_measure_id}
-            />
-            <InfoRow
-              label="Costo promedio"
-              value={
-                product?.average_cost != null
-                  ? `Q ${product.average_cost.toFixed(2)}`
-                  : undefined
-              }
-            />
-            <InfoRow label="Requiere lote" value={product?.requires_batch} />
-
-            {/* ── PRECIO ── */}
-            <Divider />
-            <SectionTitle title="Precio" />
-            {data?.price != null ? (
               <InfoRow
-                label="Precio de venta"
-                value={`${data.price.currency ?? ""} ${data.price.amount.toFixed(2)}`}
+                label="Costo promedio"
+                value={
+                  product?.average_cost != null
+                    ? `Q ${product.average_cost.toFixed(2)}`
+                    : undefined
+                }
               />
-            ) : (
-              <EmptySection text="Este producto no tiene precio de venta definido." />
-            )}
+              <InfoRow label="Requiere lote" value={product?.requires_batch} />
 
-            {/* ── CONVERSIONES Y PRECIOS POR CLIENTE (resumen) ── */}
-            <Divider />
-            <SectionTitle title="Conversiones y precios especiales" />
-            <InfoRow
-              label="Conversiones de unidad"
-              value={
-                data?.conversions?.length
-                  ? `${data.conversions.length} configurada(s)`
-                  : "Sin conversiones"
-              }
-            />
-            <InfoRow
-              label="Precios por tipo de cliente"
-              value={
-                data?.customer_type_prices?.length
-                  ? `${data.customer_type_prices.length} configurado(s)`
-                  : "Sin precios especiales"
-              }
-            />
+              {/* ── PRECIO ── */}
+              <Divider />
+              <SectionTitle title="Precio" />
+              {data?.price != null ? (
+                <InfoRow
+                  label="Precio de venta"
+                  value={`${data.price.currency ?? ""} ${data.price.amount.toFixed(2)}`}
+                />
+              ) : (
+                <EmptySection text="Este producto no tiene precio de venta definido." />
+              )}
 
-            {/* ── REGLA DE MAYOREO ── */}
-            <Divider />
-            <SectionTitle title="Regla de mayoreo" />
-            {data?.wholesale_rule ? (
-              <>
-                <InfoRow
-                  label="Cantidad mínima"
-                  value={data.wholesale_rule.min_quantity}
-                />
-                <InfoRow
-                  label="Descuento"
-                  value={`${data.wholesale_rule.discount_percentage}%`}
-                />
-              </>
-            ) : (
-              <EmptySection text="No aplica regla de mayoreo general." />
-            )}
+              {/* ── CONVERSIONES Y PRECIOS POR CLIENTE (resumen) ── */}
+              <Divider />
+              <SectionTitle title="Conversiones y precios especiales" />
+              <InfoRow
+                label="Conversiones de unidad"
+                value={
+                  data?.conversions?.length
+                    ? `${data.conversions.length} configurada(s)`
+                    : "Sin conversiones"
+                }
+              />
+              <InfoRow
+                label="Precios por tipo de cliente"
+                value={
+                  data?.customer_type_prices?.length
+                    ? `${data.customer_type_prices.length} configurado(s)`
+                    : "Sin precios especiales"
+                }
+              />
 
-            {/* ── MODIFICADOR ── */}
-            {product?.is_modifier && (
-              <>
-                <Divider />
-                <SectionTitle title="Modificador" />
-                <InfoRow label="Es modificador" value={product?.is_modifier} />
-                <InfoRow label="Grupo" value={product?.modifier_group} />
-                <InfoRow label="Nombre" value={product?.modifier_name} />
-                <InfoRow label="Cantidad" value={product?.modifier_quantity} />
-                <InfoRow
-                  label="Selec. mínima"
-                  value={product?.modifier_min_selection}
-                />
-                <InfoRow
-                  label="Selec. máxima"
-                  value={product?.modifier_max_selection}
-                />
-                <InfoRow
-                  label="Ajuste de precio"
-                  value={
-                    product?.modifier_price_adjustment != null
-                      ? `Q ${product.modifier_price_adjustment.toFixed(2)}`
-                      : undefined
-                  }
-                />
-                <InfoRow
-                  label="Por defecto"
-                  value={product?.modifier_is_default}
-                />
-              </>
-            )}
+              {/* ── REGLA DE MAYOREO ── */}
+              <Divider />
+              <SectionTitle title="Regla de mayoreo" />
+              {data?.wholesale_rule ? (
+                <>
+                  <InfoRow
+                    label="Cantidad mínima"
+                    value={data.wholesale_rule.min_quantity}
+                  />
+                  <InfoRow
+                    label="Descuento"
+                    value={`${data.wholesale_rule.discount_percentage}%`}
+                  />
+                </>
+              ) : (
+                <EmptySection text="No aplica regla de mayoreo general." />
+              )}
+
+              {/* ── MODIFICADOR ── */}
+              {product?.is_modifier && (
+                <>
+                  <Divider />
+                  <SectionTitle title="Modificador" />
+                  <InfoRow
+                    label="Es modificador"
+                    value={product?.is_modifier}
+                  />
+                  <InfoRow label="Grupo" value={product?.modifier_group} />
+                  <InfoRow label="Nombre" value={product?.modifier_name} />
+                  <InfoRow
+                    label="Cantidad"
+                    value={product?.modifier_quantity}
+                  />
+                  <InfoRow
+                    label="Selec. mínima"
+                    value={product?.modifier_min_selection}
+                  />
+                  <InfoRow
+                    label="Selec. máxima"
+                    value={product?.modifier_max_selection}
+                  />
+                  <InfoRow
+                    label="Ajuste de precio"
+                    value={
+                      product?.modifier_price_adjustment != null
+                        ? `Q ${product.modifier_price_adjustment.toFixed(2)}`
+                        : undefined
+                    }
+                  />
+                  <InfoRow
+                    label="Por defecto"
+                    value={product?.modifier_is_default}
+                  />
+                </>
+              )}
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

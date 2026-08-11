@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -132,208 +133,210 @@ export default function ProductWholesaleForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
-            onPress={() => {
-              clearData();
-              setIsEdit(false);
-              router.back();
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
-
-          <Center>
-            <Box
-              style={styles.card}
-              className="w-full bg-white rounded-[20px] py-8 px-7"
+          <DesktopScrollView>
+            <Pressable
+              onPress={() => {
+                clearData();
+                setIsEdit(false);
+                router.back();
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
             >
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                {isEdit ? "Editar Descuento" : "Nuevo Descuento por Mayoreo"}
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                {isEdit
-                  ? "Modifica la regla de descuento por cantidad mínima"
-                  : "Define a partir de cuántas unidades aplica el descuento"}
+              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+                Regresar
               </Text>
+            </Pressable>
 
-              <VStack space="lg">
-                {/* Producto */}
-                <Controller
-                  control={control}
-                  name="product_id"
-                  rules={{ required: "El producto es obligatorio." }}
-                  render={({ field: { onChange, value } }) => {
-                    const selectedLabel =
-                      productData?.find((p) => String(p.id) === value)?.name ||
-                      "";
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  {isEdit ? "Editar Descuento" : "Nuevo Descuento por Mayoreo"}
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  {isEdit
+                    ? "Modifica la regla de descuento por cantidad mínima"
+                    : "Define a partir de cuántas unidades aplica el descuento"}
+                </Text>
 
-                    return (
-                      <FormControl isInvalid={!!errors.product_id}>
+                <VStack space="lg">
+                  {/* Producto */}
+                  <Controller
+                    control={control}
+                    name="product_id"
+                    rules={{ required: "El producto es obligatorio." }}
+                    render={({ field: { onChange, value } }) => {
+                      const selectedLabel =
+                        productData?.find((p) => String(p.id) === value)
+                          ?.name || "";
+
+                      return (
+                        <FormControl isInvalid={!!errors.product_id}>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Producto
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          {isLoadingProduct ? (
+                            <View style={{ paddingVertical: 10 }}>
+                              <ActivityIndicator size="small" />
+                            </View>
+                          ) : (
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectInput
+                                  style={{ color: "#000" }}
+                                  placeholder="Selecciona un producto"
+                                  value={selectedLabel}
+                                />
+                              </SelectTrigger>
+                              <SelectPortal>
+                                <SelectBackdrop />
+                                <SelectContent style={{ maxHeight: 320 }}>
+                                  <SelectDragIndicatorWrapper>
+                                    <SelectDragIndicator />
+                                  </SelectDragIndicatorWrapper>
+                                  <ScrollView
+                                    style={{ maxHeight: 280 }}
+                                    nestedScrollEnabled
+                                  >
+                                    {(productData ?? []).map((p) => (
+                                      <SelectItem
+                                        key={p.id}
+                                        label={`${p.name} (${p.sku})`}
+                                        value={String(p.id)}
+                                      />
+                                    ))}
+                                  </ScrollView>
+                                </SelectContent>
+                              </SelectPortal>
+                            </Select>
+                          )}
+                          <FormControlError>
+                            <FormControlErrorIcon as={AlertCircleIcon} />
+                            <FormControlErrorText>
+                              {errors.product_id?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      );
+                    }}
+                  />
+
+                  {/* Cantidad mínima */}
+                  <Controller
+                    control={control}
+                    name="min_quantity"
+                    rules={{
+                      required: "La cantidad mínima es obligatoria.",
+                      validate: (v) => parseInt(v) > 0 || "Debe ser mayor a 0.",
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.min_quantity}>
                         <FormControlLabel>
                           <FormControlLabelText style={{ color: "#000" }}>
-                            Producto
+                            Cantidad mínima
                           </FormControlLabelText>
                         </FormControlLabel>
-                        {isLoadingProduct ? (
-                          <View style={{ paddingVertical: 10 }}>
-                            <ActivityIndicator size="small" />
-                          </View>
-                        ) : (
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona un producto"
-                                value={selectedLabel}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent style={{ maxHeight: 320 }}>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                <ScrollView
-                                  style={{ maxHeight: 280 }}
-                                  nestedScrollEnabled
-                                >
-                                  {(productData ?? []).map((p) => (
-                                    <SelectItem
-                                      key={p.id}
-                                      label={`${p.name} (${p.sku})`}
-                                      value={String(p.id)}
-                                    />
-                                  ))}
-                                </ScrollView>
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                        )}
+                        <Input>
+                          <InputField
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. 10"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                          />
+                        </Input>
                         <FormControlError>
                           <FormControlErrorIcon as={AlertCircleIcon} />
                           <FormControlErrorText>
-                            {errors.product_id?.message}
+                            {errors.min_quantity?.message}
                           </FormControlErrorText>
                         </FormControlError>
                       </FormControl>
-                    );
-                  }}
-                />
+                    )}
+                  />
 
-                {/* Cantidad mínima */}
-                <Controller
-                  control={control}
-                  name="min_quantity"
-                  rules={{
-                    required: "La cantidad mínima es obligatoria.",
-                    validate: (v) => parseInt(v) > 0 || "Debe ser mayor a 0.",
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.min_quantity}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Cantidad mínima
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. 10"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          keyboardType="number-pad"
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors.min_quantity?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
-
-                {/* Descuento % */}
-                <Controller
-                  control={control}
-                  name="discount_percentage"
-                  rules={{
-                    required: "El porcentaje de descuento es obligatorio.",
-                    validate: (v) => {
-                      const n = parseFloat(v);
-                      return (
-                        (n >= 0 && n <= 100) || "Debe estar entre 0 y 100."
-                      );
-                    },
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.discount_percentage}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Descuento (%)
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. 10"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          keyboardType="decimal-pad"
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors.discount_percentage?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
-
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => {
-                      clearData();
-                      setIsEdit(false);
-                      router.back();
+                  {/* Descuento % */}
+                  <Controller
+                    control={control}
+                    name="discount_percentage"
+                    rules={{
+                      required: "El porcentaje de descuento es obligatorio.",
+                      validate: (v) => {
+                        const n = parseFloat(v);
+                        return (
+                          (n >= 0 && n <= 100) || "Debe estar entre 0 y 100."
+                        );
+                      },
                     }}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.discount_percentage}>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Descuento (%)
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Input>
+                          <InputField
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. 10"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                          />
+                        </Input>
+                        <FormControlError>
+                          <FormControlErrorIcon as={AlertCircleIcon} />
+                          <FormControlErrorText>
+                            {errors.discount_percentage?.message}
+                          </FormControlErrorText>
+                        </FormControlError>
+                      </FormControl>
+                    )}
+                  />
+
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => {
+                        clearData();
+                        setIsEdit(false);
+                        router.back();
+                      }}
+                    >
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending}
+                    >
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

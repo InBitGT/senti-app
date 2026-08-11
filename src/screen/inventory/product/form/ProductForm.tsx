@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -220,90 +221,308 @@ export default function ProductForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
-            onPress={() => {
-              clearData();
-              setIsEdit(false);
-              router.back();
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
-
-          <Center>
-            <Box
-              style={styles.card}
-              className="w-full bg-white rounded-[20px] py-8 px-7"
+          <DesktopScrollView>
+            <Pressable
+              onPress={() => {
+                clearData();
+                setIsEdit(false);
+                router.back();
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
             >
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                {isEdit ? "Editar Producto" : "Nuevo Producto"}
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                {isEdit
-                  ? "Modifica los campos para editar el producto"
-                  : "Llena los campos para crear un producto"}
+              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+                Regresar
               </Text>
+            </Pressable>
 
-              <VStack space="lg">
-                {/* ── INFO GENERAL ── */}
-                <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  {isEdit ? "Editar Producto" : "Nuevo Producto"}
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  {isEdit
+                    ? "Modifica los campos para editar el producto"
+                    : "Llena los campos para crear un producto"}
+                </Text>
 
-                {/* Nombre + Categoría */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="name"
-                      rules={{ required: "El nombre es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.name}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Nombre
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. Lechuga"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.name?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
+                <VStack space="lg">
+                  {/* ── INFO GENERAL ── */}
+                  <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="category_id"
-                      rules={{ required: "La categoría es obligatoria." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          categorie?.find((c) => String(c.id) === value)
-                            ?.name || "";
-                        return (
-                          <FormControl isInvalid={!!errors.category_id}>
+                  {/* Nombre + Categoría */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="name"
+                        rules={{ required: "El nombre es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.name}>
                             <FormControlLabel>
                               <FormControlLabelText style={{ color: "#000" }}>
-                                Categoría
+                                Nombre
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. Lechuga"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.name?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="category_id"
+                        rules={{ required: "La categoría es obligatoria." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            categorie?.find((c) => String(c.id) === value)
+                              ?.name || "";
+                          return (
+                            <FormControl isInvalid={!!errors.category_id}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Categoría
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder="Selecciona categoría"
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    {(categorie ?? []).map((c) => (
+                                      <SelectItem
+                                        key={c.id}
+                                        label={c.name}
+                                        value={String(c.id)}
+                                      />
+                                    ))}
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.category_id?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Descripción */}
+                  <Controller
+                    control={control}
+                    name="description"
+                    rules={{
+                      required: "La descripción es obligatoria.",
+                      minLength: { value: 3, message: "Mínimo 3 caracteres." },
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.description}>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Descripción
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Textarea>
+                          <TextareaInput
+                            style={{ color: "#171717" }}
+                            placeholder="Describe el producto..."
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
+                        </Textarea>
+                        <FormControlError>
+                          <FormControlErrorIcon as={AlertCircleIcon} />
+                          <FormControlErrorText>
+                            {errors.description?.message}
+                          </FormControlErrorText>
+                        </FormControlError>
+                      </FormControl>
+                    )}
+                  />
+
+                  {/* SKU + Barcode */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="sku"
+                        rules={{ required: "El SKU es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.sku}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                SKU
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. MOD-LCH-001"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                autoCapitalize="characters"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.sku?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="barcode"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Código de barras{" "}
+                                <Text size="xs" style={{ color: "#999" }}>
+                                  (opcional)
+                                </Text>
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 322"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="number-pad"
+                              />
+                            </Input>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Brand + Costo promedio */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="brand"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Marca{" "}
+                                <Text size="xs" style={{ color: "#999" }}>
+                                  (opcional)
+                                </Text>
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. Del Monte"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                              />
+                            </Input>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="average_cost"
+                        rules={{ required: "El costo es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.average_cost}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Costo promedio
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 0.25"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.average_cost?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Tipo + Unidad de medida */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="unit_of_measure"
+                        rules={{ required: "La unidad es obligatoria." }}
+                        render={({ field: { onChange, value } }) => (
+                          <FormControl isInvalid={!!errors.unit_of_measure}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Unidad de medida
                               </FormControlLabelText>
                             </FormControlLabel>
                             <Select
@@ -313,8 +532,8 @@ export default function ProductForm() {
                               <SelectTrigger>
                                 <SelectInput
                                   style={{ color: "#000" }}
-                                  placeholder="Selecciona categoría"
-                                  value={selectedLabel}
+                                  placeholder="Selecciona unidad"
+                                  value={value}
                                 />
                               </SelectTrigger>
                               <SelectPortal>
@@ -323,541 +542,351 @@ export default function ProductForm() {
                                   <SelectDragIndicatorWrapper>
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
-                                  {(categorie ?? []).map((c) => (
-                                    <SelectItem
-                                      key={c.id}
-                                      label={c.name}
-                                      value={String(c.id)}
-                                    />
-                                  ))}
+                                  <SelectItem label="Unidad" value="unit" />
+                                  <SelectItem label="Kilogramo" value="kg" />
+                                  <SelectItem label="Gramo" value="g" />
+                                  <SelectItem label="Litro" value="l" />
+                                  <SelectItem label="Mililitro" value="ml" />
                                 </SelectContent>
                               </SelectPortal>
                             </Select>
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
                               <FormControlErrorText>
-                                {errors.category_id?.message}
+                                {errors.unit_of_measure?.message}
                               </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
-                        );
-                      }}
-                    />
-                  </View>
-                </View>
-
-                {/* Descripción */}
-                <Controller
-                  control={control}
-                  name="description"
-                  rules={{
-                    required: "La descripción es obligatoria.",
-                    minLength: { value: 3, message: "Mínimo 3 caracteres." },
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.description}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Descripción
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Textarea>
-                        <TextareaInput
-                          style={{ color: "#171717" }}
-                          placeholder="Describe el producto..."
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                      </Textarea>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors.description?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
-
-                {/* SKU + Barcode */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="sku"
-                      rules={{ required: "El SKU es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.sku}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              SKU
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. MOD-LCH-001"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              autoCapitalize="characters"
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.sku?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="barcode"
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Código de barras{" "}
-                              <Text size="xs" style={{ color: "#999" }}>
-                                (opcional)
-                              </Text>
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. 322"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              keyboardType="number-pad"
-                            />
-                          </Input>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
-
-                {/* Brand + Costo promedio */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="brand"
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Marca{" "}
-                              <Text size="xs" style={{ color: "#999" }}>
-                                (opcional)
-                              </Text>
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. Del Monte"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                            />
-                          </Input>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="average_cost"
-                      rules={{ required: "El costo es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.average_cost}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Costo promedio
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. 0.25"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              keyboardType="decimal-pad"
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.average_cost?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
-
-                {/* Tipo + Unidad de medida */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="unit_of_measure"
-                      rules={{ required: "La unidad es obligatoria." }}
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl isInvalid={!!errors.unit_of_measure}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Unidad de medida
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona unidad"
-                                value={value}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                <SelectItem label="Unidad" value="unit" />
-                                <SelectItem label="Kilogramo" value="kg" />
-                                <SelectItem label="Gramo" value="g" />
-                                <SelectItem label="Litro" value="l" />
-                                <SelectItem label="Mililitro" value="ml" />
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.unit_of_measure?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                  <View style={half} />
-                </View>
-
-                {/* Switches: requires_batch + is_modifier */}
-                <View style={row}>
-                  <View style={[half, styles.switchRow]}>
-                    <Text style={{ color: "#000" }}>Requiere lote</Text>
-                    <Controller
-                      control={control}
-                      name="requires_batch"
-                      render={({ field: { onChange, value } }) => (
-                        <Switch value={value} onToggle={onChange} />
-                      )}
-                    />
-                  </View>
-
-                  <View style={[half, styles.switchRow]}>
-                    <Text style={{ color: "#000" }}>Es modificador</Text>
-                    <Controller
-                      control={control}
-                      name="is_modifier"
-                      render={({ field: { onChange, value } }) => (
-                        <Switch value={value} onToggle={onChange} />
-                      )}
-                    />
-                  </View>
-                </View>
-
-                {/* ── SECCIÓN MODIFICADOR (condicional) ── */}
-                {isModifier && (
-                  <>
-                    <Divider className="my-2" />
-                    <Text style={styles.sectionLabel}>
-                      CONFIGURACIÓN DE MODIFICADOR
-                    </Text>
-
-                    {/* Grupo + Nombre del modificador */}
-                    <View style={row}>
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="modifier_group"
-                          rules={{ required: "El grupo es obligatorio." }}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl isInvalid={!!errors.modifier_group}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Grupo
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. vegetales"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.modifier_group?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          )}
-                        />
-                      </View>
-
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="modifier_name"
-                          rules={{
-                            required:
-                              "El nombre del modificador es obligatorio.",
-                          }}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl isInvalid={!!errors.modifier_name}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Nombre del modificador
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. Lechuga"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.modifier_name?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          )}
-                        />
-                      </View>
+                        )}
+                      />
                     </View>
+                    <View style={half} />
+                  </View>
 
-                    {/* Cantidad + Ajuste de precio */}
-                    <View style={row}>
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="modifier_quantity"
-                          rules={{ required: "La cantidad es obligatoria." }}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl isInvalid={!!errors.modifier_quantity}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Cantidad
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. 1"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                  keyboardType="number-pad"
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.modifier_quantity?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          )}
-                        />
-                      </View>
-
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="modifier_price_adjustment"
-                          rules={{
-                            required: "El ajuste de precio es obligatorio.",
-                          }}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl
-                              isInvalid={!!errors.modifier_price_adjustment}
-                            >
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Ajuste de precio
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. 0.00"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                  keyboardType="decimal-pad"
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.modifier_price_adjustment?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          )}
-                        />
-                      </View>
-                    </View>
-
-                    {/* Selección mínima + máxima */}
-                    <View style={row}>
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="modifier_min_selection"
-                          rules={{
-                            required: "La selección mínima es obligatoria.",
-                          }}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl
-                              isInvalid={!!errors.modifier_min_selection}
-                            >
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Selección mínima
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. 0"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                  keyboardType="number-pad"
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.modifier_min_selection?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          )}
-                        />
-                      </View>
-
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="modifier_max_selection"
-                          rules={{
-                            required: "La selección máxima es obligatoria.",
-                          }}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl
-                              isInvalid={!!errors.modifier_max_selection}
-                            >
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Selección máxima
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. 3"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                  keyboardType="number-pad"
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.modifier_max_selection?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          )}
-                        />
-                      </View>
-                    </View>
-
-                    {/* modifier_is_default */}
-                    <View style={styles.switchRow}>
-                      <Text style={{ color: "#000" }}>
-                        Seleccionado por defecto
-                      </Text>
+                  {/* Switches: requires_batch + is_modifier */}
+                  <View style={row}>
+                    <View style={[half, styles.switchRow]}>
+                      <Text style={{ color: "#000" }}>Requiere lote</Text>
                       <Controller
                         control={control}
-                        name="modifier_is_default"
+                        name="requires_batch"
                         render={({ field: { onChange, value } }) => (
                           <Switch value={value} onToggle={onChange} />
                         )}
                       />
                     </View>
-                  </>
-                )}
 
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => {
-                      clearData();
-                      setIsEdit(false);
-                      router.back();
-                    }}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                    <View style={[half, styles.switchRow]}>
+                      <Text style={{ color: "#000" }}>Es modificador</Text>
+                      <Controller
+                        control={control}
+                        name="is_modifier"
+                        render={({ field: { onChange, value } }) => (
+                          <Switch value={value} onToggle={onChange} />
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* ── SECCIÓN MODIFICADOR (condicional) ── */}
+                  {isModifier && (
+                    <>
+                      <Divider className="my-2" />
+                      <Text style={styles.sectionLabel}>
+                        CONFIGURACIÓN DE MODIFICADOR
+                      </Text>
+
+                      {/* Grupo + Nombre del modificador */}
+                      <View style={row}>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_group"
+                            rules={{ required: "El grupo es obligatorio." }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <FormControl isInvalid={!!errors.modifier_group}>
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Grupo
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Input>
+                                  <InputField
+                                    style={{ color: "#171717" }}
+                                    placeholder="Ej. vegetales"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                  />
+                                </Input>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.modifier_group?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            )}
+                          />
+                        </View>
+
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_name"
+                            rules={{
+                              required:
+                                "El nombre del modificador es obligatorio.",
+                            }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <FormControl isInvalid={!!errors.modifier_name}>
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Nombre del modificador
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Input>
+                                  <InputField
+                                    style={{ color: "#171717" }}
+                                    placeholder="Ej. Lechuga"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                  />
+                                </Input>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.modifier_name?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            )}
+                          />
+                        </View>
+                      </View>
+
+                      {/* Cantidad + Ajuste de precio */}
+                      <View style={row}>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_quantity"
+                            rules={{ required: "La cantidad es obligatoria." }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <FormControl
+                                isInvalid={!!errors.modifier_quantity}
+                              >
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Cantidad
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Input>
+                                  <InputField
+                                    style={{ color: "#171717" }}
+                                    placeholder="Ej. 1"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="number-pad"
+                                  />
+                                </Input>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.modifier_quantity?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            )}
+                          />
+                        </View>
+
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_price_adjustment"
+                            rules={{
+                              required: "El ajuste de precio es obligatorio.",
+                            }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <FormControl
+                                isInvalid={!!errors.modifier_price_adjustment}
+                              >
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Ajuste de precio
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Input>
+                                  <InputField
+                                    style={{ color: "#171717" }}
+                                    placeholder="Ej. 0.00"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="decimal-pad"
+                                  />
+                                </Input>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.modifier_price_adjustment?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            )}
+                          />
+                        </View>
+                      </View>
+
+                      {/* Selección mínima + máxima */}
+                      <View style={row}>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_min_selection"
+                            rules={{
+                              required: "La selección mínima es obligatoria.",
+                            }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <FormControl
+                                isInvalid={!!errors.modifier_min_selection}
+                              >
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Selección mínima
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Input>
+                                  <InputField
+                                    style={{ color: "#171717" }}
+                                    placeholder="Ej. 0"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="number-pad"
+                                  />
+                                </Input>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.modifier_min_selection?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            )}
+                          />
+                        </View>
+
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_max_selection"
+                            rules={{
+                              required: "La selección máxima es obligatoria.",
+                            }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <FormControl
+                                isInvalid={!!errors.modifier_max_selection}
+                              >
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Selección máxima
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Input>
+                                  <InputField
+                                    style={{ color: "#171717" }}
+                                    placeholder="Ej. 3"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="number-pad"
+                                  />
+                                </Input>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.modifier_max_selection?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            )}
+                          />
+                        </View>
+                      </View>
+
+                      {/* modifier_is_default */}
+                      <View style={styles.switchRow}>
+                        <Text style={{ color: "#000" }}>
+                          Seleccionado por defecto
+                        </Text>
+                        <Controller
+                          control={control}
+                          name="modifier_is_default"
+                          render={({ field: { onChange, value } }) => (
+                            <Switch value={value} onToggle={onChange} />
+                          )}
+                        />
+                      </View>
+                    </>
+                  )}
+
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => {
+                        clearData();
+                        setIsEdit(false);
+                        router.back();
+                      }}
+                    >
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending}
+                    >
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

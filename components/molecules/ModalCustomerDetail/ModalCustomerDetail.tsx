@@ -1,12 +1,13 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { Customer } from "@/src/types/customer/customer";
@@ -83,46 +84,48 @@ export const ModalCustomerDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <SectionTitle title="Información personal" />
-            <InfoRow label="Nombre" value={data?.name} />
-            <InfoRow label="Teléfono" value={data?.phone} />
-            <InfoRow label="Email" value={data?.email} />
-            <InfoRow label="Dirección" value={data?.address} />
+            <DesktopScrollView>
+              <SectionTitle title="Información personal" />
+              <InfoRow label="Nombre" value={data?.name} />
+              <InfoRow label="Teléfono" value={data?.phone} />
+              <InfoRow label="Email" value={data?.email} />
+              <InfoRow label="Dirección" value={data?.address} />
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Documento" />
-            <InfoRow label="Tipo" value={data?.document_type} />
-            <InfoRow label="Número" value={data?.document_number} />
+              <SectionTitle title="Documento" />
+              <InfoRow label="Tipo" value={data?.document_type} />
+              <InfoRow label="Número" value={data?.document_number} />
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Tipo de cliente" />
-            <InfoRow label="Nombre" value={data?.customer_type?.name} />
-            <InfoRow
-              label="Descripción"
-              value={data?.customer_type?.description}
-            />
+              <SectionTitle title="Tipo de cliente" />
+              <InfoRow label="Nombre" value={data?.customer_type?.name} />
+              <InfoRow
+                label="Descripción"
+                value={data?.customer_type?.description}
+              />
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Registro" />
-            <InfoRow
-              label="Creado"
-              value={
-                data?.created_at
-                  ? new Date(data.created_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
-            <InfoRow
-              label="Actualizado"
-              value={
-                data?.update_at
-                  ? new Date(data.update_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
+              <SectionTitle title="Registro" />
+              <InfoRow
+                label="Creado"
+                value={
+                  data?.created_at
+                    ? new Date(data.created_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+              <InfoRow
+                label="Actualizado"
+                value={
+                  data?.update_at
+                    ? new Date(data.update_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

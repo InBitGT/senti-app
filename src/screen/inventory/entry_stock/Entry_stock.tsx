@@ -1,4 +1,5 @@
 import { Buttons } from "@/components";
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import {
   EntryDetail,
   ModalEntryDetail,
@@ -44,18 +45,20 @@ export const Entry_stock = () => {
 
   return (
     <ScrollView style={{ flex: 1 }}>
-      <StockEntryTable
-        data={entries || []}
-        itemsPerPage={8}
-        onRowPress={hadleModalData}
-        button={dataButton}
-      />
+      <DesktopScrollView>
+        <StockEntryTable
+          data={entries || []}
+          itemsPerPage={8}
+          onRowPress={hadleModalData}
+          button={dataButton}
+        />
 
-      <ModalEntryDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
+        <ModalEntryDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+      </DesktopScrollView>
     </ScrollView>
   );
 };

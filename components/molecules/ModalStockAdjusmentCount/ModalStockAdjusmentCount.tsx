@@ -1,17 +1,18 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import {
-    ADJUSTMENT_STATUS_STYLES,
-    StockAdjustmentCount,
+  ADJUSTMENT_STATUS_STYLES,
+  StockAdjustmentCount,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import React from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
@@ -92,44 +93,46 @@ export const ModalStockAdjustmentDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <SectionTitle title="Información general" />
-            <InfoRow label="Bodega" value={data?.warehouse?.name} />
-            <InfoRow label="Conteo #" value={data?.stock_count_id} />
-            <InfoRow label="Notas" value={data?.notes} />
+            <DesktopScrollView>
+              <SectionTitle title="Información general" />
+              <InfoRow label="Bodega" value={data?.warehouse?.name} />
+              <InfoRow label="Conteo #" value={data?.stock_count_id} />
+              <InfoRow label="Notas" value={data?.notes} />
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Aprobación" />
-            <InfoRow label="Solicitado por" value={data?.requested_by_name} />
-            <InfoRow label="Aprobado por" value={data?.approved_by ?? "—"} />
-            <InfoRow
-              label="Fecha de ajuste"
-              value={
-                data?.adjustment_date
-                  ? new Date(data.adjustment_date).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
+              <SectionTitle title="Aprobación" />
+              <InfoRow label="Solicitado por" value={data?.requested_by_name} />
+              <InfoRow label="Aprobado por" value={data?.approved_by ?? "—"} />
+              <InfoRow
+                label="Fecha de ajuste"
+                value={
+                  data?.adjustment_date
+                    ? new Date(data.adjustment_date).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Registro" />
-            <InfoRow
-              label="Creado"
-              value={
-                data?.created_at
-                  ? new Date(data.created_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
-            <InfoRow
-              label="Actualizado"
-              value={
-                data?.update_at
-                  ? new Date(data.update_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
+              <SectionTitle title="Registro" />
+              <InfoRow
+                label="Creado"
+                value={
+                  data?.created_at
+                    ? new Date(data.created_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+              <InfoRow
+                label="Actualizado"
+                value={
+                  data?.update_at
+                    ? new Date(data.update_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

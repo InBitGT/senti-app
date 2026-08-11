@@ -1,12 +1,13 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { useAuthStore } from "@/src/store";
@@ -97,34 +98,36 @@ export const ModalCashRegisterDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <SectionTitle title="Información general" />
-            <InfoRow label="Nombre" value={data?.name} />
-            <InfoRow label="Código" value={data?.code} />
-            <InfoRow
-              label="Bodega"
-              value={warehouseName ?? `#${data?.warehouse_id}`}
-            />
-            <InfoRow label="Estado" value={data?.status} />
+            <DesktopScrollView>
+              <SectionTitle title="Información general" />
+              <InfoRow label="Nombre" value={data?.name} />
+              <InfoRow label="Código" value={data?.code} />
+              <InfoRow
+                label="Bodega"
+                value={warehouseName ?? `#${data?.warehouse_id}`}
+              />
+              <InfoRow label="Estado" value={data?.status} />
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Registro" />
-            <InfoRow
-              label="Creado"
-              value={
-                data?.created_at
-                  ? new Date(data.created_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
-            <InfoRow
-              label="Actualizado"
-              value={
-                data?.update_at
-                  ? new Date(data.update_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
+              <SectionTitle title="Registro" />
+              <InfoRow
+                label="Creado"
+                value={
+                  data?.created_at
+                    ? new Date(data.created_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+              <InfoRow
+                label="Actualizado"
+                value={
+                  data?.update_at
+                    ? new Date(data.update_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

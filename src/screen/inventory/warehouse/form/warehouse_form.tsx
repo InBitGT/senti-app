@@ -1,4 +1,5 @@
 import { BotonBack } from "@/components/atom/BotonBack/BotonBack";
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -191,172 +192,115 @@ export default function WarehouseForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <BotonBack
-            onPress={() => {
-              clearData();
-              setIsEdit(false);
-              router.back();
-            }}
-          />
+          <DesktopScrollView>
+            <BotonBack
+              onPress={() => {
+                clearData();
+                setIsEdit(false);
+                router.back();
+              }}
+            />
 
-          <Center>
-            <Box
-              style={styles.card}
-              className="w-full bg-white rounded-[20px] py-8 px-7"
-            >
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                {isEdit ? "Editar Bodega" : "Nueva Bodega"}
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                {isEdit
-                  ? "Modifica los campos para editar la bodega"
-                  : "Llena los campos para crear una bodega"}
-              </Text>
-
-              <VStack space="lg">
-                <Text
-                  style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
-                >
-                  DATOS DE LA BODEGA
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  {isEdit ? "Editar Bodega" : "Nueva Bodega"}
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  {isEdit
+                    ? "Modifica los campos para editar la bodega"
+                    : "Llena los campos para crear una bodega"}
                 </Text>
 
-                {/* Código + Nombre */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="code"
-                      rules={{ required: "El código es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.code}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Código
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. BOD-02"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              autoCapitalize="characters"
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.code?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="name"
-                      rules={{ required: "El nombre es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.name}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Nombre
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. Bodega Central"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.name?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
+                <VStack space="lg">
+                  <Text
+                    style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
+                  >
+                    DATOS DE LA BODEGA
+                  </Text>
 
-                {/* Tipo + Sucursal */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="type"
-                      rules={{ required: "El tipo es obligatorio." }}
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl isInvalid={!!errors.type}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Tipo
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona un tipo"
-                                value={
-                                  WAREHOUSE_TYPE_OPTIONS.find(
-                                    (t) => t.value === value,
-                                  )?.label || ""
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                {WAREHOUSE_TYPE_OPTIONS.map((t) => (
-                                  <SelectItem
-                                    key={t.value}
-                                    label={t.label}
-                                    value={t.value}
-                                  />
-                                ))}
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.type?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="branch_id"
-                      rules={{ required: "La sucursal es obligatoria." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          branchOptions.find((b) => String(b.id) === value)
-                            ?.name || "";
-
-                        return (
-                          <FormControl isInvalid={!!errors.branch_id}>
+                  {/* Código + Nombre */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="code"
+                        rules={{ required: "El código es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.code}>
                             <FormControlLabel>
                               <FormControlLabelText style={{ color: "#000" }}>
-                                Sucursal
+                                Código
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. BOD-02"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                autoCapitalize="characters"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.code?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="name"
+                        rules={{ required: "El nombre es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.name}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Nombre
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. Bodega Central"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.name?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Tipo + Sucursal */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="type"
+                        rules={{ required: "El tipo es obligatorio." }}
+                        render={({ field: { onChange, value } }) => (
+                          <FormControl isInvalid={!!errors.type}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Tipo
                               </FormControlLabelText>
                             </FormControlLabel>
                             <Select
@@ -366,8 +310,12 @@ export default function WarehouseForm() {
                               <SelectTrigger>
                                 <SelectInput
                                   style={{ color: "#000" }}
-                                  placeholder="Selecciona una sucursal"
-                                  value={selectedLabel}
+                                  placeholder="Selecciona un tipo"
+                                  value={
+                                    WAREHOUSE_TYPE_OPTIONS.find(
+                                      (t) => t.value === value,
+                                    )?.label || ""
+                                  }
                                 />
                               </SelectTrigger>
                               <SelectPortal>
@@ -376,11 +324,11 @@ export default function WarehouseForm() {
                                   <SelectDragIndicatorWrapper>
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
-                                  {branchOptions.map((b) => (
+                                  {WAREHOUSE_TYPE_OPTIONS.map((t) => (
                                     <SelectItem
-                                      key={b.id}
-                                      label={b.name}
-                                      value={String(b.id)}
+                                      key={t.value}
+                                      label={t.label}
+                                      value={t.value}
                                     />
                                   ))}
                                 </SelectContent>
@@ -389,418 +337,487 @@ export default function WarehouseForm() {
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
                               <FormControlErrorText>
-                                {errors.branch_id?.message}
+                                {errors.type?.message}
                               </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
-                        );
-                      }}
-                    />
-                  </View>
-                </View>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="branch_id"
+                        rules={{ required: "La sucursal es obligatoria." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            branchOptions.find((b) => String(b.id) === value)
+                              ?.name || "";
 
-                {/* Descripción */}
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Descripción{" "}
-                          <Text size="xs" style={{ color: "#999" }}>
-                            (opcional)
-                          </Text>
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. Bodega principal de inventario"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                      </Input>
-                    </FormControl>
-                  )}
-                />
-
-                {/* Por defecto + Usa zonas */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="is_default"
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl>
-                          <HStack
-                            style={{
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Bodega por defecto
-                            </FormControlLabelText>
-                            <Switch value={value} onValueChange={onChange} />
-                          </HStack>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="uses_zones"
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl>
-                          <HStack
-                            style={{
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Usa zonas
-                            </FormControlLabelText>
-                            <Switch value={value} onValueChange={onChange} />
-                          </HStack>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
-
-                {/* ── Zonas (n cantidad) ── */}
-                {usesZonesValue && (
-                  <View style={styles.zonesSection}>
-                    <HStack
-                      style={{
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 8,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontWeight: "bold",
-                          color: "#555",
-                          fontSize: 13,
+                          return (
+                            <FormControl isInvalid={!!errors.branch_id}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Sucursal
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder="Selecciona una sucursal"
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    {branchOptions.map((b) => (
+                                      <SelectItem
+                                        key={b.id}
+                                        label={b.name}
+                                        value={String(b.id)}
+                                      />
+                                    ))}
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.branch_id?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
                         }}
-                      >
-                        ZONAS ({fields.length})
-                      </Text>
-                      <Button size="sm" variant="outline" onPress={addZone}>
-                        <ButtonText>+ Agregar zona</ButtonText>
-                      </Button>
-                    </HStack>
+                      />
+                    </View>
+                  </View>
 
-                    {fields.length === 0 && (
-                      <Text
-                        style={{
-                          color: "#9ca3af",
-                          fontSize: 13,
-                          marginBottom: 8,
-                        }}
-                      >
-                        Aún no hay zonas. Agrega al menos una.
-                      </Text>
+                  {/* Descripción */}
+                  <Controller
+                    control={control}
+                    name="description"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Descripción{" "}
+                            <Text size="xs" style={{ color: "#999" }}>
+                              (opcional)
+                            </Text>
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Input>
+                          <InputField
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. Bodega principal de inventario"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
+                        </Input>
+                      </FormControl>
                     )}
+                  />
 
-                    <VStack space="md">
-                      {fields.map((field, index) => {
-                        // Opciones de "zona padre": cualquier otra fila del array (no ella misma).
-                        // Se referencia por id real si ya existe, o por índice temporal "new-N" si es nueva.
-                        const parentOptions = fields
-                          .map((f, i) => ({ f, i }))
-                          .filter(({ i }) => i !== index)
-                          .map(({ f, i }) => {
-                            const zoneVal = zonesValue?.[i];
-                            const refValue = zoneVal?.id
-                              ? String(zoneVal.id)
-                              : `new-${i}`;
-                            return {
-                              value: refValue,
-                              label:
-                                zoneVal?.name || `Zona sin nombre #${i + 1}`,
-                            };
-                          });
-
-                        return (
-                          <View key={field.id} style={styles.zoneCard}>
+                  {/* Por defecto + Usa zonas */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="is_default"
+                        render={({ field: { onChange, value } }) => (
+                          <FormControl>
                             <HStack
                               style={{
                                 justifyContent: "space-between",
                                 alignItems: "center",
-                                marginBottom: 8,
                               }}
                             >
-                              <Text
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Bodega por defecto
+                              </FormControlLabelText>
+                              <Switch value={value} onValueChange={onChange} />
+                            </HStack>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="uses_zones"
+                        render={({ field: { onChange, value } }) => (
+                          <FormControl>
+                            <HStack
+                              style={{
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Usa zonas
+                              </FormControlLabelText>
+                              <Switch value={value} onValueChange={onChange} />
+                            </HStack>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* ── Zonas (n cantidad) ── */}
+                  {usesZonesValue && (
+                    <View style={styles.zonesSection}>
+                      <HStack
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontWeight: "bold",
+                            color: "#555",
+                            fontSize: 13,
+                          }}
+                        >
+                          ZONAS ({fields.length})
+                        </Text>
+                        <Button size="sm" variant="outline" onPress={addZone}>
+                          <ButtonText>+ Agregar zona</ButtonText>
+                        </Button>
+                      </HStack>
+
+                      {fields.length === 0 && (
+                        <Text
+                          style={{
+                            color: "#9ca3af",
+                            fontSize: 13,
+                            marginBottom: 8,
+                          }}
+                        >
+                          Aún no hay zonas. Agrega al menos una.
+                        </Text>
+                      )}
+
+                      <VStack space="md">
+                        {fields.map((field, index) => {
+                          // Opciones de "zona padre": cualquier otra fila del array (no ella misma).
+                          // Se referencia por id real si ya existe, o por índice temporal "new-N" si es nueva.
+                          const parentOptions = fields
+                            .map((f, i) => ({ f, i }))
+                            .filter(({ i }) => i !== index)
+                            .map(({ f, i }) => {
+                              const zoneVal = zonesValue?.[i];
+                              const refValue = zoneVal?.id
+                                ? String(zoneVal.id)
+                                : `new-${i}`;
+                              return {
+                                value: refValue,
+                                label:
+                                  zoneVal?.name || `Zona sin nombre #${i + 1}`,
+                              };
+                            });
+
+                          return (
+                            <View key={field.id} style={styles.zoneCard}>
+                              <HStack
                                 style={{
-                                  fontSize: 12,
-                                  color: "#9ca3af",
-                                  fontWeight: "600",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  marginBottom: 8,
                                 }}
                               >
-                                ZONA #{index + 1}
-                              </Text>
-                              <Pressable onPress={() => remove(index)}>
-                                <Icon
-                                  as={TrashIcon}
-                                  size="sm"
-                                  style={{ color: "#dc2626" }}
-                                />
-                              </Pressable>
-                            </HStack>
+                                <Text
+                                  style={{
+                                    fontSize: 12,
+                                    color: "#9ca3af",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  ZONA #{index + 1}
+                                </Text>
+                                <Pressable onPress={() => remove(index)}>
+                                  <Icon
+                                    as={TrashIcon}
+                                    size="sm"
+                                    style={{ color: "#dc2626" }}
+                                  />
+                                </Pressable>
+                              </HStack>
 
-                            <View style={row}>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`zones.${index}.name`}
-                                  rules={{
-                                    required: "El nombre es obligatorio.",
-                                  }}
-                                  render={({
-                                    field: { onChange, onBlur, value },
-                                  }) => (
-                                    <FormControl
-                                      isInvalid={!!errors.zones?.[index]?.name}
-                                    >
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Nombre
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Input>
-                                        <InputField
-                                          style={{ color: "#171717" }}
-                                          placeholder="Ej. Zona A"
-                                          value={value}
-                                          onChangeText={onChange}
-                                          onBlur={onBlur}
-                                        />
-                                      </Input>
-                                      <FormControlError>
-                                        <FormControlErrorIcon
-                                          as={AlertCircleIcon}
-                                        />
-                                        <FormControlErrorText>
-                                          {errors.zones?.[index]?.name?.message}
-                                        </FormControlErrorText>
-                                      </FormControlError>
-                                    </FormControl>
-                                  )}
-                                />
-                              </View>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`zones.${index}.code`}
-                                  rules={{
-                                    required: "El código es obligatorio.",
-                                  }}
-                                  render={({
-                                    field: { onChange, onBlur, value },
-                                  }) => (
-                                    <FormControl
-                                      isInvalid={!!errors.zones?.[index]?.code}
-                                    >
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Código
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Input>
-                                        <InputField
-                                          style={{ color: "#171717" }}
-                                          placeholder="Ej. ZA"
-                                          value={value}
-                                          onChangeText={onChange}
-                                          onBlur={onBlur}
-                                          autoCapitalize="characters"
-                                        />
-                                      </Input>
-                                      <FormControlError>
-                                        <FormControlErrorIcon
-                                          as={AlertCircleIcon}
-                                        />
-                                        <FormControlErrorText>
-                                          {errors.zones?.[index]?.code?.message}
-                                        </FormControlErrorText>
-                                      </FormControlError>
-                                    </FormControl>
-                                  )}
-                                />
-                              </View>
-                            </View>
-
-                            <View style={[row, { marginTop: 12 }]}>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`zones.${index}.zone_type`}
-                                  rules={{
-                                    required: "El tipo es obligatorio.",
-                                  }}
-                                  render={({ field: { onChange, value } }) => (
-                                    <FormControl
-                                      isInvalid={
-                                        !!errors.zones?.[index]?.zone_type
-                                      }
-                                    >
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Tipo
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Select
-                                        selectedValue={value}
-                                        onValueChange={onChange}
+                              <View style={row}>
+                                <View style={half}>
+                                  <Controller
+                                    control={control}
+                                    name={`zones.${index}.name`}
+                                    rules={{
+                                      required: "El nombre es obligatorio.",
+                                    }}
+                                    render={({
+                                      field: { onChange, onBlur, value },
+                                    }) => (
+                                      <FormControl
+                                        isInvalid={
+                                          !!errors.zones?.[index]?.name
+                                        }
                                       >
-                                        <SelectTrigger>
-                                          <SelectInput
+                                        <FormControlLabel>
+                                          <FormControlLabelText
                                             style={{ color: "#000" }}
-                                            placeholder="Selecciona un tipo"
-                                            value={
-                                              ZONE_TYPE_OPTIONS.find(
-                                                (t) => t.value === value,
-                                              )?.label || ""
-                                            }
-                                          />
-                                        </SelectTrigger>
-                                        <SelectPortal>
-                                          <SelectBackdrop />
-                                          <SelectContent>
-                                            <SelectDragIndicatorWrapper>
-                                              <SelectDragIndicator />
-                                            </SelectDragIndicatorWrapper>
-                                            {ZONE_TYPE_OPTIONS.map((t) => (
-                                              <SelectItem
-                                                key={t.value}
-                                                label={t.label}
-                                                value={t.value}
-                                              />
-                                            ))}
-                                          </SelectContent>
-                                        </SelectPortal>
-                                      </Select>
-                                      <FormControlError>
-                                        <FormControlErrorIcon
-                                          as={AlertCircleIcon}
-                                        />
-                                        <FormControlErrorText>
-                                          {
-                                            errors.zones?.[index]?.zone_type
-                                              ?.message
-                                          }
-                                        </FormControlErrorText>
-                                      </FormControlError>
-                                    </FormControl>
-                                  )}
-                                />
-                              </View>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`zones.${index}.parent_temp_id`}
-                                  render={({ field: { onChange, value } }) => (
-                                    <FormControl>
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Zona padre{" "}
-                                          <Text
-                                            size="xs"
-                                            style={{ color: "#999" }}
                                           >
-                                            (opcional)
-                                          </Text>
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Select
-                                        selectedValue={value}
-                                        onValueChange={onChange}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectInput
-                                            style={{ color: "#000" }}
-                                            placeholder="Ninguna (zona raíz)"
-                                            value={
-                                              parentOptions.find(
-                                                (p) => p.value === value,
-                                              )?.label || ""
-                                            }
+                                            Nombre
+                                          </FormControlLabelText>
+                                        </FormControlLabel>
+                                        <Input>
+                                          <InputField
+                                            style={{ color: "#171717" }}
+                                            placeholder="Ej. Zona A"
+                                            value={value}
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
                                           />
-                                        </SelectTrigger>
-                                        <SelectPortal>
-                                          <SelectBackdrop />
-                                          <SelectContent>
-                                            <SelectDragIndicatorWrapper>
-                                              <SelectDragIndicator />
-                                            </SelectDragIndicatorWrapper>
-                                            <SelectItem
-                                              label="Ninguna (zona raíz)"
-                                              value=""
+                                        </Input>
+                                        <FormControlError>
+                                          <FormControlErrorIcon
+                                            as={AlertCircleIcon}
+                                          />
+                                          <FormControlErrorText>
+                                            {
+                                              errors.zones?.[index]?.name
+                                                ?.message
+                                            }
+                                          </FormControlErrorText>
+                                        </FormControlError>
+                                      </FormControl>
+                                    )}
+                                  />
+                                </View>
+                                <View style={half}>
+                                  <Controller
+                                    control={control}
+                                    name={`zones.${index}.code`}
+                                    rules={{
+                                      required: "El código es obligatorio.",
+                                    }}
+                                    render={({
+                                      field: { onChange, onBlur, value },
+                                    }) => (
+                                      <FormControl
+                                        isInvalid={
+                                          !!errors.zones?.[index]?.code
+                                        }
+                                      >
+                                        <FormControlLabel>
+                                          <FormControlLabelText
+                                            style={{ color: "#000" }}
+                                          >
+                                            Código
+                                          </FormControlLabelText>
+                                        </FormControlLabel>
+                                        <Input>
+                                          <InputField
+                                            style={{ color: "#171717" }}
+                                            placeholder="Ej. ZA"
+                                            value={value}
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
+                                            autoCapitalize="characters"
+                                          />
+                                        </Input>
+                                        <FormControlError>
+                                          <FormControlErrorIcon
+                                            as={AlertCircleIcon}
+                                          />
+                                          <FormControlErrorText>
+                                            {
+                                              errors.zones?.[index]?.code
+                                                ?.message
+                                            }
+                                          </FormControlErrorText>
+                                        </FormControlError>
+                                      </FormControl>
+                                    )}
+                                  />
+                                </View>
+                              </View>
+
+                              <View style={[row, { marginTop: 12 }]}>
+                                <View style={half}>
+                                  <Controller
+                                    control={control}
+                                    name={`zones.${index}.zone_type`}
+                                    rules={{
+                                      required: "El tipo es obligatorio.",
+                                    }}
+                                    render={({
+                                      field: { onChange, value },
+                                    }) => (
+                                      <FormControl
+                                        isInvalid={
+                                          !!errors.zones?.[index]?.zone_type
+                                        }
+                                      >
+                                        <FormControlLabel>
+                                          <FormControlLabelText
+                                            style={{ color: "#000" }}
+                                          >
+                                            Tipo
+                                          </FormControlLabelText>
+                                        </FormControlLabel>
+                                        <Select
+                                          selectedValue={value}
+                                          onValueChange={onChange}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectInput
+                                              style={{ color: "#000" }}
+                                              placeholder="Selecciona un tipo"
+                                              value={
+                                                ZONE_TYPE_OPTIONS.find(
+                                                  (t) => t.value === value,
+                                                )?.label || ""
+                                              }
                                             />
-                                            {parentOptions.map((p) => (
+                                          </SelectTrigger>
+                                          <SelectPortal>
+                                            <SelectBackdrop />
+                                            <SelectContent>
+                                              <SelectDragIndicatorWrapper>
+                                                <SelectDragIndicator />
+                                              </SelectDragIndicatorWrapper>
+                                              {ZONE_TYPE_OPTIONS.map((t) => (
+                                                <SelectItem
+                                                  key={t.value}
+                                                  label={t.label}
+                                                  value={t.value}
+                                                />
+                                              ))}
+                                            </SelectContent>
+                                          </SelectPortal>
+                                        </Select>
+                                        <FormControlError>
+                                          <FormControlErrorIcon
+                                            as={AlertCircleIcon}
+                                          />
+                                          <FormControlErrorText>
+                                            {
+                                              errors.zones?.[index]?.zone_type
+                                                ?.message
+                                            }
+                                          </FormControlErrorText>
+                                        </FormControlError>
+                                      </FormControl>
+                                    )}
+                                  />
+                                </View>
+                                <View style={half}>
+                                  <Controller
+                                    control={control}
+                                    name={`zones.${index}.parent_temp_id`}
+                                    render={({
+                                      field: { onChange, value },
+                                    }) => (
+                                      <FormControl>
+                                        <FormControlLabel>
+                                          <FormControlLabelText
+                                            style={{ color: "#000" }}
+                                          >
+                                            Zona padre{" "}
+                                            <Text
+                                              size="xs"
+                                              style={{ color: "#999" }}
+                                            >
+                                              (opcional)
+                                            </Text>
+                                          </FormControlLabelText>
+                                        </FormControlLabel>
+                                        <Select
+                                          selectedValue={value}
+                                          onValueChange={onChange}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectInput
+                                              style={{ color: "#000" }}
+                                              placeholder="Ninguna (zona raíz)"
+                                              value={
+                                                parentOptions.find(
+                                                  (p) => p.value === value,
+                                                )?.label || ""
+                                              }
+                                            />
+                                          </SelectTrigger>
+                                          <SelectPortal>
+                                            <SelectBackdrop />
+                                            <SelectContent>
+                                              <SelectDragIndicatorWrapper>
+                                                <SelectDragIndicator />
+                                              </SelectDragIndicatorWrapper>
                                               <SelectItem
-                                                key={p.value}
-                                                label={p.label}
-                                                value={p.value}
+                                                label="Ninguna (zona raíz)"
+                                                value=""
                                               />
-                                            ))}
-                                          </SelectContent>
-                                        </SelectPortal>
-                                      </Select>
-                                    </FormControl>
-                                  )}
-                                />
+                                              {parentOptions.map((p) => (
+                                                <SelectItem
+                                                  key={p.value}
+                                                  label={p.label}
+                                                  value={p.value}
+                                                />
+                                              ))}
+                                            </SelectContent>
+                                          </SelectPortal>
+                                        </Select>
+                                      </FormControl>
+                                    )}
+                                  />
+                                </View>
                               </View>
                             </View>
-                          </View>
-                        );
-                      })}
-                    </VStack>
-                  </View>
-                )}
+                          );
+                        })}
+                      </VStack>
+                    </View>
+                  )}
 
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => {
-                      clearData();
-                      setIsEdit(false);
-                      router.back();
-                    }}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => {
+                        clearData();
+                        setIsEdit(false);
+                        router.back();
+                      }}
+                    >
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending}
+                    >
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

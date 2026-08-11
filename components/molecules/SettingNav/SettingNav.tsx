@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { useLogin } from "@/src/hooks";
 import { useAuthStore } from "@/src/store";
 import { router } from "expo-router";
@@ -44,51 +45,53 @@ export function SettingsNav({
       }}
       className="bg-white rounded-xl"
     >
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = activeSection === item.id;
+      <DesktopScrollView>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeSection === item.id;
 
-        return (
-          <Pressable
-            key={item.id}
-            onPress={() => onSectionChange(item.id)}
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              borderRadius: 10,
-              backgroundColor: isActive ? "#eef2ff" : "transparent",
-              borderWidth: isActive ? 1 : 0,
-              borderColor: isActive ? "#c7d2fe" : "transparent",
-            }}
-          >
-            <Icon size={20} color={isActive ? "#6366f1" : "#6b7280"} />
-          </Pressable>
-        );
-      })}
+          return (
+            <Pressable
+              key={item.id}
+              onPress={() => onSectionChange(item.id)}
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 10,
+                backgroundColor: isActive ? "#eef2ff" : "transparent",
+                borderWidth: isActive ? 1 : 0,
+                borderColor: isActive ? "#c7d2fe" : "transparent",
+              }}
+            >
+              <Icon size={20} color={isActive ? "#6366f1" : "#6b7280"} />
+            </Pressable>
+          );
+        })}
 
-      <View
-        style={{
-          width: 1,
-          height: 24,
-          backgroundColor: "#f3f4f6",
-          marginHorizontal: 4,
-        }}
-      />
+        <View
+          style={{
+            width: 1,
+            height: 24,
+            backgroundColor: "#f3f4f6",
+            marginHorizontal: 4,
+          }}
+        />
 
-      <TouchableOpacity
-        onPress={handle}
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          borderRadius: 10,
-        }}
-      >
-        <LogOut size={20} color="#ef4444" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handle}
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 10,
+          }}
+        >
+          <LogOut size={20} color="#ef4444" />
+        </TouchableOpacity>
+      </DesktopScrollView>
     </ScrollView>
   );
 }

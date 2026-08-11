@@ -1,4 +1,5 @@
 import { Action, Buttons, ModalDelete } from "@/components";
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalMerchandiseDetail } from "@/components/molecules/ModalMerchandise/ModalMerchandise";
 import { MerchandiseTable } from "@/components/templates/MerchandiseTable/MerchandiseTable";
@@ -68,23 +69,25 @@ export const MerchandiseScreen: React.FC = () => {
 
   return (
     <ScrollView style={{ flex: 1 }}>
-      <MerchandiseTable
-        data={merchandise || []}
-        itemsPerPage={8}
-        button={dataButton}
-        actions={actions}
-        onRowPress={hadleModalData}
-      />
-      <ModalMerchandiseDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
+      <DesktopScrollView>
+        <MerchandiseTable
+          data={merchandise || []}
+          itemsPerPage={8}
+          button={dataButton}
+          actions={actions}
+          onRowPress={hadleModalData}
+        />
+        <ModalMerchandiseDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </DesktopScrollView>
     </ScrollView>
   );
 };

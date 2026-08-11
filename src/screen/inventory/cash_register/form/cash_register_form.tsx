@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -144,187 +145,189 @@ export default function CashRegisterForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
-            onPress={() => {
-              clearData();
-              setIsEdit(false);
-              router.back();
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
-
-          <Center>
-            <Box
-              style={styles.card}
-              className="w-full bg-white rounded-[20px] py-8 px-7"
+          <DesktopScrollView>
+            <Pressable
+              onPress={() => {
+                clearData();
+                setIsEdit(false);
+                router.back();
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
             >
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                {isEdit ? "Editar Caja" : "Nueva Caja"}
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                {isEdit
-                  ? "Modifica los campos para editar la caja"
-                  : "Llena los campos para crear una caja registradora"}
+              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+                Regresar
               </Text>
+            </Pressable>
 
-              <VStack space="lg">
-                {/* Nombre */}
-                <Controller
-                  control={control}
-                  name="name"
-                  rules={{ required: "El nombre es obligatorio." }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.name}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Nombre
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. Caja Principal"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors.name?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  {isEdit ? "Editar Caja" : "Nueva Caja"}
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  {isEdit
+                    ? "Modifica los campos para editar la caja"
+                    : "Llena los campos para crear una caja registradora"}
+                </Text>
 
-                {/* Código */}
-                <Controller
-                  control={control}
-                  name="code"
-                  rules={{ required: "El código es obligatorio." }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.code}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Código
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. CAJA-01"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          autoCapitalize="characters"
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors.code?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
-
-                {/* Bodega — solo se muestra si el usuario tiene acceso a más de una */}
-                {!hideWarehouseInput && (
+                <VStack space="lg">
+                  {/* Nombre */}
                   <Controller
                     control={control}
-                    name="warehouse_id"
-                    rules={{ required: "La bodega es obligatoria." }}
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        warehouseOptions.find((w) => String(w.id) === value)
-                          ?.label || "";
-
-                      return (
-                        <FormControl isInvalid={!!errors.warehouse_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Bodega
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona una bodega"
-                                value={selectedLabel}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                {warehouseOptions.map((w) => (
-                                  <SelectItem
-                                    key={w.id}
-                                    label={w.label}
-                                    value={String(w.id)}
-                                  />
-                                ))}
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.warehouse_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      );
-                    }}
+                    name="name"
+                    rules={{ required: "El nombre es obligatorio." }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.name}>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Nombre
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Input>
+                          <InputField
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. Caja Principal"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
+                        </Input>
+                        <FormControlError>
+                          <FormControlErrorIcon as={AlertCircleIcon} />
+                          <FormControlErrorText>
+                            {errors.name?.message}
+                          </FormControlErrorText>
+                        </FormControlError>
+                      </FormControl>
+                    )}
                   />
-                )}
 
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => {
-                      clearData();
-                      setIsEdit(false);
-                      router.back();
-                    }}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                  {/* Código */}
+                  <Controller
+                    control={control}
+                    name="code"
+                    rules={{ required: "El código es obligatorio." }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.code}>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Código
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Input>
+                          <InputField
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. CAJA-01"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            autoCapitalize="characters"
+                          />
+                        </Input>
+                        <FormControlError>
+                          <FormControlErrorIcon as={AlertCircleIcon} />
+                          <FormControlErrorText>
+                            {errors.code?.message}
+                          </FormControlErrorText>
+                        </FormControlError>
+                      </FormControl>
+                    )}
+                  />
+
+                  {/* Bodega — solo se muestra si el usuario tiene acceso a más de una */}
+                  {!hideWarehouseInput && (
+                    <Controller
+                      control={control}
+                      name="warehouse_id"
+                      rules={{ required: "La bodega es obligatoria." }}
+                      render={({ field: { onChange, value } }) => {
+                        const selectedLabel =
+                          warehouseOptions.find((w) => String(w.id) === value)
+                            ?.label || "";
+
+                        return (
+                          <FormControl isInvalid={!!errors.warehouse_id}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Bodega
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectInput
+                                  style={{ color: "#000" }}
+                                  placeholder="Selecciona una bodega"
+                                  value={selectedLabel}
+                                />
+                              </SelectTrigger>
+                              <SelectPortal>
+                                <SelectBackdrop />
+                                <SelectContent>
+                                  <SelectDragIndicatorWrapper>
+                                    <SelectDragIndicator />
+                                  </SelectDragIndicatorWrapper>
+                                  {warehouseOptions.map((w) => (
+                                    <SelectItem
+                                      key={w.id}
+                                      label={w.label}
+                                      value={String(w.id)}
+                                    />
+                                  ))}
+                                </SelectContent>
+                              </SelectPortal>
+                            </Select>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.warehouse_id?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        );
+                      }}
+                    />
+                  )}
+
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => {
+                        clearData();
+                        setIsEdit(false);
+                        router.back();
+                      }}
+                    >
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending}
+                    >
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -170,178 +171,119 @@ export default function WarehouseZoneForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
-            onPress={() => {
-              clearData();
-              setIsEdit(false);
-              router.back();
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
-
-          <Center>
-            <Box
-              style={styles.card}
-              className="w-full bg-white rounded-[20px] py-8 px-7"
+          <DesktopScrollView>
+            <Pressable
+              onPress={() => {
+                clearData();
+                setIsEdit(false);
+                router.back();
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
             >
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                {isEdit ? "Editar Zona" : "Nueva Zona"}
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                {isEdit
-                  ? "Modifica los campos para editar la zona"
-                  : "Llena los campos para crear una zona en esta bodega"}
+              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+                Regresar
               </Text>
+            </Pressable>
 
-              <VStack space="lg">
-                {/* Nombre + Código */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="name"
-                      rules={{ required: "El nombre es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.name}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Nombre
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. Zona A"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.name?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="code"
-                      rules={{ required: "El código es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.code}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Código
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. ZA"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              autoCapitalize="characters"
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.code?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  {isEdit ? "Editar Zona" : "Nueva Zona"}
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  {isEdit
+                    ? "Modifica los campos para editar la zona"
+                    : "Llena los campos para crear una zona en esta bodega"}
+                </Text>
 
-                {/* Tipo + Zona padre */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="zone_type"
-                      rules={{ required: "El tipo es obligatorio." }}
-                      render={({ field: { onChange, value } }) => (
-                        <FormControl isInvalid={!!errors.zone_type}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Tipo
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona un tipo"
-                                value={
-                                  ZONE_TYPE_OPTIONS.find(
-                                    (t) => t.value === value,
-                                  )?.label || ""
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                {ZONE_TYPE_OPTIONS.map((t) => (
-                                  <SelectItem
-                                    key={t.value}
-                                    label={t.label}
-                                    value={t.value}
-                                  />
-                                ))}
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.zone_type?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="parent_zone_id"
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          parentOptions.find((z) => String(z.id) === value)
-                            ?.name || "";
-
-                        return (
-                          <FormControl>
+                <VStack space="lg">
+                  {/* Nombre + Código */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="name"
+                        rules={{ required: "El nombre es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.name}>
                             <FormControlLabel>
                               <FormControlLabelText style={{ color: "#000" }}>
-                                Zona padre{" "}
-                                <Text size="xs" style={{ color: "#999" }}>
-                                  (opcional)
-                                </Text>
+                                Nombre
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. Zona A"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.name?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="code"
+                        rules={{ required: "El código es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.code}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Código
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. ZA"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                autoCapitalize="characters"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.code?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Tipo + Zona padre */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="zone_type"
+                        rules={{ required: "El tipo es obligatorio." }}
+                        render={({ field: { onChange, value } }) => (
+                          <FormControl isInvalid={!!errors.zone_type}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Tipo
                               </FormControlLabelText>
                             </FormControlLabel>
                             <Select
@@ -351,8 +293,12 @@ export default function WarehouseZoneForm() {
                               <SelectTrigger>
                                 <SelectInput
                                   style={{ color: "#000" }}
-                                  placeholder="Ninguna (zona raíz)"
-                                  value={selectedLabel}
+                                  placeholder="Selecciona un tipo"
+                                  value={
+                                    ZONE_TYPE_OPTIONS.find(
+                                      (t) => t.value === value,
+                                    )?.label || ""
+                                  }
                                 />
                               </SelectTrigger>
                               <SelectPortal>
@@ -361,55 +307,112 @@ export default function WarehouseZoneForm() {
                                   <SelectDragIndicatorWrapper>
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
-                                  <SelectItem
-                                    label="Ninguna (zona raíz)"
-                                    value=""
-                                  />
-                                  {parentOptions.map((z) => (
+                                  {ZONE_TYPE_OPTIONS.map((t) => (
                                     <SelectItem
-                                      key={z.id}
-                                      label={z.name}
-                                      value={String(z.id)}
+                                      key={t.value}
+                                      label={t.label}
+                                      value={t.value}
                                     />
                                   ))}
                                 </SelectContent>
                               </SelectPortal>
                             </Select>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.zone_type?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
                           </FormControl>
-                        );
-                      }}
-                    />
-                  </View>
-                </View>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="parent_zone_id"
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            parentOptions.find((z) => String(z.id) === value)
+                              ?.name || "";
 
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => {
-                      clearData();
-                      setIsEdit(false);
-                      router.back();
-                    }}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                          return (
+                            <FormControl>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Zona padre{" "}
+                                  <Text size="xs" style={{ color: "#999" }}>
+                                    (opcional)
+                                  </Text>
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder="Ninguna (zona raíz)"
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    <SelectItem
+                                      label="Ninguna (zona raíz)"
+                                      value=""
+                                    />
+                                    {parentOptions.map((z) => (
+                                      <SelectItem
+                                        key={z.id}
+                                        label={z.name}
+                                        value={String(z.id)}
+                                      />
+                                    ))}
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => {
+                        clearData();
+                        setIsEdit(false);
+                        router.back();
+                      }}
+                    >
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending}
+                    >
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

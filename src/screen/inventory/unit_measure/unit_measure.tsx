@@ -1,4 +1,5 @@
 import { Action, Buttons, ModalDelete } from "@/components";
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalUnitDetail } from "@/components/molecules/ModalUnitDetail/ModalUnitDetail";
 import { UnitsTable } from "@/components/templates/UnitsTable/UnitsTable";
@@ -62,23 +63,25 @@ export const Unit: React.FC = () => {
 
   return (
     <ScrollView style={{ flex: 1 }}>
-      <UnitsTable
-        data={units || []}
-        itemsPerPage={8}
-        button={dataButton}
-        actions={actions}
-        onRowPress={hadleModalData}
-      />
-      <ModalUnitDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
+      <DesktopScrollView>
+        <UnitsTable
+          data={units || []}
+          itemsPerPage={8}
+          button={dataButton}
+          actions={actions}
+          onRowPress={hadleModalData}
+        />
+        <ModalUnitDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </DesktopScrollView>
     </ScrollView>
   );
 };

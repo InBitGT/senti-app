@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -162,72 +163,77 @@ export const ModalCustomerCreditDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {data && (
-              <>
-                <SectionTitle title="Crédito" />
+            <DesktopScrollView>
+              {data && (
+                <>
+                  <SectionTitle title="Crédito" />
 
-                <View style={styles.statsRow}>
-                  <StatBox
-                    label="Límite"
-                    value={formatCurrency(data.credit_limit)}
-                    color="#111827"
+                  <View style={styles.statsRow}>
+                    <StatBox
+                      label="Límite"
+                      value={formatCurrency(data.credit_limit)}
+                      color="#111827"
+                    />
+                    <StatBox
+                      label="Disponible"
+                      value={formatCurrency(data.credit_available)}
+                      color="#16a34a"
+                    />
+                    <StatBox
+                      label="Usado"
+                      value={formatCurrency(data.credit_used)}
+                      color="#dc2626"
+                    />
+                  </View>
+
+                  <UsageBar used={data.credit_used} limit={data.credit_limit} />
+
+                  <Divider />
+
+                  <SectionTitle title="Plazo de pago" />
+                  <InfoRow
+                    label="Días de plazo"
+                    value={data.payment_term_days}
                   />
-                  <StatBox
-                    label="Disponible"
-                    value={formatCurrency(data.credit_available)}
-                    color="#16a34a"
+                  <InfoRow
+                    label="Fecha límite"
+                    value={new Date(data.credit_due_date).toLocaleDateString(
+                      "es-GT",
+                    )}
                   />
-                  <StatBox
-                    label="Usado"
-                    value={formatCurrency(data.credit_used)}
-                    color="#dc2626"
+                  <View style={{ marginTop: 6 }}>
+                    <DueDateBadge dueDate={data.credit_due_date} />
+                  </View>
+
+                  <Divider />
+
+                  <SectionTitle title="Cliente" />
+                  <InfoRow label="Nombre" value={data.customer?.name} />
+                  <InfoRow
+                    label="Documento"
+                    value={
+                      data.customer
+                        ? `${data.customer.document_type} ${data.customer.document_number}`
+                        : "—"
+                    }
                   />
-                </View>
+                  <InfoRow label="Teléfono" value={data.customer?.phone} />
+                  <InfoRow label="Email" value={data.customer?.email} />
 
-                <UsageBar used={data.credit_used} limit={data.credit_limit} />
+                  <Divider />
 
-                <Divider />
-
-                <SectionTitle title="Plazo de pago" />
-                <InfoRow label="Días de plazo" value={data.payment_term_days} />
-                <InfoRow
-                  label="Fecha límite"
-                  value={new Date(data.credit_due_date).toLocaleDateString(
-                    "es-GT",
-                  )}
-                />
-                <View style={{ marginTop: 6 }}>
-                  <DueDateBadge dueDate={data.credit_due_date} />
-                </View>
-
-                <Divider />
-
-                <SectionTitle title="Cliente" />
-                <InfoRow label="Nombre" value={data.customer?.name} />
-                <InfoRow
-                  label="Documento"
-                  value={
-                    data.customer
-                      ? `${data.customer.document_type} ${data.customer.document_number}`
-                      : "—"
-                  }
-                />
-                <InfoRow label="Teléfono" value={data.customer?.phone} />
-                <InfoRow label="Email" value={data.customer?.email} />
-
-                <Divider />
-
-                <SectionTitle title="Registro" />
-                <InfoRow
-                  label="Creado"
-                  value={new Date(data.created_at).toLocaleString("es-GT")}
-                />
-                <InfoRow
-                  label="Actualizado"
-                  value={new Date(data.update_at).toLocaleString("es-GT")}
-                />
-              </>
-            )}
+                  <SectionTitle title="Registro" />
+                  <InfoRow
+                    label="Creado"
+                    value={new Date(data.created_at).toLocaleString("es-GT")}
+                  />
+                  <InfoRow
+                    label="Actualizado"
+                    value={new Date(data.update_at).toLocaleString("es-GT")}
+                  />
+                </>
+              )}
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { CashMovementModal } from "@/components/molecules/CashMovementModal/CashMovementModal";
 import { CashSessionInfoModal } from "@/components/molecules/CashSessionInfoModal/CashSessionInfoModal";
 import { CashRegisterGate } from "@/components/templates/CashRegisterGate/CashRegisterGate";
@@ -265,42 +266,46 @@ export const Pos: React.FC = () => {
 
               {categories.length > 0 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <HStack space="xs">
-                    <CategoryPill
-                      label="Todas"
-                      active={categoryId === null}
-                      onPress={() => pickCategory(null)}
-                    />
-                    {categories.map((c) => (
+                  <DesktopScrollView>
+                    <HStack space="xs">
                       <CategoryPill
-                        key={c.id}
-                        label={c.name}
-                        active={categoryId === c.id}
-                        onPress={() => pickCategory(c.id)}
+                        label="Todas"
+                        active={categoryId === null}
+                        onPress={() => pickCategory(null)}
                       />
-                    ))}
-                  </HStack>
+                      {categories.map((c) => (
+                        <CategoryPill
+                          key={c.id}
+                          label={c.name}
+                          active={categoryId === c.id}
+                          onPress={() => pickCategory(c.id)}
+                        />
+                      ))}
+                    </HStack>
+                  </DesktopScrollView>
                 </ScrollView>
               )}
 
               {/* Subcategorías: solo si hay una categoría elegida y tiene hijas reales */}
               {categoryId != null && subcategories.length > 0 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <HStack space="xs">
-                    <SubcategoryPill
-                      label="Todo"
-                      active={subcategoryId === null}
-                      onPress={() => setSubcategoryId(null)}
-                    />
-                    {subcategories.map((s) => (
+                  <DesktopScrollView>
+                    <HStack space="xs">
                       <SubcategoryPill
-                        key={s.id}
-                        label={s.name}
-                        active={subcategoryId === s.id}
-                        onPress={() => setSubcategoryId(s.id)}
+                        label="Todo"
+                        active={subcategoryId === null}
+                        onPress={() => setSubcategoryId(null)}
                       />
-                    ))}
-                  </HStack>
+                      {subcategories.map((s) => (
+                        <SubcategoryPill
+                          key={s.id}
+                          label={s.name}
+                          active={subcategoryId === s.id}
+                          onPress={() => setSubcategoryId(s.id)}
+                        />
+                      ))}
+                    </HStack>
+                  </DesktopScrollView>
                 </ScrollView>
               )}
             </VStack>
@@ -502,22 +507,24 @@ function CartSidePanel({
       </HStack>
 
       <ScrollView className="flex-1 px-4 pt-3">
-        {cart.length === 0 ? (
-          <CartEmptyState />
-        ) : (
-          <VStack space="md">
-            {cart.map((line, index) => (
-              <CartLineRow
-                key={`${line.product.product_id}-${line.unit.uom_id}`}
-                line={line}
-                index={index}
-                onStepLine={onStepLine}
-                onSetQty={onSetQty}
-                onRemoveLine={onRemoveLine}
-              />
-            ))}
-          </VStack>
-        )}
+        <DesktopScrollView>
+          {cart.length === 0 ? (
+            <CartEmptyState />
+          ) : (
+            <VStack space="md">
+              {cart.map((line, index) => (
+                <CartLineRow
+                  key={`${line.product.product_id}-${line.unit.uom_id}`}
+                  line={line}
+                  index={index}
+                  onStepLine={onStepLine}
+                  onSetQty={onSetQty}
+                  onRemoveLine={onRemoveLine}
+                />
+              ))}
+            </VStack>
+          )}
+        </DesktopScrollView>
       </ScrollView>
 
       {cart.length > 0 && (

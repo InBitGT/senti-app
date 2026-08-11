@@ -1,12 +1,13 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { WarehouseZone } from "@/src/types/warehouse_zone/warehouse_zone";
@@ -91,58 +92,60 @@ export const ModalWarehouseZoneDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <SectionTitle title="Información general" />
-            <InfoRow label="Nombre" value={data?.name} />
-            <InfoRow label="Código" value={data?.code} />
-            <InfoRow
-              label="Tipo"
-              value={
-                data
-                  ? (ZONE_TYPE_LABELS[data.zone_type] ?? data.zone_type)
-                  : "—"
-              }
-            />
+            <DesktopScrollView>
+              <SectionTitle title="Información general" />
+              <InfoRow label="Nombre" value={data?.name} />
+              <InfoRow label="Código" value={data?.code} />
+              <InfoRow
+                label="Tipo"
+                value={
+                  data
+                    ? (ZONE_TYPE_LABELS[data.zone_type] ?? data.zone_type)
+                    : "—"
+                }
+              />
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Jerarquía" />
-            {data?.parent_zone ? (
-              <>
-                <InfoRow label="Zona padre" value={data.parent_zone.name} />
-                <InfoRow label="Código padre" value={data.parent_zone.code} />
-                <InfoRow
-                  label="Tipo padre"
-                  value={
-                    ZONE_TYPE_LABELS[data.parent_zone.zone_type] ??
-                    data.parent_zone.zone_type
-                  }
-                />
-              </>
-            ) : (
-              <Text style={{ color: "#9ca3af", fontSize: 13 }}>
-                Es una zona raíz (sin zona padre).
-              </Text>
-            )}
+              <SectionTitle title="Jerarquía" />
+              {data?.parent_zone ? (
+                <>
+                  <InfoRow label="Zona padre" value={data.parent_zone.name} />
+                  <InfoRow label="Código padre" value={data.parent_zone.code} />
+                  <InfoRow
+                    label="Tipo padre"
+                    value={
+                      ZONE_TYPE_LABELS[data.parent_zone.zone_type] ??
+                      data.parent_zone.zone_type
+                    }
+                  />
+                </>
+              ) : (
+                <Text style={{ color: "#9ca3af", fontSize: 13 }}>
+                  Es una zona raíz (sin zona padre).
+                </Text>
+              )}
 
-            <Divider />
+              <Divider />
 
-            <SectionTitle title="Registro" />
-            <InfoRow
-              label="Creado"
-              value={
-                data?.created_at
-                  ? new Date(data.created_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
-            <InfoRow
-              label="Actualizado"
-              value={
-                data?.update_at
-                  ? new Date(data.update_at).toLocaleString("es-GT")
-                  : "—"
-              }
-            />
+              <SectionTitle title="Registro" />
+              <InfoRow
+                label="Creado"
+                value={
+                  data?.created_at
+                    ? new Date(data.created_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+              <InfoRow
+                label="Actualizado"
+                value={
+                  data?.update_at
+                    ? new Date(data.update_at).toLocaleString("es-GT")
+                    : "—"
+                }
+              />
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

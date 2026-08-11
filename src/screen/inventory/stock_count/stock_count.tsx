@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { ProductCountList } from "@/components/molecules/ProductCountList/ProductCountList";
 import { ProductPicker } from "@/components/molecules/ProductPicker/ProductPicker";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
@@ -232,130 +233,132 @@ export function CountScreen() {
         style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 20 }}
         contentContainerStyle={{ gap: 16, paddingBottom: 100 }}
       >
-        <HStack className="items-center gap-3">
-          <View style={styles.headerIcon}>
-            <ClipboardList size={18} color="#fff" />
-          </View>
-          <VStack>
-            <Text style={styles.headerTitle}>Conteo de inventario</Text>
-            <Text style={styles.headerSubtitle}>
-              Elige qué artículos contar y captura las unidades.
-            </Text>
-          </VStack>
-        </HStack>
-
-        <VStack style={styles.card}>
-          {hasMultipleBranches && (
-            <VStack style={{ marginBottom: 3 }}>
-              <Text style={styles.cardLabel}>Sucursal</Text>
-              <Select
-                selectedValue={selectedBranchId}
-                onValueChange={setSelectedBranchId}
-              >
-                <SelectTrigger style={{ marginTop: 8 }}>
-                  <SelectInput
-                    style={{ color: "#000" }}
-                    placeholder="Selecciona una sucursal"
-                    value={selectedBranch?.branch_name ?? ""}
-                  />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    {branches.map((b) => (
-                      <SelectItem
-                        key={b.branch_id}
-                        label={b.branch_name}
-                        value={String(b.branch_id)}
-                      />
-                    ))}
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
+        <DesktopScrollView>
+          <HStack className="items-center gap-3">
+            <View style={styles.headerIcon}>
+              <ClipboardList size={18} color="#fff" />
+            </View>
+            <VStack>
+              <Text style={styles.headerTitle}>Conteo de inventario</Text>
+              <Text style={styles.headerSubtitle}>
+                Elige qué artículos contar y captura las unidades.
+              </Text>
             </VStack>
-          )}
-
-          {selectedBranchId && hasMultipleWarehouses && (
-            <VStack style={{ marginBottom: 2 }}>
-              <Text style={styles.cardLabel}>Bodega</Text>
-              <Select
-                selectedValue={selectedWarehouseId}
-                onValueChange={setSelectedWarehouseId}
-              >
-                <SelectTrigger style={{ marginTop: 8 }}>
-                  <SelectInput
-                    style={{ color: "#000" }}
-                    placeholder="Selecciona una bodega"
-                    value={selectedWarehouse?.warehouse_name ?? ""}
-                  />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    {warehouses.map((w) => (
-                      <SelectItem
-                        key={w.warehouse_id}
-                        label={w.warehouse_name}
-                        value={String(w.warehouse_id)}
-                      />
-                    ))}
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
-            </VStack>
-          )}
-          <VStack>
-            <Text style={styles.cardLabel}>Notas de alcance</Text>
-            <Input variant="outline" size="md" style={{ marginTop: 8 }}>
-              <InputField
-                style={{ color: "#000000" }}
-                placeholder="Ej. Papelería zona A"
-                value={scopeNotes}
-                onChangeText={setScopeNotes}
-              />
-            </Input>
-          </VStack>
-        </VStack>
-
-        <VStack style={styles.card}>
-          <HStack className="items-center justify-between mb-4">
-            <Text style={styles.cardTitle}>Artículos a contar</Text>
-            <ProductPicker
-              products={products}
-              selectedIds={new Set(selectedIds)}
-              onConfirm={handleConfirmSelection}
-            />
           </HStack>
 
-          {!selectedWarehouseId ? (
-            <View style={styles.loadingBox}>
-              <Text style={styles.loadingText}>
-                {hasMultipleBranches && !selectedBranchId
-                  ? "Selecciona una sucursal para continuar."
-                  : "Selecciona una bodega para continuar."}
-              </Text>
-            </View>
-          ) : isLoading ? (
-            <View style={styles.loadingBox}>
-              <ActivityIndicator />
-              <Text style={styles.loadingText}>Cargando artículos…</Text>
-            </View>
-          ) : (
-            <ProductCountList
-              selected={selectedProducts}
-              lines={lines}
-              onStep={handleStep}
-              onSet={handleSet}
-              onRemove={handleRemove}
-            />
-          )}
-        </VStack>
+          <VStack style={styles.card}>
+            {hasMultipleBranches && (
+              <VStack style={{ marginBottom: 3 }}>
+                <Text style={styles.cardLabel}>Sucursal</Text>
+                <Select
+                  selectedValue={selectedBranchId}
+                  onValueChange={setSelectedBranchId}
+                >
+                  <SelectTrigger style={{ marginTop: 8 }}>
+                    <SelectInput
+                      style={{ color: "#000" }}
+                      placeholder="Selecciona una sucursal"
+                      value={selectedBranch?.branch_name ?? ""}
+                    />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
+                      {branches.map((b) => (
+                        <SelectItem
+                          key={b.branch_id}
+                          label={b.branch_name}
+                          value={String(b.branch_id)}
+                        />
+                      ))}
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </VStack>
+            )}
+
+            {selectedBranchId && hasMultipleWarehouses && (
+              <VStack style={{ marginBottom: 2 }}>
+                <Text style={styles.cardLabel}>Bodega</Text>
+                <Select
+                  selectedValue={selectedWarehouseId}
+                  onValueChange={setSelectedWarehouseId}
+                >
+                  <SelectTrigger style={{ marginTop: 8 }}>
+                    <SelectInput
+                      style={{ color: "#000" }}
+                      placeholder="Selecciona una bodega"
+                      value={selectedWarehouse?.warehouse_name ?? ""}
+                    />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
+                      {warehouses.map((w) => (
+                        <SelectItem
+                          key={w.warehouse_id}
+                          label={w.warehouse_name}
+                          value={String(w.warehouse_id)}
+                        />
+                      ))}
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </VStack>
+            )}
+            <VStack>
+              <Text style={styles.cardLabel}>Notas de alcance</Text>
+              <Input variant="outline" size="md" style={{ marginTop: 8 }}>
+                <InputField
+                  style={{ color: "#000000" }}
+                  placeholder="Ej. Papelería zona A"
+                  value={scopeNotes}
+                  onChangeText={setScopeNotes}
+                />
+              </Input>
+            </VStack>
+          </VStack>
+
+          <VStack style={styles.card}>
+            <HStack className="items-center justify-between mb-4">
+              <Text style={styles.cardTitle}>Artículos a contar</Text>
+              <ProductPicker
+                products={products}
+                selectedIds={new Set(selectedIds)}
+                onConfirm={handleConfirmSelection}
+              />
+            </HStack>
+
+            {!selectedWarehouseId ? (
+              <View style={styles.loadingBox}>
+                <Text style={styles.loadingText}>
+                  {hasMultipleBranches && !selectedBranchId
+                    ? "Selecciona una sucursal para continuar."
+                    : "Selecciona una bodega para continuar."}
+                </Text>
+              </View>
+            ) : isLoading ? (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator />
+                <Text style={styles.loadingText}>Cargando artículos…</Text>
+              </View>
+            ) : (
+              <ProductCountList
+                selected={selectedProducts}
+                lines={lines}
+                onStep={handleStep}
+                onSet={handleSet}
+                onRemove={handleRemove}
+              />
+            )}
+          </VStack>
+        </DesktopScrollView>
       </ScrollView>
 
       <HStack style={styles.footerBar}>

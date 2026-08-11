@@ -3,6 +3,7 @@ import {
   PreferencesSection,
   SecuritySection,
 } from "@/components";
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { SettingsNav } from "@/components/molecules/SettingNav";
 import { PersonalInfoSection } from "@/components/organisms/PersonalInfoSection";
 import { Box } from "@/components/ui/box";
@@ -39,18 +40,20 @@ export function ProfileScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView className="flex-1">
-          <Box className="mx-auto max-w-7xl w-full px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
-            <VStack className="gap-4 lg:gap-6">
-              <Box className="rounded-xl border border-gray-200 overflow-hidden w-full">
-                <SettingsNav
-                  activeSection={activeSection}
-                  onSectionChange={setActiveSection}
-                />
-              </Box>
+          <DesktopScrollView>
+            <Box className="mx-auto max-w-7xl w-full px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+              <VStack className="gap-4 lg:gap-6">
+                <Box className="rounded-xl border border-gray-200 overflow-hidden w-full">
+                  <SettingsNav
+                    activeSection={activeSection}
+                    onSectionChange={setActiveSection}
+                  />
+                </Box>
 
-              <VStack className="gap-4 lg:gap-6">{renderSection()}</VStack>
-            </VStack>
-          </Box>
+                <VStack className="gap-4 lg:gap-6">{renderSection()}</VStack>
+              </VStack>
+            </Box>
+          </DesktopScrollView>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

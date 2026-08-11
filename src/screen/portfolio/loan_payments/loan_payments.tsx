@@ -1,4 +1,5 @@
 // payment_form.tsx
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -139,66 +140,76 @@ export default function LoanPaymentForm() {
       >
         <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }}>
-            <Center style={{ flex: 1 }}>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Center>
-                  <View style={styles.successIcon}>
-                    <CheckCircle2 size={28} color="#16a34a" />
-                  </View>
-                  <Heading style={{ color: "#000" }} size="lg" className="mb-1">
-                    Abono registrado
-                  </Heading>
-                  <Text size="sm" className="text-typography-400 mb-6">
-                    Referencia {result.reference || "—"}
-                  </Text>
-                </Center>
-
-                <VStack space="sm" style={{ width: "100%" }}>
-                  <HStack style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Monto abonado</Text>
-                    <Text style={styles.summaryValue}>
-                      {currencyFormat(result.payment.amount)}
-                    </Text>
-                  </HStack>
-                  <HStack style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Cliente</Text>
-                    <Text style={styles.summaryValue}>
-                      {result.clientName ?? `#${result.payment.user_id}`}
-                    </Text>
-                  </HStack>
-                  <HStack
-                    style={{ ...styles.summaryRow, borderBottomWidth: 0 }}
-                  >
-                    <Text style={styles.summaryLabel}>Nuevo plazo</Text>
-                    <Text style={styles.summaryValue}>
-                      {result.payment.payment_term_days} días
-                    </Text>
-                  </HStack>
-                  {!!result.payment.description && (
-                    <VStack style={{ marginTop: 8 }}>
-                      <Text style={styles.summaryLabel}>Descripción</Text>
-                      <Text
-                        style={{ color: "#171717", fontSize: 14, marginTop: 2 }}
-                      >
-                        {result.payment.description}
-                      </Text>
-                    </VStack>
-                  )}
-                </VStack>
-
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="mt-6 w-full"
-                  onPress={handleRegisterAnother}
+            <DesktopScrollView>
+              <Center style={{ flex: 1 }}>
+                <Box
+                  style={styles.card}
+                  className="w-full bg-white rounded-[20px] py-8 px-7"
                 >
-                  <ButtonText>Registrar otro abono</ButtonText>
-                </Button>
-              </Box>
-            </Center>
+                  <Center>
+                    <View style={styles.successIcon}>
+                      <CheckCircle2 size={28} color="#16a34a" />
+                    </View>
+                    <Heading
+                      style={{ color: "#000" }}
+                      size="lg"
+                      className="mb-1"
+                    >
+                      Abono registrado
+                    </Heading>
+                    <Text size="sm" className="text-typography-400 mb-6">
+                      Referencia {result.reference || "—"}
+                    </Text>
+                  </Center>
+
+                  <VStack space="sm" style={{ width: "100%" }}>
+                    <HStack style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Monto abonado</Text>
+                      <Text style={styles.summaryValue}>
+                        {currencyFormat(result.payment.amount)}
+                      </Text>
+                    </HStack>
+                    <HStack style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Cliente</Text>
+                      <Text style={styles.summaryValue}>
+                        {result.clientName ?? `#${result.payment.user_id}`}
+                      </Text>
+                    </HStack>
+                    <HStack
+                      style={{ ...styles.summaryRow, borderBottomWidth: 0 }}
+                    >
+                      <Text style={styles.summaryLabel}>Nuevo plazo</Text>
+                      <Text style={styles.summaryValue}>
+                        {result.payment.payment_term_days} días
+                      </Text>
+                    </HStack>
+                    {!!result.payment.description && (
+                      <VStack style={{ marginTop: 8 }}>
+                        <Text style={styles.summaryLabel}>Descripción</Text>
+                        <Text
+                          style={{
+                            color: "#171717",
+                            fontSize: 14,
+                            marginTop: 2,
+                          }}
+                        >
+                          {result.payment.description}
+                        </Text>
+                      </VStack>
+                    )}
+                  </VStack>
+
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="mt-6 w-full"
+                    onPress={handleRegisterAnother}
+                  >
+                    <ButtonText>Registrar otro abono</ButtonText>
+                  </Button>
+                </Box>
+              </Center>
+            </DesktopScrollView>
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -216,226 +227,228 @@ export default function LoanPaymentForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <VStack>
-            <Box
-              style={styles.card}
-              className="w-full bg-white rounded-[20px] py-8 px-7"
-            >
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                Abonar a mi crédito
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                Completa los datos para registrar un abono a tu crédito.
-              </Text>
+          <DesktopScrollView>
+            <VStack>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  Abonar a mi crédito
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  Completa los datos para registrar un abono a tu crédito.
+                </Text>
 
-              <VStack space="lg">
-                {/* Cliente (get a useCredit) */}
-                <Controller
-                  control={control}
-                  name="user_id"
-                  rules={{ required: "Selecciona un cliente." }}
-                  render={({ field: { onChange, value } }) => {
-                    const selectedLabel =
-                      clients?.find((c) => String(c.customer_id) === value)
-                        ?.customer.name || "";
-                    return (
-                      <FormControl isInvalid={!!errors.user_id}>
+                <VStack space="lg">
+                  {/* Cliente (get a useCredit) */}
+                  <Controller
+                    control={control}
+                    name="user_id"
+                    rules={{ required: "Selecciona un cliente." }}
+                    render={({ field: { onChange, value } }) => {
+                      const selectedLabel =
+                        clients?.find((c) => String(c.customer_id) === value)
+                          ?.customer.name || "";
+                      return (
+                        <FormControl isInvalid={!!errors.user_id}>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Cliente
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          {isLoadingClients ? (
+                            <View style={{ paddingVertical: 10 }}>
+                              <ActivityIndicator size="small" />
+                            </View>
+                          ) : (
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectInput
+                                  style={{ color: "#000" }}
+                                  placeholder="Selecciona un cliente"
+                                  value={selectedLabel}
+                                />
+                              </SelectTrigger>
+                              <SelectPortal>
+                                <SelectBackdrop />
+                                <SelectContent>
+                                  <SelectDragIndicatorWrapper>
+                                    <SelectDragIndicator />
+                                  </SelectDragIndicatorWrapper>
+                                  {(clients ?? []).map((c) => (
+                                    <SelectItem
+                                      key={c.customer_id}
+                                      label={c.customer.name}
+                                      value={String(c.customer_id)}
+                                    />
+                                  ))}
+                                </SelectContent>
+                              </SelectPortal>
+                            </Select>
+                          )}
+                          <FormControlError>
+                            <FormControlErrorIcon as={AlertCircleIcon} />
+                            <FormControlErrorText>
+                              {errors.user_id?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                          {selectedClient && (
+                            <HStack
+                              style={{
+                                ...styles.debtBox,
+                                ...(hasNoPendingDebt && styles.debtBoxOk),
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  ...styles.debtLabel,
+                                  ...(hasNoPendingDebt && styles.debtLabelOk),
+                                }}
+                              >
+                                {hasNoPendingDebt
+                                  ? "Este cliente no tiene saldo pendiente"
+                                  : "Saldo pendiente"}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.debtValue,
+                                  hasNoPendingDebt && styles.debtLabelOk,
+                                ]}
+                              >
+                                {currencyFormat(selectedClient.credit_used)}
+                              </Text>
+                            </HStack>
+                          )}
+                        </FormControl>
+                      );
+                    }}
+                  />
+
+                  {/* Monto */}
+                  <Controller
+                    control={control}
+                    name="amount"
+                    rules={{
+                      required: "El monto es obligatorio.",
+                      validate: (v) =>
+                        (Number.isFinite(parseFloat(v)) && parseFloat(v) > 0) ||
+                        "Ingresa un monto válido mayor a 0.",
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.amount}>
                         <FormControlLabel>
                           <FormControlLabelText style={{ color: "#000" }}>
-                            Cliente
+                            Monto a abonar
                           </FormControlLabelText>
                         </FormControlLabel>
-                        {isLoadingClients ? (
-                          <View style={{ paddingVertical: 10 }}>
-                            <ActivityIndicator size="small" />
-                          </View>
-                        ) : (
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona un cliente"
-                                value={selectedLabel}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                {(clients ?? []).map((c) => (
-                                  <SelectItem
-                                    key={c.customer_id}
-                                    label={c.customer.name}
-                                    value={String(c.customer_id)}
-                                  />
-                                ))}
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                        )}
+                        <Input>
+                          <InputField
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. 300.00"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                          />
+                        </Input>
                         <FormControlError>
                           <FormControlErrorIcon as={AlertCircleIcon} />
                           <FormControlErrorText>
-                            {errors.user_id?.message}
+                            {errors.amount?.message}
                           </FormControlErrorText>
                         </FormControlError>
-                        {selectedClient && (
-                          <HStack
-                            style={{
-                              ...styles.debtBox,
-                              ...(hasNoPendingDebt && styles.debtBoxOk),
-                            }}
-                          >
-                            <Text
-                              style={{
-                                ...styles.debtLabel,
-                                ...(hasNoPendingDebt && styles.debtLabelOk),
-                              }}
-                            >
-                              {hasNoPendingDebt
-                                ? "Este cliente no tiene saldo pendiente"
-                                : "Saldo pendiente"}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.debtValue,
-                                hasNoPendingDebt && styles.debtLabelOk,
-                              ]}
-                            >
-                              {currencyFormat(selectedClient.credit_used)}
-                            </Text>
-                          </HStack>
-                        )}
                       </FormControl>
-                    );
-                  }}
-                />
+                    )}
+                  />
 
-                {/* Monto */}
-                <Controller
-                  control={control}
-                  name="amount"
-                  rules={{
-                    required: "El monto es obligatorio.",
-                    validate: (v) =>
-                      (Number.isFinite(parseFloat(v)) && parseFloat(v) > 0) ||
-                      "Ingresa un monto válido mayor a 0.",
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.amount}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Monto a abonar
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. 300.00"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          keyboardType="decimal-pad"
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors.amount?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
+                  {/* Plazo en días */}
+                  <Controller
+                    control={control}
+                    name="payment_term_days"
+                    rules={{
+                      required: "El plazo es obligatorio.",
+                      validate: (v) =>
+                        (Number.isInteger(parseInt(v)) && parseInt(v) >= 0) ||
+                        "Ingresa un plazo en días válido.",
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.payment_term_days}>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Aplazar el tiempo de pago (días)
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Input>
+                          <InputField
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. 15"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                          />
+                        </Input>
+                        <FormControlError>
+                          <FormControlErrorIcon as={AlertCircleIcon} />
+                          <FormControlErrorText>
+                            {errors.payment_term_days?.message}
+                          </FormControlErrorText>
+                        </FormControlError>
+                      </FormControl>
+                    )}
+                  />
 
-                {/* Plazo en días */}
-                <Controller
-                  control={control}
-                  name="payment_term_days"
-                  rules={{
-                    required: "El plazo es obligatorio.",
-                    validate: (v) =>
-                      (Number.isInteger(parseInt(v)) && parseInt(v) >= 0) ||
-                      "Ingresa un plazo en días válido.",
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.payment_term_days}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Aplazar el tiempo de pago (días)
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. 15"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          keyboardType="number-pad"
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors.payment_term_days?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
+                  {/* Descripción */}
+                  <Controller
+                    control={control}
+                    name="description"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl isInvalid={!!errors.description}>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Descripción{" "}
+                            <Text size="xs" style={{ color: "#999" }}>
+                              (opcional)
+                            </Text>
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Textarea>
+                          <TextareaInput
+                            style={{ color: "#171717" }}
+                            placeholder="Ej. Pago parcial, nuevo plazo acordado"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
+                        </Textarea>
+                      </FormControl>
+                    )}
+                  />
 
-                {/* Descripción */}
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl isInvalid={!!errors.description}>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Descripción{" "}
-                          <Text size="xs" style={{ color: "#999" }}>
-                            (opcional)
-                          </Text>
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Textarea>
-                        <TextareaInput
-                          style={{ color: "#171717" }}
-                          placeholder="Ej. Pago parcial, nuevo plazo acordado"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                      </Textarea>
-                    </FormControl>
-                  )}
-                />
-
-                <Button
-                  size="lg"
-                  className="mt-2 w-full"
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={post.isPending || hasNoPendingDebt}
-                >
-                  {post.isPending ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <ButtonText>
-                      {hasNoPendingDebt
-                        ? "Sin saldo pendiente"
-                        : "Confirmar abono"}
-                    </ButtonText>
-                  )}
-                </Button>
-              </VStack>
-            </Box>
-          </VStack>
+                  <Button
+                    size="lg"
+                    className="mt-2 w-full"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={post.isPending || hasNoPendingDebt}
+                  >
+                    {post.isPending ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <ButtonText>
+                        {hasNoPendingDebt
+                          ? "Sin saldo pendiente"
+                          : "Confirmar abono"}
+                      </ButtonText>
+                    )}
+                  </Button>
+                </VStack>
+              </Box>
+            </VStack>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

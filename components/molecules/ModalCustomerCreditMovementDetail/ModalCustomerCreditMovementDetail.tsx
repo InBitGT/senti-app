@@ -1,12 +1,13 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { CustomerCreditMovement } from "@/src/types/movement_credit/movement_credit";
@@ -122,70 +123,78 @@ export const ModalCustomerCreditMovementDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {data && (
-              <>
-                <SectionTitle title="Movimiento" />
-                <AmountBox
-                  movementType={data.movement_type}
-                  amount={data.amount}
-                  balanceAfter={data.balance_after}
-                />
-                <InfoRow label="Descripción" value={data.description ?? "—"} />
-                <InfoRow label="Orden asociada" value={data.order_id ?? "—"} />
-                <InfoRow
-                  label="Ajuste manual (override)"
-                  value={data.is_override}
-                />
-                {data.is_override && (
-                  <InfoRow
-                    label="Autorizado por"
-                    value={data.authorized_by ?? "—"}
+            <DesktopScrollView>
+              {data && (
+                <>
+                  <SectionTitle title="Movimiento" />
+                  <AmountBox
+                    movementType={data.movement_type}
+                    amount={data.amount}
+                    balanceAfter={data.balance_after}
                   />
-                )}
-                {data.payment_term_days !== null && (
                   <InfoRow
-                    label="Nuevo plazo acordado (días)"
-                    value={data.payment_term_days}
+                    label="Descripción"
+                    value={data.description ?? "—"}
                   />
-                )}
+                  <InfoRow
+                    label="Orden asociada"
+                    value={data.order_id ?? "—"}
+                  />
+                  <InfoRow
+                    label="Ajuste manual (override)"
+                    value={data.is_override}
+                  />
+                  {data.is_override && (
+                    <InfoRow
+                      label="Autorizado por"
+                      value={data.authorized_by ?? "—"}
+                    />
+                  )}
+                  {data.payment_term_days !== null && (
+                    <InfoRow
+                      label="Nuevo plazo acordado (días)"
+                      value={data.payment_term_days}
+                    />
+                  )}
 
-                <Divider />
+                  <Divider />
 
-                <SectionTitle title="Cliente" />
-                <InfoRow label="Nombre" value={data.customer?.name} />
-                <InfoRow
-                  label="Documento"
-                  value={
-                    data.customer
-                      ? `${data.customer.document_type} ${data.customer.document_number}`
-                      : "—"
-                  }
-                />
-                <InfoRow label="Teléfono" value={data.customer?.phone} />
+                  <SectionTitle title="Cliente" />
+                  <InfoRow label="Nombre" value={data.customer?.name} />
+                  <InfoRow
+                    label="Documento"
+                    value={
+                      data.customer
+                        ? `${data.customer.document_type} ${data.customer.document_number}`
+                        : "—"
+                    }
+                  />
+                  <InfoRow label="Teléfono" value={data.customer?.phone} />
 
-                <Divider />
+                  <Divider />
 
-                <SectionTitle title="Registrado por" />
-                <InfoRow
-                  label="Nombre"
-                  value={`${data.user?.first_name} ${data.user?.last_name}`}
-                />
-                <InfoRow label="Usuario" value={data.user?.username} />
-                <InfoRow label="Rol" value={data.user?.role_name} />
+                  <SectionTitle title="Registrado por" />
+                  <InfoRow
+                    label="Nombre"
+                    value={`${data.user?.first_name} ${data.user?.last_name}`}
+                  />
+                  <InfoRow label="Usuario" value={data.user?.username} />
+                  <InfoRow label="Rol" value={data.user?.role_name} />
 
-                <Divider />
+                  <Divider />
 
-                <SectionTitle title="Registro" />
-                <InfoRow
-                  label="Creado"
-                  value={new Date(data.created_at).toLocaleString("es-GT")}
-                />
-                <InfoRow
-                  label="Actualizado"
-                  value={new Date(data.update_at).toLocaleString("es-GT")}
-                />
-              </>
-            )}
+                  <SectionTitle title="Registro" />
+                  <InfoRow
+                    label="Creado"
+                    value={new Date(data.created_at).toLocaleString("es-GT")}
+                  />
+                  <InfoRow
+                    label="Actualizado"
+                    value={new Date(data.update_at).toLocaleString("es-GT")}
+                  />
+                </>
+              )}
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

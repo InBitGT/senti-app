@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalMovementDetail } from "@/components/molecules/ModalMovementDetail/ModalMovementDetail";
 import { MovementsTable } from "@/components/templates/MovementsTable/MovementsTable";
@@ -7,30 +8,29 @@ import { useState } from "react";
 import { ScrollView } from "react-native";
 
 export default function InventoryMovementsScreen() {
-    const [selected, setSelected] = useState<InventoryMovement | null>(null)
+  const [selected, setSelected] = useState<InventoryMovement | null>(null);
 
   const { data: movement, isLoading } = useMovement();
 
-  if (isLoading) return <TableSkeleton />
-
+  if (isLoading) return <TableSkeleton />;
 
   return (
-    <ScrollView style={{flex:1}}>
-
-    <MovementsTable
-      data={movement || []}
-      itemsPerPage={8}
-      onRowPress={(row) => {
-        setSelected(row)
-        }}
+    <ScrollView style={{ flex: 1 }}>
+      <DesktopScrollView>
+        <MovementsTable
+          data={movement || []}
+          itemsPerPage={8}
+          onRowPress={(row) => {
+            setSelected(row);
+          }}
         />
-
 
         <ModalMovementDetail
-        isOpen={!!selected}
-        onClose={() => setSelected(null)}
-        data={selected ?? undefined}
+          isOpen={!!selected}
+          onClose={() => setSelected(null)}
+          data={selected ?? undefined}
         />
+      </DesktopScrollView>
     </ScrollView>
   );
 }

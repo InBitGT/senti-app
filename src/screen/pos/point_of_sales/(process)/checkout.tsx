@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -339,441 +340,445 @@ export const Checkout: React.FC = () => {
       </HStack>
 
       <ScrollView className="flex-1 p-4">
-        <VStack space="lg">
-          {/* Resumen del pedido */}
-          <VStack className="rounded-xl border border-gray-200 bg-white">
-            <Text className="border-b border-gray-100 p-3 text-sm font-semibold text-gray-900">
-              Resumen del pedido
-            </Text>
-            {cart.map((line) => (
-              <HStack
-                key={`${line.product.product_id}-${line.unit.uom_id}`}
-                className="items-center justify-between border-b border-gray-100 p-3"
-              >
-                <VStack className="flex-1">
-                  <Text
-                    className="text-sm font-medium text-gray-900"
-                    numberOfLines={1}
-                  >
-                    {line.product.name}
-                  </Text>
-                  {/* `quantity` ya está en unidades base: se muestra junto
+        <DesktopScrollView>
+          <VStack space="lg">
+            {/* Resumen del pedido */}
+            <VStack className="rounded-xl border border-gray-200 bg-white">
+              <Text className="border-b border-gray-100 p-3 text-sm font-semibold text-gray-900">
+                Resumen del pedido
+              </Text>
+              {cart.map((line) => (
+                <HStack
+                  key={`${line.product.product_id}-${line.unit.uom_id}`}
+                  className="items-center justify-between border-b border-gray-100 p-3"
+                >
+                  <VStack className="flex-1">
+                    <Text
+                      className="text-sm font-medium text-gray-900"
+                      numberOfLines={1}
+                    >
+                      {line.product.name}
+                    </Text>
+                    {/* `quantity` ya está en unidades base: se muestra junto
                       al código de la unidad base, y si se compró en una
                       unidad distinta (ej. "Caja"), se aclara entre
                       paréntesis cuántas de esas representa. */}
-                  <Text className="text-xs text-gray-400">
-                    {line.quantity} {line.product.units[0]?.code}
-                    {line.unit.factorToBase !== 1 &&
-                      ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
-                    {" × "}
-                    {formatCurrency(line.product.price)}
+                    <Text className="text-xs text-gray-400">
+                      {line.quantity} {line.product.units[0]?.code}
+                      {line.unit.factorToBase !== 1 &&
+                        ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
+                      {" × "}
+                      {formatCurrency(line.product.price)}
+                    </Text>
+                  </VStack>
+                  <Text className="text-sm font-semibold text-gray-900">
+                    {formatCurrency(line.product.price * line.quantity)}
                   </Text>
-                </VStack>
-                <Text className="text-sm font-semibold text-gray-900">
-                  {formatCurrency(line.product.price * line.quantity)}
+                </HStack>
+              ))}
+              <HStack className="items-center justify-between p-3">
+                <Text className="text-base font-semibold text-gray-900">
+                  Total
+                </Text>
+                <Text className="text-lg font-semibold text-gray-900">
+                  {formatCurrency(total)}
                 </Text>
               </HStack>
-            ))}
-            <HStack className="items-center justify-between p-3">
-              <Text className="text-base font-semibold text-gray-900">
-                Total
-              </Text>
-              <Text className="text-lg font-semibold text-gray-900">
-                {formatCurrency(total)}
-              </Text>
-            </HStack>
-          </VStack>
+            </VStack>
 
-          {/* Cliente */}
-          <VStack
-            className="rounded-xl border border-gray-200 bg-white p-3"
-            space="sm"
-          >
-            <TouchableOpacity
-              onPress={() => setShowCustomer((v) => !v)}
-              className="flex-row items-center gap-2"
+            {/* Cliente */}
+            <VStack
+              className="rounded-xl border border-gray-200 bg-white p-3"
+              space="sm"
             >
-              <Text className="text-sm text-gray-500">Cliente:</Text>
-              <Text className="text-sm font-medium text-gray-900">
-                {selectedCustomer
-                  ? selectedCustomer.name
-                  : (customerTypes.find((t) => t.id === customerTypeId)?.name ??
-                    "Público general")}
-              </Text>
-              {creditAvailable && (
-                <HStack
-                  space="xs"
-                  className="items-center rounded bg-blue-50 px-1.5 py-0.5"
+              <TouchableOpacity
+                onPress={() => setShowCustomer((v) => !v)}
+                className="flex-row items-center gap-2"
+              >
+                <Text className="text-sm text-gray-500">Cliente:</Text>
+                <Text className="text-sm font-medium text-gray-900">
+                  {selectedCustomer
+                    ? selectedCustomer.name
+                    : (customerTypes.find((t) => t.id === customerTypeId)
+                        ?.name ?? "Público general")}
+                </Text>
+                {creditAvailable && (
+                  <HStack
+                    space="xs"
+                    className="items-center rounded bg-blue-50 px-1.5 py-0.5"
+                  >
+                    <Icon as={CreditCard} size="xs" className="text-blue-600" />
+                    <Text className="text-[10px] font-medium text-blue-600">
+                      disponible{" "}
+                      {formatCurrency(selectedCredit?.credit_available ?? 0)}
+                    </Text>
+                  </HStack>
+                )}
+                <HStack space="xs" className="ml-auto items-center">
+                  <Icon as={Pencil} size="xs" className="text-blue-600" />
+                  <Text className="text-xs font-medium text-blue-600">
+                    {customerId == null ? "Cambiar" : "Editar"}
+                  </Text>
+                </HStack>
+              </TouchableOpacity>
+
+              {showCustomer && (
+                <VStack space="sm" className="border-t border-gray-100 pt-3">
+                  <Text className="text-xs font-medium text-gray-500">
+                    Tipo de cliente
+                  </Text>
+                  <HStack space="xs">
+                    {customerTypes.map((t) => {
+                      const active =
+                        customerId == null && customerTypeId === t.id;
+                      return (
+                        <TouchableOpacity
+                          key={t.id}
+                          onPress={() => {
+                            setCustomerId(null);
+                            setCustomerTypeId(t.id);
+                          }}
+                        >
+                          <Box
+                            className={`rounded-md border px-2.5 py-1.5 ${
+                              active
+                                ? "border-blue-600 bg-blue-600"
+                                : "border-gray-300 bg-white"
+                            }`}
+                          >
+                            <Text
+                              className={`text-xs font-medium ${
+                                active ? "text-white" : "text-gray-700"
+                              }`}
+                            >
+                              {t.name}
+                            </Text>
+                          </Box>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </HStack>
+
+                  <Text className="text-xs font-medium text-gray-500">
+                    Cliente específico (habilita crédito si aplica)
+                  </Text>
+                  <Select
+                    selectedValue={customerId != null ? String(customerId) : ""}
+                    onValueChange={(v) => setCustomerId(v ? Number(v) : null)}
+                  >
+                    <SelectTrigger
+                      variant="outline"
+                      size="sm"
+                      className="justify-between border-gray-300 bg-white"
+                    >
+                      <SelectInput
+                        placeholder="Sin cliente asignado"
+                        value={selectedCustomer?.name ?? ""}
+                        className="text-sm text-gray-900"
+                      />
+                      <Icon
+                        as={ChevronDown}
+                        size="xs"
+                        className="mr-2 text-gray-400"
+                      />
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectBackdrop />
+                      <SelectContent className="bg-white">
+                        <SelectDragIndicatorWrapper>
+                          <SelectDragIndicator />
+                        </SelectDragIndicatorWrapper>
+                        <SelectItem label="Sin cliente asignado" value="" />
+                        {(customerCredits ?? []).map((c) => (
+                          <SelectItem
+                            key={c.id}
+                            label={`${c.customer.name}${
+                              c.customer.document_number
+                                ? " · " + c.customer.document_number
+                                : ""
+                            }`}
+                            value={String(c.customer_id)}
+                          />
+                        ))}
+                      </SelectContent>
+                    </SelectPortal>
+                  </Select>
+                </VStack>
+              )}
+            </VStack>
+
+            {/* Métodos de pago */}
+            <VStack
+              className="rounded-xl border border-gray-200 bg-white p-3"
+              space="sm"
+            >
+              <HStack className="items-center justify-between">
+                <Text className="text-sm font-semibold text-gray-900">
+                  Método de pago
+                </Text>
+                <TouchableOpacity
+                  onPress={addEntry}
+                  className="flex-row items-center gap-1 rounded-md border border-gray-300 px-2 py-1"
                 >
-                  <Icon as={CreditCard} size="xs" className="text-blue-600" />
-                  <Text className="text-[10px] font-medium text-blue-600">
-                    disponible{" "}
-                    {formatCurrency(selectedCredit?.credit_available ?? 0)}
+                  <Icon as={Plus} size="xs" className="text-gray-700" />
+                  <Text className="text-xs font-medium text-gray-700">
+                    Dividir pago
+                  </Text>
+                </TouchableOpacity>
+              </HStack>
+
+              {isLoadingPayment && (
+                <HStack space="xs" className="items-center py-2">
+                  <Spinner size="small" />
+                  <Text className="text-xs text-gray-400">
+                    Cargando métodos de pago...
                   </Text>
                 </HStack>
               )}
-              <HStack space="xs" className="ml-auto items-center">
-                <Icon as={Pencil} size="xs" className="text-blue-600" />
-                <Text className="text-xs font-medium text-blue-600">
-                  {customerId == null ? "Cambiar" : "Editar"}
-                </Text>
-              </HStack>
-            </TouchableOpacity>
 
-            {showCustomer && (
-              <VStack space="sm" className="border-t border-gray-100 pt-3">
-                <Text className="text-xs font-medium text-gray-500">
-                  Tipo de cliente
-                </Text>
-                <HStack space="xs">
-                  {customerTypes.map((t) => {
-                    const active =
-                      customerId == null && customerTypeId === t.id;
-                    return (
-                      <TouchableOpacity
-                        key={t.id}
-                        onPress={() => {
-                          setCustomerId(null);
-                          setCustomerTypeId(t.id);
-                        }}
-                      >
-                        <Box
-                          className={`rounded-md border px-2.5 py-1.5 ${
-                            active
-                              ? "border-blue-600 bg-blue-600"
-                              : "border-gray-300 bg-white"
-                          }`}
-                        >
-                          <Text
-                            className={`text-xs font-medium ${
-                              active ? "text-white" : "text-gray-700"
-                            }`}
-                          >
-                            {t.name}
-                          </Text>
-                        </Box>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </HStack>
+              {entries.map((entry) => {
+                const cash = isCashMethod(methodById(entry.paymentMethodId));
+                // Con un solo método, el monto es fijo (100% del total) y no
+                // se puede tocar; recién se habilita a escribir al dividir.
+                const amountEditable = !singleMethod;
+                const displayedAmount = singleMethod
+                  ? total.toFixed(2)
+                  : entry.amount;
 
-                <Text className="text-xs font-medium text-gray-500">
-                  Cliente específico (habilita crédito si aplica)
-                </Text>
-                <Select
-                  selectedValue={customerId != null ? String(customerId) : ""}
-                  onValueChange={(v) => setCustomerId(v ? Number(v) : null)}
-                >
-                  <SelectTrigger
-                    variant="outline"
-                    size="sm"
-                    className="justify-between border-gray-300 bg-white"
+                return (
+                  <VStack
+                    key={entry.key}
+                    space="xs"
+                    className="rounded-lg border border-gray-100 p-2"
                   >
-                    <SelectInput
-                      placeholder="Sin cliente asignado"
-                      value={selectedCustomer?.name ?? ""}
-                      className="text-sm text-gray-900"
-                    />
-                    <Icon
-                      as={ChevronDown}
-                      size="xs"
-                      className="mr-2 text-gray-400"
-                    />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent className="bg-white">
-                      <SelectDragIndicatorWrapper>
-                        <SelectDragIndicator />
-                      </SelectDragIndicatorWrapper>
-                      <SelectItem label="Sin cliente asignado" value="" />
-                      {(customerCredits ?? []).map((c) => (
-                        <SelectItem
-                          key={c.id}
-                          label={`${c.customer.name}${
-                            c.customer.document_number
-                              ? " · " + c.customer.document_number
-                              : ""
-                          }`}
-                          value={String(c.customer_id)}
-                        />
-                      ))}
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
-              </VStack>
-            )}
-          </VStack>
+                    <HStack space="xs" className="items-center">
+                      <Select
+                        selectedValue={
+                          entry.isCredit
+                            ? "credit"
+                            : String(entry.paymentMethodId ?? "")
+                        }
+                        onValueChange={(v) =>
+                          v === "credit"
+                            ? setEntryCredit(entry.key)
+                            : setEntryMethod(entry.key, Number(v))
+                        }
+                        className="flex-1"
+                      >
+                        <SelectTrigger
+                          variant="outline"
+                          size="sm"
+                          className="justify-between border-gray-300 bg-white"
+                        >
+                          <SelectInput
+                            value={
+                              entry.isCredit
+                                ? "Crédito"
+                                : (methodById(entry.paymentMethodId)?.method ??
+                                  "")
+                            }
+                            className="text-sm text-gray-900"
+                          />
+                          <Icon
+                            as={ChevronDown}
+                            size="xs"
+                            className="mr-2 text-gray-400"
+                          />
+                        </SelectTrigger>
+                        <SelectPortal>
+                          <SelectBackdrop />
+                          <SelectContent className="bg-white">
+                            <SelectDragIndicatorWrapper>
+                              <SelectDragIndicator />
+                            </SelectDragIndicatorWrapper>
+                            {methods.map((m) => (
+                              <SelectItem
+                                key={m.id}
+                                label={m.method}
+                                value={String(m.id)}
+                              />
+                            ))}
+                            {/* Crédito solo aparece si hay un cliente con crédito habilitado y saldo disponible */}
+                            {creditAvailable && (
+                              <SelectItem label="Crédito" value="credit" />
+                            )}
+                          </SelectContent>
+                        </SelectPortal>
+                      </Select>
 
-          {/* Métodos de pago */}
-          <VStack
-            className="rounded-xl border border-gray-200 bg-white p-3"
-            space="sm"
-          >
-            <HStack className="items-center justify-between">
-              <Text className="text-sm font-semibold text-gray-900">
-                Método de pago
-              </Text>
-              <TouchableOpacity
-                onPress={addEntry}
-                className="flex-row items-center gap-1 rounded-md border border-gray-300 px-2 py-1"
-              >
-                <Icon as={Plus} size="xs" className="text-gray-700" />
-                <Text className="text-xs font-medium text-gray-700">
-                  Dividir pago
-                </Text>
-              </TouchableOpacity>
-            </HStack>
-
-            {isLoadingPayment && (
-              <HStack space="xs" className="items-center py-2">
-                <Spinner size="small" />
-                <Text className="text-xs text-gray-400">
-                  Cargando métodos de pago...
-                </Text>
-              </HStack>
-            )}
-
-            {entries.map((entry) => {
-              const cash = isCashMethod(methodById(entry.paymentMethodId));
-              // Con un solo método, el monto es fijo (100% del total) y no
-              // se puede tocar; recién se habilita a escribir al dividir.
-              const amountEditable = !singleMethod;
-              const displayedAmount = singleMethod
-                ? total.toFixed(2)
-                : entry.amount;
-
-              return (
-                <VStack
-                  key={entry.key}
-                  space="xs"
-                  className="rounded-lg border border-gray-100 p-2"
-                >
-                  <HStack space="xs" className="items-center">
-                    <Select
-                      selectedValue={
-                        entry.isCredit
-                          ? "credit"
-                          : String(entry.paymentMethodId ?? "")
-                      }
-                      onValueChange={(v) =>
-                        v === "credit"
-                          ? setEntryCredit(entry.key)
-                          : setEntryMethod(entry.key, Number(v))
-                      }
-                      className="flex-1"
-                    >
-                      <SelectTrigger
+                      <Input
                         variant="outline"
                         size="sm"
-                        className="justify-between border-gray-300 bg-white"
+                        isReadOnly={!amountEditable}
+                        className={`flex-1 border-gray-300 ${
+                          amountEditable ? "bg-white" : "bg-gray-100"
+                        }`}
                       >
-                        <SelectInput
-                          value={
-                            entry.isCredit
-                              ? "Crédito"
-                              : (methodById(entry.paymentMethodId)?.method ??
-                                "")
+                        <InputField
+                          value={displayedAmount}
+                          onChangeText={
+                            amountEditable
+                              ? (v) =>
+                                  updateEntry(entry.key, {
+                                    amount: sanitizeDecimal(v),
+                                  })
+                              : undefined
                           }
+                          editable={amountEditable}
+                          placeholder="0.00"
+                          keyboardType="decimal-pad"
+                          className={`text-sm ${
+                            amountEditable ? "text-gray-900" : "text-gray-500"
+                          }`}
+                        />
+                      </Input>
+
+                      {entries.length > 1 && (
+                        <TouchableOpacity
+                          onPress={() => removeEntry(entry.key)}
+                        >
+                          <Icon as={X} size="sm" className="text-gray-400" />
+                        </TouchableOpacity>
+                      )}
+                    </HStack>
+
+                    {!entry.isCredit && cash && (
+                      <Input
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-300 bg-white"
+                      >
+                        <InputField
+                          value={entry.amountReceived}
+                          onChangeText={(v) =>
+                            updateEntry(entry.key, {
+                              amountReceived: sanitizeDecimal(v),
+                            })
+                          }
+                          placeholder="Efectivo recibido (para calcular cambio)"
+                          keyboardType="decimal-pad"
                           className="text-sm text-gray-900"
                         />
-                        <Icon
-                          as={ChevronDown}
-                          size="xs"
-                          className="mr-2 text-gray-400"
-                        />
-                      </SelectTrigger>
-                      <SelectPortal>
-                        <SelectBackdrop />
-                        <SelectContent className="bg-white">
-                          <SelectDragIndicatorWrapper>
-                            <SelectDragIndicator />
-                          </SelectDragIndicatorWrapper>
-                          {methods.map((m) => (
-                            <SelectItem
-                              key={m.id}
-                              label={m.method}
-                              value={String(m.id)}
-                            />
-                          ))}
-                          {/* Crédito solo aparece si hay un cliente con crédito habilitado y saldo disponible */}
-                          {creditAvailable && (
-                            <SelectItem label="Crédito" value="credit" />
-                          )}
-                        </SelectContent>
-                      </SelectPortal>
-                    </Select>
-
-                    <Input
-                      variant="outline"
-                      size="sm"
-                      isReadOnly={!amountEditable}
-                      className={`flex-1 border-gray-300 ${
-                        amountEditable ? "bg-white" : "bg-gray-100"
-                      }`}
-                    >
-                      <InputField
-                        value={displayedAmount}
-                        onChangeText={
-                          amountEditable
-                            ? (v) =>
-                                updateEntry(entry.key, {
-                                  amount: sanitizeDecimal(v),
-                                })
-                            : undefined
-                        }
-                        editable={amountEditable}
-                        placeholder="0.00"
-                        keyboardType="decimal-pad"
-                        className={`text-sm ${
-                          amountEditable ? "text-gray-900" : "text-gray-500"
-                        }`}
-                      />
-                    </Input>
-
-                    {entries.length > 1 && (
-                      <TouchableOpacity onPress={() => removeEntry(entry.key)}>
-                        <Icon as={X} size="sm" className="text-gray-400" />
-                      </TouchableOpacity>
+                      </Input>
                     )}
-                  </HStack>
 
-                  {!entry.isCredit && cash && (
-                    <Input
-                      variant="outline"
-                      size="sm"
-                      className="border-gray-300 bg-white"
-                    >
-                      <InputField
-                        value={entry.amountReceived}
-                        onChangeText={(v) =>
-                          updateEntry(entry.key, {
-                            amountReceived: sanitizeDecimal(v),
-                          })
-                        }
-                        placeholder="Efectivo recibido (para calcular cambio)"
-                        keyboardType="decimal-pad"
-                        className="text-sm text-gray-900"
-                      />
-                    </Input>
-                  )}
+                    {!entry.isCredit && !cash && (
+                      <Input
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-300 bg-white"
+                      >
+                        <InputField
+                          value={entry.reference}
+                          onChangeText={(v) =>
+                            updateEntry(entry.key, { reference: v })
+                          }
+                          placeholder="Referencia (opcional)"
+                          className="text-sm text-gray-900"
+                        />
+                      </Input>
+                    )}
+                  </VStack>
+                );
+              })}
 
-                  {!entry.isCredit && !cash && (
-                    <Input
-                      variant="outline"
-                      size="sm"
-                      className="border-gray-300 bg-white"
-                    >
-                      <InputField
-                        value={entry.reference}
-                        onChangeText={(v) =>
-                          updateEntry(entry.key, { reference: v })
-                        }
-                        placeholder="Referencia (opcional)"
-                        className="text-sm text-gray-900"
-                      />
-                    </Input>
-                  )}
-                </VStack>
-              );
-            })}
+              <VStack space="xs">
+                {remaining > 0.005 ? (
+                  <Text className="text-sm font-medium text-red-600">
+                    Faltan {formatCurrency(remaining)}
+                  </Text>
+                ) : cashChange > 0.005 ? (
+                  <Text className="text-sm font-medium text-blue-600">
+                    Cambio: {formatCurrency(cashChange)}
+                  </Text>
+                ) : null}
 
-            <VStack space="xs">
-              {remaining > 0.005 ? (
-                <Text className="text-sm font-medium text-red-600">
-                  Faltan {formatCurrency(remaining)}
-                </Text>
-              ) : cashChange > 0.005 ? (
-                <Text className="text-sm font-medium text-blue-600">
-                  Cambio: {formatCurrency(cashChange)}
-                </Text>
-              ) : null}
+                {creditUsed > 0 && (
+                  <Text
+                    className={`flex-row items-center text-xs ${
+                      creditOverLimit ? "text-red-600" : "text-gray-500"
+                    }`}
+                  >
+                    Crédito: {formatCurrency(creditUsed)} de{" "}
+                    {formatCurrency(selectedCredit?.credit_available ?? 0)}{" "}
+                    disponibles
+                    {creditOverLimit && " · excede lo disponible"}
+                  </Text>
+                )}
+              </VStack>
 
-              {creditUsed > 0 && (
-                <Text
-                  className={`flex-row items-center text-xs ${
-                    creditOverLimit ? "text-red-600" : "text-gray-500"
-                  }`}
-                >
-                  Crédito: {formatCurrency(creditUsed)} de{" "}
-                  {formatCurrency(selectedCredit?.credit_available ?? 0)}{" "}
-                  disponibles
-                  {creditOverLimit && " · excede lo disponible"}
+              {!creditAvailable && (
+                <Text className="text-xs text-gray-400">
+                  El crédito solo está disponible seleccionando un cliente con
+                  crédito habilitado y saldo disponible arriba.
                 </Text>
               )}
             </VStack>
 
-            {!creditAvailable && (
-              <Text className="text-xs text-gray-400">
-                El crédito solo está disponible seleccionando un cliente con
-                crédito habilitado y saldo disponible arriba.
-              </Text>
-            )}
-          </VStack>
-
-          {/* Documento fiscal */}
-          <VStack
-            className="rounded-xl border border-gray-200 bg-white p-3"
-            space="sm"
-          >
-            <TouchableOpacity
-              onPress={() => setGenerateFiscal((v) => !v)}
-              className="flex-row items-center gap-2"
+            {/* Documento fiscal */}
+            <VStack
+              className="rounded-xl border border-gray-200 bg-white p-3"
+              space="sm"
             >
-              <Box
-                className={`h-5 w-5 items-center justify-center rounded border ${
-                  generateFiscal
-                    ? "border-blue-600 bg-blue-600"
-                    : "border-gray-300 bg-white"
-                }`}
+              <TouchableOpacity
+                onPress={() => setGenerateFiscal((v) => !v)}
+                className="flex-row items-center gap-2"
               >
-                {generateFiscal && (
-                  <Text className="text-xs text-white">✓</Text>
-                )}
-              </Box>
-              <Icon as={FileText} size="sm" className="text-gray-500" />
-              <Text className="text-sm font-medium text-gray-900">
-                Generar documento fiscal (factura)
-              </Text>
-            </TouchableOpacity>
+                <Box
+                  className={`h-5 w-5 items-center justify-center rounded border ${
+                    generateFiscal
+                      ? "border-blue-600 bg-blue-600"
+                      : "border-gray-300 bg-white"
+                  }`}
+                >
+                  {generateFiscal && (
+                    <Text className="text-xs text-white">✓</Text>
+                  )}
+                </Box>
+                <Icon as={FileText} size="sm" className="text-gray-500" />
+                <Text className="text-sm font-medium text-gray-900">
+                  Generar documento fiscal (factura)
+                </Text>
+              </TouchableOpacity>
 
-            {generateFiscal && (
-              <VStack space="xs">
-                <Input
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-300 bg-white"
-                >
-                  <InputField
-                    value={fiscalNit}
-                    onChangeText={(v) => setFiscalNit(sanitizeDigits(v))}
-                    placeholder="NIT del cliente"
-                    keyboardType="number-pad"
-                    className="text-sm text-gray-900"
-                  />
-                </Input>
-                <Input
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-300 bg-white"
-                >
-                  <InputField
-                    value={fiscalName}
-                    onChangeText={setFiscalName}
-                    placeholder="Nombre del cliente"
-                    className="text-sm text-gray-900"
-                  />
-                </Input>
-              </VStack>
+              {generateFiscal && (
+                <VStack space="xs">
+                  <Input
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-300 bg-white"
+                  >
+                    <InputField
+                      value={fiscalNit}
+                      onChangeText={(v) => setFiscalNit(sanitizeDigits(v))}
+                      placeholder="NIT del cliente"
+                      keyboardType="number-pad"
+                      className="text-sm text-gray-900"
+                    />
+                  </Input>
+                  <Input
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-300 bg-white"
+                  >
+                    <InputField
+                      value={fiscalName}
+                      onChangeText={setFiscalName}
+                      placeholder="Nombre del cliente"
+                      className="text-sm text-gray-900"
+                    />
+                  </Input>
+                </VStack>
+              )}
+            </VStack>
+
+            {checkout.isError && (
+              <Text className="text-sm font-medium text-red-600">
+                No se pudo registrar la venta. Intenta de nuevo.
+              </Text>
             )}
           </VStack>
-
-          {checkout.isError && (
-            <Text className="text-sm font-medium text-red-600">
-              No se pudo registrar la venta. Intenta de nuevo.
-            </Text>
-          )}
-        </VStack>
+        </DesktopScrollView>
       </ScrollView>
 
       <VStack className="border-t border-gray-200 bg-white p-4">

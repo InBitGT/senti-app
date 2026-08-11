@@ -1,12 +1,13 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
@@ -102,29 +103,34 @@ export const ModalUnitDetail: React.FC<Props> = ({ isOpen, onClose, data }) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1 }}
           >
-            <SectionTitle title="General" />
-            <InfoRow label="Nombre" value={data?.name} />
-            <InfoRow label="Código" value={data?.code} />
-            <InfoRow
-              label="Tipo"
-              value={
-                data?.uom_type
-                  ? (UOM_TYPE_LABELS[data.uom_type] ?? data.uom_type)
-                  : undefined
-              }
-            />
-            <InfoRow label="Estado" value={data?.status} />
+            <DesktopScrollView>
+              <SectionTitle title="General" />
+              <InfoRow label="Nombre" value={data?.name} />
+              <InfoRow label="Código" value={data?.code} />
+              <InfoRow
+                label="Tipo"
+                value={
+                  data?.uom_type
+                    ? (UOM_TYPE_LABELS[data.uom_type] ?? data.uom_type)
+                    : undefined
+                }
+              />
+              <InfoRow label="Estado" value={data?.status} />
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            <SectionTitle title="Metadatos" />
-            <InfoRow label="ID" value={data?.id} />
-            <InfoRow label="Tenant" value={data?.tenant_id} />
-            <InfoRow label="Creado" value={formatDateTime(data?.created_at)} />
-            <InfoRow
-              label="Actualizado"
-              value={formatDateTime(data?.update_at)}
-            />
+              <SectionTitle title="Metadatos" />
+              <InfoRow label="ID" value={data?.id} />
+              <InfoRow label="Tenant" value={data?.tenant_id} />
+              <InfoRow
+                label="Creado"
+                value={formatDateTime(data?.created_at)}
+              />
+              <InfoRow
+                label="Actualizado"
+                value={formatDateTime(data?.update_at)}
+              />
+            </DesktopScrollView>
           </ScrollView>
         </ModalBody>
 

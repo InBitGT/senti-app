@@ -1,17 +1,18 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalInventoryStockDetail } from "@/components/molecules/ModalInventory/ModalInventory";
 import { InventoryStockTable } from "@/components/templates/InventoryStockTable/InventoryStockTable";
 import { HStack } from "@/components/ui/hstack";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { VStack } from "@/components/ui/vstack";
 import { useInventory } from "@/src/hooks/useInventory/useInventory";
@@ -100,93 +101,95 @@ export const InventoryStockScreen: React.FC = () => {
   console.log(stock, "stock");
   return (
     <ScrollView style={{ flex: 1 }}>
-      {!hideBranchWarehouseSelects && (
-        <VStack className="px-4 pt-6 md:px-10 gap-2">
-          <HStack className="items-center gap-2">
-            {/* Sucursal — solo si el usuario tiene acceso a más de una */}
-            {branchOptions.length > 1 && (
-              <View style={{ width: 220 }}>
-                <Select
-                  selectedValue={selectedBranchId}
-                  onValueChange={setSelectedBranchId}
-                >
-                  <SelectTrigger>
-                    <SelectInput
-                      style={{ color: "#000" }}
-                      placeholder="Selecciona una sucursal"
-                      value={selectedBranchLabel}
-                    />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      <SelectDragIndicatorWrapper>
-                        <SelectDragIndicator />
-                      </SelectDragIndicatorWrapper>
-                      {branchOptions.map((b) => (
-                        <SelectItem
-                          key={b.id}
-                          label={b.name}
-                          value={String(b.id)}
-                        />
-                      ))}
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
-              </View>
-            )}
+      <DesktopScrollView>
+        {!hideBranchWarehouseSelects && (
+          <VStack className="px-4 pt-6 md:px-10 gap-2">
+            <HStack className="items-center gap-2">
+              {/* Sucursal — solo si el usuario tiene acceso a más de una */}
+              {branchOptions.length > 1 && (
+                <View style={{ width: 220 }}>
+                  <Select
+                    selectedValue={selectedBranchId}
+                    onValueChange={setSelectedBranchId}
+                  >
+                    <SelectTrigger>
+                      <SelectInput
+                        style={{ color: "#000" }}
+                        placeholder="Selecciona una sucursal"
+                        value={selectedBranchLabel}
+                      />
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectBackdrop />
+                      <SelectContent>
+                        <SelectDragIndicatorWrapper>
+                          <SelectDragIndicator />
+                        </SelectDragIndicatorWrapper>
+                        {branchOptions.map((b) => (
+                          <SelectItem
+                            key={b.id}
+                            label={b.name}
+                            value={String(b.id)}
+                          />
+                        ))}
+                      </SelectContent>
+                    </SelectPortal>
+                  </Select>
+                </View>
+              )}
 
-            {/* Bodega — solo si la sucursal seleccionada tiene más de una */}
-            {warehouseOptionsForBranch.length > 1 && (
-              <View style={{ width: 220 }}>
-                <Select
-                  selectedValue={selectedWarehouseId}
-                  onValueChange={setSelectedWarehouseId}
-                >
-                  <SelectTrigger>
-                    <SelectInput
-                      style={{ color: "#000" }}
-                      placeholder="Selecciona una bodega"
-                      value={selectedWarehouseLabel}
-                    />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      <SelectDragIndicatorWrapper>
-                        <SelectDragIndicator />
-                      </SelectDragIndicatorWrapper>
-                      {warehouseOptionsForBranch.map((w) => (
-                        <SelectItem
-                          key={w.warehouse_id}
-                          label={w.warehouse_name}
-                          value={String(w.warehouse_id)}
-                        />
-                      ))}
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
-              </View>
-            )}
-          </HStack>
-        </VStack>
-      )}
+              {/* Bodega — solo si la sucursal seleccionada tiene más de una */}
+              {warehouseOptionsForBranch.length > 1 && (
+                <View style={{ width: 220 }}>
+                  <Select
+                    selectedValue={selectedWarehouseId}
+                    onValueChange={setSelectedWarehouseId}
+                  >
+                    <SelectTrigger>
+                      <SelectInput
+                        style={{ color: "#000" }}
+                        placeholder="Selecciona una bodega"
+                        value={selectedWarehouseLabel}
+                      />
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectBackdrop />
+                      <SelectContent>
+                        <SelectDragIndicatorWrapper>
+                          <SelectDragIndicator />
+                        </SelectDragIndicatorWrapper>
+                        {warehouseOptionsForBranch.map((w) => (
+                          <SelectItem
+                            key={w.warehouse_id}
+                            label={w.warehouse_name}
+                            value={String(w.warehouse_id)}
+                          />
+                        ))}
+                      </SelectContent>
+                    </SelectPortal>
+                  </Select>
+                </View>
+              )}
+            </HStack>
+          </VStack>
+        )}
 
-      {isLoading ? (
-        <TableSkeleton />
-      ) : (
-        <InventoryStockTable
-          data={stock || []}
-          itemsPerPage={8}
-          onRowPress={handleRowPress}
+        {isLoading ? (
+          <TableSkeleton />
+        ) : (
+          <InventoryStockTable
+            data={stock || []}
+            itemsPerPage={8}
+            onRowPress={handleRowPress}
+          />
+        )}
+
+        <ModalInventoryStockDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
         />
-      )}
-
-      <ModalInventoryStockDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
+      </DesktopScrollView>
     </ScrollView>
   );
 };

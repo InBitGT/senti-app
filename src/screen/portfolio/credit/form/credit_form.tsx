@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -145,273 +146,279 @@ export default function CustomerCreditForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
-            onPress={() => {
-              clearData();
-              setIsEdit(false);
-              router.back();
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
-
-          <Center>
-            <Box
-              style={styles.card}
-              className="w-full bg-white rounded-[20px] py-8 px-7"
+          <DesktopScrollView>
+            <Pressable
+              onPress={() => {
+                clearData();
+                setIsEdit(false);
+                router.back();
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
             >
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                {isEdit ? "Editar Crédito" : "Asignar Crédito"}
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                {isEdit
-                  ? "Modifica las condiciones de crédito del cliente"
-                  : "Asigna condiciones de crédito a un cliente"}
+              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+                Regresar
               </Text>
+            </Pressable>
 
-              <VStack space="lg">
-                {/* Cliente */}
-                <Controller
-                  control={control}
-                  name="customer_id"
-                  rules={{ required: "El cliente es obligatorio." }}
-                  render={({ field: { onChange, value } }) => {
-                    const selectedLabel =
-                      customerData?.find((c) => String(c.id) === value)?.name ||
-                      "";
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  {isEdit ? "Editar Crédito" : "Asignar Crédito"}
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  {isEdit
+                    ? "Modifica las condiciones de crédito del cliente"
+                    : "Asigna condiciones de crédito a un cliente"}
+                </Text>
 
-                    return (
-                      <FormControl isInvalid={!!errors.customer_id}>
-                        <FormControlLabel>
+                <VStack space="lg">
+                  {/* Cliente */}
+                  <Controller
+                    control={control}
+                    name="customer_id"
+                    rules={{ required: "El cliente es obligatorio." }}
+                    render={({ field: { onChange, value } }) => {
+                      const selectedLabel =
+                        customerData?.find((c) => String(c.id) === value)
+                          ?.name || "";
+
+                      return (
+                        <FormControl isInvalid={!!errors.customer_id}>
+                          <FormControlLabel>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Cliente
+                            </FormControlLabelText>
+                          </FormControlLabel>
+                          {isLoadingCustomer ? (
+                            <View style={{ paddingVertical: 10 }}>
+                              <ActivityIndicator size="small" />
+                            </View>
+                          ) : (
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                              isDisabled={isEdit}
+                            >
+                              <SelectTrigger>
+                                <SelectInput
+                                  style={{ color: "#000" }}
+                                  placeholder="Selecciona un cliente"
+                                  value={selectedLabel}
+                                />
+                              </SelectTrigger>
+                              <SelectPortal>
+                                <SelectBackdrop />
+                                <SelectContent>
+                                  <SelectDragIndicatorWrapper>
+                                    <SelectDragIndicator />
+                                  </SelectDragIndicatorWrapper>
+                                  {(customerData ?? []).map((c) => (
+                                    <SelectItem
+                                      key={c.id}
+                                      label={c.name}
+                                      value={String(c.id)}
+                                    />
+                                  ))}
+                                </SelectContent>
+                              </SelectPortal>
+                            </Select>
+                          )}
+                          <FormControlError>
+                            <FormControlErrorIcon as={AlertCircleIcon} />
+                            <FormControlErrorText>
+                              {errors.customer_id?.message}
+                            </FormControlErrorText>
+                          </FormControlError>
+                        </FormControl>
+                      );
+                    }}
+                  />
+
+                  {/* Tiene crédito */}
+                  <Controller
+                    control={control}
+                    name="has_credit"
+                    render={({ field: { onChange, value } }) => (
+                      <FormControl>
+                        <HStack
+                          style={{
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
                           <FormControlLabelText style={{ color: "#000" }}>
-                            Cliente
+                            Habilitar crédito
                           </FormControlLabelText>
-                        </FormControlLabel>
-                        {isLoadingCustomer ? (
-                          <View style={{ paddingVertical: 10 }}>
-                            <ActivityIndicator size="small" />
-                          </View>
-                        ) : (
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                            isDisabled={isEdit}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Selecciona un cliente"
-                                value={selectedLabel}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                {(customerData ?? []).map((c) => (
-                                  <SelectItem
-                                    key={c.id}
-                                    label={c.name}
-                                    value={String(c.id)}
-                                  />
-                                ))}
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                        )}
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.customer_id?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
+                          <Switch value={value} onValueChange={onChange} />
+                        </HStack>
                       </FormControl>
-                    );
-                  }}
-                />
+                    )}
+                  />
 
-                {/* Tiene crédito */}
-                <Controller
-                  control={control}
-                  name="has_credit"
-                  render={({ field: { onChange, value } }) => (
-                    <FormControl>
+                  {/* Límite + Plazo */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="credit_limit"
+                        rules={{
+                          required: "El límite de crédito es obligatorio.",
+                          validate: (v) =>
+                            !isNaN(parseFloat(v)) ||
+                            "Debe ser un número válido.",
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.credit_limit}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Límite de crédito (Q)
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 500"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                                editable={hasCreditValue}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.credit_limit?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="payment_term_days"
+                        rules={{
+                          required: "El plazo de pago es obligatorio.",
+                          validate: (v) =>
+                            !isNaN(parseInt(v)) || "Debe ser un número entero.",
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.payment_term_days}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Plazo de pago (días)
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 30"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="number-pad"
+                                editable={hasCreditValue}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.payment_term_days?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Info de solo lectura al editar: disponible / usado los calcula el servidor */}
+                  {isEdit && data && (
+                    <View style={styles.readonlyBox}>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#6b7280",
+                          marginBottom: 4,
+                        }}
+                      >
+                        Calculado por el sistema (no editable aquí)
+                      </Text>
+                      <HStack style={{ justifyContent: "space-between" }}>
+                        <Text style={{ fontSize: 13, color: "#111827" }}>
+                          Disponible
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            color: "#16a34a",
+                            fontWeight: "600",
+                          }}
+                        >
+                          {formatCurrency(data.credit_available)}
+                        </Text>
+                      </HStack>
                       <HStack
                         style={{
                           justifyContent: "space-between",
-                          alignItems: "center",
+                          marginTop: 4,
                         }}
                       >
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Habilitar crédito
-                        </FormControlLabelText>
-                        <Switch value={value} onValueChange={onChange} />
+                        <Text style={{ fontSize: 13, color: "#111827" }}>
+                          Usado
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            color: "#dc2626",
+                            fontWeight: "600",
+                          }}
+                        >
+                          {formatCurrency(data.credit_used)}
+                        </Text>
                       </HStack>
-                    </FormControl>
+                    </View>
                   )}
-                />
 
-                {/* Límite + Plazo */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="credit_limit"
-                      rules={{
-                        required: "El límite de crédito es obligatorio.",
-                        validate: (v) =>
-                          !isNaN(parseFloat(v)) || "Debe ser un número válido.",
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.credit_limit}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Límite de crédito (Q)
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. 500"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              keyboardType="decimal-pad"
-                              editable={hasCreditValue}
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.credit_limit?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="payment_term_days"
-                      rules={{
-                        required: "El plazo de pago es obligatorio.",
-                        validate: (v) =>
-                          !isNaN(parseInt(v)) || "Debe ser un número entero.",
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.payment_term_days}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Plazo de pago (días)
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. 30"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              keyboardType="number-pad"
-                              editable={hasCreditValue}
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.payment_term_days?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
-
-                {/* Info de solo lectura al editar: disponible / usado los calcula el servidor */}
-                {isEdit && data && (
-                  <View style={styles.readonlyBox}>
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: "#6b7280",
-                        marginBottom: 4,
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => {
+                        clearData();
+                        setIsEdit(false);
+                        router.back();
                       }}
                     >
-                      Calculado por el sistema (no editable aquí)
-                    </Text>
-                    <HStack style={{ justifyContent: "space-between" }}>
-                      <Text style={{ fontSize: 13, color: "#111827" }}>
-                        Disponible
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          color: "#16a34a",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {formatCurrency(data.credit_available)}
-                      </Text>
-                    </HStack>
-                    <HStack
-                      style={{ justifyContent: "space-between", marginTop: 4 }}
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending}
                     >
-                      <Text style={{ fontSize: 13, color: "#111827" }}>
-                        Usado
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          color: "#dc2626",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {formatCurrency(data.credit_used)}
-                      </Text>
-                    </HStack>
-                  </View>
-                )}
-
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => {
-                      clearData();
-                      setIsEdit(false);
-                      router.back();
-                    }}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>
