@@ -144,7 +144,7 @@ export const ModalStockAdjustmentDetail: React.FC<Props> = ({
             <Button
               size="sm"
               style={{ backgroundColor: "#d4d4d4" }}
-              onPress={() => data && onApprove?.(data)}
+              onPress={() => data && onReject?.(data)}
               disabled={isApproving}
             >
               <ButtonText>Rechazado</ButtonText>

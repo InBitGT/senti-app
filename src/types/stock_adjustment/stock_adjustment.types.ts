@@ -28,8 +28,8 @@ export interface Warehouse {
 
 export enum StatusAdjustmentStock {
   PENDING = "pending_approval",
-  APPROVED = "approved",
-  REJECTED = "rejected",
+  APPROVED = "approve",
+  REJECTED = "reject",
 }
 
 export interface CreateAdjustmentCount {
