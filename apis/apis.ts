@@ -4,7 +4,6 @@ import { useAuthStore } from "@/src/store/useAuthStore";
 import { ApiResponse } from "@/src/types";
 import axios, {
   AxiosError,
-  AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
@@ -146,31 +145,26 @@ const handleRequest = async <T>(
   }
 };
 
-export const get = async <T>(
-  url: string,
-  config?: AxiosRequestConfig,
-): Promise<ApiResponse<T>> =>
-  handleRequest<T>(api.get<ApiResponse<T>>(url, config));
+export const get = async <T>(url: string): Promise<ApiResponse<T>> =>
+  handleRequest<T>(api.get<ApiResponse<T>>(url));
 
 export const post = async <TResponse, TBody = unknown>(
   url: string,
   data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.post<ApiResponse<TResponse>>(url, data, config));
+  handleRequest<TResponse>(api.post<ApiResponse<TResponse>>(url, data));
 
 export const put = async <TResponse, TBody = unknown>(
   url: string,
   data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.put<ApiResponse<TResponse>>(url, data, config));
+  handleRequest<TResponse>(api.put<ApiResponse<TResponse>>(url, data));
 
 export const patch = async <TResponse, TBody = unknown>(
   url: string,
   data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(
-    api.patch<ApiResponse<TResponse>>(url, data, config),
-  );
+  handleRequest<TResponse>(api.patch<ApiResponse<TResponse>>(url, data));
 
 export const remove = async <T>(url: string): Promise<ApiResponse<T>> =>
   handleRequest<T>(api.delete<ApiResponse<T>>(url));
