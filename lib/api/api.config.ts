@@ -175,4 +175,8 @@ export const ENDPOINT = {
     ) => `inventory-service/api/inventory-stock/summary?tenant_id=${idTenant}&warehouse_id=${idWarehouse}
     }`,
   },
+  dashboard: {
+    detail: (idTenant: number | string) =>
+      `inventory-service/api/inventory-stock/low-stock?tenant_id=${idTenant}`,
+  },
 };

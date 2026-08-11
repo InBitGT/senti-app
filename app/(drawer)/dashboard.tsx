@@ -1,10 +1,6 @@
-import React from 'react'
-import { Text, View } from 'react-native'
+import { DasboardScreen } from "@/src/screen/workspace/dashboard/Dasboard";
+import React from "react";
 
 export default function dashboard() {
-  return (
-    <View>
-      <Text>dashboard78</Text>
-    </View>
-  )
+  return <DasboardScreen />;
 }
