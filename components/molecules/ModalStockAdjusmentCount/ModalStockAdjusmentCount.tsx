@@ -1,17 +1,17 @@
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import {
-    ADJUSTMENT_STATUS_STYLES,
-    StockAdjustmentCount,
+  ADJUSTMENT_STATUS_STYLES,
+  StockAdjustmentCount,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import React from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
@@ -141,7 +141,7 @@ export const ModalStockAdjustmentDetail: React.FC<Props> = ({
             <Button
               size="sm"
               style={{ backgroundColor: "#d4d4d4" }}
-              onPress={() => data && onApprove?.(data)}
+              onPress={() => data && onReject?.(data)}
               disabled={isApproving}
             >
               <ButtonText>Rechazado</ButtonText>
