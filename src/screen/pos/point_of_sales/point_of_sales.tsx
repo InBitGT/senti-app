@@ -378,6 +378,7 @@ export const Pos: React.FC = () => {
           isOpen={cashMovementOpen}
           sessionId={session.data.id}
           onDone={() => session.refetch()}
+          onClose={() => setCashMovementOpen(false)}
         />
       )}
     </CashRegisterGate>
@@ -561,7 +562,7 @@ function CartModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalBackdrop />
-      <ModalContent className="bg-white">
+      <ModalContent className="bg-white" style={{ maxHeight: "85%" }}>
         <ModalHeader className="items-center justify-between">
           <Heading size="md" className="text-gray-900">
             Carrito
@@ -571,23 +572,25 @@ function CartModal({
           </TouchableOpacity>
         </ModalHeader>
 
-        <ModalBody>
-          {cart.length === 0 ? (
-            <CartEmptyState />
-          ) : (
-            <VStack space="md">
-              {cart.map((line, index) => (
-                <CartLineRow
-                  key={`${line.product.product_id}-${line.unit.uom_id}`}
-                  line={line}
-                  index={index}
-                  onStepLine={onStepLine}
-                  onSetQty={onSetQty}
-                  onRemoveLine={onRemoveLine}
-                />
-              ))}
-            </VStack>
-          )}
+        <ModalBody style={{ flexGrow: 0, flexShrink: 1 }}>
+          <ScrollView style={{ flexGrow: 0 }}>
+            {cart.length === 0 ? (
+              <CartEmptyState />
+            ) : (
+              <VStack space="md">
+                {cart.map((line, index) => (
+                  <CartLineRow
+                    key={`${line.product.product_id}-${line.unit.uom_id}`}
+                    line={line}
+                    index={index}
+                    onStepLine={onStepLine}
+                    onSetQty={onSetQty}
+                    onRemoveLine={onRemoveLine}
+                  />
+                ))}
+              </VStack>
+            )}
+          </ScrollView>
         </ModalBody>
 
         {cart.length > 0 && (

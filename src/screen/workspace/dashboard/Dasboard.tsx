@@ -1,5 +1,6 @@
 import { Icon } from "@/components/ui/icon";
 import { useDashboard } from "@/src/hooks/useDashboard/useDashboard";
+import { router } from "expo-router";
 import {
   ArrowRight,
   ClipboardList,
@@ -289,7 +290,10 @@ export const DasboardScreen = () => {
           {saludo.subtitle}
         </Text>
 
-        <NewSaleBanner isDesktop={isDesktop} />
+        <NewSaleBanner
+          isDesktop={isDesktop}
+          onPress={() => router.navigate("/(drawer)/(pos)/point_of_sales")}
+        />
 
         {/* En desktop, "Contar inventario" y "Alerta" van lado a lado */}
         {isDesktop ? (
@@ -301,7 +305,12 @@ export const DasboardScreen = () => {
               gap: 20,
             }}
           >
-            <CountInventoryBanner style={{ flex: 1 }} />
+            <CountInventoryBanner
+              style={{ flex: 1 }}
+              onPress={() => {
+                router.navigate("/(drawer)/(inventory)/stock_count");
+              }}
+            />
             {mostrarSeccionAlertas && (
               <InventoryAlertBanner
                 isLoading={alertInventory.isPending}
@@ -315,6 +324,9 @@ export const DasboardScreen = () => {
           <>
             <CountInventoryBanner
               style={{ marginHorizontal: 20, marginTop: 0 }}
+              onPress={() => {
+                router.navigate("/(drawer)/(inventory)/stock_count");
+              }}
             />
 
             {mostrarSeccionAlertas && (
