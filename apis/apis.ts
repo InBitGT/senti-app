@@ -4,6 +4,7 @@ import { useAuthStore } from "@/src/store/useAuthStore";
 import { ApiResponse } from "@/src/types";
 import axios, {
   AxiosError,
+  AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
@@ -19,8 +20,11 @@ interface QueueItem {
   reject: (error: unknown) => void;
 }
 
+const DEFAULT_TIMEOUT = 15000;
+
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: DEFAULT_TIMEOUT,
   headers: {
     "Content-Type": "application/json",
   },
@@ -142,26 +146,31 @@ const handleRequest = async <T>(
   }
 };
 
-export const get = async <T>(url: string): Promise<ApiResponse<T>> =>
-  handleRequest<T>(api.get<ApiResponse<T>>(url));
+export const get = async <T>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<ApiResponse<T>> =>
+  handleRequest<T>(api.get<ApiResponse<T>>(url, config));
 
 export const post = async <TResponse, TBody = unknown>(
   url: string,
   data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.post<ApiResponse<TResponse>>(url, data));
+  handleRequest<TResponse>(api.post<ApiResponse<TResponse>>(url, data, config));
 
 export const put = async <TResponse, TBody = unknown>(
   url: string,
   data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.put<ApiResponse<TResponse>>(url, data));
+  handleRequest<TResponse>(api.put<ApiResponse<TResponse>>(url, data, config));
 
 export const patch = async <TResponse, TBody = unknown>(
   url: string,
   data: TBody,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.patch<ApiResponse<TResponse>>(url, data));
+  handleRequest<TResponse>(
+    api.patch<ApiResponse<TResponse>>(url, data, config),
+  );
 
 export const remove = async <T>(url: string): Promise<ApiResponse<T>> =>
   handleRequest<T>(api.delete<ApiResponse<T>>(url));

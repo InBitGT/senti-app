@@ -82,6 +82,7 @@ export function UnitsTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar unidad, código…"
             value={search}
             onChangeText={setSearch}

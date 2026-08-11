@@ -1,21 +1,21 @@
 import { HStack } from "@/components/ui/hstack";
 import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
-    StatusAdjustmentStock,
-    StockAdjustmentCount,
+  StatusAdjustmentStock,
+  StockAdjustmentCount,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import { SearchIcon } from "lucide-react-native";
 import React, { useState } from "react";
@@ -146,6 +146,7 @@ export function StockAdjustmentsTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar ajuste..."
             value={search}
             onChangeText={setSearch}

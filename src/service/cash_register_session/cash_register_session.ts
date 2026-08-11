@@ -3,6 +3,7 @@ import { ENDPOINT } from "@/lib";
 import { useAuthStore } from "@/src/store";
 import {
   CashMovementPayload,
+  CashVoucher,
   CloseCashRegisterPayload,
 } from "@/src/types/cash_register/cash_register";
 import {
@@ -52,7 +53,7 @@ export async function OpenCashRegisterFn(payload: OpenCashRegisterPayload) {
 export async function CloseCashRegisterFn(
   sessionId: number,
   payload: CloseCashRegisterPayload,
-) {
+): Promise<CashVoucher> {
   if (__DEV__) {
     console.warn(
       `[CloseCashRegisterFn] cerrando sesión ${sessionId} con payload:`,
@@ -60,7 +61,7 @@ export async function CloseCashRegisterFn(
     );
   }
 
-  const response = await post<CashRegisterSession>(
+  const response = await post<CashVoucher, CloseCashRegisterPayload>(
     ENDPOINT.cash_register.closed(sessionId),
     payload,
   );
@@ -71,6 +72,10 @@ export async function CloseCashRegisterFn(
 
   if (response.code !== "200" && response.code !== "201") {
     throw new Error(response.message ?? `Error ${response.code}`);
+  }
+
+  if (!response.data) {
+    throw new Error("La respuesta no trajo datos del voucher de cierre.");
   }
 
   return response.data;

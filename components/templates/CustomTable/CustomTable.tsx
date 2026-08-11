@@ -147,6 +147,7 @@ export function CustomTable<T extends Record<string, any>>({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar..."
             value={search}
             onChangeText={setSearch}

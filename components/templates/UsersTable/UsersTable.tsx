@@ -103,6 +103,7 @@ export function UsersTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar usuario..."
             value={search}
             onChangeText={setSearch}

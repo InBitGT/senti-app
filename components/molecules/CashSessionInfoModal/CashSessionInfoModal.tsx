@@ -6,17 +6,18 @@ import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCloseCashRegister } from "@/src/hooks/useCloseCashRegister/useCloseCashRegister";
 import { useAuthStore } from "@/src/store";
 import { CashRegisterSession } from "@/src/types/cash_register_session/cash_register_session";
+import { router } from "expo-router";
 import { CreditCard, User, Wallet, X } from "lucide-react-native";
 import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
@@ -63,6 +64,7 @@ export const CashSessionInfoModal: React.FC<{
           closing_amount: amount,
         },
       });
+      router.navigate("/(drawer)/(pos)/(process)/receipt");
       setClosingAmount("");
       setClosing(false);
       onClosed();

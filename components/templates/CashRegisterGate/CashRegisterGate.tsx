@@ -80,6 +80,11 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
           No tenés una caja abierta y no tenés permiso para abrir una. Pedile a
           un encargado que la abra para poder vender.
         </Text>
+        <Button onPress={() => session.refetch}>
+          <Text className="text-center text-base font-medium text-gray-700">
+            Recargar información
+          </Text>
+        </Button>
       </VStack>
     );
   }
@@ -99,6 +104,11 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
         <Button onPress={() => setModalOpen(true)}>
           <Text className="text-center text-base font-medium text-gray-700">
             Abrir caja
+          </Text>
+        </Button>
+        <Button onPress={() => session.refetch}>
+          <Text className="text-center text-base font-medium text-gray-700">
+            Recargar información
           </Text>
         </Button>
       </VStack>

@@ -144,6 +144,7 @@ export function MenuIngredientsTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar ingrediente, SKU, grupo…"
             value={search}
             onChangeText={setSearch}

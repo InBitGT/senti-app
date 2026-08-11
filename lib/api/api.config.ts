@@ -70,7 +70,7 @@ export const ENDPOINT = {
     info: "inventory-service/api/unit-of-measure",
   },
   merchandise: {
-    info: "inventory-service/api/product",
+    info: "inventory-service/api/product/full",
     detail: (idTenant: string | number) =>
       `inventory-service/api/product/full?tenant_id=${idTenant}&type=finished_product`,
   },
@@ -167,5 +167,12 @@ export const ENDPOINT = {
   cash_register_users: {
     detail: (idTenant: number | string) =>
       `payment-client-service/api/cash-register-session/available-users?tenant_id=${idTenant}`,
+  },
+  invenrtory: {
+    detail: (
+      idTenant: number | string,
+      idWarehouse: number | string,
+    ) => `inventory-service/api/inventory-stock/summary?tenant_id=${idTenant}&warehouse_id=${idWarehouse}
+    }`,
   },
 };

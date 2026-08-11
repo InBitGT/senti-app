@@ -93,6 +93,7 @@ export function CashRegistersTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar caja..."
             value={search}
             onChangeText={setSearch}

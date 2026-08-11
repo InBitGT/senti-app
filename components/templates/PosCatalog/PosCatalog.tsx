@@ -29,7 +29,7 @@ import {
   Tag,
 } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { FlatList } from "react-native";
+import { FlatList, useWindowDimensions } from "react-native";
 
 // ---------------------------------------------------------------------------
 // Coerción defensiva: el backend a veces manda los montos como string
@@ -90,12 +90,19 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     );
   }
 
+  // Si no hay categoría "padre" real (parent_category_id null/vacío, como
+  // pasa con varios productos), la categoría de nivel superior cae hacia
+  // la categoría normal — así category_id/name nunca queda en null y lo
+  // que se manda al backend en el checkout sigue siendo válido.
+  const hasParent =
+    !!api.parent_category_id && !!api.parent_category_name?.trim();
+
   return {
     product_id: api.product_id,
     name: api.name,
     sku: api.sku,
-    category_id: api.parent_category_id,
-    category_name: api.parent_category_name,
+    category_id: hasParent ? api.parent_category_id : api.category_id,
+    category_name: hasParent ? api.parent_category_name : api.category_name,
     subcategory_id: api.category_id,
     subcategory_name: api.category_name,
     stock_qty: api.stock_qty,
@@ -267,16 +274,24 @@ function ProductCard({
   );
 }
 
+// Mismo breakpoint que Pos.tsx para decidir layout desktop/tablet vs móvil.
+const DESKTOP_BREAKPOINT = 768;
+
 // ---------------------------------------------------------------------------
 // Grid del catálogo
 // ---------------------------------------------------------------------------
 export function ProductCatalog({
   data,
   onAddToCart,
+  onPress,
 }: {
   data: ApiCatalogProduct[];
   onAddToCart?: (product: CatalogProduct, unit: SellUnit) => void;
+  onPress: () => void;
 }) {
+  const { width } = useWindowDimensions();
+  const numColumns = width >= DESKTOP_BREAKPOINT ? 4 : 2;
+
   const products = useMemo(() => data.map(mapApiProductToProduct), [data]);
 
   const dupSkus = useMemo(() => {
@@ -292,6 +307,11 @@ export function ProductCatalog({
       <VStack className="items-center justify-center py-16" space="sm">
         <Icon as={Package} size="xl" className="text-gray-300" />
         <Text className="text-gray-400">Sin resultados</Text>
+        <Button onPress={onPress}>
+          <Text className="text-center text-base font-medium text-gray-700">
+            Recargar información
+          </Text>
+        </Button>
       </VStack>
     );
   }
@@ -312,8 +332,10 @@ export function ProductCatalog({
 
       <FlatList
         data={products}
-        key="catalog-grid-2col"
-        numColumns={2}
+        // La key debe cambiar junto con numColumns — FlatList no puede
+        // recalcular el layout de columnas en caliente sin remontarse.
+        key={`catalog-grid-${numColumns}col`}
+        numColumns={numColumns}
         keyExtractor={(item) => String(item.product_id)}
         renderItem={({ item }) => (
           <ProductCard

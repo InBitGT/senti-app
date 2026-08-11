@@ -41,7 +41,7 @@ import {
   ShoppingCart,
   Trash2,
   Wallet,
-  X
+  X,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -90,23 +90,70 @@ export const Pos: React.FC = () => {
 
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
 
-  // Categorías únicas derivadas del JSON crudo (parent_category = genérica).
-  // Se descartan nombres vacíos/nulos para no renderizar un chip en blanco.
+  // Muchos productos (como los que vienen sin categoría "padre" real, ej.
+  // parent_category_id: null) solo traen category_id/category_name. En esos
+  // casos, la categoría de nivel superior "depende de" (cae hacia) la
+  // categoría normal, en vez de quedar sin ningún pill asignado. Cuando SÍ
+  // hay padre real, category_id/category_name pasan a ser la subcategoría.
+  function topCategoryOf(
+    p: ApiCatalogProduct,
+  ): { id: number; name: string } | null {
+    if (p.parent_category_id && p.parent_category_name?.trim()) {
+      return { id: p.parent_category_id, name: p.parent_category_name.trim() };
+    }
+    if (p.category_id && p.category_name?.trim()) {
+      return { id: p.category_id, name: p.category_name.trim() };
+    }
+    return null;
+  }
+
+  function hasRealParent(p: ApiCatalogProduct): boolean {
+    return !!p.parent_category_id && !!p.parent_category_name?.trim();
+  }
+
+  // Categorías únicas derivadas del JSON crudo, con el fallback de arriba.
+  // Se descartan productos sin ninguna categoría utilizable.
   const categories = useMemo(() => {
     const map = new Map<number, string>();
     (catalog ?? []).forEach((p) => {
-      if (!p.parent_category_id || !p.parent_category_name?.trim()) return;
-      map.set(p.parent_category_id, p.parent_category_name.trim());
+      const top = topCategoryOf(p);
+      if (!top) return;
+      map.set(top.id, top.name);
     });
     return [...map.entries()].map(([id, name]) => ({ id, name }));
   }, [catalog]);
 
+  // Subcategorías: solo existen para productos que SÍ tienen padre real
+  // (parent_category_id) dentro de la categoría elegida — category_id/name
+  // en esos casos es la subcategoría, no un fallback de nivel superior.
+  const subcategories = useMemo(() => {
+    if (categoryId == null) return [];
+    const map = new Map<number, string>();
+    (catalog ?? []).forEach((p) => {
+      if (!hasRealParent(p)) return;
+      if (p.parent_category_id !== categoryId) return;
+      if (!p.category_id || !p.category_name?.trim()) return;
+      map.set(p.category_id, p.category_name.trim());
+    });
+    return [...map.entries()].map(([id, name]) => ({ id, name }));
+  }, [catalog, categoryId]);
+
+  function pickCategory(id: number | null) {
+    setCategoryId(id);
+    setSubcategoryId(null); // al cambiar de categoría, se resetea la subcategoría
+  }
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (catalog ?? []).filter((p) => {
-      if (categoryId != null && p.parent_category_id !== categoryId)
+      if (categoryId != null) {
+        const top = topCategoryOf(p);
+        if (top?.id !== categoryId) return false;
+      }
+      if (subcategoryId != null && p.category_id !== subcategoryId)
         return false;
       if (
         q &&
@@ -116,7 +163,7 @@ export const Pos: React.FC = () => {
         return false;
       return true;
     });
-  }, [catalog, query, categoryId]);
+  }, [catalog, query, categoryId, subcategoryId]);
 
   function handleAddToCart(product: CatalogProduct, unit: SellUnit) {
     addLine(product, unit);
@@ -222,14 +269,35 @@ export const Pos: React.FC = () => {
                     <CategoryPill
                       label="Todas"
                       active={categoryId === null}
-                      onPress={() => setCategoryId(null)}
+                      onPress={() => pickCategory(null)}
                     />
                     {categories.map((c) => (
                       <CategoryPill
                         key={c.id}
                         label={c.name}
                         active={categoryId === c.id}
-                        onPress={() => setCategoryId(c.id)}
+                        onPress={() => pickCategory(c.id)}
+                      />
+                    ))}
+                  </HStack>
+                </ScrollView>
+              )}
+
+              {/* Subcategorías: solo si hay una categoría elegida y tiene hijas reales */}
+              {categoryId != null && subcategories.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <HStack space="xs">
+                    <SubcategoryPill
+                      label="Todo"
+                      active={subcategoryId === null}
+                      onPress={() => setSubcategoryId(null)}
+                    />
+                    {subcategories.map((s) => (
+                      <SubcategoryPill
+                        key={s.id}
+                        label={s.name}
+                        active={subcategoryId === s.id}
+                        onPress={() => setSubcategoryId(s.id)}
                       />
                     ))}
                   </HStack>
@@ -241,6 +309,7 @@ export const Pos: React.FC = () => {
               <ProductCatalog
                 data={filtered as ApiCatalogProduct[]}
                 onAddToCart={handleAddToCart}
+                onPress={() => refetch()}
               />
             </Box>
 
@@ -307,7 +376,6 @@ export const Pos: React.FC = () => {
       {session.data && (
         <CashMovementModal
           isOpen={cashMovementOpen}
-          onClose={() => setCashMovementOpen(false)}
           sessionId={session.data.id}
           onDone={() => session.refetch()}
         />
@@ -560,6 +628,32 @@ function CategoryPill({
       >
         <Text
           className={`text-sm font-medium ${active ? "text-white" : "text-gray-700"}`}
+        >
+          {label}
+        </Text>
+      </Box>
+    </TouchableOpacity>
+  );
+}
+
+function SubcategoryPill({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <Box
+        className={`rounded-full border px-2.5 py-1 ${
+          active ? "border-blue-600 bg-blue-50" : "border-gray-300 bg-white"
+        }`}
+      >
+        <Text
+          className={`text-xs font-medium ${active ? "text-blue-700" : "text-gray-600"}`}
         >
           {label}
         </Text>

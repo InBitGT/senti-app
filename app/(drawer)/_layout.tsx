@@ -61,21 +61,28 @@ export default function DrawerLayout() {
           name="(menu)"
           options={({ route }) => ({
             headerShown: !isForm,
-            title: getGroupTitle("(menu)", route, "Configuraciones"),
+            title: getGroupTitle("(menu)", route, "Menú"),
           })}
         />
         <Drawer.Screen
           name="(pos)"
           options={({ route }) => ({
             headerShown: !isForm,
-            title: getGroupTitle("(pos)", route, "Configuraciones"),
+            title: getGroupTitle("(pos)", route, "Punto de Venta"),
+          })}
+        />
+        <Drawer.Screen
+          name="(pos_form)"
+          options={({ route }) => ({
+            headerShown: !isForm,
+            title: getGroupTitle("(pos_form)", route, "Punto de Venta"),
           })}
         />
         <Drawer.Screen
           name="(portfolio)"
           options={({ route }) => ({
             headerShown: !isForm,
-            title: getGroupTitle("(pos)", route, "Configuraciones"),
+            title: getGroupTitle("(portfolio)", route, "Cartera"),
           })}
         />
       </Drawer>

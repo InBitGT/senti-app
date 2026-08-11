@@ -105,6 +105,7 @@ export function CustomersTable({
             <InputIcon as={SearchIcon} size="sm" />
           </InputSlot>
           <InputField
+            style={{ color: "#000" }}
             placeholder="Buscar cliente..."
             value={search}
             onChangeText={setSearch}
