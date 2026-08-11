@@ -41,7 +41,7 @@ import type {
   MerchandiseListItem,
 } from "@/src/types/merchandise/merchandise.types";
 import { useRouter } from "expo-router";
-import { Plus, Trash2 } from "lucide-react-native";
+import { ArrowLeftIcon, Plus, Trash2 } from "lucide-react-native";
 import React from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -340,7 +340,7 @@ export default function MerchandiseForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          {/* <Pressable
+          <Pressable
             onPress={() => {
               clearData();
               setIsEdit(false);
@@ -356,10 +356,13 @@ export default function MerchandiseForm() {
             <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
               Regresar
             </Text>
-          </Pressable> */}
+          </Pressable>
 
           <Center>
-            <Box style={styles.card}>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
                 {isEdit ? "Editar Producto" : "Nuevo Producto"}
               </Heading>

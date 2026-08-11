@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
+import { AlertCircleIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -36,6 +36,7 @@ import {
   ProductWholesaleRule,
 } from "@/src/types/wholesale/wholesale";
 import { useRouter } from "expo-router";
+import { ArrowLeftIcon } from "lucide-react-native";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -150,7 +151,10 @@ export default function ProductWholesaleForm() {
           </Pressable>
 
           <Center>
-            <Box style={styles.card}>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
                 {isEdit ? "Editar Descuento" : "Nuevo Descuento por Mayoreo"}
               </Heading>

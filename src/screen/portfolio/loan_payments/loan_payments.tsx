@@ -140,7 +140,10 @@ export default function LoanPaymentForm() {
         <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }}>
             <Center style={{ flex: 1 }}>
-              <Box style={styles.card}>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
                 <Center>
                   <View style={styles.successIcon}>
                     <CheckCircle2 size={28} color="#16a34a" />
@@ -214,7 +217,10 @@ export default function LoanPaymentForm() {
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
           <VStack>
-            <Box style={styles.card}>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
                 Abonar a mi crédito
               </Heading>

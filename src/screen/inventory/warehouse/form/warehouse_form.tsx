@@ -12,11 +12,7 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import {
-  AlertCircleIcon,
-  Icon,
-  TrashIcon
-} from "@/components/ui/icon";
+import { AlertCircleIcon, Icon, TrashIcon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -204,7 +200,10 @@ export default function WarehouseForm() {
           />
 
           <Center>
-            <Box style={styles.card}>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
                 {isEdit ? "Editar Bodega" : "Nueva Bodega"}
               </Heading>

@@ -12,7 +12,13 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AddIcon, AlertCircleIcon, ArrowLeftIcon, Icon, TrashIcon } from "@/components/ui/icon";
+import {
+  AddIcon,
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  Icon,
+  TrashIcon,
+} from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -111,14 +117,25 @@ function IngredientRow({
   const third = isLarge ? { flex: 1, minWidth: 0 } : {};
 
   return (
-    <Box style={styles.subCard}>
-      <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+    <Box
+      style={styles.subCard}
+      className="w-full bg-white rounded-[20px] py-8 px-7"
+    >
+      <HStack
+        style={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 10,
+        }}
+      >
         <Text style={{ fontWeight: "bold", color: "#333", fontSize: 13 }}>
           Ingrediente #{index + 1}
         </Text>
         <Pressable onPress={() => remove(index)} style={styles.removeBtn}>
           <Icon as={TrashIcon} size="sm" style={{ color: "#ef4444" }} />
-          <Text style={{ color: "#ef4444", fontSize: 12, marginLeft: 4 }}>Eliminar</Text>
+          <Text style={{ color: "#ef4444", fontSize: 12, marginLeft: 4 }}>
+            Eliminar
+          </Text>
         </Pressable>
       </HStack>
 
@@ -130,11 +147,16 @@ function IngredientRow({
           rules={{ required: "Selecciona un ingrediente." }}
           render={({ field: { onChange, value } }) => {
             const selectedLabel =
-              ingredientOptions?.find((p) => String(p.id) === value)?.name || "";
+              ingredientOptions?.find((p) => String(p.id) === value)?.name ||
+              "";
             return (
-              <FormControl isInvalid={!!errors?.ingredients?.[index]?.ingredient_id}>
+              <FormControl
+                isInvalid={!!errors?.ingredients?.[index]?.ingredient_id}
+              >
                 <FormControlLabel>
-                  <FormControlLabelText style={{ color: "#000" }}>Ingrediente</FormControlLabelText>
+                  <FormControlLabelText style={{ color: "#000" }}>
+                    Ingrediente
+                  </FormControlLabelText>
                 </FormControlLabel>
                 <Select selectedValue={value} onValueChange={onChange}>
                   <SelectTrigger>
@@ -151,7 +173,11 @@ function IngredientRow({
                         <SelectDragIndicator />
                       </SelectDragIndicatorWrapper>
                       {ingredientOptions.map((p) => (
-                        <SelectItem key={p.id} label={p.name} value={String(p.id)} />
+                        <SelectItem
+                          key={p.id}
+                          label={p.name}
+                          value={String(p.id)}
+                        />
                       ))}
                     </SelectContent>
                   </SelectPortal>
@@ -175,9 +201,13 @@ function IngredientRow({
               name={`ingredients.${index}.quantity`}
               rules={{ required: "Requerido." }}
               render={({ field: { onChange, onBlur, value } }) => (
-                <FormControl isInvalid={!!errors?.ingredients?.[index]?.quantity}>
+                <FormControl
+                  isInvalid={!!errors?.ingredients?.[index]?.quantity}
+                >
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Cantidad</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Cantidad
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Input>
                     <InputField
@@ -208,16 +238,24 @@ function IngredientRow({
               render={({ field: { onChange, value } }) => (
                 <FormControl isInvalid={!!errors?.ingredients?.[index]?.unit}>
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Unidad</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Unidad
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Select selectedValue={value} onValueChange={onChange}>
                     <SelectTrigger>
-                      <SelectInput style={{ color: "#000" }} placeholder="Unidad" value={value} />
+                      <SelectInput
+                        style={{ color: "#000" }}
+                        placeholder="Unidad"
+                        value={value}
+                      />
                     </SelectTrigger>
                     <SelectPortal>
                       <SelectBackdrop />
                       <SelectContent>
-                        <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                        <SelectDragIndicatorWrapper>
+                          <SelectDragIndicator />
+                        </SelectDragIndicatorWrapper>
                         <SelectItem label="Unidad" value="unit" />
                         <SelectItem label="Kg" value="kg" />
                         <SelectItem label="g" value="g" />
@@ -262,14 +300,25 @@ function VariantRow({
   const third = isLarge ? { flex: 1, minWidth: 0 } : {};
 
   return (
-    <Box style={styles.subCard}>
-      <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+    <Box
+      style={styles.subCard}
+      className="w-full bg-white rounded-[20px] py-8 px-7"
+    >
+      <HStack
+        style={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 10,
+        }}
+      >
         <Text style={{ fontWeight: "bold", color: "#333", fontSize: 13 }}>
           Variante #{index + 1}
         </Text>
         <Pressable onPress={() => remove(index)} style={styles.removeBtn}>
           <Icon as={TrashIcon} size="sm" style={{ color: "#ef4444" }} />
-          <Text style={{ color: "#ef4444", fontSize: 12, marginLeft: 4 }}>Eliminar</Text>
+          <Text style={{ color: "#ef4444", fontSize: 12, marginLeft: 4 }}>
+            Eliminar
+          </Text>
         </Pressable>
       </HStack>
 
@@ -284,7 +333,9 @@ function VariantRow({
               render={({ field: { onChange, onBlur, value } }) => (
                 <FormControl isInvalid={!!errors?.variants?.[index]?.name}>
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Nombre</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Nombre
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Input>
                     <InputField
@@ -313,9 +364,13 @@ function VariantRow({
               name={`variants.${index}.price_adjustment`}
               rules={{ required: "El ajuste es obligatorio." }}
               render={({ field: { onChange, onBlur, value } }) => (
-                <FormControl isInvalid={!!errors?.variants?.[index]?.price_adjustment}>
+                <FormControl
+                  isInvalid={!!errors?.variants?.[index]?.price_adjustment}
+                >
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Ajuste de precio</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Ajuste de precio
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Input>
                     <InputField
@@ -345,18 +400,28 @@ function VariantRow({
               name={`variants.${index}.adjustment_type`}
               rules={{ required: "Requerido." }}
               render={({ field: { onChange, value } }) => (
-                <FormControl isInvalid={!!errors?.variants?.[index]?.adjustment_type}>
+                <FormControl
+                  isInvalid={!!errors?.variants?.[index]?.adjustment_type}
+                >
                   <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>Tipo</FormControlLabelText>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Tipo
+                    </FormControlLabelText>
                   </FormControlLabel>
                   <Select selectedValue={value} onValueChange={onChange}>
                     <SelectTrigger>
-                      <SelectInput style={{ color: "#000" }} placeholder="Tipo" value={value} />
+                      <SelectInput
+                        style={{ color: "#000" }}
+                        placeholder="Tipo"
+                        value={value}
+                      />
                     </SelectTrigger>
                     <SelectPortal>
                       <SelectBackdrop />
                       <SelectContent>
-                        <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                        <SelectDragIndicatorWrapper>
+                          <SelectDragIndicator />
+                        </SelectDragIndicatorWrapper>
                         <SelectItem label="Fijo" value="fixed" />
                         <SelectItem label="Porcentaje" value="percentage" />
                       </SelectContent>
@@ -392,7 +457,7 @@ function ModifierRow({
   remove: (i: number) => void;
   modifierOptions: MenuIngredient[];
 }) {
-  console.log(modifierOptions, "modifierOptions en el componente" )
+  console.log(modifierOptions, "modifierOptions en el componente");
   return (
     <HStack style={{ alignItems: "center", gap: 8 }}>
       <View style={{ flex: 1 }}>
@@ -401,12 +466,16 @@ function ModifierRow({
           name={`modifiers.${index}.product_modifier_id`}
           rules={{ required: "Selecciona un modificador." }}
           render={({ field: { onChange, value } }) => {
-              console.log("value actual:", value);
-              const selectedLabel =
-              modifierOptions?.find((m) => String(m.product_modifier_id) === value)?.modifier_name || "";
-              console.log(selectedLabel, "selectedLabel", )
-              return (
-              <FormControl isInvalid={!!errors?.modifiers?.[index]?.product_modifier_id}>
+            console.log("value actual:", value);
+            const selectedLabel =
+              modifierOptions?.find(
+                (m) => String(m.product_modifier_id) === value,
+              )?.modifier_name || "";
+            console.log(selectedLabel, "selectedLabel");
+            return (
+              <FormControl
+                isInvalid={!!errors?.modifiers?.[index]?.product_modifier_id}
+              >
                 <Select selectedValue={value} onValueChange={onChange}>
                   <SelectTrigger>
                     <SelectInput
@@ -418,7 +487,9 @@ function ModifierRow({
                   <SelectPortal>
                     <SelectBackdrop />
                     <SelectContent>
-                      <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
                       {modifierOptions.map((m) => (
                         <SelectItem
                           key={m.id}
@@ -440,7 +511,10 @@ function ModifierRow({
           }}
         />
       </View>
-      <Pressable onPress={() => remove(index)} style={[styles.removeBtn, { marginTop: 4 }]}>
+      <Pressable
+        onPress={() => remove(index)}
+        style={[styles.removeBtn, { marginTop: 4 }]}
+      >
         <Icon as={TrashIcon} size="sm" style={{ color: "#ef4444" }} />
       </Pressable>
     </HStack>
@@ -467,10 +541,10 @@ export default function MenuItemForm() {
 
   const ingredientOptions = productData ?? [];
   const modifierOptions = (productData ?? []).filter(
-    (p: any) => p.is_modifier === true && p.product_modifier_id !== null
+    (p: any) => p.is_modifier === true && p.product_modifier_id !== null,
   );
   console.log("modifiers data:", JSON.stringify(data?.modifiers));
-console.log("modifierOptions:", modifierOptions);
+  console.log("modifierOptions:", modifierOptions);
 
   const {
     control,
@@ -478,7 +552,9 @@ console.log("modifierOptions:", modifierOptions);
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      category_id: data?.product?.category_id ? String(data.product.category_id) : "",
+      category_id: data?.product?.category_id
+        ? String(data.product.category_id)
+        : "",
       name: data?.product?.name || "",
       sku: data?.product?.sku || "",
       unit_of_measure: data?.product?.unit_of_measure || "unit",
@@ -492,14 +568,16 @@ console.log("modifierOptions:", modifierOptions);
         unit: ing.unit,
         waste_factor: String(ing.waste_factor),
       })) ?? [EMPTY_INGREDIENT],
-      variants: data?.variants?.map((v) => ({
-        name: v.name,
-        price_adjustment: String(v.price_adjustment),
-        adjustment_type: v.adjustment_type,
-      })) ?? [],
-      modifiers: data?.modifiers?.map((data) => ({
-        product_modifier_id: String(data.product_modifier_id),
-      })) ?? [],
+      variants:
+        data?.variants?.map((v) => ({
+          name: v.name,
+          price_adjustment: String(v.price_adjustment),
+          adjustment_type: v.adjustment_type,
+        })) ?? [],
+      modifiers:
+        data?.modifiers?.map((data) => ({
+          product_modifier_id: String(data.product_modifier_id),
+        })) ?? [],
     },
   });
 
@@ -551,39 +629,43 @@ console.log("modifierOptions:", modifierOptions);
             price_adjustment: parseFloat(v.price_adjustment),
             adjustment_type: v.adjustment_type,
           })),
-          modifiers: values.modifiers.map((m) => parseInt(m.product_modifier_id)),
+          modifiers: values.modifiers.map((m) =>
+            parseInt(m.product_modifier_id),
+          ),
         };
 
         await post.mutateAsync(payload);
         showToast({ message: "Ítem creado correctamente", type: "success" });
       } else {
-            const payload: MenuItemDetail = {
-              product: {
-                category_id: parseInt(values.category_id),
-                name: values.name.trim(),
-                sku: values.sku.trim(),
-                type: "menu_item",
-                unit_of_measure: values.unit_of_measure,
-                availability_status: values.availability_status,
-                price: parseFloat(values.price),
-                currency: values.currency,
-              },
-              recipe: {
-                version: parseInt(values.recipe_version),
-                ingredients: values.ingredients.map((ing) => ({
-                  ingredient_id: parseInt(ing.ingredient_id),
-                  quantity: parseFloat(ing.quantity),
-                  unit: ing.unit,
-                  waste_factor: parseFloat(ing.waste_factor),
-                })),
-              },
-              variants: values.variants.map((v) => ({
-                name: v.name.trim(),
-                price_adjustment: parseFloat(v.price_adjustment),
-                adjustment_type: v.adjustment_type,
-              })),
-              modifiers: values.modifiers.map((m) => parseInt(m.product_modifier_id)),
-            };
+        const payload: MenuItemDetail = {
+          product: {
+            category_id: parseInt(values.category_id),
+            name: values.name.trim(),
+            sku: values.sku.trim(),
+            type: "menu_item",
+            unit_of_measure: values.unit_of_measure,
+            availability_status: values.availability_status,
+            price: parseFloat(values.price),
+            currency: values.currency,
+          },
+          recipe: {
+            version: parseInt(values.recipe_version),
+            ingredients: values.ingredients.map((ing) => ({
+              ingredient_id: parseInt(ing.ingredient_id),
+              quantity: parseFloat(ing.quantity),
+              unit: ing.unit,
+              waste_factor: parseFloat(ing.waste_factor),
+            })),
+          },
+          variants: values.variants.map((v) => ({
+            name: v.name.trim(),
+            price_adjustment: parseFloat(v.price_adjustment),
+            adjustment_type: v.adjustment_type,
+          })),
+          modifiers: values.modifiers.map((m) =>
+            parseInt(m.product_modifier_id),
+          ),
+        };
 
         if (!data?.product?.id) return;
         await put.mutateAsync({ id: data.product.id, data: payload });
@@ -611,15 +693,28 @@ console.log("modifierOptions:", modifierOptions);
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
           <Pressable
-            onPress={() => { clearData(); setIsEdit(false); router.back(); }}
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
           >
             <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>Regresar</Text>
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
           </Pressable>
 
           <Center>
-            <Box style={styles.card}>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
                 {isEdit ? "Editar Ítem de Menú" : "Nuevo Ítem de Menú"}
               </Heading>
@@ -642,7 +737,9 @@ console.log("modifierOptions:", modifierOptions);
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.name}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Nombre</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Nombre
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -655,7 +752,9 @@ console.log("modifierOptions:", modifierOptions);
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.name?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.name?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -669,13 +768,19 @@ console.log("modifierOptions:", modifierOptions);
                       rules={{ required: "La categoría es obligatoria." }}
                       render={({ field: { onChange, value } }) => {
                         const selectedLabel =
-                          categorie?.find((c) => String(c.id) === value)?.name || "";
+                          categorie?.find((c) => String(c.id) === value)
+                            ?.name || "";
                         return (
                           <FormControl isInvalid={!!errors.category_id}>
                             <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>Categoría</FormControlLabelText>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Categoría
+                              </FormControlLabelText>
                             </FormControlLabel>
-                            <Select selectedValue={value} onValueChange={onChange}>
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
                               <SelectTrigger>
                                 <SelectInput
                                   style={{ color: "#000" }}
@@ -686,16 +791,24 @@ console.log("modifierOptions:", modifierOptions);
                               <SelectPortal>
                                 <SelectBackdrop />
                                 <SelectContent>
-                                  <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                                  <SelectDragIndicatorWrapper>
+                                    <SelectDragIndicator />
+                                  </SelectDragIndicatorWrapper>
                                   {(categorie ?? []).map((c) => (
-                                    <SelectItem key={c.id} label={c.name} value={String(c.id)} />
+                                    <SelectItem
+                                      key={c.id}
+                                      label={c.name}
+                                      value={String(c.id)}
+                                    />
                                   ))}
                                 </SelectContent>
                               </SelectPortal>
                             </Select>
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>{errors.category_id?.message}</FormControlErrorText>
+                              <FormControlErrorText>
+                                {errors.category_id?.message}
+                              </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
                         );
@@ -714,7 +827,9 @@ console.log("modifierOptions:", modifierOptions);
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.sku}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>SKU</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              SKU
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -728,7 +843,9 @@ console.log("modifierOptions:", modifierOptions);
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.sku?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.sku?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -743,7 +860,9 @@ console.log("modifierOptions:", modifierOptions);
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.price}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Precio</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Precio
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -757,7 +876,9 @@ console.log("modifierOptions:", modifierOptions);
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.price?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.price?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -775,16 +896,27 @@ console.log("modifierOptions:", modifierOptions);
                       render={({ field: { onChange, value } }) => (
                         <FormControl isInvalid={!!errors.unit_of_measure}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Unidad de medida</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Unidad de medida
+                            </FormControlLabelText>
                           </FormControlLabel>
-                          <Select selectedValue={value} onValueChange={onChange}>
+                          <Select
+                            selectedValue={value}
+                            onValueChange={onChange}
+                          >
                             <SelectTrigger>
-                              <SelectInput style={{ color: "#000" }} placeholder="Unidad" value={value} />
+                              <SelectInput
+                                style={{ color: "#000" }}
+                                placeholder="Unidad"
+                                value={value}
+                              />
                             </SelectTrigger>
                             <SelectPortal>
                               <SelectBackdrop />
                               <SelectContent>
-                                <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                                <SelectDragIndicatorWrapper>
+                                  <SelectDragIndicator />
+                                </SelectDragIndicatorWrapper>
                                 <SelectItem label="Unidad" value="unit" />
                                 <SelectItem label="Porción" value="portion" />
                               </SelectContent>
@@ -792,7 +924,9 @@ console.log("modifierOptions:", modifierOptions);
                           </Select>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.unit_of_measure?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.unit_of_measure?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -805,16 +939,33 @@ console.log("modifierOptions:", modifierOptions);
                 <Divider className="my-2" />
 
                 {/* ── INGREDIENTES ── */}
-                <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={styles.sectionLabel}>INGREDIENTES ({ingredientFields.length})</Text>
-                  <Button size="sm" onPress={() => appendIngredient(EMPTY_INGREDIENT)}>
-                    <Icon as={AddIcon} size="sm" style={{ color: "#000", marginRight: 4 }} />
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    INGREDIENTES ({ingredientFields.length})
+                  </Text>
+                  <Button
+                    size="sm"
+                    onPress={() => appendIngredient(EMPTY_INGREDIENT)}
+                  >
+                    <Icon
+                      as={AddIcon}
+                      size="sm"
+                      style={{ color: "#000", marginRight: 4 }}
+                    />
                     <ButtonText>Agregar</ButtonText>
                   </Button>
                 </HStack>
 
                 {ingredientFields.length === 0 && (
-                  <Box style={styles.emptyBox}>
+                  <Box
+                    style={styles.emptyBox}
+                    className="w-full bg-white rounded-[20px] py-8 px-7"
+                  >
                     <Text style={{ color: "#999", textAlign: "center" }}>
                       Sin ingredientes. Presiona Agregar para añadir uno.
                     </Text>
@@ -838,16 +989,33 @@ console.log("modifierOptions:", modifierOptions);
                 <Divider className="my-2" />
 
                 {/* ── VARIANTES ── */}
-                <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={styles.sectionLabel}>VARIANTES ({variantFields.length})</Text>
-                  <Button size="sm" onPress={() => appendVariant(EMPTY_VARIANT)}>
-                    <Icon as={AddIcon} size="sm" style={{ color: "#000", marginRight: 4 }} />
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    VARIANTES ({variantFields.length})
+                  </Text>
+                  <Button
+                    size="sm"
+                    onPress={() => appendVariant(EMPTY_VARIANT)}
+                  >
+                    <Icon
+                      as={AddIcon}
+                      size="sm"
+                      style={{ color: "#000", marginRight: 4 }}
+                    />
                     <ButtonText>Agregar</ButtonText>
                   </Button>
                 </HStack>
 
                 {variantFields.length === 0 && (
-                  <Box style={styles.emptyBox}>
+                  <Box
+                    style={styles.emptyBox}
+                    className="w-full bg-white rounded-[20px] py-8 px-7"
+                  >
                     <Text style={{ color: "#999", textAlign: "center" }}>
                       Sin variantes. Presiona Agregar para añadir una.
                     </Text>
@@ -870,16 +1038,33 @@ console.log("modifierOptions:", modifierOptions);
                 <Divider className="my-2" />
 
                 {/* ── MODIFICADORES ── */}
-                <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={styles.sectionLabel}>MODIFICADORES ({modifierFields.length})</Text>
-                  <Button size="sm" onPress={() => appendModifier(EMPTY_MODIFIER)}>
-                    <Icon as={AddIcon} size="sm" style={{ color: "#000", marginRight: 4 }} />
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    MODIFICADORES ({modifierFields.length})
+                  </Text>
+                  <Button
+                    size="sm"
+                    onPress={() => appendModifier(EMPTY_MODIFIER)}
+                  >
+                    <Icon
+                      as={AddIcon}
+                      size="sm"
+                      style={{ color: "#000", marginRight: 4 }}
+                    />
                     <ButtonText>Agregar</ButtonText>
                   </Button>
                 </HStack>
 
                 {modifierFields.length === 0 && (
-                  <Box style={styles.emptyBox}>
+                  <Box
+                    style={styles.emptyBox}
+                    className="w-full bg-white rounded-[20px] py-8 px-7"
+                  >
                     <Text style={{ color: "#999", textAlign: "center" }}>
                       Sin modificadores. Presiona Agregar para añadir uno.
                     </Text>
@@ -904,7 +1089,11 @@ console.log("modifierOptions:", modifierOptions);
                   <Button
                     size="lg"
                     className="mt-4"
-                    onPress={() => { clearData(); setIsEdit(false); router.back(); }}
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
                   >
                     <ButtonText>Cancelar</ButtonText>
                   </Button>
@@ -915,7 +1104,9 @@ console.log("modifierOptions:", modifierOptions);
                     onPress={handleSubmit(onSubmit)}
                     disabled={isPending}
                   >
-                    <ButtonText>{isPending ? "Guardando..." : "Guardar"}</ButtonText>
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
                   </Button>
                 </HStack>
               </VStack>

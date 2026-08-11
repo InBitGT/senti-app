@@ -247,7 +247,10 @@ export default function UserForm() {
           </Pressable>
 
           <Center>
-            <Box style={styles.card}>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
                 {isEdit ? "Editar Usuario" : "Nuevo Usuario"}
               </Heading>

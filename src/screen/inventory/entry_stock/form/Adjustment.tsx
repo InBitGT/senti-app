@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
+import { AlertCircleIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -33,6 +34,7 @@ import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useAuthStore } from "@/src/store";
 import { Adjustment } from "@/src/types/entry_stock/entry_stock.types";
 import { useRouter } from "expo-router";
+import { ArrowLeftIcon } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
@@ -201,49 +203,178 @@ export default function AdjustmentForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <Pressable
-            onPress={() => router.back()}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
-
-          <Center>
-            <Box style={styles.card}>
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                Nuevo Movimiento
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                Registra un movimiento de inventario
+          <DesktopScrollView>
+            <Pressable
+              onPress={() => router.back()}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+                Regresar
               </Text>
+            </Pressable>
 
-              <VStack space="lg">
-                <Text style={styles.sectionLabel}>DATOS DEL MOVIMIENTO</Text>
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  Nuevo Movimiento
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  Registra un movimiento de inventario
+                </Text>
 
-                {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
-                {!hideBranchWarehouseInputs && (
+                <VStack space="lg">
+                  <Text style={styles.sectionLabel}>DATOS DEL MOVIMIENTO</Text>
+
+                  {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
+                  {!hideBranchWarehouseInputs && (
+                    <View style={row}>
+                      <View style={half}>
+                        <Controller
+                          control={control}
+                          name="branch_id"
+                          rules={{ required: "La sucursal es obligatoria." }}
+                          render={({ field: { onChange, value } }) => {
+                            const selectedLabel =
+                              branchOptions.find((b) => String(b.id) === value)
+                                ?.name || "";
+                            return (
+                              <FormControl isInvalid={!!errors.branch_id}>
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Sucursal
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Select
+                                  selectedValue={value}
+                                  onValueChange={onChange}
+                                >
+                                  <SelectTrigger>
+                                    <SelectInput
+                                      style={{ color: "#000" }}
+                                      placeholder="Selecciona una sucursal"
+                                      value={selectedLabel}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectPortal>
+                                    <SelectBackdrop />
+                                    <SelectContent>
+                                      <SelectDragIndicatorWrapper>
+                                        <SelectDragIndicator />
+                                      </SelectDragIndicatorWrapper>
+                                      {branchOptions.map((b) => (
+                                        <SelectItem
+                                          key={b.id}
+                                          label={b.name}
+                                          value={String(b.id)}
+                                        />
+                                      ))}
+                                    </SelectContent>
+                                  </SelectPortal>
+                                </Select>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.branch_id?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            );
+                          }}
+                        />
+                      </View>
+
+                      <View style={half}>
+                        <Controller
+                          control={control}
+                          name="warehouse_id"
+                          rules={{ required: "La bodega es obligatoria." }}
+                          render={({ field: { onChange, value } }) => {
+                            const selectedLabel =
+                              warehouseOptionsForBranch.find(
+                                (w) => String(w.warehouse_id) === value,
+                              )?.warehouse_name || "";
+                            return (
+                              <FormControl isInvalid={!!errors.warehouse_id}>
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Bodega
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Select
+                                  selectedValue={value}
+                                  onValueChange={onChange}
+                                  isDisabled={!selectedBranchId}
+                                >
+                                  <SelectTrigger>
+                                    <SelectInput
+                                      style={{ color: "#000" }}
+                                      placeholder={
+                                        selectedBranchId
+                                          ? "Selecciona una bodega"
+                                          : "Primero selecciona una sucursal"
+                                      }
+                                      value={selectedLabel}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectPortal>
+                                    <SelectBackdrop />
+                                    <SelectContent style={{ maxHeight: 320 }}>
+                                      <SelectDragIndicatorWrapper>
+                                        <SelectDragIndicator />
+                                      </SelectDragIndicatorWrapper>
+                                      {warehouseOptionsForBranch.map((w) => (
+                                        <SelectItem
+                                          key={w.warehouse_id}
+                                          label={w.warehouse_name}
+                                          value={String(w.warehouse_id)}
+                                        />
+                                      ))}
+                                    </SelectContent>
+                                  </SelectPortal>
+                                </Select>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.warehouse_id?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            );
+                          }}
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Producto + N° Referencia */}
                   <View style={row}>
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="branch_id"
-                        rules={{ required: "La sucursal es obligatoria." }}
+                        name="product_id"
+                        rules={{ required: "El producto es obligatorio." }}
                         render={({ field: { onChange, value } }) => {
                           const selectedLabel =
-                            branchOptions.find((b) => String(b.id) === value)
-                              ?.name || "";
+                            productData?.find(
+                              (p: any) => String(p.id) === value,
+                            )?.name || "";
                           return (
-                            <FormControl isInvalid={!!errors.branch_id}>
+                            <FormControl isInvalid={!!errors.product_id}>
                               <FormControlLabel>
                                 <FormControlLabelText style={{ color: "#000" }}>
-                                  Sucursal
+                                  Producto
                                 </FormControlLabelText>
                               </FormControlLabel>
                               <Select
@@ -253,68 +384,7 @@ export default function AdjustmentForm() {
                                 <SelectTrigger>
                                   <SelectInput
                                     style={{ color: "#000" }}
-                                    placeholder="Selecciona una sucursal"
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    {branchOptions.map((b) => (
-                                      <SelectItem
-                                        key={b.id}
-                                        label={b.name}
-                                        value={String(b.id)}
-                                      />
-                                    ))}
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.branch_id?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          );
-                        }}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="warehouse_id"
-                        rules={{ required: "La bodega es obligatoria." }}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            warehouseOptionsForBranch.find(
-                              (w) => String(w.warehouse_id) === value,
-                            )?.warehouse_name || "";
-                          return (
-                            <FormControl isInvalid={!!errors.warehouse_id}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Bodega
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                                isDisabled={!selectedBranchId}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder={
-                                      selectedBranchId
-                                        ? "Selecciona una bodega"
-                                        : "Primero selecciona una sucursal"
-                                    }
+                                    placeholder="Selecciona producto"
                                     value={selectedLabel}
                                   />
                                 </SelectTrigger>
@@ -324,11 +394,111 @@ export default function AdjustmentForm() {
                                     <SelectDragIndicatorWrapper>
                                       <SelectDragIndicator />
                                     </SelectDragIndicatorWrapper>
-                                    {warehouseOptionsForBranch.map((w) => (
+                                    <ScrollView
+                                      style={{ maxHeight: 280 }}
+                                      nestedScrollEnabled
+                                    >
+                                      {(productData ?? []).map((p: any) => (
+                                        <SelectItem
+                                          key={p.id}
+                                          label={p.name}
+                                          value={String(p.id)}
+                                        />
+                                      ))}
+                                    </ScrollView>
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.product_id?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      {/* N° Referencia */}
+                      <Controller
+                        control={control}
+                        name="reference_number"
+                        rules={{
+                          required: "El número de referencia es obligatorio.",
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.reference_number}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                N° Referencia
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. ADJ-BATCH-002"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                autoCapitalize="characters"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.reference_number?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Tipo de movimiento + Razón */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="movement_type"
+                        rules={{ required: "El tipo es obligatorio." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            MOVEMENT_TYPE_OPTIONS.find((m) => m.value === value)
+                              ?.label || "";
+
+                          return (
+                            <FormControl isInvalid={!!errors.movement_type}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Tipo de movimiento
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder="Selecciona tipo"
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    {MOVEMENT_TYPE_OPTIONS.map((m) => (
                                       <SelectItem
-                                        key={w.warehouse_id}
-                                        label={w.warehouse_name}
-                                        value={String(w.warehouse_id)}
+                                        key={m.value}
+                                        label={m.label}
+                                        value={m.value}
                                       />
                                     ))}
                                   </SelectContent>
@@ -337,7 +507,63 @@ export default function AdjustmentForm() {
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
                                 <FormControlErrorText>
-                                  {errors.warehouse_id?.message}
+                                  {errors.movement_type?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="reason"
+                        rules={{ required: "La razón es obligatoria." }}
+                        render={({ field: { onChange, value } }) => {
+                          const selectedLabel =
+                            REASON_OPTIONS.find((r) => r.value === value)
+                              ?.label || "";
+
+                          return (
+                            <FormControl isInvalid={!!errors.reason}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Razón
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Select
+                                selectedValue={value}
+                                onValueChange={onChange}
+                              >
+                                <SelectTrigger>
+                                  <SelectInput
+                                    style={{ color: "#000" }}
+                                    placeholder="Selecciona razón"
+                                    value={selectedLabel}
+                                  />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                  <SelectBackdrop />
+                                  <SelectContent>
+                                    <SelectDragIndicatorWrapper>
+                                      <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    {REASON_OPTIONS.map((r) => (
+                                      <SelectItem
+                                        key={r.value}
+                                        label={r.label}
+                                        value={r.value}
+                                      />
+                                    ))}
+                                  </SelectContent>
+                                </SelectPortal>
+                              </Select>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.reason?.message}
                                 </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
@@ -346,372 +572,158 @@ export default function AdjustmentForm() {
                       />
                     </View>
                   </View>
-                )}
 
-                {/* Producto + N° Referencia */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="product_id"
-                      rules={{ required: "El producto es obligatorio." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          productData?.find((p: any) => String(p.id) === value)
-                            ?.name || "";
-                        return (
-                          <FormControl isInvalid={!!errors.product_id}>
+                  {/* Cantidad + Costo unitario */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="qty"
+                        rules={{ required: "La cantidad es obligatoria." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.qty}>
                             <FormControlLabel>
                               <FormControlLabelText style={{ color: "#000" }}>
-                                Producto
+                                Cantidad
                               </FormControlLabelText>
                             </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona producto"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent style={{ maxHeight: 320 }}>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  <ScrollView
-                                    style={{ maxHeight: 280 }}
-                                    nestedScrollEnabled
-                                  >
-                                    {(productData ?? []).map((p: any) => (
-                                      <SelectItem
-                                        key={p.id}
-                                        label={p.name}
-                                        value={String(p.id)}
-                                      />
-                                    ))}
-                                  </ScrollView>
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 4"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                              />
+                            </Input>
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
                               <FormControlErrorText>
-                                {errors.product_id?.message}
+                                {errors.qty?.message}
                               </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
-                        );
-                      }}
-                    />
+                        )}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="unit_cost"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Costo unitario{" "}
+                                <Text size="xs" style={{ color: "#999" }}>
+                                  (opcional)
+                                </Text>
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. 5.50"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                              />
+                            </Input>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
                   </View>
 
-                  <View style={half}>
-                    {/* N° Referencia */}
+                  {/* Lote — solo si el producto requiere batch */}
+                  {requiresBatch && (
                     <Controller
                       control={control}
-                      name="reference_number"
-                      rules={{
-                        required: "El número de referencia es obligatorio.",
-                      }}
+                      name="batch_id"
+                      rules={{ required: "El lote es obligatorio." }}
                       render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.reference_number}>
+                        <FormControl isInvalid={!!errors.batch_id}>
                           <FormControlLabel>
                             <FormControlLabelText style={{ color: "#000" }}>
-                              N° Referencia
+                              ID de lote
                             </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
                               style={{ color: "#171717" }}
-                              placeholder="Ej. ADJ-BATCH-002"
+                              placeholder="Ej. 1"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
-                              autoCapitalize="characters"
+                              keyboardType="number-pad"
                             />
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
                             <FormControlErrorText>
-                              {errors.reference_number?.message}
+                              {errors.batch_id?.message}
                             </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
                     />
-                  </View>
-                </View>
+                  )}
 
-                {/* Tipo de movimiento + Razón */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="movement_type"
-                      rules={{ required: "El tipo es obligatorio." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          MOVEMENT_TYPE_OPTIONS.find((m) => m.value === value)
-                            ?.label || "";
-
-                        return (
-                          <FormControl isInvalid={!!errors.movement_type}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Tipo de movimiento
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona tipo"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {MOVEMENT_TYPE_OPTIONS.map((m) => (
-                                    <SelectItem
-                                      key={m.value}
-                                      label={m.label}
-                                      value={m.value}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.movement_type?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
-                        );
-                      }}
-                    />
-                  </View>
-
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="reason"
-                      rules={{ required: "La razón es obligatoria." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          REASON_OPTIONS.find((r) => r.value === value)
-                            ?.label || "";
-
-                        return (
-                          <FormControl isInvalid={!!errors.reason}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Razón
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona razón"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {REASON_OPTIONS.map((r) => (
-                                    <SelectItem
-                                      key={r.value}
-                                      label={r.label}
-                                      value={r.value}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.reason?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
-                        );
-                      }}
-                    />
-                  </View>
-                </View>
-
-                {/* Cantidad + Costo unitario */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="qty"
-                      rules={{ required: "La cantidad es obligatoria." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.qty}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Cantidad
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. 4"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              keyboardType="decimal-pad"
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.qty?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="unit_cost"
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Costo unitario{" "}
-                              <Text size="xs" style={{ color: "#999" }}>
-                                (opcional)
-                              </Text>
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. 5.50"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              keyboardType="decimal-pad"
-                            />
-                          </Input>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
-
-                {/* Lote — solo si el producto requiere batch */}
-                {requiresBatch && (
+                  {/* Notas */}
                   <Controller
                     control={control}
-                    name="batch_id"
-                    rules={{ required: "El lote es obligatorio." }}
+                    name="notes"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.batch_id}>
+                      <FormControl>
                         <FormControlLabel>
                           <FormControlLabelText style={{ color: "#000" }}>
-                            ID de lote
+                            Notas{" "}
+                            <Text size="xs" style={{ color: "#999" }}>
+                              (opcional)
+                            </Text>
                           </FormControlLabelText>
                         </FormControlLabel>
-                        <Input>
-                          <InputField
+                        <Textarea>
+                          <TextareaInput
                             style={{ color: "#171717" }}
-                            placeholder="Ej. 1"
+                            placeholder="Observaciones del movimiento..."
                             value={value}
                             onChangeText={onChange}
                             onBlur={onBlur}
-                            keyboardType="number-pad"
                           />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.batch_id?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
+                        </Textarea>
                       </FormControl>
                     )}
                   />
-                )}
 
-                {/* Notas */}
-                <Controller
-                  control={control}
-                  name="notes"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Notas{" "}
-                          <Text size="xs" style={{ color: "#999" }}>
-                            (opcional)
-                          </Text>
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Textarea>
-                        <TextareaInput
-                          style={{ color: "#171717" }}
-                          placeholder="Observaciones del movimiento..."
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                      </Textarea>
-                    </FormControl>
-                  )}
-                />
-
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => router.back()}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => router.back()}
+                    >
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending}
+                    >
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

@@ -1,4 +1,5 @@
-import { ArrowLeftIcon, Icon } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
+import { ArrowLeftIcon } from "lucide-react-native";
 import { Pressable, Text } from "react-native";
 
 interface Props {

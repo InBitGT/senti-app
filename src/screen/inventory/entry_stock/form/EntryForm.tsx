@@ -1,3 +1,4 @@
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -15,7 +16,6 @@ import { HStack } from "@/components/ui/hstack";
 import {
   AddIcon,
   AlertCircleIcon,
-  ArrowLeftIcon,
   Icon,
   TrashIcon,
 } from "@/components/ui/icon";
@@ -41,17 +41,18 @@ import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
 import { useAuthStore } from "@/src/store";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
 import { useRouter } from "expo-router";
+import { ArrowLeftIcon } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
   useWindowDimensions,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface ItemFormValues {
@@ -117,7 +118,10 @@ function ItemRow({
     : (parseFloat(quantity) * parseFloat(unit_cost)).toFixed(2);
 
   return (
-    <Box style={styles.itemCard}>
+    <Box
+      style={styles.itemCard}
+      className="w-full bg-white rounded-[20px] py-8 px-7"
+    >
       <HStack
         style={{
           justifyContent: "space-between",
@@ -573,53 +577,198 @@ export default function InventoryForm() {
     >
       <SafeAreaView edges={["top"]}>
         <ScrollView
+          style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 20,
+            paddingBottom: 40,
+          }}
+          showsVerticalScrollIndicator={true}
         >
-          <Pressable
-            onPress={() => router.back()}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-              Regresar
-            </Text>
-          </Pressable>
-
-          <Center>
-            <Box style={styles.card}>
-              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                Nuevo Ingreso
-              </Heading>
-              <Text size="sm" className="text-typography-400 mb-6">
-                Llena los campos para registrar un ingreso de inventario
+          <DesktopScrollView>
+            <Pressable
+              onPress={() => router.back()}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+                Regresar
               </Text>
+            </Pressable>
 
-              <VStack space="lg">
-                {/* ── DATOS DEL DOCUMENTO ── */}
-                <Text style={styles.sectionLabel}>DATOS DEL DOCUMENTO</Text>
+            <Center>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                  Nuevo Ingreso
+                </Heading>
+                <Text size="sm" className="text-typography-400 mb-6">
+                  Llena los campos para registrar un ingreso de inventario
+                </Text>
 
-                {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
-                {!hideBranchWarehouseInputs && (
+                <VStack space="lg">
+                  {/* ── DATOS DEL DOCUMENTO ── */}
+                  <Text style={styles.sectionLabel}>DATOS DEL DOCUMENTO</Text>
+
+                  {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
+                  {!hideBranchWarehouseInputs && (
+                    <View style={row}>
+                      <View style={half}>
+                        <Controller
+                          control={control}
+                          name="branch_id"
+                          rules={{ required: "La sucursal es obligatoria." }}
+                          render={({ field: { onChange, value } }) => {
+                            const selectedLabel =
+                              branchOptions.find((b) => String(b.id) === value)
+                                ?.name || "";
+                            return (
+                              <FormControl isInvalid={!!errors.branch_id}>
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Sucursal
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Select
+                                  selectedValue={value}
+                                  onValueChange={onChange}
+                                >
+                                  <SelectTrigger>
+                                    <SelectInput
+                                      style={{ color: "#000" }}
+                                      placeholder="Selecciona una sucursal"
+                                      value={selectedLabel}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectPortal>
+                                    <SelectBackdrop />
+                                    <SelectContent style={{ maxHeight: "50%" }}>
+                                      <SelectDragIndicatorWrapper>
+                                        <SelectDragIndicator />
+                                      </SelectDragIndicatorWrapper>
+                                      <ScrollView
+                                        style={{ width: "100%" }}
+                                        showsVerticalScrollIndicator={false}
+                                      >
+                                        {branchOptions.map((b) => (
+                                          <SelectItem
+                                            key={b.id}
+                                            label={b.name}
+                                            value={String(b.id)}
+                                          />
+                                        ))}
+                                      </ScrollView>
+                                    </SelectContent>
+                                  </SelectPortal>
+                                </Select>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.branch_id?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            );
+                          }}
+                        />
+                      </View>
+
+                      <View style={half}>
+                        <Controller
+                          control={control}
+                          name="warehouse_id"
+                          rules={{ required: "La bodega es obligatoria." }}
+                          render={({ field: { onChange, value } }) => {
+                            const selectedLabel =
+                              warehouseOptionsForBranch.find(
+                                (w) => String(w.warehouse_id) === value,
+                              )?.warehouse_name || "";
+                            return (
+                              <FormControl isInvalid={!!errors.warehouse_id}>
+                                <FormControlLabel>
+                                  <FormControlLabelText
+                                    style={{ color: "#000" }}
+                                  >
+                                    Bodega
+                                  </FormControlLabelText>
+                                </FormControlLabel>
+                                <Select
+                                  selectedValue={value}
+                                  onValueChange={onChange}
+                                  isDisabled={!selectedBranchId}
+                                >
+                                  <SelectTrigger>
+                                    <SelectInput
+                                      style={{ color: "#000" }}
+                                      placeholder={
+                                        selectedBranchId
+                                          ? "Selecciona una bodega"
+                                          : "Primero selecciona una sucursal"
+                                      }
+                                      value={selectedLabel}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectPortal>
+                                    <SelectBackdrop />
+                                    <SelectContent style={{ maxHeight: "50%" }}>
+                                      <SelectDragIndicatorWrapper>
+                                        <SelectDragIndicator />
+                                      </SelectDragIndicatorWrapper>
+                                      <ScrollView
+                                        style={{ width: "100%" }}
+                                        showsVerticalScrollIndicator={false}
+                                      >
+                                        {warehouseOptionsForBranch.map((w) => (
+                                          <SelectItem
+                                            key={w.warehouse_id}
+                                            label={w.warehouse_name}
+                                            value={String(w.warehouse_id)}
+                                          />
+                                        ))}
+                                      </ScrollView>
+                                    </SelectContent>
+                                  </SelectPortal>
+                                </Select>
+                                <FormControlError>
+                                  <FormControlErrorIcon as={AlertCircleIcon} />
+                                  <FormControlErrorText>
+                                    {errors.warehouse_id?.message}
+                                  </FormControlErrorText>
+                                </FormControlError>
+                              </FormControl>
+                            );
+                          }}
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Bodega + Proveedor */}
                   <View style={row}>
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="branch_id"
-                        rules={{ required: "La sucursal es obligatoria." }}
+                        name="supplier_id"
+                        rules={{ required: "El proveedor es obligatorio." }}
                         render={({ field: { onChange, value } }) => {
                           const selectedLabel =
-                            branchOptions.find((b) => String(b.id) === value)
-                              ?.name || "";
+                            supplierData?.find(
+                              (s: any) => String(s.id) === value,
+                            )?.name || "";
                           return (
-                            <FormControl isInvalid={!!errors.branch_id}>
+                            <FormControl isInvalid={!!errors.supplier_id}>
                               <FormControlLabel>
                                 <FormControlLabelText style={{ color: "#000" }}>
-                                  Sucursal
+                                  Proveedor
                                 </FormControlLabelText>
                               </FormControlLabel>
                               <Select
@@ -629,7 +778,7 @@ export default function InventoryForm() {
                                 <SelectTrigger>
                                   <SelectInput
                                     style={{ color: "#000" }}
-                                    placeholder="Selecciona una sucursal"
+                                    placeholder="Selecciona proveedor"
                                     value={selectedLabel}
                                   />
                                 </SelectTrigger>
@@ -643,11 +792,11 @@ export default function InventoryForm() {
                                       style={{ width: "100%" }}
                                       showsVerticalScrollIndicator={false}
                                     >
-                                      {branchOptions.map((b) => (
+                                      {(supplierData ?? []).map((s: any) => (
                                         <SelectItem
-                                          key={b.id}
-                                          label={b.name}
-                                          value={String(b.id)}
+                                          key={s.id}
+                                          label={s.name}
+                                          value={String(s.id)}
                                         />
                                       ))}
                                     </ScrollView>
@@ -657,7 +806,7 @@ export default function InventoryForm() {
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
                                 <FormControlErrorText>
-                                  {errors.branch_id?.message}
+                                  {errors.supplier_id?.message}
                                 </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
@@ -665,345 +814,222 @@ export default function InventoryForm() {
                         }}
                       />
                     </View>
-
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="warehouse_id"
-                        rules={{ required: "La bodega es obligatoria." }}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            warehouseOptionsForBranch.find(
-                              (w) => String(w.warehouse_id) === value,
-                            )?.warehouse_name || "";
-                          return (
-                            <FormControl isInvalid={!!errors.warehouse_id}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Bodega
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                                isDisabled={!selectedBranchId}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder={
-                                      selectedBranchId
-                                        ? "Selecciona una bodega"
-                                        : "Primero selecciona una sucursal"
-                                    }
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent style={{ maxHeight: "50%" }}>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    <ScrollView
-                                      style={{ width: "100%" }}
-                                      showsVerticalScrollIndicator={false}
-                                    >
-                                      {warehouseOptionsForBranch.map((w) => (
-                                        <SelectItem
-                                          key={w.warehouse_id}
-                                          label={w.warehouse_name}
-                                          value={String(w.warehouse_id)}
-                                        />
-                                      ))}
-                                    </ScrollView>
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.warehouse_id?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          );
+                        name="document_number"
+                        rules={{
+                          required: "El número de documento es obligatorio.",
                         }}
-                      />
-                    </View>
-                  </View>
-                )}
-
-                {/* Bodega + Proveedor */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="supplier_id"
-                      rules={{ required: "El proveedor es obligatorio." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          supplierData?.find((s: any) => String(s.id) === value)
-                            ?.name || "";
-                        return (
-                          <FormControl isInvalid={!!errors.supplier_id}>
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.document_number}>
                             <FormControlLabel>
                               <FormControlLabelText style={{ color: "#000" }}>
-                                Proveedor
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona proveedor"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent style={{ maxHeight: "50%" }}>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  <ScrollView
-                                    style={{ width: "100%" }}
-                                    showsVerticalScrollIndicator={false}
-                                  >
-                                    {(supplierData ?? []).map((s: any) => (
-                                      <SelectItem
-                                        key={s.id}
-                                        label={s.name}
-                                        value={String(s.id)}
-                                      />
-                                    ))}
-                                  </ScrollView>
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.supplier_id?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
-                        );
-                      }}
-                    />
-                  </View>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="document_number"
-                      rules={{
-                        required: "El número de documento es obligatorio.",
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormControl isInvalid={!!errors.document_number}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              N° Documento
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Input>
-                            <InputField
-                              style={{ color: "#171717" }}
-                              placeholder="Ej. FAC-003"
-                              value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              autoCapitalize="characters"
-                            />
-                          </Input>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.document_number?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      )}
-                    />
-                  </View>
-                </View>
-
-                {/* N° Documento + Fecha */}
-                <View style={row}>
-                  <View style={half}>
-                    <Controller
-                      control={control}
-                      name="document_date"
-                      rules={{
-                        required: "La fecha es obligatoria.",
-                        pattern: {
-                          value: /^\d{4}-\d{2}-\d{2}$/,
-                          message: "Formato inválido. Usa YYYY-MM-DD.",
-                        },
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => {
-                        const handleChange = (text: string) => {
-                          // Solo permitir números y guiones
-                          const cleaned = text.replace(/[^0-9]/g, "");
-
-                          // Insertar guiones automáticamente
-                          let formatted = cleaned;
-                          if (cleaned.length > 4) {
-                            formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
-                          }
-                          if (cleaned.length > 6) {
-                            formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
-                          }
-
-                          onChange(formatted);
-                        };
-
-                        return (
-                          <FormControl isInvalid={!!errors.document_date}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Fecha del documento
+                                N° Documento
                               </FormControlLabelText>
                             </FormControlLabel>
                             <Input>
                               <InputField
                                 style={{ color: "#171717" }}
-                                placeholder="YYYY-MM-DD"
+                                placeholder="Ej. FAC-003"
                                 value={value}
-                                onChangeText={handleChange}
+                                onChangeText={onChange}
                                 onBlur={onBlur}
-                                keyboardType="number-pad"
-                                maxLength={10}
+                                autoCapitalize="characters"
                               />
                             </Input>
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
                               <FormControlErrorText>
-                                {errors.document_date?.message}
+                                {errors.document_number?.message}
                               </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
-                        );
-                      }}
-                    />
+                        )}
+                      />
+                    </View>
                   </View>
-                  <View style={half}></View>
-                </View>
 
-                {/* Notas generales */}
-                <Controller
-                  control={control}
-                  name="notes"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl>
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Notas{" "}
-                          <Text size="xs" style={{ color: "#999" }}>
-                            (opcional)
-                          </Text>
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Textarea>
-                        <TextareaInput
-                          style={{ color: "#171717" }}
-                          placeholder="Observaciones generales del ingreso..."
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                      </Textarea>
-                    </FormControl>
-                  )}
-                />
+                  {/* N° Documento + Fecha */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="document_date"
+                        rules={{
+                          required: "La fecha es obligatoria.",
+                          pattern: {
+                            value: /^\d{4}-\d{2}-\d{2}$/,
+                            message: "Formato inválido. Usa YYYY-MM-DD.",
+                          },
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => {
+                          const handleChange = (text: string) => {
+                            // Solo permitir números y guiones
+                            const cleaned = text.replace(/[^0-9]/g, "");
 
-                <Divider className="my-2" />
+                            // Insertar guiones automáticamente
+                            let formatted = cleaned;
+                            if (cleaned.length > 4) {
+                              formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+                            }
+                            if (cleaned.length > 6) {
+                              formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
+                            }
 
-                {/* ── PRODUCTOS ── */}
-                <HStack
-                  style={{
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={styles.sectionLabel}>
-                    PRODUCTOS ({fields.length})
-                  </Text>
-                  <Button size="sm" onPress={() => append(EMPTY_ITEM)}>
-                    <Icon
-                      as={AddIcon}
-                      size="sm"
-                      style={{ color: "#fff", marginRight: 4 }}
-                    />
-                    <ButtonText>Agregar</ButtonText>
-                  </Button>
-                </HStack>
+                            onChange(formatted);
+                          };
 
-                {fields.length === 0 && (
-                  <Box style={styles.emptyBox}>
-                    <Text style={{ color: "#999", textAlign: "center" }}>
-                      No hay productos. Presiona Agregar para añadir uno.
-                    </Text>
-                  </Box>
-                )}
+                          return (
+                            <FormControl isInvalid={!!errors.document_date}>
+                              <FormControlLabel>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Fecha del documento
+                                </FormControlLabelText>
+                              </FormControlLabel>
+                              <Input>
+                                <InputField
+                                  style={{ color: "#171717" }}
+                                  placeholder="YYYY-MM-DD"
+                                  value={value}
+                                  onChangeText={handleChange}
+                                  onBlur={onBlur}
+                                  keyboardType="number-pad"
+                                  maxLength={10}
+                                />
+                              </Input>
+                              <FormControlError>
+                                <FormControlErrorIcon as={AlertCircleIcon} />
+                                <FormControlErrorText>
+                                  {errors.document_date?.message}
+                                </FormControlErrorText>
+                              </FormControlError>
+                            </FormControl>
+                          );
+                        }}
+                      />
+                    </View>
+                    <View style={half}></View>
+                  </View>
 
-                {fields.map((field, index) => (
-                  <ItemRow
-                    key={field.id}
-                    index={index}
+                  {/* Notas generales */}
+                  <Controller
                     control={control}
-                    errors={errors}
-                    remove={remove}
-                    productData={productData ?? []}
-                    isLarge={isLarge}
+                    name="notes"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormControl>
+                        <FormControlLabel>
+                          <FormControlLabelText style={{ color: "#000" }}>
+                            Notas{" "}
+                            <Text size="xs" style={{ color: "#999" }}>
+                              (opcional)
+                            </Text>
+                          </FormControlLabelText>
+                        </FormControlLabel>
+                        <Textarea>
+                          <TextareaInput
+                            style={{ color: "#171717" }}
+                            placeholder="Observaciones generales del ingreso..."
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
+                        </Textarea>
+                      </FormControl>
+                    )}
                   />
-                ))}
 
-                {/* Total general */}
-                {fields.length > 0 && (
-                  <Box style={styles.totalBox}>
-                    <Text style={{ color: "#555", fontSize: 14 }}>
-                      Total general
+                  <Divider className="my-2" />
+
+                  {/* ── PRODUCTOS ── */}
+                  <HStack
+                    style={{
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={styles.sectionLabel}>
+                      PRODUCTOS ({fields.length})
                     </Text>
-                    <Text
-                      style={{
-                        color: "#000",
-                        fontWeight: "bold",
-                        fontSize: 20,
-                      }}
+                    <Button size="sm" onPress={() => append(EMPTY_ITEM)}>
+                      <Icon
+                        as={AddIcon}
+                        size="sm"
+                        style={{ color: "#fff", marginRight: 4 }}
+                      />
+                      <ButtonText>Agregar</ButtonText>
+                    </Button>
+                  </HStack>
+
+                  {fields.length === 0 && (
+                    <Box
+                      style={styles.emptyBox}
+                      className="w-full bg-white rounded-[20px] py-8 px-7"
                     >
-                      Q {totalGeneral.toFixed(2)}
-                    </Text>
-                  </Box>
-                )}
+                      <Text style={{ color: "#999", textAlign: "center" }}>
+                        No hay productos. Presiona Agregar para añadir uno.
+                      </Text>
+                    </Box>
+                  )}
 
-                {/* Botones */}
-                <HStack style={{ justifyContent: "flex-end" }}>
-                  <Button
-                    size="lg"
-                    className="mt-4"
-                    onPress={() => router.back()}
-                  >
-                    <ButtonText>Cancelar</ButtonText>
-                  </Button>
-                  <Button
-                    style={{ marginLeft: 10 }}
-                    size="lg"
-                    className="mt-4"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={isPending || fields.length === 0}
-                  >
-                    <ButtonText>
-                      {isPending ? "Guardando..." : "Guardar"}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </Box>
-          </Center>
+                  {fields.map((field, index) => (
+                    <ItemRow
+                      key={field.id}
+                      index={index}
+                      control={control}
+                      errors={errors}
+                      remove={remove}
+                      productData={productData ?? []}
+                      isLarge={isLarge}
+                    />
+                  ))}
+
+                  {/* Total general */}
+                  {fields.length > 0 && (
+                    <Box
+                      style={styles.totalBox}
+                      className="w-full bg-white rounded-[20px] py-8 px-7"
+                    >
+                      <Text style={{ color: "#555", fontSize: 14 }}>
+                        Total general
+                      </Text>
+                      <Text
+                        style={{
+                          color: "#000",
+                          fontWeight: "bold",
+                          fontSize: 20,
+                        }}
+                      >
+                        Q {totalGeneral.toFixed(2)}
+                      </Text>
+                    </Box>
+                  )}
+
+                  {/* Botones */}
+                  <HStack style={{ justifyContent: "flex-end" }}>
+                    <Button
+                      size="lg"
+                      className="mt-4"
+                      onPress={() => router.back()}
+                    >
+                      <ButtonText>Cancelar</ButtonText>
+                    </Button>
+                    <Button
+                      style={{ marginLeft: 10 }}
+                      size="lg"
+                      className="mt-4"
+                      onPress={handleSubmit(onSubmit)}
+                      disabled={isPending || fields.length === 0}
+                    >
+                      <ButtonText>
+                        {isPending ? "Guardando..." : "Guardar"}
+                      </ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </Center>
+          </DesktopScrollView>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

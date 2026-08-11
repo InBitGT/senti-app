@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
+import { AlertCircleIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -35,6 +35,7 @@ import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useAuthStore } from "@/src/store";
 import { useProductStore } from "@/src/store/useProductStore/useProductStore";
 import { useRouter } from "expo-router";
+import { ArrowLeftIcon } from "lucide-react-native";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -135,10 +136,18 @@ export default function ProductForm() {
       // Modifier
       modifier_group: data?.modifier_group || "",
       modifier_name: data?.modifier_name || "",
-      modifier_quantity: data?.modifier_quantity ? String(data.modifier_quantity) : "1",
-      modifier_min_selection: data?.modifier_min_selection ? String(data.modifier_min_selection) : "0",
-      modifier_max_selection: data?.modifier_max_selection ? String(data.modifier_max_selection) : "1",
-      modifier_price_adjustment: data?.modifier_price_adjustment ? String(data.modifier_price_adjustment) : "0",
+      modifier_quantity: data?.modifier_quantity
+        ? String(data.modifier_quantity)
+        : "1",
+      modifier_min_selection: data?.modifier_min_selection
+        ? String(data.modifier_min_selection)
+        : "0",
+      modifier_max_selection: data?.modifier_max_selection
+        ? String(data.modifier_max_selection)
+        : "1",
+      modifier_price_adjustment: data?.modifier_price_adjustment
+        ? String(data.modifier_price_adjustment)
+        : "0",
       modifier_is_default: data?.modifier_is_default ?? false,
     },
   });
@@ -178,11 +187,17 @@ export default function ProductForm() {
     try {
       if (!isEdit) {
         await post.mutateAsync(payload);
-        showToast({ message: "Producto creado correctamente", type: "success" });
+        showToast({
+          message: "Producto creado correctamente",
+          type: "success",
+        });
       } else {
         if (!data?.id) return;
         await put.mutateAsync({ id: data.id, data: payload });
-        showToast({ message: "Producto editado correctamente", type: "success" });
+        showToast({
+          message: "Producto editado correctamente",
+          type: "success",
+        });
         setIsEdit(false);
       }
       clearData();
@@ -206,15 +221,28 @@ export default function ProductForm() {
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
           <Pressable
-            onPress={() => { clearData(); setIsEdit(false); router.back(); }}
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
           >
             <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>Regresar</Text>
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
           </Pressable>
 
           <Center>
-            <Box style={styles.card}>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
               <Heading style={{ color: "#000" }} size="xl" className="mb-1">
                 {isEdit ? "Editar Producto" : "Nuevo Producto"}
               </Heading>
@@ -225,7 +253,6 @@ export default function ProductForm() {
               </Text>
 
               <VStack space="lg">
-
                 {/* ── INFO GENERAL ── */}
                 <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
@@ -239,7 +266,9 @@ export default function ProductForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.name}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Nombre</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Nombre
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -252,7 +281,9 @@ export default function ProductForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.name?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.name?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -266,13 +297,19 @@ export default function ProductForm() {
                       rules={{ required: "La categoría es obligatoria." }}
                       render={({ field: { onChange, value } }) => {
                         const selectedLabel =
-                          categorie?.find((c) => String(c.id) === value)?.name || "";
+                          categorie?.find((c) => String(c.id) === value)
+                            ?.name || "";
                         return (
                           <FormControl isInvalid={!!errors.category_id}>
                             <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>Categoría</FormControlLabelText>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Categoría
+                              </FormControlLabelText>
                             </FormControlLabel>
-                            <Select selectedValue={value} onValueChange={onChange}>
+                            <Select
+                              selectedValue={value}
+                              onValueChange={onChange}
+                            >
                               <SelectTrigger>
                                 <SelectInput
                                   style={{ color: "#000" }}
@@ -287,14 +324,20 @@ export default function ProductForm() {
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
                                   {(categorie ?? []).map((c) => (
-                                    <SelectItem key={c.id} label={c.name} value={String(c.id)} />
+                                    <SelectItem
+                                      key={c.id}
+                                      label={c.name}
+                                      value={String(c.id)}
+                                    />
                                   ))}
                                 </SelectContent>
                               </SelectPortal>
                             </Select>
                             <FormControlError>
                               <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>{errors.category_id?.message}</FormControlErrorText>
+                              <FormControlErrorText>
+                                {errors.category_id?.message}
+                              </FormControlErrorText>
                             </FormControlError>
                           </FormControl>
                         );
@@ -307,11 +350,16 @@ export default function ProductForm() {
                 <Controller
                   control={control}
                   name="description"
-                  rules={{ required: "La descripción es obligatoria.", minLength: { value: 3, message: "Mínimo 3 caracteres." } }}
+                  rules={{
+                    required: "La descripción es obligatoria.",
+                    minLength: { value: 3, message: "Mínimo 3 caracteres." },
+                  }}
                   render={({ field: { onChange, onBlur, value } }) => (
                     <FormControl isInvalid={!!errors.description}>
                       <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>Descripción</FormControlLabelText>
+                        <FormControlLabelText style={{ color: "#000" }}>
+                          Descripción
+                        </FormControlLabelText>
                       </FormControlLabel>
                       <Textarea>
                         <TextareaInput
@@ -324,7 +372,9 @@ export default function ProductForm() {
                       </Textarea>
                       <FormControlError>
                         <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>{errors.description?.message}</FormControlErrorText>
+                        <FormControlErrorText>
+                          {errors.description?.message}
+                        </FormControlErrorText>
                       </FormControlError>
                     </FormControl>
                   )}
@@ -340,7 +390,9 @@ export default function ProductForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.sku}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>SKU</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              SKU
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -354,7 +406,9 @@ export default function ProductForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.sku?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.sku?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -370,7 +424,9 @@ export default function ProductForm() {
                           <FormControlLabel>
                             <FormControlLabelText style={{ color: "#000" }}>
                               Código de barras{" "}
-                              <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
+                              <Text size="xs" style={{ color: "#999" }}>
+                                (opcional)
+                              </Text>
                             </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
@@ -400,7 +456,9 @@ export default function ProductForm() {
                           <FormControlLabel>
                             <FormControlLabelText style={{ color: "#000" }}>
                               Marca{" "}
-                              <Text size="xs" style={{ color: "#999" }}>(opcional)</Text>
+                              <Text size="xs" style={{ color: "#999" }}>
+                                (opcional)
+                              </Text>
                             </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
@@ -425,7 +483,9 @@ export default function ProductForm() {
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormControl isInvalid={!!errors.average_cost}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Costo promedio</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Costo promedio
+                            </FormControlLabelText>
                           </FormControlLabel>
                           <Input>
                             <InputField
@@ -439,7 +499,9 @@ export default function ProductForm() {
                           </Input>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.average_cost?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.average_cost?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
@@ -457,16 +519,27 @@ export default function ProductForm() {
                       render={({ field: { onChange, value } }) => (
                         <FormControl isInvalid={!!errors.unit_of_measure}>
                           <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>Unidad de medida</FormControlLabelText>
+                            <FormControlLabelText style={{ color: "#000" }}>
+                              Unidad de medida
+                            </FormControlLabelText>
                           </FormControlLabel>
-                          <Select selectedValue={value} onValueChange={onChange}>
+                          <Select
+                            selectedValue={value}
+                            onValueChange={onChange}
+                          >
                             <SelectTrigger>
-                              <SelectInput style={{ color: "#000" }} placeholder="Selecciona unidad" value={value} />
+                              <SelectInput
+                                style={{ color: "#000" }}
+                                placeholder="Selecciona unidad"
+                                value={value}
+                              />
                             </SelectTrigger>
                             <SelectPortal>
                               <SelectBackdrop />
                               <SelectContent>
-                                <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                                <SelectDragIndicatorWrapper>
+                                  <SelectDragIndicator />
+                                </SelectDragIndicatorWrapper>
                                 <SelectItem label="Unidad" value="unit" />
                                 <SelectItem label="Kilogramo" value="kg" />
                                 <SelectItem label="Gramo" value="g" />
@@ -477,13 +550,15 @@ export default function ProductForm() {
                           </Select>
                           <FormControlError>
                             <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>{errors.unit_of_measure?.message}</FormControlErrorText>
+                            <FormControlErrorText>
+                              {errors.unit_of_measure?.message}
+                            </FormControlErrorText>
                           </FormControlError>
                         </FormControl>
                       )}
                     />
                   </View>
-                  <View style={half}/>
+                  <View style={half} />
                 </View>
 
                 {/* Switches: requires_batch + is_modifier */}
@@ -515,7 +590,9 @@ export default function ProductForm() {
                 {isModifier && (
                   <>
                     <Divider className="my-2" />
-                    <Text style={styles.sectionLabel}>CONFIGURACIÓN DE MODIFICADOR</Text>
+                    <Text style={styles.sectionLabel}>
+                      CONFIGURACIÓN DE MODIFICADOR
+                    </Text>
 
                     {/* Grupo + Nombre del modificador */}
                     <View style={row}>
@@ -527,7 +604,9 @@ export default function ProductForm() {
                           render={({ field: { onChange, onBlur, value } }) => (
                             <FormControl isInvalid={!!errors.modifier_group}>
                               <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>Grupo</FormControlLabelText>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Grupo
+                                </FormControlLabelText>
                               </FormControlLabel>
                               <Input>
                                 <InputField
@@ -540,7 +619,9 @@ export default function ProductForm() {
                               </Input>
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>{errors.modifier_group?.message}</FormControlErrorText>
+                                <FormControlErrorText>
+                                  {errors.modifier_group?.message}
+                                </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
                           )}
@@ -551,11 +632,16 @@ export default function ProductForm() {
                         <Controller
                           control={control}
                           name="modifier_name"
-                          rules={{ required: "El nombre del modificador es obligatorio." }}
+                          rules={{
+                            required:
+                              "El nombre del modificador es obligatorio.",
+                          }}
                           render={({ field: { onChange, onBlur, value } }) => (
                             <FormControl isInvalid={!!errors.modifier_name}>
                               <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>Nombre del modificador</FormControlLabelText>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Nombre del modificador
+                                </FormControlLabelText>
                               </FormControlLabel>
                               <Input>
                                 <InputField
@@ -568,7 +654,9 @@ export default function ProductForm() {
                               </Input>
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>{errors.modifier_name?.message}</FormControlErrorText>
+                                <FormControlErrorText>
+                                  {errors.modifier_name?.message}
+                                </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
                           )}
@@ -586,7 +674,9 @@ export default function ProductForm() {
                           render={({ field: { onChange, onBlur, value } }) => (
                             <FormControl isInvalid={!!errors.modifier_quantity}>
                               <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>Cantidad</FormControlLabelText>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Cantidad
+                                </FormControlLabelText>
                               </FormControlLabel>
                               <Input>
                                 <InputField
@@ -600,7 +690,9 @@ export default function ProductForm() {
                               </Input>
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>{errors.modifier_quantity?.message}</FormControlErrorText>
+                                <FormControlErrorText>
+                                  {errors.modifier_quantity?.message}
+                                </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
                           )}
@@ -611,11 +703,17 @@ export default function ProductForm() {
                         <Controller
                           control={control}
                           name="modifier_price_adjustment"
-                          rules={{ required: "El ajuste de precio es obligatorio." }}
+                          rules={{
+                            required: "El ajuste de precio es obligatorio.",
+                          }}
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl isInvalid={!!errors.modifier_price_adjustment}>
+                            <FormControl
+                              isInvalid={!!errors.modifier_price_adjustment}
+                            >
                               <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>Ajuste de precio</FormControlLabelText>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Ajuste de precio
+                                </FormControlLabelText>
                               </FormControlLabel>
                               <Input>
                                 <InputField
@@ -629,7 +727,9 @@ export default function ProductForm() {
                               </Input>
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>{errors.modifier_price_adjustment?.message}</FormControlErrorText>
+                                <FormControlErrorText>
+                                  {errors.modifier_price_adjustment?.message}
+                                </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
                           )}
@@ -643,11 +743,17 @@ export default function ProductForm() {
                         <Controller
                           control={control}
                           name="modifier_min_selection"
-                          rules={{ required: "La selección mínima es obligatoria." }}
+                          rules={{
+                            required: "La selección mínima es obligatoria.",
+                          }}
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl isInvalid={!!errors.modifier_min_selection}>
+                            <FormControl
+                              isInvalid={!!errors.modifier_min_selection}
+                            >
                               <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>Selección mínima</FormControlLabelText>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Selección mínima
+                                </FormControlLabelText>
                               </FormControlLabel>
                               <Input>
                                 <InputField
@@ -661,7 +767,9 @@ export default function ProductForm() {
                               </Input>
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>{errors.modifier_min_selection?.message}</FormControlErrorText>
+                                <FormControlErrorText>
+                                  {errors.modifier_min_selection?.message}
+                                </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
                           )}
@@ -672,11 +780,17 @@ export default function ProductForm() {
                         <Controller
                           control={control}
                           name="modifier_max_selection"
-                          rules={{ required: "La selección máxima es obligatoria." }}
+                          rules={{
+                            required: "La selección máxima es obligatoria.",
+                          }}
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl isInvalid={!!errors.modifier_max_selection}>
+                            <FormControl
+                              isInvalid={!!errors.modifier_max_selection}
+                            >
                               <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>Selección máxima</FormControlLabelText>
+                                <FormControlLabelText style={{ color: "#000" }}>
+                                  Selección máxima
+                                </FormControlLabelText>
                               </FormControlLabel>
                               <Input>
                                 <InputField
@@ -690,7 +804,9 @@ export default function ProductForm() {
                               </Input>
                               <FormControlError>
                                 <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>{errors.modifier_max_selection?.message}</FormControlErrorText>
+                                <FormControlErrorText>
+                                  {errors.modifier_max_selection?.message}
+                                </FormControlErrorText>
                               </FormControlError>
                             </FormControl>
                           )}
@@ -700,7 +816,9 @@ export default function ProductForm() {
 
                     {/* modifier_is_default */}
                     <View style={styles.switchRow}>
-                      <Text style={{ color: "#000" }}>Seleccionado por defecto</Text>
+                      <Text style={{ color: "#000" }}>
+                        Seleccionado por defecto
+                      </Text>
                       <Controller
                         control={control}
                         name="modifier_is_default"
@@ -717,7 +835,11 @@ export default function ProductForm() {
                   <Button
                     size="lg"
                     className="mt-4"
-                    onPress={() => { clearData(); setIsEdit(false); router.back(); }}
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
                   >
                     <ButtonText>Cancelar</ButtonText>
                   </Button>
@@ -728,7 +850,9 @@ export default function ProductForm() {
                     onPress={handleSubmit(onSubmit)}
                     disabled={isPending}
                   >
-                    <ButtonText>{isPending ? "Guardando..." : "Guardar"}</ButtonText>
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
                   </Button>
                 </HStack>
               </VStack>
