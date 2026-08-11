@@ -8,16 +8,14 @@ import { Vaucher } from "@/src/types/vaucher/vaucher";
 export async function CatalogFn() {
   const { claims } = useAuthStore.getState();
   const { session } = useCashRegisterSessionStore.getState();
-  console.log("llega aqui ---", session);
 
   if (!claims || !session) {
     throw new Error();
   }
-  console.log("llega aqui");
 
   const response = await get<ApiCatalogProduct[]>(
     ENDPOINT.pos.detail(
-      session.cash_register.branch_id,
+      session.cash_register.warehouse_id,
       claims.tenant_id,
       "finished_product",
     ),

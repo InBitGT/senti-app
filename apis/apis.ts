@@ -3,11 +3,11 @@ import { useAuthStore } from "@/src/store/useAuthStore";
 import { ApiResponse } from "@/src/types";
 import axios, {
   AxiosError,
+  AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
 import * as SecureStore from "expo-secure-store";
-
 
 interface RefreshResponse {
   access_token: string;
@@ -20,14 +20,15 @@ interface QueueItem {
   reject: (error: unknown) => void;
 }
 
+const DEFAULT_TIMEOUT = 15000;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: DEFAULT_TIMEOUT,
   headers: {
     "Content-Type": "application/json",
   },
 });
-
 
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const token = await SecureStore.getItemAsync("access_token");
@@ -83,19 +84,25 @@ api.interceptors.response.use(
           {
             user_id: claims?.sub,
             refresh_token: refreshToken,
-          }
+          },
         );
 
         const newToken = data?.data?.access_token;
-        if(!newToken) return
+        if (!newToken) return;
         await SecureStore.setItemAsync("access_token", newToken);
 
         if (data?.data?.refresh_token) {
-          await SecureStore.setItemAsync("refresh_token", data.data.refresh_token);
+          await SecureStore.setItemAsync(
+            "refresh_token",
+            data.data.refresh_token,
+          );
         }
 
         if (data?.data?.expires_in) {
-          await SecureStore.setItemAsync("expires_in", String(data.data.expires_in));
+          await SecureStore.setItemAsync(
+            "expires_in",
+            String(data.data.expires_in),
+          );
         }
 
         // Actualiza claims con el nuevo token
@@ -120,13 +127,13 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // ---- HELPERS ----
 
 const handleRequest = async <T>(
-  request: Promise<AxiosResponse<ApiResponse<T>>>
+  request: Promise<AxiosResponse<ApiResponse<T>>>,
 ): Promise<ApiResponse<T>> => {
   try {
     const response = await request;
@@ -136,7 +143,17 @@ const handleRequest = async <T>(
       data: response.data.data,
     };
   } catch (error: any) {
-     return {
+    // Timeout específico (ECONNABORTED con mensaje "timeout of Xms exceeded")
+    // — se distingue de otros errores para poder mostrar algo más claro
+    // que "500" en la UI si hace falta.
+    if (error.code === "ECONNABORTED") {
+      return {
+        code: "TIMEOUT",
+        message: "La solicitud tardó demasiado en responder.",
+        data: null as T,
+      };
+    }
+    return {
       code: error.response?.status || 500,
       message:
         error.response?.data?.message || error.message || "An error occurred",
@@ -145,26 +162,37 @@ const handleRequest = async <T>(
   }
 };
 
-export const get = async <T>(url: string): Promise<ApiResponse<T>> =>
-  handleRequest<T>(api.get<ApiResponse<T>>(url));
+export const get = async <T>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<ApiResponse<T>> =>
+  handleRequest<T>(api.get<ApiResponse<T>>(url, config));
 
 export const post = async <TResponse, TBody = unknown>(
   url: string,
-  data: TBody
+  data: TBody,
+  config?: AxiosRequestConfig,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.post<ApiResponse<TResponse>>(url, data));
+  handleRequest<TResponse>(api.post<ApiResponse<TResponse>>(url, data, config));
 
 export const put = async <TResponse, TBody = unknown>(
   url: string,
-  data: TBody
+  data: TBody,
+  config?: AxiosRequestConfig,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.put<ApiResponse<TResponse>>(url, data));
+  handleRequest<TResponse>(api.put<ApiResponse<TResponse>>(url, data, config));
 
 export const patch = async <TResponse, TBody = unknown>(
   url: string,
-  data: TBody
+  data: TBody,
+  config?: AxiosRequestConfig,
 ): Promise<ApiResponse<TResponse>> =>
-  handleRequest<TResponse>(api.patch<ApiResponse<TResponse>>(url, data));
+  handleRequest<TResponse>(
+    api.patch<ApiResponse<TResponse>>(url, data, config),
+  );
 
-export const remove = async <T>(url: string): Promise<ApiResponse<T>> =>
-  handleRequest<T>(api.delete<ApiResponse<T>>(url));
+export const remove = async <T>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<ApiResponse<T>> =>
+  handleRequest<T>(api.delete<ApiResponse<T>>(url, config));
