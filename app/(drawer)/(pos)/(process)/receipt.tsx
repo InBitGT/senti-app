@@ -1,9 +1,5 @@
-import { Text, View } from "react-native";
+import { CashCloseVoucher } from "@/src/screen/pos/point_of_sales/(process)/receipt";
 
 export default function receipt() {
-  return (
-    <View>
-      <Text>hola</Text>
-    </View>
-  );
+  return <CashCloseVoucher />;
 }

@@ -34,7 +34,6 @@ import {
 
 import { router } from "expo-router";
 import {
-  AlertCircle,
   ArrowLeftRight,
   Minus,
   Plus,
@@ -195,19 +194,19 @@ export const Pos: React.FC = () => {
     );
   }
 
-  if (isError) {
-    return (
-      <VStack className="flex-1 items-center justify-center px-6" space="sm">
-        <Icon as={AlertCircle} size="xl" className="text-red-600" />
-        <Text className="text-center text-gray-600">
-          No se pudo cargar el catálogo. Intenta de nuevo.
-        </Text>
-        <Button size="sm" variant="outline" onPress={() => refetch()}>
-          <ButtonText className="text-gray-900">Reintentar</ButtonText>
-        </Button>
-      </VStack>
-    );
-  }
+  // if (isError) {
+  //   return (
+  //     <VStack className="flex-1 items-center justify-center px-6" space="sm">
+  //       <Icon as={AlertCircle} size="xl" className="text-red-600" />
+  //       <Text className="text-center text-gray-600">
+  //         No se pudo cargar el catálogo. Intenta de nuevo.
+  //       </Text>
+  //       <Button size="sm" variant="outline" onPress={() => refetch()}>
+  //         <ButtonText className="text-gray-900">Reintentar</ButtonText>
+  //       </Button>
+  //     </VStack>
+  //   );
+  // }
 
   const cartProps = {
     cart,
@@ -310,6 +309,7 @@ export const Pos: React.FC = () => {
               <ProductCatalog
                 data={filtered as ApiCatalogProduct[]}
                 onAddToCart={handleAddToCart}
+                onPress={() => refetch()}
               />
             </Box>
 
@@ -376,7 +376,6 @@ export const Pos: React.FC = () => {
       {session.data && (
         <CashMovementModal
           isOpen={cashMovementOpen}
-          onClose={() => setCashMovementOpen(false)}
           sessionId={session.data.id}
           onDone={() => session.refetch()}
         />

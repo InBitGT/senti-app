@@ -5,12 +5,12 @@ import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -34,10 +34,10 @@ function sanitizeDecimal(raw: string): string {
 
 export const CashMovementModal: React.FC<{
   isOpen: boolean;
-  onClose: () => void;
+
   sessionId: number;
   onDone: () => void;
-}> = ({ isOpen, onClose, sessionId, onDone }) => {
+}> = ({ isOpen, sessionId, onDone }) => {
   const claims = useAuthStore((s) => s.claims);
   const { cashMovement } = useCashMovement();
   const { showToast } = useCustomToast();
@@ -72,7 +72,6 @@ export const CashMovementModal: React.FC<{
 
       reset();
       onDone();
-      onClose();
     } catch {
       // El error queda disponible en cashMovement.error para mostrarlo abajo.
     }
@@ -83,7 +82,6 @@ export const CashMovementModal: React.FC<{
       isOpen={isOpen}
       onClose={() => {
         reset();
-        onClose();
       }}
     >
       <ModalBackdrop />
@@ -95,7 +93,6 @@ export const CashMovementModal: React.FC<{
           <TouchableOpacity
             onPress={() => {
               reset();
-              onClose();
             }}
           >
             <Icon as={X} size="sm" className="text-gray-400" />
