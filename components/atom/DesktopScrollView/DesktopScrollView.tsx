@@ -5,7 +5,7 @@ export function DesktopScrollView({ children }: { children: React.ReactNode }) {
     return (
       <div
         style={{
-          height: window.innerHeight,
+          // height: window.innerHeight,
           overflowY: "auto",
           overflowX: "hidden",
         }}
