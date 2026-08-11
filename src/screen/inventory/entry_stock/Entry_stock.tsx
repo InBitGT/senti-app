@@ -44,7 +44,7 @@ export const Entry_stock = () => {
   if (isLoading) return null;
 
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1, margin: 20 }}>
       <DesktopScrollView>
         <StockEntryTable
           data={entries || []}

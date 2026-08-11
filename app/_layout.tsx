@@ -57,7 +57,7 @@ export default function RootLayout() {
       <KeyboardProvider>
         <QueryClientProvider client={queryClient}>
           <ToastProvider>
-            <GluestackUIProvider mode="dark">
+            <GluestackUIProvider mode="light">
               <PaperProvider theme={paperTheme}>
                 <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
                   <Stack>

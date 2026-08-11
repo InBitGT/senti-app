@@ -15,7 +15,6 @@ import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import {
   AlertCircleIcon,
-  ArrowLeftIcon,
   EyeIcon,
   EyeOffIcon,
   Icon,
@@ -40,6 +39,7 @@ import { useAuthStore } from "@/src/store";
 import { useUserStore } from "@/src/store/useUserStore/useUserStore";
 import { Address, UserDetail } from "@/src/types/user/user.types";
 import { useRouter } from "expo-router";
+import { ArrowLeftIcon } from "lucide-react-native";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {

@@ -38,6 +38,7 @@ import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useEntryStock } from "@/src/hooks/useEntryStock/useEntryStock";
 import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
+import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
 import { useRouter } from "expo-router";
@@ -79,7 +80,7 @@ interface FormValues {
 const EMPTY_ITEM: ItemFormValues = {
   product_id: "",
   quantity: "",
-  unit: "unit",
+  unit: "",
   unit_cost: "",
   expiration_date: "",
   batch_number: "",
@@ -93,6 +94,7 @@ function ItemRow({
   errors,
   remove,
   productData,
+  unitData,
   isLarge,
 }: {
   index: number;
@@ -100,6 +102,7 @@ function ItemRow({
   errors: any;
   remove: (i: number) => void;
   productData: any[];
+  unitData: any[];
   isLarge: boolean;
 }) {
   const row = isLarge ? { flexDirection: "row" as const, gap: 12 } : {};
@@ -170,18 +173,13 @@ function ItemRow({
                       <SelectDragIndicatorWrapper>
                         <SelectDragIndicator />
                       </SelectDragIndicatorWrapper>
-                      <ScrollView
-                        style={{ width: "100%" }}
-                        showsVerticalScrollIndicator={false}
-                      >
-                        {(productData ?? []).map((p) => (
-                          <SelectItem
-                            key={p.id}
-                            label={p.name}
-                            value={String(p.id)}
-                          />
-                        ))}
-                      </ScrollView>
+                      {(productData ?? []).map((p) => (
+                        <SelectItem
+                          key={p.id}
+                          label={p.name}
+                          value={String(p.id)}
+                        />
+                      ))}
                     </SelectContent>
                   </SelectPortal>
                 </Select>
@@ -232,52 +230,56 @@ function ItemRow({
           </View>
 
           <View style={third}>
+            {/* Unidad — ahora se llena con las unidades reales del backend (useUnit),
+                mismo patrón que ya usas en merchandise_form.tsx. El value que
+                se guarda es el CODIGO de la unidad (u.code). */}
             <Controller
               control={control}
               name={`items.${index}.unit`}
               rules={{ required: "Requerido." }}
-              render={({ field: { onChange, value } }) => (
-                <FormControl isInvalid={!!errors?.items?.[index]?.unit}>
-                  <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>
-                      Unidad
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Select selectedValue={value} onValueChange={onChange}>
-                    <SelectTrigger>
-                      <SelectInput
-                        style={{ color: "#000" }}
-                        placeholder="Unidad"
-                        value={value}
-                      />
-                    </SelectTrigger>
-                    <SelectPortal>
-                      <SelectBackdrop />
-                      <SelectContent style={{ maxHeight: "50%" }}>
-                        <SelectDragIndicatorWrapper>
-                          <SelectDragIndicator />
-                        </SelectDragIndicatorWrapper>
-                        <ScrollView
-                          style={{ width: "100%" }}
-                          showsVerticalScrollIndicator={false}
-                        >
-                          <SelectItem label="Unidad" value="unit" />
-                          <SelectItem label="Kg" value="kg" />
-                          <SelectItem label="g" value="g" />
-                          <SelectItem label="L" value="l" />
-                          <SelectItem label="ml" value="ml" />
-                        </ScrollView>
-                      </SelectContent>
-                    </SelectPortal>
-                  </Select>
-                  <FormControlError>
-                    <FormControlErrorIcon as={AlertCircleIcon} />
-                    <FormControlErrorText>
-                      {errors?.items?.[index]?.unit?.message}
-                    </FormControlErrorText>
-                  </FormControlError>
-                </FormControl>
-              )}
+              render={({ field: { onChange, value } }) => {
+                const selectedLabel =
+                  unitData?.find((u) => u.code === value)?.name || "";
+                return (
+                  <FormControl isInvalid={!!errors?.items?.[index]?.unit}>
+                    <FormControlLabel>
+                      <FormControlLabelText style={{ color: "#000" }}>
+                        Unidad
+                      </FormControlLabelText>
+                    </FormControlLabel>
+                    <Select selectedValue={value} onValueChange={onChange}>
+                      <SelectTrigger>
+                        <SelectInput
+                          style={{ color: "#000" }}
+                          placeholder="Selecciona unidad"
+                          value={selectedLabel}
+                        />
+                      </SelectTrigger>
+                      <SelectPortal>
+                        <SelectBackdrop />
+                        <SelectContent style={{ maxHeight: "50%" }}>
+                          <SelectDragIndicatorWrapper>
+                            <SelectDragIndicator />
+                          </SelectDragIndicatorWrapper>
+                          {(unitData ?? []).map((u) => (
+                            <SelectItem
+                              key={u.id}
+                              label={`${u.name} (${u.code})`}
+                              value={u.code}
+                            />
+                          ))}
+                        </SelectContent>
+                      </SelectPortal>
+                    </Select>
+                    <FormControlError>
+                      <FormControlErrorIcon as={AlertCircleIcon} />
+                      <FormControlErrorText>
+                        {errors?.items?.[index]?.unit?.message}
+                      </FormControlErrorText>
+                    </FormControlError>
+                  </FormControl>
+                );
+              }}
             />
           </View>
 
@@ -457,6 +459,7 @@ export default function InventoryForm() {
   const { post } = useEntryStock();
   const { data: productData } = useProduct();
   const { data: supplierData } = useSupplier();
+  const { data: unitData } = useUnit();
   const { showToast } = useCustomToast();
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
@@ -655,18 +658,13 @@ export default function InventoryForm() {
                                       <SelectDragIndicatorWrapper>
                                         <SelectDragIndicator />
                                       </SelectDragIndicatorWrapper>
-                                      <ScrollView
-                                        style={{ width: "100%" }}
-                                        showsVerticalScrollIndicator={false}
-                                      >
-                                        {branchOptions.map((b) => (
-                                          <SelectItem
-                                            key={b.id}
-                                            label={b.name}
-                                            value={String(b.id)}
-                                          />
-                                        ))}
-                                      </ScrollView>
+                                      {branchOptions.map((b) => (
+                                        <SelectItem
+                                          key={b.id}
+                                          label={b.name}
+                                          value={String(b.id)}
+                                        />
+                                      ))}
                                     </SelectContent>
                                   </SelectPortal>
                                 </Select>
@@ -723,18 +721,13 @@ export default function InventoryForm() {
                                       <SelectDragIndicatorWrapper>
                                         <SelectDragIndicator />
                                       </SelectDragIndicatorWrapper>
-                                      <ScrollView
-                                        style={{ width: "100%" }}
-                                        showsVerticalScrollIndicator={false}
-                                      >
-                                        {warehouseOptionsForBranch.map((w) => (
-                                          <SelectItem
-                                            key={w.warehouse_id}
-                                            label={w.warehouse_name}
-                                            value={String(w.warehouse_id)}
-                                          />
-                                        ))}
-                                      </ScrollView>
+                                      {warehouseOptionsForBranch.map((w) => (
+                                        <SelectItem
+                                          key={w.warehouse_id}
+                                          label={w.warehouse_name}
+                                          value={String(w.warehouse_id)}
+                                        />
+                                      ))}
                                     </SelectContent>
                                   </SelectPortal>
                                 </Select>
@@ -788,18 +781,13 @@ export default function InventoryForm() {
                                     <SelectDragIndicatorWrapper>
                                       <SelectDragIndicator />
                                     </SelectDragIndicatorWrapper>
-                                    <ScrollView
-                                      style={{ width: "100%" }}
-                                      showsVerticalScrollIndicator={false}
-                                    >
-                                      {(supplierData ?? []).map((s: any) => (
-                                        <SelectItem
-                                          key={s.id}
-                                          label={s.name}
-                                          value={String(s.id)}
-                                        />
-                                      ))}
-                                    </ScrollView>
+                                    {(supplierData ?? []).map((s: any) => (
+                                      <SelectItem
+                                        key={s.id}
+                                        label={s.name}
+                                        value={String(s.id)}
+                                      />
+                                    ))}
                                   </SelectContent>
                                 </SelectPortal>
                               </Select>
@@ -980,6 +968,7 @@ export default function InventoryForm() {
                       errors={errors}
                       remove={remove}
                       productData={productData ?? []}
+                      unitData={unitData ?? []}
                       isLarge={isLarge}
                     />
                   ))}
