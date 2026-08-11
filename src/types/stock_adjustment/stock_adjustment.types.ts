@@ -32,6 +32,12 @@ export enum StatusAdjustmentStock {
   REJECTED = "reject",
 }
 
+export enum StatusAdjustmentStockSelect {
+  PENDING = "pending_approval",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+}
+
 export interface CreateAdjustmentCount {
   tenant_id: number;
   warehouse_id: number;

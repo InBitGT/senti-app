@@ -1,4 +1,7 @@
-import { StatusAdjustmentStock } from "@/src/types/stock_adjustment/stock_adjustment.types";
+import {
+  StatusAdjustmentStock,
+  StatusAdjustmentStockSelect,
+} from "@/src/types/stock_adjustment/stock_adjustment.types";
 
 export const ENDPOINT = {
   auth: {
@@ -98,7 +101,7 @@ export const ENDPOINT = {
     detailInfo: (
       idTenant: string | number,
       idWarehouse: string | number,
-      status: StatusAdjustmentStock,
+      status: StatusAdjustmentStockSelect,
     ) =>
       `inventory-service/api/stock-adjustment?tenant_id=${idTenant}&warehouse_id=${idWarehouse}&adjustment_status=${status}`,
   },

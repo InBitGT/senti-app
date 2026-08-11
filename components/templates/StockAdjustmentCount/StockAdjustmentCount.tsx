@@ -14,7 +14,7 @@ import {
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
-  StatusAdjustmentStock,
+  StatusAdjustmentStockSelect,
   StockAdjustmentCount,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import { SearchIcon } from "lucide-react-native";
@@ -26,31 +26,35 @@ export interface StockAdjustmentsTableProps {
   data: StockAdjustmentCount[];
   itemsPerPage?: number;
   onRowPress?: (row: StockAdjustmentCount) => void;
-  statusFilter: StatusAdjustmentStock;
-  onStatusFilterChange: (status: StatusAdjustmentStock) => void;
+  statusFilter: StatusAdjustmentStockSelect;
+  onStatusFilterChange: (status: StatusAdjustmentStockSelect) => void;
 }
 
-const STATUS_OPTIONS: { value: StatusAdjustmentStock; label: string }[] = [
-  { value: StatusAdjustmentStock.PENDING, label: "Pendiente de aprobación" },
-  { value: StatusAdjustmentStock.APPROVED, label: "Aprobado" },
-  { value: StatusAdjustmentStock.REJECTED, label: "Rechazado" },
-];
+const STATUS_OPTIONS: { value: StatusAdjustmentStockSelect; label: string }[] =
+  [
+    {
+      value: StatusAdjustmentStockSelect.PENDING,
+      label: "Pendiente de aprobación",
+    },
+    { value: StatusAdjustmentStockSelect.APPROVED, label: "Aprobado" },
+    { value: StatusAdjustmentStockSelect.REJECTED, label: "Rechazado" },
+  ];
 
 const STATUS_STYLES: Record<
   string,
   { bg: string; color: string; label: string }
 > = {
-  [StatusAdjustmentStock.PENDING]: {
+  [StatusAdjustmentStockSelect.PENDING]: {
     bg: "#fef9c3",
     color: "#a16207",
     label: "Pendiente",
   },
-  [StatusAdjustmentStock.APPROVED]: {
+  [StatusAdjustmentStockSelect.APPROVED]: {
     bg: "#dcfce7",
     color: "#16a34a",
     label: "Aprobado",
   },
-  [StatusAdjustmentStock.REJECTED]: {
+  [StatusAdjustmentStockSelect.REJECTED]: {
     bg: "#fee2e2",
     color: "#dc2626",
     label: "Rechazado",
@@ -122,25 +126,39 @@ export function StockAdjustmentsTable({
     borderWidth: 0.5,
     borderRadius: 15,
     marginTop: 15,
+    overflow: "hidden",
   };
 
   const rowBorder: ViewStyle = {
     borderBottomWidth: 0.5,
     borderBottomColor: "#d4d4d4",
-    alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    minHeight: 48,
   };
 
   const selectedStatusLabel =
     STATUS_OPTIONS.find((s) => s.value === statusFilter)?.label || "";
 
   return (
-    <VStack className="flex-1 px-4 py-6 md:px-10">
-      <HStack className="justify-between items-center mb-4 gap-2">
+    <VStack
+      className="flex-1 px-4 py-6 md:px-10"
+      style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 24 }}
+    >
+      <HStack
+        className="justify-between items-center mb-4 gap-2"
+        style={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+          gap: 8,
+        }}
+      >
         <Input
           className="flex-1 sm:w-64 sm:flex-none bg-white rounded-lg"
           variant="outline"
           size="md"
+          style={{ flex: 1, backgroundColor: "#fff", borderRadius: 8 }}
         >
           <InputSlot style={{ marginLeft: 10 }}>
             <InputIcon as={SearchIcon} size="sm" />
@@ -153,11 +171,11 @@ export function StockAdjustmentsTable({
           />
         </Input>
 
-        <View style={{ width: 200 }}>
+        <View style={{ width: 200, marginLeft: 8 }}>
           <Select
             selectedValue={statusFilter}
             onValueChange={(value) =>
-              onStatusFilterChange(value as StatusAdjustmentStock)
+              onStatusFilterChange(value as StatusAdjustmentStockSelect)
             }
           >
             <SelectTrigger>

@@ -3,24 +3,25 @@ import { ModalStockAdjustmentDetail } from "@/components/molecules/ModalStockAdj
 import { StockAdjustmentsTable } from "@/components/templates/StockAdjustmentCount/StockAdjustmentCount";
 import { HStack } from "@/components/ui/hstack";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useStockCounAdjustment } from "@/src/hooks/useStockCountAdjustment/useStockCountAdjustment";
 import { useAuthStore } from "@/src/store";
 import {
-    ApprovedType,
-    StatusAdjustmentStock,
-    StockAdjustmentCount as StockAdjustmentModel,
+  ApprovedType,
+  StatusAdjustmentStock,
+  StatusAdjustmentStockSelect,
+  StockAdjustmentCount as StockAdjustmentModel,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -30,6 +31,11 @@ interface WarehouseOption {
   id: number;
   label: string;
 }
+
+// "approve" y "reject" comparten la MISMA mutation (approve.mutateAsync con distinto status),
+// así que approve.isPending es true para ambos. Usamos esto para saber cuál acción
+// disparó la mutation actualmente en curso y así no marcar el botón equivocado.
+type PendingAction = "approve" | "reject" | null;
 
 export const StockAdjustmentCountScreen: React.FC = () => {
   // Si la pantalla se abre con /warehouse/[id]/adjustments, este id se usa como valor inicial del select.
@@ -49,9 +55,8 @@ export const StockAdjustmentCountScreen: React.FC = () => {
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>(
     routeWarehouseId ? String(routeWarehouseId) : "",
   );
-  const [selectedStatus, setSelectedStatus] = useState<StatusAdjustmentStock>(
-    StatusAdjustmentStock.PENDING,
-  );
+  const [selectedStatus, setSelectedStatus] =
+    useState<StatusAdjustmentStockSelect>(StatusAdjustmentStockSelect.PENDING);
 
   // Si aún no hay selección (ni por ruta) y ya cargaron las bodegas de claims, selecciona la primera.
   React.useEffect(() => {
@@ -64,6 +69,8 @@ export const StockAdjustmentCountScreen: React.FC = () => {
   const [modalData, setModalData] = useState<StockAdjustmentModel | undefined>(
     undefined,
   );
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+
   const {
     data: adjustments,
     isLoading,
@@ -82,11 +89,12 @@ export const StockAdjustmentCountScreen: React.FC = () => {
 
   const handleApprove = async (row: StockAdjustmentModel) => {
     if (!claims) return;
+    setPendingAction("approve");
     try {
       const payload: ApprovedType = {
         approved_by: claims.sub,
         notes: "",
-      } as ApprovedType;
+      };
 
       await approve.mutateAsync({
         adjusmentCountId: row.id,
@@ -98,11 +106,14 @@ export const StockAdjustmentCountScreen: React.FC = () => {
     } catch (error) {
       console.log(error);
       showToast({ message: "Error al aprobar el ajuste", type: "error" });
+    } finally {
+      setPendingAction(null);
     }
   };
 
   const handleReject = async (row: StockAdjustmentModel) => {
     if (!claims) return;
+    setPendingAction("reject");
     try {
       const payload: ApprovedType = {
         approved_by: claims.sub,
@@ -113,11 +124,13 @@ export const StockAdjustmentCountScreen: React.FC = () => {
         data: payload,
         status: StatusAdjustmentStock.REJECTED,
       });
-      showToast({ message: "Ajuste aprobado correctamente", type: "success" });
+      showToast({ message: "Ajuste rechazado correctamente", type: "success" });
       setShowModalData(false);
     } catch (error) {
       console.log(error);
-      showToast({ message: "Error al aprobar el ajuste", type: "error" });
+      showToast({ message: "Error al rechazar el ajuste", type: "error" });
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -155,8 +168,12 @@ export const StockAdjustmentCountScreen: React.FC = () => {
         onClose={() => setShowModalData(false)}
         data={modalData}
         onApprove={handleApprove}
-        isApproving={approve.isPending}
         onReject={handleReject}
+        // approve.isPending es compartido por las dos mutations (mismo endpoint,
+        // distinto status), así que lo cruzamos con pendingAction para saber
+        // cuál botón debe mostrarse "cargando".
+        isApproving={approve.isPending && pendingAction === "approve"}
+        isRejecting={approve.isPending && pendingAction === "reject"}
       />
     </View>
   );

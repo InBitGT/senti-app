@@ -1,17 +1,18 @@
 import {
-    ApprovedStockCountAdjustment,
-    PostStockCountAdjustment,
-    StockCountAdjusmentFn,
+  ApprovedStockCountAdjustment,
+  PostStockCountAdjustment,
+  StockCountAdjusmentFn,
 } from "@/src/service/stock_count_adjustment/stock_count_adjustment.services";
 import {
-    ApprovedType,
-    StatusAdjustmentStock,
+  ApprovedType,
+  StatusAdjustmentStock,
+  StatusAdjustmentStockSelect,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useStockCounAdjustment = (
   warehouseId?: string | number,
-  status?: StatusAdjustmentStock,
+  status?: StatusAdjustmentStockSelect,
 ) => {
   const queryClient = useQueryClient();
 
@@ -20,7 +21,7 @@ export const useStockCounAdjustment = (
     queryFn: () =>
       StockCountAdjusmentFn(
         warehouseId ? warehouseId : "",
-        status ? status : StatusAdjustmentStock.PENDING,
+        status ? status : StatusAdjustmentStockSelect.PENDING,
       ),
     enabled:
       warehouseId !== undefined && warehouseId !== 0 && warehouseId !== "",

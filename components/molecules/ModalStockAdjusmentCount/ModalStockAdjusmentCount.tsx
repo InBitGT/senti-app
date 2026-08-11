@@ -23,6 +23,7 @@ interface Props {
   onApprove?: (row: StockAdjustmentCount) => void;
   onReject?: (row: StockAdjustmentCount) => void;
   isApproving?: boolean;
+  isRejecting?: boolean; // 👈 NUEVO: estado propio para el botón de rechazo
 }
 
 const InfoRow = ({
@@ -71,8 +72,12 @@ export const ModalStockAdjustmentDetail: React.FC<Props> = ({
   onApprove,
   isApproving,
   onReject,
+  isRejecting,
 }) => {
   const canApprove = data?.adjustment_status === "pending_approval";
+  // Mientras cualquiera de las dos acciones está en curso, bloqueamos ambos botones
+  // para evitar doble-click / condiciones de carrera.
+  const isBusy = isApproving || isRejecting;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -134,25 +139,36 @@ export const ModalStockAdjustmentDetail: React.FC<Props> = ({
         </ModalBody>
 
         <ModalFooter style={{ justifyContent: "space-between" }}>
-          <Button variant="outline" size="sm" onPress={onClose}>
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={onClose}
+            disabled={isBusy}
+          >
             <ButtonText>Cerrar</ButtonText>
           </Button>
+
           {canApprove && (
             <Button
               size="sm"
               style={{ backgroundColor: "#d4d4d4" }}
               onPress={() => data && onReject?.(data)}
-              disabled={isApproving}
+              disabled={isBusy}
             >
-              <ButtonText>Rechazado</ButtonText>
+              {isRejecting ? (
+                <ActivityIndicator size="small" color="#111827" />
+              ) : (
+                <ButtonText>Rechazado</ButtonText>
+              )}
             </Button>
           )}
+
           {canApprove && (
             <Button
               size="sm"
               style={{ backgroundColor: "#16a34a" }}
               onPress={() => data && onApprove?.(data)}
-              disabled={isApproving}
+              disabled={isBusy}
             >
               {isApproving ? (
                 <ActivityIndicator size="small" color="#fff" />

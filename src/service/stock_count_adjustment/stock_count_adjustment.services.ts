@@ -5,12 +5,13 @@ import {
     ApprovedType,
     CreateAdjustmentCount,
     StatusAdjustmentStock,
+  StatusAdjustmentStockSelect,
     StockAdjustmentCount,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 
 export async function StockCountAdjusmentFn(
   idWarehouse: string | number,
-  status: StatusAdjustmentStock,
+  status: StatusAdjustmentStockSelect,
 ) {
   const { claims } = useAuthStore.getState();
   if (!claims) {
