@@ -78,7 +78,7 @@ export const ENDPOINT = {
       `inventory-service/api/product/full?tenant_id=${idTenant}&type=finished_product`,
   },
   warehouse: {
-    info: "inventory-service/api/warehouse/",
+    info: "inventory-service/api/warehouse",
     detail: (idTenant: string | number) =>
       `inventory-service/api/warehouse?tenant_id=${idTenant}`,
   },
