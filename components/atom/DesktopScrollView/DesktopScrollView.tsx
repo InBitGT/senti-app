@@ -1,11 +1,19 @@
 import { Platform, View } from "react-native";
 
-export function DesktopScrollView({ children }: { children: React.ReactNode }) {
+interface DesktopScrollViewProps {
+  children: React.ReactNode;
+  useWindowHeight?: boolean;
+}
+
+export function DesktopScrollView({
+  children,
+  useWindowHeight = false,
+}: DesktopScrollViewProps) {
   if (Platform.OS === "web") {
     return (
       <div
         style={{
-          // height: window.innerHeight,
+          ...(useWindowHeight ? { height: window.innerHeight } : {}),
           overflowY: "auto",
           overflowX: "hidden",
         }}

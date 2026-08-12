@@ -28,7 +28,7 @@ export const Entry_stock = () => {
       onPress: () =>
         router.navigate("/(drawer)/(inventory)/(form)/entry_stock_form"),
       icon: PackagePlus,
-      variant: "solid",
+      variant: "outline",
     },
     {
       name: "Agregar ajuste de inventario",

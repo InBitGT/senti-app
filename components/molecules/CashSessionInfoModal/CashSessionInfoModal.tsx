@@ -67,7 +67,7 @@ export const CashSessionInfoModal: React.FC<{
       router.navigate("/(drawer)/(pos)/(process)/receipt");
       setClosingAmount("");
       setClosing(false);
-      onClosed();
+      // onClosed();
       onClose();
     } catch {
       // El error queda disponible en closeCashRegister.error para mostrarlo abajo.

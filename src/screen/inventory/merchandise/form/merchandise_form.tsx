@@ -341,7 +341,7 @@ export default function MerchandiseForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
+          <DesktopScrollView useWindowHeight>
             <Pressable
               onPress={() => {
                 clearData();

@@ -59,7 +59,7 @@ export const MerchandiseScreen: React.FC = () => {
       icon: Plus,
       onPress: () =>
         router.navigate("/(drawer)/(inventory)/(form)/merchandise_form"),
-      variant: "solid",
+      variant: "outline",
     },
   ];
 
@@ -68,7 +68,7 @@ export const MerchandiseScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1, margin: 20 }}>
       <DesktopScrollView>
         <MerchandiseTable
           data={merchandise || []}

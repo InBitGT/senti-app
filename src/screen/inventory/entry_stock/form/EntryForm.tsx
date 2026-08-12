@@ -589,7 +589,7 @@ export default function InventoryForm() {
           }}
           showsVerticalScrollIndicator={true}
         >
-          <DesktopScrollView>
+          <DesktopScrollView useWindowHeight>
             <Pressable
               onPress={() => router.back()}
               style={{
