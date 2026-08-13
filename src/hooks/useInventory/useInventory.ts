@@ -2,12 +2,18 @@ import { inventoryStockSummaryFn } from "@/src/service/inventory/inventory";
 import { useQuery } from "@tanstack/react-query";
 
 export function useInventory(warehouseId?: string | number) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["inventory-stock-summary", warehouseId],
-    queryFn: () => inventoryStockSummaryFn(warehouseId ?? ""),
-    enabled:
-      warehouseId !== undefined && warehouseId !== 0 && warehouseId !== "",
+  const normalizedId =
+    warehouseId === undefined || warehouseId === null
+      ? ""
+      : String(warehouseId);
+
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ["inventory-stock-summary", normalizedId],
+    queryFn: () => inventoryStockSummaryFn(normalizedId),
+    enabled: normalizedId !== "" && normalizedId !== "0",
+    refetchOnMount: "always",
+    placeholderData: undefined,
   });
 
-  return { data, isLoading };
+  return { data, isLoading: isLoading || isFetching, error };
 }
