@@ -194,6 +194,8 @@ export default function MerchandiseForm() {
 
   const product = data?.product;
 
+  console.log(units, "valores de units");
+
   const {
     control,
     handleSubmit,
@@ -717,18 +719,18 @@ export default function MerchandiseForm() {
                                     <SelectDragIndicatorWrapper>
                                       <SelectDragIndicator />
                                     </SelectDragIndicatorWrapper>
-                                    <ScrollView
+                                    {/* <ScrollView
                                       style={{ maxHeight: 280, width: "100%" }}
                                       nestedScrollEnabled
-                                    >
-                                      {(units ?? []).map((u) => (
-                                        <SelectItem
-                                          key={u.id}
-                                          label={`${u.name} (${u.code})`}
-                                          value={String(u.id)}
-                                        />
-                                      ))}
-                                    </ScrollView>
+                                    > */}
+                                    {(units ?? []).map((u) => (
+                                      <SelectItem
+                                        key={u.id}
+                                        label={`${u.name} (${u.code})`}
+                                        value={String(u.id)}
+                                      />
+                                    ))}
+                                    {/* </ScrollView> */}
                                   </SelectContent>
                                 </SelectPortal>
                               </Select>
@@ -912,18 +914,18 @@ export default function MerchandiseForm() {
                                           <SelectDragIndicatorWrapper>
                                             <SelectDragIndicator />
                                           </SelectDragIndicatorWrapper>
-                                          <ScrollView
+                                          {/* <ScrollView
                                             style={{ width: "100%" }}
                                             showsVerticalScrollIndicator={false}
-                                          >
-                                            {(units ?? []).map((u) => (
-                                              <SelectItem
-                                                key={u.id}
-                                                label={`${u.name} (${u.code})`}
-                                                value={String(u.id)}
-                                              />
-                                            ))}
-                                          </ScrollView>
+                                          > */}
+                                          {(units ?? []).map((u) => (
+                                            <SelectItem
+                                              key={u.id}
+                                              label={`${u.name} (${u.code})`}
+                                              value={String(u.id)}
+                                            />
+                                          ))}
+                                          {/* </ScrollView> */}
                                         </SelectContent>
                                       </SelectPortal>
                                     </Select>
@@ -969,18 +971,18 @@ export default function MerchandiseForm() {
                                           <SelectDragIndicatorWrapper>
                                             <SelectDragIndicator />
                                           </SelectDragIndicatorWrapper>
-                                          <ScrollView
+                                          {/* <ScrollView
                                             style={{ width: "100%" }}
-                                            showsVerticalScrollIndicator={false}
-                                          >
-                                            {toOptions.map((u) => (
-                                              <SelectItem
-                                                key={u.id}
-                                                label={`${u.name} (${u.code})`}
-                                                value={String(u.id)}
-                                              />
-                                            ))}
-                                          </ScrollView>
+                                            showsVerticalScrollIndicator={false} */}
+
+                                          {toOptions.map((u) => (
+                                            <SelectItem
+                                              key={u.id}
+                                              label={`${u.name} (${u.code})`}
+                                              value={String(u.id)}
+                                            />
+                                          ))}
+                                          {/* </ScrollView> */}
                                         </SelectContent>
                                       </SelectPortal>
                                     </Select>

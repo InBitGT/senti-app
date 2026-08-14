@@ -203,7 +203,7 @@ export default function AdjustmentForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
+          <DesktopScrollView useWindowHeight>
             <Pressable
               onPress={() => router.back()}
               style={{
