@@ -66,7 +66,7 @@ interface CartLine {
 const DESKTOP_BREAKPOINT = 768;
 
 export const Pos: React.FC = () => {
-  const { catalog, isLoading, isError, refetch } = useCatalog();
+  const { catalog, isLoading, refetch } = useCatalog();
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
 
@@ -94,11 +94,74 @@ export const Pos: React.FC = () => {
   const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
 
-  // Muchos productos (como los que vienen sin categoría "padre" real, ej.
-  // parent_category_id: null) solo traen category_id/category_name. En esos
-  // casos, la categoría de nivel superior "depende de" (cae hacia) la
-  // categoría normal, en vez de quedar sin ningún pill asignado. Cuando SÍ
-  // hay padre real, category_id/category_name pasan a ser la subcategoría.
+  // -------------------------------------------------------------------
+  // Validación de stock del carrito.
+  //
+  // `quantity` de cada línea ya está en unidades base, así que para saber
+  // cuánto le queda disponible a UNA línea hay que restarle al stock total
+  // del producto lo que ya está "ocupado" en las OTRAS líneas del mismo
+  // producto (puede estar repartido entre distintas unidades, ej. algo de
+  // "Caja" y algo de "Unidad" suelta del mismo producto).
+  //
+  // No tengo acceso a useCartStore.ts (donde viven addLine/stepLine/
+  // setLineQty), así que esta validación vive acá, envolviendo esas
+  // acciones antes de llamarlas. Si esas funciones también se invocan
+  // desde otro lugar del código sin pasar por estos wrappers, esta
+  // protección no aplicaría ahí — para una validación a prueba de todo
+  // convendría moverla también al store.
+  // -------------------------------------------------------------------
+  function qtyInOtherLines(productId: number, excludeIndex: number) {
+    return cart.reduce((sum, l, i) => {
+      if (i === excludeIndex) return sum;
+      return l.product.product_id === productId ? sum + l.quantity : sum;
+    }, 0);
+  }
+
+  function maxQtyForLine(index: number) {
+    const line = cart[index];
+    if (!line) return 0;
+    const otherQty = qtyInOtherLines(line.product.product_id, index);
+    return Math.max(0, line.product.stock_qty - otherQty);
+  }
+
+  // Un valor por línea con el máximo permitido, para pasarle a cada
+  // CartLineRow y que pueda deshabilitar el "+" cuando corresponda.
+  const maxQuantities = useMemo(
+    () => cart.map((_, index) => maxQtyForLine(index)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cart],
+  );
+
+  function handleStepLine(index: number, direction: 1 | -1) {
+    if (direction === 1) {
+      const line = cart[index];
+      if (!line) return;
+      const max = maxQtyForLine(index);
+      // No dejamos sumar otro "salto" completo de esta unidad (ej. una
+      // Caja entera) si ya no entra en lo que queda de stock.
+      if (line.quantity + line.unit.factorToBase > max) return;
+    }
+    stepLine(index, direction);
+  }
+
+  function handleSetQty(index: number, raw: string) {
+    const line = cart[index];
+    if (!line) {
+      setLineQty(index, raw);
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isNaN(parsed) && parsed >= 0) {
+      const max = maxQtyForLine(index);
+      if (parsed > max) {
+        // En vez de rechazar el tipeo, dejamos el valor tope permitido.
+        setLineQty(index, String(max));
+        return;
+      }
+    }
+    setLineQty(index, raw);
+  }
+
   function topCategoryOf(
     p: ApiCatalogProduct,
   ): { id: number; name: string } | null {
@@ -167,6 +230,17 @@ export const Pos: React.FC = () => {
   }, [catalog, query, categoryId, subcategoryId]);
 
   function handleAddToCart(product: CatalogProduct, unit: SellUnit) {
+    const alreadyInCart = cart.reduce(
+      (sum, l) =>
+        l.product.product_id === product.product_id ? sum + l.quantity : sum,
+      0,
+    );
+    const remaining = product.stock_qty - alreadyInCart;
+    // Defensa extra: ProductCard ya deshabilita "Añadir" cuando no alcanza
+    // el stock, pero validamos de nuevo acá por si esta función se llega a
+    // invocar desde otro lado más adelante.
+    if (unit.factorToBase > remaining) return;
+
     addLine(product, unit);
     // En escritorio/tablet el carrito ya está visible en el panel derecho;
     // el modal solo se abre en móvil, donde es la única forma de verlo.
@@ -195,24 +269,11 @@ export const Pos: React.FC = () => {
     );
   }
 
-  // if (isError) {
-  //   return (
-  //     <VStack className="flex-1 items-center justify-center px-6" space="sm">
-  //       <Icon as={AlertCircle} size="xl" className="text-red-600" />
-  //       <Text className="text-center text-gray-600">
-  //         No se pudo cargar el catálogo. Intenta de nuevo.
-  //       </Text>
-  //       <Button size="sm" variant="outline" onPress={() => refetch()}>
-  //         <ButtonText className="text-gray-900">Reintentar</ButtonText>
-  //       </Button>
-  //     </VStack>
-  //   );
-  // }
-
   const cartProps = {
     cart,
-    onStepLine: stepLine,
-    onSetQty: setLineQty,
+    maxQuantities,
+    onStepLine: handleStepLine,
+    onSetQty: handleSetQty,
     onRemoveLine: removeLine,
   };
 
@@ -396,74 +457,105 @@ export const Pos: React.FC = () => {
 function CartLineRow({
   line,
   index,
+  maxQuantity,
   onStepLine,
   onSetQty,
   onRemoveLine,
 }: {
   line: CartLine;
   index: number;
+  // Máximo de unidades base que puede tener ESTA línea sin pasarse del
+  // stock del producto (ya descuenta lo que ocupan otras líneas del mismo
+  // producto con otra unidad).
+  maxQuantity: number;
   onStepLine: (index: number, direction: 1 | -1) => void;
   onSetQty: (index: number, raw: string) => void;
   onRemoveLine: (index: number) => void;
 }) {
+  // Si sumar un "salto" completo de la unidad elegida (ej. una Caja) ya no
+  // entra en lo que queda de stock, deshabilitamos el "+".
+  const atMax = line.quantity + line.unit.factorToBase > maxQuantity;
+
   return (
-    <HStack
-      className="items-center justify-between border-b border-gray-100 pb-3"
-      space="sm"
-    >
-      <VStack className="flex-1">
-        <Text className="text-sm font-medium text-gray-900" numberOfLines={1}>
-          {line.product.name}
-        </Text>
-        <Text className="text-xs text-gray-400">
-          {formatCurrency(line.product.price * line.unit.factorToBase)}/
-          {line.unit.code}
-        </Text>
-      </VStack>
+    <VStack space="xs" className="border-b border-gray-100 pb-3">
+      <HStack className="items-center justify-between" space="sm">
+        <VStack className="flex-1">
+          <Text className="text-sm font-medium text-gray-900" numberOfLines={1}>
+            {line.product.name}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            {formatCurrency(line.product.price * line.unit.factorToBase)}/
+            {line.unit.code}
+          </Text>
+        </VStack>
 
-      <HStack space="xs" className="items-center">
-        <TouchableOpacity onPress={() => onStepLine(index, -1)}>
-          <Box className="h-7 w-7 items-center justify-center rounded-md border border-gray-300 bg-white">
-            <Icon as={Minus} size="xs" className="text-gray-600" />
-          </Box>
+        <HStack space="xs" className="items-center">
+          <TouchableOpacity onPress={() => onStepLine(index, -1)}>
+            <Box className="h-7 w-7 items-center justify-center rounded-md border border-gray-300 bg-white">
+              <Icon as={Minus} size="xs" className="text-gray-600" />
+            </Box>
+          </TouchableOpacity>
+
+          <Input
+            variant="outline"
+            size="sm"
+            className="w-12 border-gray-300 bg-white"
+          >
+            <InputField
+              value={String(line.quantity)}
+              onChangeText={(v) => onSetQty(index, v)}
+              keyboardType="numeric"
+              textAlign="center"
+              className="text-sm font-medium text-gray-900"
+              selectTextOnFocus
+            />
+          </Input>
+
+          <TouchableOpacity
+            onPress={() => onStepLine(index, 1)}
+            disabled={atMax}
+          >
+            <Box
+              className={`h-7 w-7 items-center justify-center rounded-md border ${
+                atMax
+                  ? "border-gray-200 bg-gray-50"
+                  : "border-gray-300 bg-white"
+              }`}
+            >
+              <Icon
+                as={Plus}
+                size="xs"
+                className={atMax ? "text-gray-300" : "text-gray-600"}
+              />
+            </Box>
+          </TouchableOpacity>
+          {/* FIX: acá se mostraba siempre `line.product.units[0]?.code`
+              (la unidad base), sin importar qué unidad tuviera realmente
+              esta línea. Con varias unidades por producto, esto hacía
+              parecer que la unidad "no cambiaba" al elegir otra distinta
+              de la base. Ahora usa `line.unit.code`, que es la unidad
+              real de esta línea. */}
+          <Text className="text-[11px] text-gray-400">{line.unit.code}</Text>
+        </HStack>
+
+        {/* `quantity` ya está en unidades base: se multiplica solo por el
+            precio base, sin volver a aplicar factorToBase (eso duplicaba
+            el total cuando la unidad elegida era distinta de la base). */}
+        <Text className="w-16 text-right text-sm font-semibold text-gray-900">
+          {formatCurrency(line.product.price * line.quantity)}
+        </Text>
+
+        <TouchableOpacity onPress={() => onRemoveLine(index)}>
+          <Icon as={Trash2} size="xs" className="text-red-500" />
         </TouchableOpacity>
-
-        <Input
-          variant="outline"
-          size="sm"
-          className="w-12 border-gray-300 bg-white"
-        >
-          <InputField
-            value={String(line.quantity)}
-            onChangeText={(v) => onSetQty(index, v)}
-            keyboardType="numeric"
-            textAlign="center"
-            className="text-sm font-medium text-gray-900"
-            selectTextOnFocus
-          />
-        </Input>
-
-        <TouchableOpacity onPress={() => onStepLine(index, 1)}>
-          <Box className="h-7 w-7 items-center justify-center rounded-md border border-gray-300 bg-white">
-            <Icon as={Plus} size="xs" className="text-gray-600" />
-          </Box>
-        </TouchableOpacity>
-        <Text className="text-[11px] text-gray-400">
-          {line.product.units[0]?.code}
-        </Text>
       </HStack>
 
-      {/* `quantity` ya está en unidades base: se multiplica solo por el
-          precio base, sin volver a aplicar factorToBase (eso duplicaba
-          el total cuando la unidad elegida era distinta de la base). */}
-      <Text className="w-16 text-right text-sm font-semibold text-gray-900">
-        {formatCurrency(line.product.price * line.quantity)}
-      </Text>
-
-      <TouchableOpacity onPress={() => onRemoveLine(index)}>
-        <Icon as={Trash2} size="xs" className="text-red-500" />
-      </TouchableOpacity>
-    </HStack>
+      {atMax && (
+        <Text className="text-[10px] font-medium text-amber-600">
+          Alcanzaste el stock disponible de &quot;{line.product.name}&quot;.
+        </Text>
+      )}
+    </VStack>
   );
 }
 
@@ -478,6 +570,7 @@ function CartEmptyState() {
 
 function CartSidePanel({
   cart,
+  maxQuantities,
   cartCount,
   total,
   onStepLine,
@@ -486,6 +579,7 @@ function CartSidePanel({
   onCheckout,
 }: {
   cart: CartLine[];
+  maxQuantities: number[];
   cartCount: number;
   total: number;
   onStepLine: (index: number, direction: 1 | -1) => void;
@@ -518,6 +612,7 @@ function CartSidePanel({
                   key={`${line.product.product_id}-${line.unit.uom_id}`}
                   line={line}
                   index={index}
+                  maxQuantity={maxQuantities[index] ?? 0}
                   onStepLine={onStepLine}
                   onSetQty={onSetQty}
                   onRemoveLine={onRemoveLine}
@@ -551,6 +646,7 @@ function CartModal({
   isOpen,
   onClose,
   cart,
+  maxQuantities,
   total,
   onStepLine,
   onSetQty,
@@ -560,6 +656,7 @@ function CartModal({
   isOpen: boolean;
   onClose: () => void;
   cart: CartLine[];
+  maxQuantities: number[];
   total: number;
   onStepLine: (index: number, direction: 1 | -1) => void;
   onSetQty: (index: number, raw: string) => void;
@@ -590,6 +687,7 @@ function CartModal({
                     key={`${line.product.product_id}-${line.unit.uom_id}`}
                     line={line}
                     index={index}
+                    maxQuantity={maxQuantities[index] ?? 0}
                     onStepLine={onStepLine}
                     onSetQty={onSetQty}
                     onRemoveLine={onRemoveLine}

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { useCartStore } from "@/src/store/useCartStore/useCartStore";
 import {
   ApiCatalogProduct,
   CatalogProduct,
@@ -31,10 +32,6 @@ import {
 import React, { useMemo, useState } from "react";
 import { FlatList, useWindowDimensions } from "react-native";
 
-// ---------------------------------------------------------------------------
-// Coerción defensiva: el backend a veces manda los montos como string
-// ("15.50") o con separador de miles.
-// ---------------------------------------------------------------------------
 function toNumber(v: unknown): number {
   if (typeof v === "number") return Number.isFinite(v) ? v : 0;
   if (typeof v === "string") {
@@ -44,18 +41,15 @@ function toNumber(v: unknown): number {
   return 0;
 }
 
-// ---------------------------------------------------------------------------
-// Adaptador: JSON de la API -> CatalogProduct
-// ---------------------------------------------------------------------------
 export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
   const baseUnit: SellUnit = {
-    uom_id: api.unit_of_measure_id,
+    uom_id: Number(api.unit_of_measure_id),
     code: api.unit_of_measure_code,
     name: api.unit_of_measure_name,
     factorToBase: 1,
   };
   const conversionUnits: SellUnit[] = (api.conversions ?? []).map((c) => ({
-    uom_id: c.to_uom_id,
+    uom_id: Number(c.to_uom_id),
     code: c.from_uom_code,
     name: c.from_uom_name,
     factorToBase: c.factor,
@@ -84,7 +78,10 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
   if (__DEV__ && conversionUnits.length > 0) {
     console.warn(
       `[POS] unidades de "${api.name}" (id ${api.product_id}):`,
-      units.map((u) => `${u.name} = ${u.factorToBase} ${baseUnit.name}(s)`),
+      units.map(
+        (u) =>
+          `${u.name} (uom_id=${u.uom_id}) = ${u.factorToBase} ${baseUnit.name}(s)`,
+      ),
       "conversions crudo del API:",
       api.conversions,
     );
@@ -145,11 +142,34 @@ function ProductCard({
   duplicatedSku: boolean;
 }) {
   const [selectedUomId, setSelectedUomId] = useState<number>(
-    product.units[0].uom_id,
+    Number(product.units[0].uom_id),
   );
   const unit =
     product.units.find((u) => u.uom_id === selectedUomId) ?? product.units[0];
-  const soldOut = product.stock_qty <= 0;
+
+  // ---------------------------------------------------------------------
+  // Validación de stock: cuánto de este producto ya está en el carrito
+  // (sumado en unidades base, sin importar con qué unidad se agregó cada
+  // línea), y cuánto queda disponible para seguir agregando.
+  // ---------------------------------------------------------------------
+  const cart = useCartStore((s) => s.cart);
+  const qtyInCart = useMemo(
+    () =>
+      cart.reduce(
+        (sum, l) =>
+          l.product.product_id === product.product_id ? sum + l.quantity : sum,
+        0,
+      ),
+    [cart, product.product_id],
+  );
+  const remainingStock = Math.max(0, product.stock_qty - qtyInCart);
+
+  const noStockAtAll = product.stock_qty <= 0;
+  // La unidad elegida "pesa" unit.factorToBase en unidades base (ej. una
+  // Caja pesa 12). Si eso no entra en lo que queda disponible, no dejamos
+  // agregar con esa unidad.
+  const wouldExceedStock = !noStockAtAll && unit.factorToBase > remainingStock;
+  const soldOut = noStockAtAll || wouldExceedStock;
 
   return (
     <Box className="m-1.5 flex-1 rounded-xl border border-gray-200 bg-white p-3">
@@ -164,10 +184,14 @@ function ProductCard({
           <Badge
             size="sm"
             variant="solid"
-            className={`ml-1.5 rounded-full ${soldOut ? "bg-red-500" : "bg-gray-400"}`}
+            className={`ml-1.5 rounded-full ${noStockAtAll ? "bg-red-500" : "bg-gray-400"}`}
           >
             <BadgeText className="text-white">
-              {soldOut ? "Agotado" : formatQty(product.stock_qty)}
+              {noStockAtAll
+                ? "Agotado"
+                : qtyInCart > 0
+                  ? `${formatQty(remainingStock)} disp.`
+                  : formatQty(product.stock_qty)}
             </BadgeText>
           </Badge>
         </HStack>
@@ -206,9 +230,21 @@ function ProductCard({
           )}
         </HStack>
 
+        {/* Aviso cuando la unidad elegida no entra en lo que queda de stock */}
+        {wouldExceedStock && (
+          <Text className="text-[10px] font-medium text-amber-600">
+            Solo quedan {formatQty(remainingStock)} disponibles, no alcanza para
+            una unidad de &quot;{unit.name}&quot;.
+          </Text>
+        )}
+
         <HStack space="xs" className="items-center">
           {product.units.length > 1 && (
             <Select
+              // FIX: forzamos remount del Select cada vez que cambia la
+              // unidad elegida, para que el SelectInput siempre refleje
+              // `unit.name` actual y no se quede mostrando texto viejo.
+              key={`unit-select-${product.product_id}-${unit.uom_id}`}
               selectedValue={String(unit.uom_id)}
               onValueChange={(v) => setSelectedUomId(Number(v))}
               className="flex-1"
@@ -259,6 +295,7 @@ function ProductCard({
                 console.warn(
                   `[POS] Añadir "${product.name}" con unidad:`,
                   unit,
+                  `remainingStock=${remainingStock}`,
                 );
               }
               onAdd(unit);
