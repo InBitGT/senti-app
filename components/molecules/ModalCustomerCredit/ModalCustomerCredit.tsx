@@ -141,6 +141,8 @@ export const ModalCustomerCreditDetail: React.FC<Props> = ({
   onClose,
   data,
 }) => {
+  const hasDueDate = Boolean(data?.credit_due_date);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalBackdrop />
@@ -172,15 +174,33 @@ export const ModalCustomerCreditDetail: React.FC<Props> = ({
                     value={formatCurrency(data.credit_limit)}
                     color="#111827"
                   />
-                  <StatBox
-                    label="Disponible"
-                    value={formatCurrency(data.credit_available)}
-                    color="#16a34a"
-                  />
-                  <StatBox
-                    label="Usado"
-                    value={formatCurrency(data.credit_used)}
-                    color="#dc2626"
+                  {hasDueDate && (
+                    <>
+                      <InfoRow
+                        label="Fecha límite"
+                        value={new Date(
+                          data.credit_due_date as string,
+                        ).toLocaleDateString("es-GT")}
+                      />
+                      <View style={{ marginTop: 6 }}>
+                        <DueDateBadge
+                          dueDate={data.credit_due_date as string}
+                        />
+                      </View>
+                    </>
+                  )}
+
+                  <Divider />
+
+                  <SectionTitle title="Cliente" />
+                  <InfoRow label="Nombre" value={data.customer?.name} />
+                  <InfoRow
+                    label="Documento"
+                    value={
+                      data.customer
+                        ? `${data.customer.document_type} ${data.customer.document_number}`
+                        : "—"
+                    }
                   />
                 </View>
 
