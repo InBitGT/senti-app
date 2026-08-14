@@ -10,6 +10,9 @@ export interface ApiConversion {
   to_uom_name: string;
   to_uom_code: string;
   factor: number;
+  price_per_uom_id?: number | null;
+  price_per_uom_amount?: number | null;
+  price_per_uom_currency?: string | null;
 }
 
 export interface ApiCatalogProduct {
@@ -46,6 +49,8 @@ export interface SellUnit {
   code: string;
   name: string;
   factorToBase: number;
+
+  unitPrice: number;
 }
 
 export interface CatalogProduct {
