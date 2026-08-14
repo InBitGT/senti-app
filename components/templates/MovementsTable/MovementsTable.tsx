@@ -378,7 +378,12 @@ export function MovementsTable({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16, paddingVertical: 20 },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    margin: 20,
+  },
   pillRow: { flexWrap: "wrap", gap: 6, marginBottom: 12 },
   pill: {
     paddingHorizontal: 12,

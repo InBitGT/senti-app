@@ -46,6 +46,7 @@ import {
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Platform,
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
@@ -325,9 +326,15 @@ export const Pos: React.FC = () => {
                 )}
               </HStack>
 
-              {categories.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <DesktopScrollView>
+              {categories.length > 0 &&
+                (Platform.OS === "web" ? (
+                  // FIX: en Tauri (webview), envolver DesktopScrollView
+                  // (que ya scrollea con overflow-x + drag de mouse) DENTRO
+                  // de un <ScrollView> de RN generaba dos contenedores de
+                  // scroll horizontal anidados peleándose entre sí, y el
+                  // resultado era que ninguno scrolleaba de forma
+                  // confiable. En web/Tauri usamos SOLO DesktopScrollView.
+                  <DesktopScrollView horizontal>
                     <HStack space="xs">
                       <CategoryPill
                         label="Todas"
@@ -344,14 +351,34 @@ export const Pos: React.FC = () => {
                       ))}
                     </HStack>
                   </DesktopScrollView>
-                </ScrollView>
-              )}
+                ) : (
+                  // En iOS/Android seguimos usando el ScrollView nativo de
+                  // RN, que ahí sí funciona bien con touch.
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <HStack space="xs">
+                      <CategoryPill
+                        label="Todas"
+                        active={categoryId === null}
+                        onPress={() => pickCategory(null)}
+                      />
+                      {categories.map((c) => (
+                        <CategoryPill
+                          key={c.id}
+                          label={c.name}
+                          active={categoryId === c.id}
+                          onPress={() => pickCategory(c.id)}
+                        />
+                      ))}
+                    </HStack>
+                  </ScrollView>
+                ))}
 
               {/* Subcategorías: solo si hay una categoría elegida y tiene hijas reales */}
-              {categoryId != null && subcategories.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <DesktopScrollView>
-                    <HStack space="xs">
+              {categoryId != null &&
+                subcategories.length > 0 &&
+                (Platform.OS === "web" ? (
+                  <DesktopScrollView horizontal>
+                    <HStack space="xs" className="mb-24">
                       <SubcategoryPill
                         label="Todo"
                         active={subcategoryId === null}
@@ -367,8 +394,25 @@ export const Pos: React.FC = () => {
                       ))}
                     </HStack>
                   </DesktopScrollView>
-                </ScrollView>
-              )}
+                ) : (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <HStack space="xs">
+                      <SubcategoryPill
+                        label="Todo"
+                        active={subcategoryId === null}
+                        onPress={() => setSubcategoryId(null)}
+                      />
+                      {subcategories.map((s) => (
+                        <SubcategoryPill
+                          key={s.id}
+                          label={s.name}
+                          active={subcategoryId === s.id}
+                          onPress={() => setSubcategoryId(s.id)}
+                        />
+                      ))}
+                    </HStack>
+                  </ScrollView>
+                ))}
             </VStack>
 
             <Box className="flex-1 px-1.5 pt-2">

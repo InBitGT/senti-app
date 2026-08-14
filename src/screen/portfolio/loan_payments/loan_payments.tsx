@@ -227,7 +227,7 @@ export default function LoanPaymentForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
+          <DesktopScrollView useWindowHeight>
             <VStack>
               <Box
                 style={styles.card}
@@ -431,7 +431,7 @@ export default function LoanPaymentForm() {
 
                   <Button
                     size="lg"
-                    className="mt-2 w-full"
+                    className="mt-2 w-full mb-6"
                     onPress={handleSubmit(onSubmit)}
                     disabled={post.isPending || hasNoPendingDebt}
                   >
