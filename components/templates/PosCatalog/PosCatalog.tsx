@@ -55,7 +55,7 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     factorToBase: 1,
   };
   const conversionUnits: SellUnit[] = (api.conversions ?? []).map((c) => ({
-    uom_id: c.from_uom_id,
+    uom_id: c.to_uom_id,
     code: c.from_uom_code,
     name: c.from_uom_name,
     factorToBase: c.factor,
