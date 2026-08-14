@@ -60,6 +60,23 @@ interface CartLine {
   quantity: number;
 }
 
+// Precio total de una línea del carrito. `quantity` está en unidades base,
+// así que `quantity / unit.factorToBase` es la cantidad de "paquetes" de
+// esa unidad (ej. cuántas Cajas), multiplicado por `unit.unitPrice` (el
+// precio de UNA unidad de ese tipo, que ya resuelve internamente si tiene
+// un precio especial de conversión o si se calcula por factor).
+//
+// FIX: antes en varios lugares de este archivo se volvía a calcular
+// `product.price * factorToBase` / `product.price * quantity` a mano, lo
+// que ignoraba por completo cualquier `price_per_uom_amount` especial que
+// ya viene resuelto en `unit.unitPrice` — el precio de "Caja" en el
+// Select de ProductCatalog se veía bien, pero al pasar al carrito se
+// perdía y volvía a calcularse por factor. Toda la pantalla del carrito
+// debe usar esta función en vez de tocar `product.price` directamente.
+function lineTotal(line: CartLine): number {
+  return (line.quantity / line.unit.factorToBase) * line.unit.unitPrice;
+}
+
 // A partir de este ancho se muestra el panel fijo a la derecha (tablet/web).
 // Debajo, se usa el modal tipo drawer de móvil.
 const DESKTOP_BREAKPOINT = 768;
@@ -102,12 +119,9 @@ export const Pos: React.FC = () => {
   // producto (puede estar repartido entre distintas unidades, ej. algo de
   // "Caja" y algo de "Unidad" suelta del mismo producto).
   //
-  // No tengo acceso a useCartStore.ts (donde viven addLine/stepLine/
-  // setLineQty), así que esta validación vive acá, envolviendo esas
-  // acciones antes de llamarlas. Si esas funciones también se invocan
-  // desde otro lugar del código sin pasar por estos wrappers, esta
-  // protección no aplicaría ahí — para una validación a prueba de todo
-  // convendría moverla también al store.
+  // No tengo acceso al store desde acá directamente en este archivo más
+  // que a través del hook, así que esta validación vive acá, envolviendo
+  // las acciones antes de llamarlas.
   // -------------------------------------------------------------------
   function qtyInOtherLines(productId: number, excludeIndex: number) {
     return cart.reduce((sum, l, i) => {
@@ -247,12 +261,10 @@ export const Pos: React.FC = () => {
   }
 
   const cartCount = cart.reduce((sum, l) => sum + l.quantity, 0);
-  // `quantity` ya está en unidades base, así que el total NO se vuelve a
-  // multiplicar por factorToBase (antes eso duplicaba el monto).
-  const cartTotal = cart.reduce(
-    (sum, l) => sum + l.product.price * l.quantity,
-    0,
-  );
+  // FIX: antes era `sum + l.product.price * l.quantity`, que ignoraba
+  // cualquier precio especial de conversión. Ahora suma `lineTotal(l)`
+  // por línea (ver la función arriba).
+  const cartTotal = cart.reduce((sum, l) => sum + lineTotal(l), 0);
 
   function goToCheckout() {
     setCartOpen(false);
@@ -478,9 +490,11 @@ function CartLineRow({
           <Text className="text-sm font-medium text-gray-900" numberOfLines={1}>
             {line.product.name}
           </Text>
+          {/* FIX: antes era `line.product.price * line.unit.factorToBase`,
+              que ignoraba cualquier precio especial de conversión. Ahora
+              usa `line.unit.unitPrice` directo. */}
           <Text className="text-xs text-gray-400">
-            {formatCurrency(line.product.price * line.unit.factorToBase)}/
-            {line.unit.code}
+            {formatCurrency(line.unit.unitPrice)}/{line.unit.code}
           </Text>
         </VStack>
 
@@ -524,20 +538,15 @@ function CartLineRow({
               />
             </Box>
           </TouchableOpacity>
-          {/* FIX: acá se mostraba siempre `line.product.units[0]?.code`
-              (la unidad base), sin importar qué unidad tuviera realmente
-              esta línea. Con varias unidades por producto, esto hacía
-              parecer que la unidad "no cambiaba" al elegir otra distinta
-              de la base. Ahora usa `line.unit.code`, que es la unidad
-              real de esta línea. */}
+          {/* Unidad real de esta línea (no la unidad base del producto). */}
           <Text className="text-[11px] text-gray-400">{line.unit.code}</Text>
         </HStack>
 
-        {/* `quantity` ya está en unidades base: se multiplica solo por el
-            precio base, sin volver a aplicar factorToBase (eso duplicaba
-            el total cuando la unidad elegida era distinta de la base). */}
+        {/* FIX: antes era `line.product.price * line.quantity`, que
+            ignoraba cualquier precio especial de conversión. Ahora usa
+            `lineTotal(line)`. */}
         <Text className="w-16 text-right text-sm font-semibold text-gray-900">
-          {formatCurrency(line.product.price * line.quantity)}
+          {formatCurrency(lineTotal(line))}
         </Text>
 
         <TouchableOpacity onPress={() => onRemoveLine(index)}>
