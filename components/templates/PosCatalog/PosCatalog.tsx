@@ -42,19 +42,6 @@ function toNumber(v: unknown): number {
 }
 
 export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
-  const baseUnit: SellUnit = {
-    uom_id: Number(api.unit_of_measure_id),
-    code: api.unit_of_measure_code,
-    name: api.unit_of_measure_name,
-    factorToBase: 1,
-  };
-  const conversionUnits: SellUnit[] = (api.conversions ?? []).map((c) => ({
-    uom_id: Number(c.id),
-    code: c.from_uom_code,
-    name: c.from_uom_name,
-    factorToBase: c.factor,
-  }));
-
   const finalPrice = toNumber(api.final_price);
   const basePrice = toNumber(api.base_price);
   const customerTypePrice = toNumber(api.customer_type_price);
@@ -73,6 +60,49 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     );
   }
 
+  const baseUnit: SellUnit = {
+    uom_id: Number(api.unit_of_measure_id),
+    code: api.unit_of_measure_code,
+    name: api.unit_of_measure_name,
+    factorToBase: 1,
+    unitPrice: price,
+  };
+
+  const conversionUnits: SellUnit[] = (api.conversions ?? []).map((c) => {
+    // FIX/NUEVO: `price_per_uom_amount` puede venir vacío/null/0 (no
+    // todas las conversiones tienen precio especial) — en ese caso el
+    // precio de 1 de esta unidad se sigue calculando como
+    // `price_base * factor`, exactamente como antes. Si SÍ viene con un
+    // valor > 0, ese es el precio real de venta de esa unidad (puede no
+    // coincidir con price*factor, ej. un descuento por comprar la Caja
+    // completa).
+    const specialPrice = toNumber(c.price_per_uom_amount);
+    const unitPrice = specialPrice > 0 ? specialPrice : price * c.factor;
+
+    if (__DEV__ && specialPrice > 0) {
+      console.warn(
+        `[POS] "${api.name}": la unidad "${c.from_uom_name}" tiene precio especial de conversión Q${specialPrice} ` +
+          `(en vez de Q${price * c.factor} que daría price_base * factor).`,
+      );
+    }
+
+    return {
+      // FIX: usamos `c.id` (el id propio de la fila de conversión) como
+      // uom_id de esta unidad seleccionable, en vez de `to_uom_id`.
+      // `to_uom_id` es el id de la unidad BASE a la que convierte la
+      // conversión (en el ejemplo, "Unidad"), así que coincide con el
+      // uom_id de `baseUnit` — usarlo hacía que "Caja" terminara con el
+      // MISMO uom_id que la base y el Select nunca pudiera distinguirlas
+      // (Array.find siempre devolvía la primera coincidencia, o sea
+      // baseUnit). `c.id` es único garantizado por fila de conversión.
+      uom_id: Number(c.id),
+      code: c.from_uom_code,
+      name: c.from_uom_name,
+      factorToBase: c.factor,
+      unitPrice,
+    };
+  });
+
   const units = [baseUnit, ...conversionUnits];
 
   if (__DEV__ && conversionUnits.length > 0) {
@@ -80,7 +110,7 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
       `[POS] unidades de "${api.name}" (id ${api.product_id}):`,
       units.map(
         (u) =>
-          `${u.name} (uom_id=${u.uom_id}) = ${u.factorToBase} ${baseUnit.name}(s)`,
+          `${u.name} (uom_id=${u.uom_id}) = ${u.factorToBase} ${baseUnit.name}(s), unitPrice=Q${u.unitPrice}`,
       ),
       "conversions crudo del API:",
       api.conversions,
@@ -166,7 +196,7 @@ function ProductCard({
 
   const noStockAtAll = product.stock_qty <= 0;
   // La unidad elegida "pesa" unit.factorToBase en unidades base (ej. una
-  // Caja pesa 12). Si eso no entra en lo que queda disponible, no dejamos
+  // Caja pesa 10). Si eso no entra en lo que queda disponible, no dejamos
   // agregar con esa unidad.
   const wouldExceedStock = !noStockAtAll && unit.factorToBase > remainingStock;
   const soldOut = noStockAtAll || wouldExceedStock;
@@ -216,8 +246,13 @@ function ProductCard({
         <HStack className="items-baseline">
           {product.hasPrice ? (
             <>
+              {/* FIX: antes era `product.price * unit.factorToBase`,
+                  calculado siempre por regla de 3. Ahora usa
+                  `unit.unitPrice`, que ya resuelve internamente si esta
+                  unidad tiene un precio especial de conversión
+                  (price_per_uom_amount) o si hay que calcularlo. */}
               <Text className="text-base font-semibold text-gray-900">
-                {formatCurrency(product.price * unit.factorToBase)}
+                {formatCurrency(unit.unitPrice)}
               </Text>
               <Text className="ml-1 text-[10px] text-gray-400">
                 /{unit.code}
@@ -276,7 +311,7 @@ function ProductCard({
                       key={u.uom_id}
                       label={
                         u.factorToBase !== 1
-                          ? `${u.name} (=${u.factorToBase})`
+                          ? `${u.name} (=${u.factorToBase}) — ${formatCurrency(u.unitPrice)}`
                           : u.name
                       }
                       value={String(u.uom_id)}
