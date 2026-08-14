@@ -1,9 +1,9 @@
-import { CustomToast } from '@/components';
-import { useToast } from '@/components/ui/toast';
-import { BadgeCheck, CircleAlert, Info, LucideIcon } from 'lucide-react-native';
-import React from 'react';
+import { CustomToast } from "@/components";
+import { useToast } from "@/components/ui/toast";
+import { BadgeCheck, CircleAlert, Info, LucideIcon } from "lucide-react-native";
+import React from "react";
 
-type ToastType = 'success' | 'error' | 'info';
+type ToastType = "success" | "error" | "info";
 
 const TOAST_ICONS: Record<ToastType, LucideIcon> = {
   success: BadgeCheck,
@@ -20,13 +20,13 @@ interface ShowToastProps {
 export const useCustomToast = () => {
   const toast = useToast();
 
-  const showToast = ({ message, type = 'success', icon }: ShowToastProps) => {
+  const showToast = ({ message, type = "success", icon }: ShowToastProps) => {
     const Icon = icon ?? TOAST_ICONS[type];
 
     toast.show({
-      placement: 'top',
+      placement: "bottom",
       render: ({ id }) => {
-        const toastId = 'toast-' + id;
+        const toastId = "toast-" + id;
         return (
           <CustomToast toastId={toastId} Icon={Icon} message={message} />
         ) as React.ReactNode;
