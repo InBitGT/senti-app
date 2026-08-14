@@ -38,8 +38,10 @@ import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { useMerchandiseStore } from "@/src/store/useMerchandiseStore/useMerchandiseStore";
 import type {
+  MerchandiseConversion,
   MerchandiseDetail,
   MerchandiseListItem,
+  PricePerUom,
 } from "@/src/types/merchandise/merchandise.types";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon, Plus, Trash2 } from "lucide-react-native";
@@ -110,6 +112,82 @@ const CURRENCIES = [
   { label: "USD", value: "USD" },
 ];
 
+// -----------------------------------------------------------------------
+// FIX: el precio por conversión puede venir de DOS lugares distintos en
+// la respuesta del GET:
+//   1) Anidado: `conversion.price_per_uom` (lo único que se leía antes).
+//   2) Suelto: `MerchandiseListItem.price_per_uom` (un array aparte a
+//      nivel raíz, sin relación explícita con su conversión salvo por
+//      los campos que agregamos a `PricePerUom`).
+// Si el backend llena el (2) y no el (1), `buildDefaultValues` nunca
+// encontraba el precio — por eso el switch "Definir precio para esta
+// unidad" se veía siempre apagado al editar.
+//
+// Esta función intenta (1) primero, y si no hay nada ahí, busca en (2)
+// por `conversion_id` y, si tampoco está ese campo, por el par
+// from_uom_id/to_uom_id.
+// -----------------------------------------------------------------------
+function findPricePerUomForConversion(
+  conversion: MerchandiseConversion,
+  rootPricePerUom: PricePerUom[] | undefined,
+): PricePerUom | null {
+  if (conversion.price_per_uom) {
+    if (__DEV__) {
+      console.warn(
+        `[Merchandise] price_per_uom de la conversión ${conversion.from_uom_id}->${conversion.to_uom_id} ` +
+          `vino ANIDADO en conversion.price_per_uom.`,
+        conversion.price_per_uom,
+      );
+    }
+    return conversion.price_per_uom;
+  }
+
+  if (!rootPricePerUom?.length) return null;
+
+  // FIX: confirmado con datos reales — el campo de relación es `uom_id`,
+  // que coincide con `from_uom_id` de la conversión (la unidad que se
+  // está definiendo, ej. "Caja"). Esta es la vía principal de matcheo.
+  const byUomId = rootPricePerUom.find(
+    (p) => p.uom_id === conversion.from_uom_id,
+  );
+  if (byUomId) {
+    if (__DEV__) {
+      console.warn(
+        `[Merchandise] price_per_uom de la conversión ${conversion.from_uom_id}->${conversion.to_uom_id} ` +
+          `encontrado en el array RAÍZ por uom_id.`,
+        byUomId,
+      );
+    }
+    return byUomId;
+  }
+
+  // Respaldo: en los datos reales vistos hasta ahora, `id` coincide entre
+  // la conversión y su price_per_uom (probable relación 1:1 con mismo id
+  // en ambas tablas del lado del backend).
+  if (conversion.id != null) {
+    const byId = rootPricePerUom.find((p) => p.id === conversion.id);
+    if (byId) {
+      if (__DEV__) {
+        console.warn(
+          `[Merchandise] price_per_uom de la conversión id=${conversion.id} encontrado en el array RAÍZ ` +
+            `por id compartido (respaldo, uom_id no matcheó).`,
+          byId,
+        );
+      }
+      return byId;
+    }
+  }
+
+  if (__DEV__) {
+    console.warn(
+      `[Merchandise] NO se encontró price_per_uom para la conversión ${conversion.from_uom_id}->${conversion.to_uom_id} ` +
+        `ni anidado ni en el array raíz (probado por uom_id e id). rootPricePerUom crudo:`,
+      rootPricePerUom,
+    );
+  }
+  return null;
+}
+
 // Extraída como función aparte para poder llamarla también desde reset(),
 // no solo desde el defaultValues inicial de useForm.
 function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
@@ -133,25 +211,31 @@ function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
     price_amount: data?.price?.amount != null ? String(data.price.amount) : "",
     price_currency: data?.price?.currency || "GTQ",
     conversions: data?.conversions?.length
-      ? data.conversions.map((c) => ({
-          from_uom_id: String(c.from_uom_id),
-          to_uom_id: String(c.to_uom_id),
-          factor: String(c.factor),
-          has_price_per_uom: !!c.price_per_uom,
-          price_per_uom_amount:
-            c.price_per_uom?.amount != null
-              ? String(c.price_per_uom.amount)
-              : "",
-          price_per_uom_currency: c.price_per_uom?.currency || "GTQ",
-          price_per_uom_wholesale_min_qty:
-            c.price_per_uom?.wholesale_min_qty != null
-              ? String(c.price_per_uom.wholesale_min_qty)
-              : "",
-          price_per_uom_wholesale_amount:
-            c.price_per_uom?.wholesale_amount != null
-              ? String(c.price_per_uom.wholesale_amount)
-              : "",
-        }))
+      ? data.conversions.map((c) => {
+          // FIX: antes era `c.price_per_uom` directo. Ahora busca también
+          // en el array raíz `data.price_per_uom` si no está anidado.
+          const pricePerUom = findPricePerUomForConversion(
+            c,
+            data?.price_per_uom,
+          );
+          return {
+            from_uom_id: String(c.from_uom_id),
+            to_uom_id: String(c.to_uom_id),
+            factor: String(c.factor),
+            has_price_per_uom: !!pricePerUom,
+            price_per_uom_amount:
+              pricePerUom?.amount != null ? String(pricePerUom.amount) : "",
+            price_per_uom_currency: pricePerUom?.currency || "GTQ",
+            price_per_uom_wholesale_min_qty:
+              pricePerUom?.wholesale_min_qty != null
+                ? String(pricePerUom.wholesale_min_qty)
+                : "",
+            price_per_uom_wholesale_amount:
+              pricePerUom?.wholesale_amount != null
+                ? String(pricePerUom.wholesale_amount)
+                : "",
+          };
+        })
       : [],
     customer_type_prices: data?.customer_type_prices?.length
       ? data.customer_type_prices.map((c) => ({

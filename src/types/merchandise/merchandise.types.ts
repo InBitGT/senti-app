@@ -15,6 +15,14 @@ export interface PricePerUom {
   currency: string;
   wholesale_min_qty?: number | null;
   wholesale_amount?: number | null;
+  // FIX: el campo real que manda el backend para relacionar esta entrada
+  // con su conversión es `uom_id`, y coincide con el `from_uom_id` de la
+  // conversión (la unidad que se está definiendo, ej. "Caja"). Ejemplo
+  // real: conversion { id: 16, from_uom_id: 2 } <-> price_per_uom
+  // { id: 16, uom_id: 2 }. `id` también coincide entre ambos en la
+  // práctica (probable relación 1:1 con mismo id en ambas tablas), así
+  // que se deja como respaldo adicional para matchear.
+  uom_id?: number | null;
 }
 
 export interface MerchandiseConversion {
@@ -24,7 +32,9 @@ export interface MerchandiseConversion {
   to_uom_id: number;
   to_uom_code?: string;
   factor: number;
-  // Precio específico para esta conversión de unidad (opcional).
+  // Precio específico para esta conversión de unidad (opcional). Puede
+  // venir anidado acá, o suelto en `MerchandiseListItem.price_per_uom` —
+  // ver `findPricePerUomForConversion` en MerchandiseForm.tsx.
   price_per_uom?: PricePerUom | null;
 }
 
@@ -79,6 +89,11 @@ export interface MerchandiseListItem {
   price: Price | null;
   conversions: MerchandiseConversion[];
   customer_type_prices: CustomerTypePrice[];
+  // NOTA: este array es una fuente ALTERNATIVA de precios por conversión,
+  // separada de `conversions[].price_per_uom`. Si el backend llena este
+  // array en vez del campo anidado, hay que relacionar cada entrada con
+  // su conversión — ver `findPricePerUomForConversion` en
+  // MerchandiseForm.tsx.
   price_per_uom: PricePerUom[];
   wholesale_rule: WholesaleRule | null;
 }
