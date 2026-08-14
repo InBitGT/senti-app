@@ -2,6 +2,7 @@
 // 1) Shape crudo que devuelve el endpoint del catálogo
 // ---------------------------------------------------------------------------
 export interface ApiConversion {
+  id: number;
   from_uom_id: number;
   from_uom_name: string;
   from_uom_code: string;
