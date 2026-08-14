@@ -10,6 +10,11 @@ export interface ApiConversion {
   to_uom_name: string;
   to_uom_code: string;
   factor: number;
+  // Precio especial para vender exactamente 1 de esta unidad de
+  // conversión (ej. 1 "Caja" a Q18 en vez de los Q20 que daría la regla
+  // de 3 con el precio base * factor). Pueden venir vacíos/null si esta
+  // conversión no tiene precio especial — en ese caso el precio de la
+  // unidad se sigue calculando como `price_normal * factor`.
   price_per_uom_id?: number | null;
   price_per_uom_amount?: number | null;
   price_per_uom_currency?: string | null;
@@ -37,6 +42,11 @@ export interface ApiCatalogProduct {
   has_wholesale: boolean;
   wholesale_min_qty?: number;
   wholesale_discount_pct?: number;
+  // NOTA: `final_price` es el precio YA con el descuento de mayoreo
+  // aplicado por el backend. NO es "el precio a usar por defecto" — solo
+  // debe usarse una vez que la cantidad en el carrito alcanza
+  // `wholesale_min_qty`. El precio normal (antes de mayoreo) es
+  // `base_price` (o `customer_type_price` si aplica).
   final_price: number;
   conversions: ApiConversion[];
 }
@@ -49,8 +59,15 @@ export interface SellUnit {
   code: string;
   name: string;
   factorToBase: number;
-
+  // Precio de UNA unidad de este tipo en tarifa NORMAL (sin mayoreo). Si
+  // la conversión trae price_per_uom_amount lo usa tal cual; si no, es
+  // `normalPrice * factorToBase`.
   unitPrice: number;
+  // Precio de UNA unidad de este tipo en tarifa de MAYOREO. Solo debe
+  // usarse cuando la cantidad total en el carrito de este producto (en
+  // unidades base, sumando todas las líneas sin importar la unidad con
+  // la que se agregaron) alcanza `CatalogProduct.wholesale_min_qty`.
+  wholesaleUnitPrice: number;
 }
 
 export interface CatalogProduct {
@@ -63,7 +80,15 @@ export interface CatalogProduct {
   subcategory_name: string;
   stock_qty: number;
   units: SellUnit[];
+  // Precio normal (sin mayoreo). Antes este campo mezclaba normal y
+  // mayoreo según cuál viniera con valor — ahora siempre es la tarifa
+  // normal; para la tarifa de mayoreo usar `wholesalePrice`.
   price: number;
+  // Precio con el descuento de mayoreo ya aplicado (viene de
+  // `final_price` del backend). Solo se debe usar cuando la cantidad en
+  // el carrito alcanza `wholesale_min_qty` — ver `has_wholesale` /
+  // `wholesale_min_qty` abajo.
+  wholesalePrice: number;
   hasPrice: boolean;
   has_wholesale: boolean;
   wholesale_min_qty: number | null;

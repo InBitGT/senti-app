@@ -25,9 +25,10 @@ import { useCustomerType } from "@/src/hooks/useCustomerType/useCustomerType";
 import { usePaymentMethod } from "@/src/hooks/usePaymentsMethods/usePaymentsMethods";
 import { useCatalog } from "@/src/hooks/usePos/usePos";
 import { useAuthStore } from "@/src/store";
-import { useCartStore } from "@/src/store/useCartStore/useCartStore";
+import { CartLine, useCartStore } from "@/src/store/useCartStore/useCartStore";
 import { useCashRegisterSessionStore } from "@/src/store/useCashRegisterSessionStore/useCashRegisterSessionStore";
 import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
+import { CatalogProduct } from "@/src/types/pos/pos";
 import { router } from "expo-router";
 import {
   ArrowLeft,
@@ -42,6 +43,53 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 
 const CASH_ALIASES = ["efectivo", "cash", "contado"];
+
+// ---------------------------------------------------------------------------
+// Precio efectivo por línea, igual que en Pos.tsx: mayoreo se evalúa por
+// PRODUCTO sumando todas sus líneas del carrito (sin importar la unidad
+// con la que se agregó cada una), y el precio unitario respeta tanto el
+// precio especial de conversión (unit.unitPrice) como el de mayoreo
+// (unit.wholesaleUnitPrice) una vez alcanzado wholesale_min_qty.
+//
+// Este archivo no comparte estado con Pos.tsx (son pantallas distintas),
+// así que la misma lógica se repite acá — si en algún momento se decide
+// centralizarla, el lugar natural sería useCartStore.ts, ya que ambas
+// pantallas ya dependen de él.
+// ---------------------------------------------------------------------------
+function totalQtyForProduct(cart: CartLine[], productId: number): number {
+  return cart.reduce(
+    (sum, l) => (l.product.product_id === productId ? sum + l.quantity : sum),
+    0,
+  );
+}
+
+function isWholesaleActiveFor(cart: CartLine[], product: CatalogProduct) {
+  if (!product.has_wholesale || product.wholesale_min_qty == null) {
+    return false;
+  }
+  return (
+    totalQtyForProduct(cart, product.product_id) >= product.wholesale_min_qty
+  );
+}
+
+// Precio de UNA unidad de la línea (ej. 1 Caja), ya resuelto.
+function unitPriceForLine(cart: CartLine[], line: CartLine): number {
+  return isWholesaleActiveFor(cart, line.product)
+    ? line.unit.wholesaleUnitPrice
+    : line.unit.unitPrice;
+}
+
+// Precio de UNA unidad BASE (ej. 1 Unidad suelta) de la línea. Como
+// `quantity` está en unidades base, esto es lo que hay que mandarle al
+// backend como `unit_price` para que `quantity * unit_price` cuadre.
+function basePriceForLine(cart: CartLine[], line: CartLine): number {
+  return unitPriceForLine(cart, line) / line.unit.factorToBase;
+}
+
+// Total de una línea completa.
+function lineTotal(cart: CartLine[], line: CartLine): number {
+  return line.quantity * basePriceForLine(cart, line);
+}
 
 // Deja pasar solo dígitos y un único punto decimal (para montos).
 function sanitizeDecimal(raw: string): string {
@@ -153,11 +201,10 @@ export const Checkout: React.FC = () => {
     );
   }, [creditAvailable, methods]);
 
-  // `quantity` en el carrito ya está en unidades base (mismas de stock_qty)
-  // desde que se agregó en Pos.tsx — no se vuelve a multiplicar por
-  // factorToBase acá, eso duplicaba el total cuando la unidad elegida era
-  // distinta de la base (ej. "Caja").
-  const total = cart.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+  // FIX: antes era `sum + l.product.price * l.quantity`, que ignoraba el
+  // precio especial de conversión y el de mayoreo. Ahora usa `lineTotal`,
+  // que respeta ambos (ver definición arriba, igual que en Pos.tsx).
+  const total = cart.reduce((sum, l) => sum + lineTotal(cart, l), 0);
 
   // Con un solo método de pago, SIEMPRE se cobra el 100% del total — el
   // campo queda de solo lectura y no hace falta que el usuario escriba
@@ -296,10 +343,14 @@ export const Checkout: React.FC = () => {
           // categoría genérica, cambiar a subcategory_id/subcategory_name.
           category_id: l.product.category_id,
           category_name: l.product.category_name,
-          // `quantity` ya está en unidades base y `l.product.price` ya es
-          // el precio de esa unidad base — no hace falta convertir nada.
+          // `quantity` ya está en unidades base.
           quantity: l.quantity,
-          unit_price: l.product.price,
+          // FIX: antes era `l.product.price` (precio normal fijo, siempre
+          // el mismo sin importar mayoreo o precio especial de
+          // conversión). Ahora es el precio real que se está cobrando por
+          // UNA unidad base de esta línea — respeta tanto el precio
+          // especial de conversión como el de mayoreo si ya aplica.
+          unit_price: basePriceForLine(cart, l),
         })),
         payments,
         generate_fiscal_document: generateFiscal,
@@ -347,35 +398,53 @@ export const Checkout: React.FC = () => {
               <Text className="border-b border-gray-100 p-3 text-sm font-semibold text-gray-900">
                 Resumen del pedido
               </Text>
-              {cart.map((line) => (
-                <HStack
-                  key={`${line.product.product_id}-${line.unit.uom_id}`}
-                  className="items-center justify-between border-b border-gray-100 p-3"
-                >
-                  <VStack className="flex-1">
-                    <Text
-                      className="text-sm font-medium text-gray-900"
-                      numberOfLines={1}
-                    >
-                      {line.product.name}
+              {cart.map((line) => {
+                // FIX: antes se mostraba y calculaba todo con
+                // `line.product.price` fijo. Ahora se resuelve el precio
+                // real de esta línea (por unidad base) igual que en el
+                // total y en el payload de checkout.
+                const pricePerBaseUnit = basePriceForLine(cart, line);
+                const wholesale = isWholesaleActiveFor(cart, line.product);
+
+                return (
+                  <HStack
+                    key={`${line.product.product_id}-${line.unit.uom_id}`}
+                    className="items-center justify-between border-b border-gray-100 p-3"
+                  >
+                    <VStack className="flex-1">
+                      <HStack space="xs" className="items-center">
+                        <Text
+                          className="text-sm font-medium text-gray-900"
+                          numberOfLines={1}
+                        >
+                          {line.product.name}
+                        </Text>
+                        {wholesale && (
+                          <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
+                            <Text className="text-[9px] font-semibold text-green-700">
+                              mayoreo
+                            </Text>
+                          </Box>
+                        )}
+                      </HStack>
+                      {/* `quantity` ya está en unidades base: se muestra junto
+                        al código de la unidad base, y si se compró en una
+                        unidad distinta (ej. "Caja"), se aclara entre
+                        paréntesis cuántas de esas representa. */}
+                      <Text className="text-xs text-gray-400">
+                        {line.quantity} {line.product.units[0]?.code}
+                        {line.unit.factorToBase !== 1 &&
+                          ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
+                        {" × "}
+                        {formatCurrency(pricePerBaseUnit)}
+                      </Text>
+                    </VStack>
+                    <Text className="text-sm font-semibold text-gray-900">
+                      {formatCurrency(lineTotal(cart, line))}
                     </Text>
-                    {/* `quantity` ya está en unidades base: se muestra junto
-                      al código de la unidad base, y si se compró en una
-                      unidad distinta (ej. "Caja"), se aclara entre
-                      paréntesis cuántas de esas representa. */}
-                    <Text className="text-xs text-gray-400">
-                      {line.quantity} {line.product.units[0]?.code}
-                      {line.unit.factorToBase !== 1 &&
-                        ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
-                      {" × "}
-                      {formatCurrency(line.product.price)}
-                    </Text>
-                  </VStack>
-                  <Text className="text-sm font-semibold text-gray-900">
-                    {formatCurrency(line.product.price * line.quantity)}
-                  </Text>
-                </HStack>
-              ))}
+                  </HStack>
+                );
+              })}
               <HStack className="items-center justify-between p-3">
                 <Text className="text-base font-semibold text-gray-900">
                   Total
@@ -424,7 +493,7 @@ export const Checkout: React.FC = () => {
 
               {showCustomer && (
                 <VStack space="sm" className="border-t border-gray-100 pt-3">
-                  <Text className="text-xs font-medium text-gray-500">
+                  {/* <Text className="text-xs font-medium text-gray-500">
                     Tipo de cliente
                   </Text>
                   <HStack space="xs">
@@ -457,7 +526,7 @@ export const Checkout: React.FC = () => {
                         </TouchableOpacity>
                       );
                     })}
-                  </HStack>
+                  </HStack> */}
 
                   <Text className="text-xs font-medium text-gray-500">
                     Cliente específico (habilita crédito si aplica)

@@ -40,6 +40,7 @@ import {
   Plus,
   Search,
   ShoppingCart,
+  Tag,
   Trash2,
   Wallet,
   X,
@@ -60,23 +61,6 @@ interface CartLine {
   // cambia lo que significa `quantity`, solo de cuánto en cuánto salta el
   // stepper (ver useCartStore: addLine/stepLine usan unit.factorToBase).
   quantity: number;
-}
-
-// Precio total de una línea del carrito. `quantity` está en unidades base,
-// así que `quantity / unit.factorToBase` es la cantidad de "paquetes" de
-// esa unidad (ej. cuántas Cajas), multiplicado por `unit.unitPrice` (el
-// precio de UNA unidad de ese tipo, que ya resuelve internamente si tiene
-// un precio especial de conversión o si se calcula por factor).
-//
-// FIX: antes en varios lugares de este archivo se volvía a calcular
-// `product.price * factorToBase` / `product.price * quantity` a mano, lo
-// que ignoraba por completo cualquier `price_per_uom_amount` especial que
-// ya viene resuelto en `unit.unitPrice` — el precio de "Caja" en el
-// Select de ProductCatalog se veía bien, pero al pasar al carrito se
-// perdía y volvía a calcularse por factor. Toda la pantalla del carrito
-// debe usar esta función en vez de tocar `product.price` directamente.
-function lineTotal(line: CartLine): number {
-  return (line.quantity / line.unit.factorToBase) * line.unit.unitPrice;
 }
 
 // A partir de este ancho se muestra el panel fijo a la derecha (tablet/web).
@@ -113,17 +97,8 @@ export const Pos: React.FC = () => {
   const [cartOpen, setCartOpen] = useState(false);
 
   // -------------------------------------------------------------------
-  // Validación de stock del carrito.
-  //
-  // `quantity` de cada línea ya está en unidades base, así que para saber
-  // cuánto le queda disponible a UNA línea hay que restarle al stock total
-  // del producto lo que ya está "ocupado" en las OTRAS líneas del mismo
-  // producto (puede estar repartido entre distintas unidades, ej. algo de
-  // "Caja" y algo de "Unidad" suelta del mismo producto).
-  //
-  // No tengo acceso al store desde acá directamente en este archivo más
-  // que a través del hook, así que esta validación vive acá, envolviendo
-  // las acciones antes de llamarlas.
+  // Validación de stock del carrito (ver explicación completa más abajo,
+  // junto a maxQtyForLine).
   // -------------------------------------------------------------------
   function qtyInOtherLines(productId: number, excludeIndex: number) {
     return cart.reduce((sum, l, i) => {
@@ -146,6 +121,52 @@ export const Pos: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cart],
   );
+
+  // -------------------------------------------------------------------
+  // Mayoreo: el umbral (`wholesale_min_qty`) es por PRODUCTO, sumando la
+  // cantidad de TODAS sus líneas en el carrito — no importa si esa
+  // cantidad está repartida entre "Caja" y "Unidad" suelta del mismo
+  // producto, ni con qué unidad se agregó cada línea. Por eso esto se
+  // calcula acá (donde está el carrito completo) y no en cada tarjeta o
+  // línea por separado.
+  // -------------------------------------------------------------------
+  const productTotalQty = useMemo(() => {
+    const map = new Map<number, number>();
+    cart.forEach((l) => {
+      map.set(
+        l.product.product_id,
+        (map.get(l.product.product_id) ?? 0) + l.quantity,
+      );
+    });
+    return map;
+  }, [cart]);
+
+  function isWholesaleActiveFor(product: CatalogProduct): boolean {
+    if (!product.has_wholesale || product.wholesale_min_qty == null) {
+      return false;
+    }
+    const totalQty = productTotalQty.get(product.product_id) ?? 0;
+    return totalQty >= product.wholesale_min_qty;
+  }
+
+  // Precio de UNA unidad de la línea, según si ya aplica mayoreo o no.
+  function unitPriceForLine(line: CartLine): number {
+    return isWholesaleActiveFor(line.product)
+      ? line.unit.wholesaleUnitPrice
+      : line.unit.unitPrice;
+  }
+
+  // Total de una línea. `quantity` está en unidades base, así que
+  // `quantity / factorToBase` es la cantidad de "paquetes" de esa unidad
+  // (ej. cuántas Cajas), multiplicado por el precio efectivo de un
+  // paquete (normal o de mayoreo, según corresponda).
+  function lineTotal(line: CartLine): number {
+    return (line.quantity / line.unit.factorToBase) * unitPriceForLine(line);
+  }
+
+  const lineUnitPrices = cart.map((l) => unitPriceForLine(l));
+  const lineTotals = cart.map((l) => lineTotal(l));
+  const lineIsWholesale = cart.map((l) => isWholesaleActiveFor(l.product));
 
   function handleStepLine(index: number, direction: 1 | -1) {
     if (direction === 1) {
@@ -263,10 +284,7 @@ export const Pos: React.FC = () => {
   }
 
   const cartCount = cart.reduce((sum, l) => sum + l.quantity, 0);
-  // FIX: antes era `sum + l.product.price * l.quantity`, que ignoraba
-  // cualquier precio especial de conversión. Ahora suma `lineTotal(l)`
-  // por línea (ver la función arriba).
-  const cartTotal = cart.reduce((sum, l) => sum + lineTotal(l), 0);
+  const cartTotal = lineTotals.reduce((sum, t) => sum + t, 0);
 
   function goToCheckout() {
     setCartOpen(false);
@@ -285,6 +303,9 @@ export const Pos: React.FC = () => {
   const cartProps = {
     cart,
     maxQuantities,
+    lineUnitPrices,
+    lineTotals,
+    lineIsWholesale,
     onStepLine: handleStepLine,
     onSetQty: handleSetQty,
     onRemoveLine: removeLine,
@@ -513,6 +534,9 @@ function CartLineRow({
   line,
   index,
   maxQuantity,
+  unitPrice,
+  total,
+  isWholesale,
   onStepLine,
   onSetQty,
   onRemoveLine,
@@ -523,6 +547,13 @@ function CartLineRow({
   // stock del producto (ya descuenta lo que ocupan otras líneas del mismo
   // producto con otra unidad).
   maxQuantity: number;
+  // Precio de UNA unidad, ya resuelto (normal o de mayoreo).
+  unitPrice: number;
+  // Total de la línea, ya resuelto.
+  total: number;
+  // Si el producto de esta línea ya alcanzó el mínimo de mayoreo (sumando
+  // TODAS sus líneas en el carrito).
+  isWholesale: boolean;
   onStepLine: (index: number, direction: 1 | -1) => void;
   onSetQty: (index: number, raw: string) => void;
   onRemoveLine: (index: number) => void;
@@ -535,14 +566,21 @@ function CartLineRow({
     <VStack space="xs" className="border-b border-gray-100 pb-3">
       <HStack className="items-center justify-between" space="sm">
         <VStack className="flex-1">
-          <Text className="text-sm font-medium text-gray-900" numberOfLines={1}>
-            {line.product.name}
-          </Text>
-          {/* FIX: antes era `line.product.price * line.unit.factorToBase`,
-              que ignoraba cualquier precio especial de conversión. Ahora
-              usa `line.unit.unitPrice` directo. */}
+          <HStack space="xs" className="items-center">
+            <Text
+              className="text-sm font-medium text-gray-900"
+              numberOfLines={1}
+            >
+              {line.product.name}
+            </Text>
+            {isWholesale && (
+              <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
+                <Icon as={Tag} size="xs" className={"text-green-600"} />
+              </Box>
+            )}
+          </HStack>
           <Text className="text-xs text-gray-400">
-            {formatCurrency(line.unit.unitPrice)}/{line.unit.code}
+            {formatCurrency(unitPrice)}/{line.unit.code}
           </Text>
         </VStack>
 
@@ -590,11 +628,8 @@ function CartLineRow({
           <Text className="text-[11px] text-gray-400">{line.unit.code}</Text>
         </HStack>
 
-        {/* FIX: antes era `line.product.price * line.quantity`, que
-            ignoraba cualquier precio especial de conversión. Ahora usa
-            `lineTotal(line)`. */}
         <Text className="w-16 text-right text-sm font-semibold text-gray-900">
-          {formatCurrency(lineTotal(line))}
+          {formatCurrency(total)}
         </Text>
 
         <TouchableOpacity onPress={() => onRemoveLine(index)}>
@@ -623,6 +658,9 @@ function CartEmptyState() {
 function CartSidePanel({
   cart,
   maxQuantities,
+  lineUnitPrices,
+  lineTotals,
+  lineIsWholesale,
   cartCount,
   total,
   onStepLine,
@@ -632,6 +670,9 @@ function CartSidePanel({
 }: {
   cart: CartLine[];
   maxQuantities: number[];
+  lineUnitPrices: number[];
+  lineTotals: number[];
+  lineIsWholesale: boolean[];
   cartCount: number;
   total: number;
   onStepLine: (index: number, direction: 1 | -1) => void;
@@ -665,6 +706,9 @@ function CartSidePanel({
                   line={line}
                   index={index}
                   maxQuantity={maxQuantities[index] ?? 0}
+                  unitPrice={lineUnitPrices[index] ?? 0}
+                  total={lineTotals[index] ?? 0}
+                  isWholesale={lineIsWholesale[index] ?? false}
                   onStepLine={onStepLine}
                   onSetQty={onSetQty}
                   onRemoveLine={onRemoveLine}
@@ -699,6 +743,9 @@ function CartModal({
   onClose,
   cart,
   maxQuantities,
+  lineUnitPrices,
+  lineTotals,
+  lineIsWholesale,
   total,
   onStepLine,
   onSetQty,
@@ -709,6 +756,9 @@ function CartModal({
   onClose: () => void;
   cart: CartLine[];
   maxQuantities: number[];
+  lineUnitPrices: number[];
+  lineTotals: number[];
+  lineIsWholesale: boolean[];
   total: number;
   onStepLine: (index: number, direction: 1 | -1) => void;
   onSetQty: (index: number, raw: string) => void;
@@ -740,6 +790,9 @@ function CartModal({
                     line={line}
                     index={index}
                     maxQuantity={maxQuantities[index] ?? 0}
+                    unitPrice={lineUnitPrices[index] ?? 0}
+                    total={lineTotals[index] ?? 0}
+                    isWholesale={lineIsWholesale[index] ?? false}
                     onStepLine={onStepLine}
                     onSetQty={onSetQty}
                     onRemoveLine={onRemoveLine}
