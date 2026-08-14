@@ -42,20 +42,30 @@ function toNumber(v: unknown): number {
 }
 
 export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
-  const finalPrice = toNumber(api.final_price);
   const basePrice = toNumber(api.base_price);
+  const finalPrice = toNumber(api.final_price);
   const customerTypePrice = toNumber(api.customer_type_price);
 
-  const price =
-    finalPrice > 0
-      ? finalPrice
-      : api.has_customer_type_price && customerTypePrice > 0
-        ? customerTypePrice
-        : basePrice;
+  // FIX: precio NORMAL (sin mayoreo). Antes se priorizaba `final_price`
+  // sin importar la cantidad, y `final_price` es justo el precio YA con
+  // el descuento de mayoreo aplicado por el backend — por eso se veía
+  // descontado desde la unidad 1. El precio normal es `base_price` (o
+  // `customer_type_price` si el cliente tiene tarifa especial), nunca
+  // `final_price`.
+  const normalPrice =
+    api.has_customer_type_price && customerTypePrice > 0
+      ? customerTypePrice
+      : basePrice;
 
-  if (__DEV__ && price === 0) {
+  // Precio de MAYOREO: este sí es `final_price`. Solo debe usarse una vez
+  // que la cantidad en el carrito de este producto alcanza
+  // `wholesale_min_qty` — esa decisión no se toma acá (esta función no
+  // sabe qué hay en el carrito), se resuelve donde se muestra el precio.
+  const wholesalePrice = finalPrice > 0 ? finalPrice : normalPrice;
+
+  if (__DEV__ && normalPrice === 0) {
     console.warn(
-      `[POS] "${api.name}" (id ${api.product_id}) llegó sin precio utilizable. base_price=${api.base_price} final_price=${api.final_price} customer_type_price=${api.customer_type_price}`,
+      `[POS] "${api.name}" (id ${api.product_id}) llegó sin precio normal utilizable. base_price=${api.base_price} customer_type_price=${api.customer_type_price}`,
       api,
     );
   }
@@ -65,41 +75,37 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     code: api.unit_of_measure_code,
     name: api.unit_of_measure_name,
     factorToBase: 1,
-    unitPrice: price,
+    unitPrice: normalPrice,
+    wholesaleUnitPrice: wholesalePrice,
   };
 
   const conversionUnits: SellUnit[] = (api.conversions ?? []).map((c) => {
-    // FIX/NUEVO: `price_per_uom_amount` puede venir vacío/null/0 (no
-    // todas las conversiones tienen precio especial) — en ese caso el
-    // precio de 1 de esta unidad se sigue calculando como
-    // `price_base * factor`, exactamente como antes. Si SÍ viene con un
-    // valor > 0, ese es el precio real de venta de esa unidad (puede no
-    // coincidir con price*factor, ej. un descuento por comprar la Caja
-    // completa).
+    // `price_per_uom_amount` puede venir vacío/null/0 — en ese caso el
+    // precio normal de 1 de esta unidad se calcula como
+    // `normalPrice * factor`, como antes. No hay un campo de precio
+    // especial de mayoreo por conversión, así que el precio de mayoreo
+    // de esta unidad siempre se calcula como `wholesalePrice * factor`.
     const specialPrice = toNumber(c.price_per_uom_amount);
-    const unitPrice = specialPrice > 0 ? specialPrice : price * c.factor;
+    const unitPrice = specialPrice > 0 ? specialPrice : normalPrice * c.factor;
+    const wholesaleUnitPrice = wholesalePrice * c.factor;
 
     if (__DEV__ && specialPrice > 0) {
       console.warn(
         `[POS] "${api.name}": la unidad "${c.from_uom_name}" tiene precio especial de conversión Q${specialPrice} ` +
-          `(en vez de Q${price * c.factor} que daría price_base * factor).`,
+          `(en vez de Q${normalPrice * c.factor} que daría normalPrice * factor).`,
       );
     }
 
     return {
-      // FIX: usamos `c.id` (el id propio de la fila de conversión) como
-      // uom_id de esta unidad seleccionable, en vez de `to_uom_id`.
-      // `to_uom_id` es el id de la unidad BASE a la que convierte la
-      // conversión (en el ejemplo, "Unidad"), así que coincide con el
-      // uom_id de `baseUnit` — usarlo hacía que "Caja" terminara con el
-      // MISMO uom_id que la base y el Select nunca pudiera distinguirlas
-      // (Array.find siempre devolvía la primera coincidencia, o sea
-      // baseUnit). `c.id` es único garantizado por fila de conversión.
+      // `c.id` (id propio de la fila de conversión) como uom_id: es
+      // único garantizado, a diferencia de from_uom_id/to_uom_id, que
+      // pueden coincidir con el uom_id de la unidad base.
       uom_id: Number(c.id),
       code: c.from_uom_code,
       name: c.from_uom_name,
       factorToBase: c.factor,
       unitPrice,
+      wholesaleUnitPrice,
     };
   });
 
@@ -110,7 +116,8 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
       `[POS] unidades de "${api.name}" (id ${api.product_id}):`,
       units.map(
         (u) =>
-          `${u.name} (uom_id=${u.uom_id}) = ${u.factorToBase} ${baseUnit.name}(s), unitPrice=Q${u.unitPrice}`,
+          `${u.name} (uom_id=${u.uom_id}) = ${u.factorToBase} ${baseUnit.name}(s), ` +
+          `normal=Q${u.unitPrice}, mayoreo=Q${u.wholesaleUnitPrice}`,
       ),
       "conversions crudo del API:",
       api.conversions,
@@ -134,8 +141,9 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     subcategory_name: api.category_name,
     stock_qty: api.stock_qty,
     units,
-    price,
-    hasPrice: price > 0,
+    price: normalPrice,
+    wholesalePrice,
+    hasPrice: normalPrice > 0,
     has_wholesale: api.has_wholesale,
     wholesale_min_qty: api.wholesale_min_qty ?? null,
     wholesale_discount_pct: api.wholesale_discount_pct ?? 0,
@@ -178,9 +186,9 @@ function ProductCard({
     product.units.find((u) => u.uom_id === selectedUomId) ?? product.units[0];
 
   // ---------------------------------------------------------------------
-  // Validación de stock: cuánto de este producto ya está en el carrito
-  // (sumado en unidades base, sin importar con qué unidad se agregó cada
-  // línea), y cuánto queda disponible para seguir agregando.
+  // Validación de stock + mayoreo: cuánto de este producto ya está en el
+  // carrito (sumado en unidades base, sin importar con qué unidad se
+  // agregó cada línea).
   // ---------------------------------------------------------------------
   const cart = useCartStore((s) => s.cart);
   const qtyInCart = useMemo(
@@ -200,6 +208,18 @@ function ProductCard({
   // agregar con esa unidad.
   const wouldExceedStock = !noStockAtAll && unit.factorToBase > remainingStock;
   const soldOut = noStockAtAll || wouldExceedStock;
+
+  // FIX: el precio de mayoreo (unit.wholesaleUnitPrice) solo debe
+  // mostrarse/usarse una vez que la cantidad YA en el carrito para este
+  // producto alcanza wholesale_min_qty. Antes no había ningún chequeo de
+  // cantidad — el precio con descuento se mostraba siempre.
+  const isWholesaleActive =
+    product.has_wholesale &&
+    product.wholesale_min_qty != null &&
+    qtyInCart >= product.wholesale_min_qty;
+  const displayUnitPrice = isWholesaleActive
+    ? unit.wholesaleUnitPrice
+    : unit.unitPrice;
 
   return (
     <Box className="m-1.5 flex-1 rounded-xl border border-gray-200 bg-white p-3">
@@ -235,10 +255,19 @@ function ProductCard({
 
         {product.has_wholesale && (
           <HStack space="xs" className="items-center">
-            <Icon as={Tag} size="xs" className="text-blue-600" />
-            <Text className="text-[10px] font-medium text-blue-600">
+            <Icon
+              as={Tag}
+              size="xs"
+              className={isWholesaleActive ? "text-green-600" : "text-blue-600"}
+            />
+            <Text
+              className={`text-[10px] font-medium ${
+                isWholesaleActive ? "text-green-600" : "text-blue-600"
+              }`}
+            >
               mayoreo x{product.wholesale_min_qty} (-
               {product.wholesale_discount_pct}%)
+              {isWholesaleActive ? " · activo" : ""}
             </Text>
           </HStack>
         )}
@@ -246,13 +275,10 @@ function ProductCard({
         <HStack className="items-baseline">
           {product.hasPrice ? (
             <>
-              {/* FIX: antes era `product.price * unit.factorToBase`,
-                  calculado siempre por regla de 3. Ahora usa
-                  `unit.unitPrice`, que ya resuelve internamente si esta
-                  unidad tiene un precio especial de conversión
-                  (price_per_uom_amount) o si hay que calcularlo. */}
+              {/* Muestra el precio de mayoreo solo si ya se alcanzó la
+                  cantidad mínima en el carrito; si no, el precio normal. */}
               <Text className="text-base font-semibold text-gray-900">
-                {formatCurrency(unit.unitPrice)}
+                {formatCurrency(displayUnitPrice)}
               </Text>
               <Text className="ml-1 text-[10px] text-gray-400">
                 /{unit.code}
@@ -276,8 +302,8 @@ function ProductCard({
         <HStack space="xs" className="items-center">
           {product.units.length > 1 && (
             <Select
-              // FIX: forzamos remount del Select cada vez que cambia la
-              // unidad elegida, para que el SelectInput siempre refleje
+              // Forzamos remount del Select cada vez que cambia la unidad
+              // elegida, para que el SelectInput siempre refleje
               // `unit.name` actual y no se quede mostrando texto viejo.
               key={`unit-select-${product.product_id}-${unit.uom_id}`}
               selectedValue={String(unit.uom_id)}
@@ -311,7 +337,7 @@ function ProductCard({
                       key={u.uom_id}
                       label={
                         u.factorToBase !== 1
-                          ? `${u.name} (=${u.factorToBase}) — ${formatCurrency(u.unitPrice)}`
+                          ? `${u.name} (=${u.factorToBase}) — ${formatCurrency(isWholesaleActive ? u.wholesaleUnitPrice : u.unitPrice)}`
                           : u.name
                       }
                       value={String(u.uom_id)}
@@ -331,6 +357,7 @@ function ProductCard({
                   `[POS] Añadir "${product.name}" con unidad:`,
                   unit,
                   `remainingStock=${remainingStock}`,
+                  `isWholesaleActive=${isWholesaleActive}`,
                 );
               }
               onAdd(unit);

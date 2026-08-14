@@ -1190,7 +1190,7 @@ export default function MerchandiseForm() {
                   );
                 })}
 
-                <Divider className="my-2" />
+                {/* <Divider className="my-2" />
                 <HStack
                   style={{
                     justifyContent: "space-between",
@@ -1214,7 +1214,7 @@ export default function MerchandiseForm() {
                     style={styles.addRowButton}
                   >
                     <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                    {/* <Text style={styles.addRowText}>Agregar precio</Text> */}
+                    <Text style={styles.addRowText}>Agregar precio</Text> 
                   </Pressable>
                 </HStack>
 
@@ -1309,7 +1309,7 @@ export default function MerchandiseForm() {
                       </Pressable>
                     </HStack>
                   </View>
-                ))}
+                ))} */}
 
                 <Divider className="my-2" />
                 <View style={styles.switchRow}>
