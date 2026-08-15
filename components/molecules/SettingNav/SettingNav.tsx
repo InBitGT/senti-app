@@ -1,8 +1,14 @@
 import { useLogin } from "@/src/hooks";
 import { useAuthStore } from "@/src/store";
 import { router } from "expo-router";
-import { Bell, LogOut, MapPin, Shield, User } from "lucide-react-native";
-import { Pressable, ScrollView, TouchableOpacity, View } from "react-native";
+import { LogOut, MapPin, User } from "lucide-react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface SettingsNavProps {
   activeSection: string;
@@ -12,8 +18,8 @@ interface SettingsNavProps {
 const navItems = [
   { id: "personal", label: "Informacion Personal", icon: User },
   { id: "address", label: "Direccion", icon: MapPin },
-  { id: "security", label: "Seguridad", icon: Shield },
-  { id: "preferences", label: "Preferencias", icon: Bell },
+  // { id: "security", label: "Seguridad", icon: Shield },
+  // { id: "preferences", label: "Preferencias", icon: Bell },
 ];
 
 export function SettingsNav({
@@ -31,19 +37,10 @@ export function SettingsNav({
     router.replace("/(auth)/Login");
   };
 
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={{ flexGrow: 0, height: 60 }}
-      contentContainerStyle={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingHorizontal: 8,
-      }}
-      className="bg-white rounded-xl"
-    >
+  // Contenido compartido entre la rama web (DesktopScrollView) y la
+  // rama nativa (ScrollView de RN), para no duplicar el JSX de los ítems.
+  const navContent = (
+    <>
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = activeSection === item.id;
@@ -89,6 +86,50 @@ export function SettingsNav({
       >
         <LogOut size={20} color="#ef4444" />
       </TouchableOpacity>
+    </>
+  );
+
+  // FIX: en web/Tauri, envolver DesktopScrollView (overflow-x + drag de
+  // mouse) DENTRO de un <ScrollView> de RN genera dos contenedores de
+  // scroll horizontal anidados peleándose entre sí. Acá además faltaba
+  // el prop `horizontal` en DesktopScrollView, que por defecto deja
+  // overflowX en "hidden" y recorta el contenido en vez de dejarlo
+  // scrollear — combinando ambos bugs, en desktop los ítems que no
+  // entraban en el ancho visible simplemente desaparecían.
+  if (Platform.OS === "web") {
+    return (
+      <View style={{ height: 60 }} className="bg-white rounded-xl">
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 8,
+            height: 60,
+          }}
+        >
+          {navContent}
+        </View>
+      </View>
+    );
+  }
+
+  // En iOS/Android seguimos usando el ScrollView nativo de RN, que ahí sí
+  // funciona bien con touch.
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={{ flexGrow: 0, height: 60 }}
+      contentContainerStyle={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        paddingHorizontal: 8,
+      }}
+      className="bg-white rounded-xl"
+    >
+      {navContent}
     </ScrollView>
   );
 }
