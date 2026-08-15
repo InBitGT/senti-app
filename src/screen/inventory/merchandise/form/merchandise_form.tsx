@@ -101,11 +101,7 @@ interface FormValues {
   wholesale_discount_percentage: string;
 }
 
-const PRODUCT_TYPES = [
-  { label: "Producto", value: "finished_product" },
-  { label: "Servicio", value: "services" },
-  { label: "Material de empaque", value: "packing" },
-];
+const PRODUCT_TYPES = [{ label: "Producto", value: "finished_product" }];
 
 const CURRENCIES = [
   { label: "GTQ", value: "GTQ" },
@@ -965,7 +961,7 @@ export default function MerchandiseForm() {
                           <View style={half}>
                             <Controller
                               control={control}
-                              name={`conversions.${index}.from_uom_id`}
+                              name={`conversions.${index}.to_uom_id`}
                               render={({ field: { onChange, value } }) => {
                                 const label =
                                   units?.find((u) => String(u.id) === value)
@@ -976,7 +972,7 @@ export default function MerchandiseForm() {
                                       <FormControlLabelText
                                         style={{ color: "#000" }}
                                       >
-                                        De la unidad
+                                        De la unidad (unidad estandar)
                                       </FormControlLabelText>
                                     </FormControlLabel>
                                     <Select
@@ -986,7 +982,7 @@ export default function MerchandiseForm() {
                                       <SelectTrigger>
                                         <SelectInput
                                           style={{ color: "#000" }}
-                                          placeholder="Unidad origen"
+                                          placeholder="Unidad Origen"
                                           value={label}
                                         />
                                       </SelectTrigger>
@@ -1000,9 +996,9 @@ export default function MerchandiseForm() {
                                           </SelectDragIndicatorWrapper>
                                           {/* <ScrollView
                                             style={{ width: "100%" }}
-                                            showsVerticalScrollIndicator={false}
-                                          > */}
-                                          {(units ?? []).map((u) => (
+                                            showsVerticalScrollIndicator={false} */}
+
+                                          {toOptions.map((u) => (
                                             <SelectItem
                                               key={u.id}
                                               label={`${u.name} (${u.code})`}
@@ -1022,7 +1018,7 @@ export default function MerchandiseForm() {
                           <View style={half}>
                             <Controller
                               control={control}
-                              name={`conversions.${index}.to_uom_id`}
+                              name={`conversions.${index}.from_uom_id`}
                               render={({ field: { onChange, value } }) => {
                                 const label =
                                   units?.find((u) => String(u.id) === value)
@@ -1033,7 +1029,7 @@ export default function MerchandiseForm() {
                                       <FormControlLabelText
                                         style={{ color: "#000" }}
                                       >
-                                        A la unidad
+                                        A la unidad (unidad de cambio)
                                       </FormControlLabelText>
                                     </FormControlLabel>
                                     <Select
@@ -1057,9 +1053,9 @@ export default function MerchandiseForm() {
                                           </SelectDragIndicatorWrapper>
                                           {/* <ScrollView
                                             style={{ width: "100%" }}
-                                            showsVerticalScrollIndicator={false} */}
-
-                                          {toOptions.map((u) => (
+                                            showsVerticalScrollIndicator={false}
+                                          > */}
+                                          {(units ?? []).map((u) => (
                                             <SelectItem
                                               key={u.id}
                                               label={`${u.name} (${u.code})`}
