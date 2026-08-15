@@ -25,6 +25,8 @@ export const ENDPOINT = {
   },
   supplier: {
     info: "inventory-service/api/supplier",
+    detail: (idTenant: string | number) =>
+      `inventory-service/api/supplier?tenant_id=${idTenant}`,
   },
   stock: {
     detail: (idTenant: string | number) =>
