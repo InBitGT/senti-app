@@ -174,33 +174,15 @@ export const ModalCustomerCreditDetail: React.FC<Props> = ({
                     value={formatCurrency(data.credit_limit)}
                     color="#111827"
                   />
-                  {hasDueDate && (
-                    <>
-                      <InfoRow
-                        label="Fecha límite"
-                        value={new Date(
-                          data.credit_due_date as string,
-                        ).toLocaleDateString("es-GT")}
-                      />
-                      <View style={{ marginTop: 6 }}>
-                        <DueDateBadge
-                          dueDate={data.credit_due_date as string}
-                        />
-                      </View>
-                    </>
-                  )}
-
-                  <Divider />
-
-                  <SectionTitle title="Cliente" />
-                  <InfoRow label="Nombre" value={data.customer?.name} />
-                  <InfoRow
-                    label="Documento"
-                    value={
-                      data.customer
-                        ? `${data.customer.document_type} ${data.customer.document_number}`
-                        : "—"
-                    }
+                  <StatBox
+                    label="Disponible"
+                    value={formatCurrency(data.credit_available)}
+                    color="#16a34a"
+                  />
+                  <StatBox
+                    label="Usado"
+                    value={formatCurrency(data.credit_used)}
+                    color="#dc2626"
                   />
                 </View>
 
@@ -210,12 +192,19 @@ export const ModalCustomerCreditDetail: React.FC<Props> = ({
 
                 <SectionTitle title="Plazo de pago" />
                 <InfoRow label="Días de plazo" value={data.payment_term_days} />
-                <InfoRow
-                  label="Fecha límite"
-                  value={new Date(data.credit_due_date).toLocaleDateString(
-                    "es-GT",
-                  )}
-                />
+                {hasDueDate && (
+                  <>
+                    <InfoRow
+                      label="Fecha límite"
+                      value={new Date(
+                        data.credit_due_date as string,
+                      ).toLocaleDateString("es-GT")}
+                    />
+                    <View style={{ marginTop: 6 }}>
+                      <DueDateBadge dueDate={data.credit_due_date as string} />
+                    </View>
+                  </>
+                )}
                 <View style={{ marginTop: 6 }}>
                   <DueDateBadge dueDate={data.credit_due_date} />
                 </View>
