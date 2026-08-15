@@ -205,9 +205,6 @@ export const ModalCustomerCreditDetail: React.FC<Props> = ({
                     </View>
                   </>
                 )}
-                <View style={{ marginTop: 6 }}>
-                  <DueDateBadge dueDate={data.credit_due_date} />
-                </View>
 
                 <Divider />
 
