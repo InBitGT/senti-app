@@ -38,8 +38,10 @@ import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useEntryStock } from "@/src/hooks/useEntryStock/useEntryStock";
 import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
+import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
+import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -93,6 +95,7 @@ function ItemRow({
   remove,
   productData,
   isLarge,
+  units,
 }: {
   index: number;
   control: any;
@@ -100,6 +103,7 @@ function ItemRow({
   remove: (i: number) => void;
   productData: any[];
   isLarge: boolean;
+  units?: UnitOfMeasure[];
 }) {
   const row = isLarge ? { flexDirection: "row" as const, gap: 12 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
@@ -232,48 +236,54 @@ function ItemRow({
               control={control}
               name={`items.${index}.unit`}
               rules={{ required: "Requerido." }}
-              render={({ field: { onChange, value } }) => (
-                <FormControl isInvalid={!!errors?.items?.[index]?.unit}>
-                  <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>
-                      Unidad
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Select selectedValue={value} onValueChange={onChange}>
-                    <SelectTrigger>
-                      <SelectInput
-                        style={{ color: "#000" }}
-                        placeholder="Unidad"
-                        value={value}
-                      />
-                    </SelectTrigger>
-                    <SelectPortal>
-                      <SelectBackdrop />
-                      <SelectContent style={{ maxHeight: "50%" }}>
-                        <SelectDragIndicatorWrapper>
-                          <SelectDragIndicator />
-                        </SelectDragIndicatorWrapper>
-                        <ScrollView
-                          style={{ width: "100%" }}
-                          showsVerticalScrollIndicator={false}
-                        >
-                          <SelectItem label="Unidad" value="unit" />
-                          <SelectItem label="Kg" value="kg" />
-                          <SelectItem label="g" value="g" />
-                          <SelectItem label="L" value="l" />
-                          <SelectItem label="ml" value="ml" />
-                        </ScrollView>
-                      </SelectContent>
-                    </SelectPortal>
-                  </Select>
-                  <FormControlError>
-                    <FormControlErrorIcon as={AlertCircleIcon} />
-                    <FormControlErrorText>
-                      {errors?.items?.[index]?.unit?.message}
-                    </FormControlErrorText>
-                  </FormControlError>
-                </FormControl>
-              )}
+              render={({ field: { onChange, value } }) => {
+                const selectedLabel =
+                  units?.find((u) => String(u.id) === value)?.name || "";
+                return (
+                  <FormControl isInvalid={!!errors.unit_of_measure_id}>
+                    <FormControlLabel>
+                      <FormControlLabelText style={{ color: "#000" }}>
+                        Unidad de medida
+                      </FormControlLabelText>
+                    </FormControlLabel>
+                    <Select selectedValue={value} onValueChange={onChange}>
+                      <SelectTrigger>
+                        <SelectInput
+                          style={{ color: "#000" }}
+                          placeholder="Selecciona unidad"
+                          value={selectedLabel}
+                        />
+                      </SelectTrigger>
+                      <SelectPortal>
+                        <SelectBackdrop />
+                        <SelectContent>
+                          <SelectDragIndicatorWrapper>
+                            <SelectDragIndicator />
+                          </SelectDragIndicatorWrapper>
+                          <ScrollView
+                            style={{ maxHeight: 280, width: "100%" }}
+                            nestedScrollEnabled
+                          >
+                            {(units ?? []).map((u) => (
+                              <SelectItem
+                                key={u.id}
+                                label={`${u.name} (${u.code})`}
+                                value={String(u.id)}
+                              />
+                            ))}
+                          </ScrollView>
+                        </SelectContent>
+                      </SelectPortal>
+                    </Select>
+                    <FormControlError>
+                      <FormControlErrorIcon as={AlertCircleIcon} />
+                      <FormControlErrorText>
+                        {errors.unit_of_measure_id?.message}
+                      </FormControlErrorText>
+                    </FormControlError>
+                  </FormControl>
+                );
+              }}
             />
           </View>
 
@@ -455,6 +465,7 @@ export default function InventoryForm() {
   const { data: supplierData } = useSupplier();
   const { showToast } = useCustomToast();
   const { width } = useWindowDimensions();
+  const { data: units } = useUnit();
   const isLarge = width >= 768;
 
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
@@ -959,6 +970,7 @@ export default function InventoryForm() {
                     remove={remove}
                     productData={productData ?? []}
                     isLarge={isLarge}
+                    units={units}
                   />
                 ))}
 

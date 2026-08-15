@@ -522,13 +522,17 @@ export default function MerchandiseForm() {
                                   <SelectDragIndicatorWrapper>
                                     <SelectDragIndicator />
                                   </SelectDragIndicatorWrapper>
-                                  {(categorie ?? []).map((c) => (
-                                    <SelectItem
-                                      key={c.id}
-                                      label={c.name}
-                                      value={String(c.id)}
-                                    />
-                                  ))}
+                                  <ScrollView
+                                    style={{ maxHeight: 280, width: "100%" }}
+                                  >
+                                    {(categorie ?? []).map((c) => (
+                                      <SelectItem
+                                        key={c.id}
+                                        label={c.name}
+                                        value={String(c.id)}
+                                      />
+                                    ))}
+                                  </ScrollView>
                                 </SelectContent>
                               </SelectPortal>
                             </Select>
@@ -955,63 +959,6 @@ export default function MerchandiseForm() {
                         <View style={half}>
                           <Controller
                             control={control}
-                            name={`conversions.${index}.from_uom_id`}
-                            render={({ field: { onChange, value } }) => {
-                              const label =
-                                units?.find((u) => String(u.id) === value)
-                                  ?.name || "";
-                              return (
-                                <FormControl>
-                                  <FormControlLabel>
-                                    <FormControlLabelText
-                                      style={{ color: "#000" }}
-                                    >
-                                      De la unidad
-                                    </FormControlLabelText>
-                                  </FormControlLabel>
-                                  <Select
-                                    selectedValue={value}
-                                    onValueChange={onChange}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectInput
-                                        style={{ color: "#000" }}
-                                        placeholder="Unidad origen"
-                                        value={label}
-                                      />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                      <SelectBackdrop />
-                                      <SelectContent
-                                        style={{ maxHeight: "50%" }}
-                                      >
-                                        <SelectDragIndicatorWrapper>
-                                          <SelectDragIndicator />
-                                        </SelectDragIndicatorWrapper>
-                                        <ScrollView
-                                          style={{ width: "100%" }}
-                                          showsVerticalScrollIndicator={false}
-                                        >
-                                          {(units ?? []).map((u) => (
-                                            <SelectItem
-                                              key={u.id}
-                                              label={`${u.name} (${u.code})`}
-                                              value={String(u.id)}
-                                            />
-                                          ))}
-                                        </ScrollView>
-                                      </SelectContent>
-                                    </SelectPortal>
-                                  </Select>
-                                </FormControl>
-                              );
-                            }}
-                          />
-                        </View>
-
-                        <View style={half}>
-                          <Controller
-                            control={control}
                             name={`conversions.${index}.to_uom_id`}
                             render={({ field: { onChange, value } }) => {
                               const label =
@@ -1023,7 +970,7 @@ export default function MerchandiseForm() {
                                     <FormControlLabelText
                                       style={{ color: "#000" }}
                                     >
-                                      A la unidad
+                                      De la unidad (unidad estandar)
                                     </FormControlLabelText>
                                   </FormControlLabel>
                                   <Select
@@ -1050,6 +997,62 @@ export default function MerchandiseForm() {
                                           showsVerticalScrollIndicator={false}
                                         >
                                           {toOptions.map((u) => (
+                                            <SelectItem
+                                              key={u.id}
+                                              label={`${u.name} (${u.code})`}
+                                              value={String(u.id)}
+                                            />
+                                          ))}
+                                        </ScrollView>
+                                      </SelectContent>
+                                    </SelectPortal>
+                                  </Select>
+                                </FormControl>
+                              );
+                            }}
+                          />
+                        </View>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name={`conversions.${index}.from_uom_id`}
+                            render={({ field: { onChange, value } }) => {
+                              const label =
+                                units?.find((u) => String(u.id) === value)
+                                  ?.name || "";
+                              return (
+                                <FormControl>
+                                  <FormControlLabel>
+                                    <FormControlLabelText
+                                      style={{ color: "#000" }}
+                                    >
+                                      A la unidad (unidad de cambio)
+                                    </FormControlLabelText>
+                                  </FormControlLabel>
+                                  <Select
+                                    selectedValue={value}
+                                    onValueChange={onChange}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectInput
+                                        style={{ color: "#000" }}
+                                        placeholder="Unidad origen"
+                                        value={label}
+                                      />
+                                    </SelectTrigger>
+                                    <SelectPortal>
+                                      <SelectBackdrop />
+                                      <SelectContent
+                                        style={{ maxHeight: "50%" }}
+                                      >
+                                        <SelectDragIndicatorWrapper>
+                                          <SelectDragIndicator />
+                                        </SelectDragIndicatorWrapper>
+                                        <ScrollView
+                                          style={{ width: "100%" }}
+                                          showsVerticalScrollIndicator={false}
+                                        >
+                                          {(units ?? []).map((u) => (
                                             <SelectItem
                                               key={u.id}
                                               label={`${u.name} (${u.code})`}
