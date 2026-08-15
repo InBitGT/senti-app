@@ -41,6 +41,7 @@ import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
 import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
+import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
 import React, { useMemo } from "react";
@@ -96,6 +97,7 @@ function ItemRow({
   productData,
   unitData,
   isLarge,
+  units,
 }: {
   index: number;
   control: any;
@@ -104,6 +106,7 @@ function ItemRow({
   productData: any[];
   unitData: any[];
   isLarge: boolean;
+  units?: UnitOfMeasure[];
 }) {
   const row = isLarge ? { flexDirection: "row" as const, gap: 12 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
