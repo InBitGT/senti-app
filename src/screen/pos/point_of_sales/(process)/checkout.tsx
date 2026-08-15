@@ -396,35 +396,53 @@ export const Checkout: React.FC = () => {
             <Text className="border-b border-gray-100 p-3 text-sm font-semibold text-gray-900">
               Resumen del pedido
             </Text>
-            {cart.map((line) => (
-              <HStack
-                key={`${line.product.product_id}-${line.unit.uom_id}`}
-                className="items-center justify-between border-b border-gray-100 p-3"
-              >
-                <VStack className="flex-1">
-                  <Text
-                    className="text-sm font-medium text-gray-900"
-                    numberOfLines={1}
-                  >
-                    {line.product.name}
+            {cart.map((line) => {
+              // FIX: antes se mostraba y calculaba todo con
+              // `line.product.price` fijo. Ahora se resuelve el precio
+              // real de esta línea (por unidad base) igual que en el
+              // total y en el payload de checkout.
+              const pricePerBaseUnit = basePriceForLine(cart, line);
+              const wholesale = isWholesaleActiveFor(cart, line.product);
+
+              return (
+                <HStack
+                  key={`${line.product.product_id}-${line.unit.uom_id}`}
+                  className="items-center justify-between border-b border-gray-100 p-3"
+                >
+                  <VStack className="flex-1">
+                    <HStack space="xs" className="items-center">
+                      <Text
+                        className="text-sm font-medium text-gray-900"
+                        numberOfLines={1}
+                      >
+                        {line.product.name}
+                      </Text>
+                      {wholesale && (
+                        <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
+                          <Text className="text-[9px] font-semibold text-green-700">
+                            mayoreo
+                          </Text>
+                        </Box>
+                      )}
+                    </HStack>
+                    {/* `quantity` ya está en unidades base: se muestra junto
+                        al código de la unidad base, y si se compró en una
+                        unidad distinta (ej. "Caja"), se aclara entre
+                        paréntesis cuántas de esas representa. */}
+                    <Text className="text-xs text-gray-400">
+                      {line.quantity} {line.product.units[0]?.code}
+                      {line.unit.factorToBase !== 1 &&
+                        ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
+                      {" × "}
+                      {formatCurrency(pricePerBaseUnit)}
+                    </Text>
+                  </VStack>
+                  <Text className="text-sm font-semibold text-gray-900">
+                    {formatCurrency(lineTotal(cart, line))}
                   </Text>
-                  {/* `quantity` ya está en unidades base: se muestra junto
-                      al código de la unidad base, y si se compró en una
-                      unidad distinta (ej. "Caja"), se aclara entre
-                      paréntesis cuántas de esas representa. */}
-                  <Text className="text-xs text-gray-400">
-                    {line.quantity} {line.product.units[0]?.code}
-                    {line.unit.factorToBase !== 1 &&
-                      ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
-                    {" × "}
-                    {formatCurrency(line.product.price)}
-                  </Text>
-                </VStack>
-                <Text className="text-sm font-semibold text-gray-900">
-                  {formatCurrency(line.product.price * line.quantity)}
-                </Text>
-              </HStack>
-            ))}
+                </HStack>
+              );
+            })}
             <HStack className="items-center justify-between p-3">
               <Text className="text-base font-semibold text-gray-900">
                 Total
@@ -473,40 +491,40 @@ export const Checkout: React.FC = () => {
 
             {showCustomer && (
               <VStack space="sm" className="border-t border-gray-100 pt-3">
-                <Text className="text-xs font-medium text-gray-500">
-                  Tipo de cliente
-                </Text>
-                <HStack space="xs">
-                  {customerTypes.map((t) => {
-                    const active =
-                      customerId == null && customerTypeId === t.id;
-                    return (
-                      <TouchableOpacity
-                        key={t.id}
-                        onPress={() => {
-                          setCustomerId(null);
-                          setCustomerTypeId(t.id);
-                        }}
-                      >
-                        <Box
-                          className={`rounded-md border px-2.5 py-1.5 ${
-                            active
-                              ? "border-blue-600 bg-blue-600"
-                              : "border-gray-300 bg-white"
-                          }`}
+                {/* <Text className="text-xs font-medium text-gray-500">
+                    Tipo de cliente
+                  </Text>
+                  <HStack space="xs">
+                    {customerTypes.map((t) => {
+                      const active =
+                        customerId == null && customerTypeId === t.id;
+                      return (
+                        <TouchableOpacity
+                          key={t.id}
+                          onPress={() => {
+                            setCustomerId(null);
+                            setCustomerTypeId(t.id);
+                          }}
                         >
-                          <Text
-                            className={`text-xs font-medium ${
-                              active ? "text-white" : "text-gray-700"
+                          <Box
+                            className={`rounded-md border px-2.5 py-1.5 ${
+                              active
+                                ? "border-blue-600 bg-blue-600"
+                                : "border-gray-300 bg-white"
                             }`}
                           >
-                            {t.name}
-                          </Text>
-                        </Box>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </HStack>
+                            <Text
+                              className={`text-xs font-medium ${
+                                active ? "text-white" : "text-gray-700"
+                              }`}
+                            >
+                              {t.name}
+                            </Text>
+                          </Box>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </HStack> */}
 
                 <Text className="text-xs font-medium text-gray-500">
                   Cliente específico (habilita crédito si aplica)
