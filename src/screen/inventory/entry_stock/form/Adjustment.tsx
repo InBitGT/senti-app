@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, ArrowLeftIcon, Icon } from "@/components/ui/icon";
+import { AlertCircleIcon, Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
   Select,
@@ -33,6 +33,11 @@ import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useAuthStore } from "@/src/store";
 import { Adjustment } from "@/src/types/entry_stock/entry_stock.types";
 import { useRouter } from "expo-router";
+import {
+  ArrowLeftIcon,
+  ChevronDownIcon,
+  SearchIcon,
+} from "lucide-react-native";
 import React, { useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
@@ -76,6 +81,135 @@ const REASON_OPTIONS = [
   { value: "return", label: "Devolución" },
   { value: "other", label: "Otro" },
 ];
+
+// ── Buscador de producto (autocomplete) ────────────────────────────────────────
+// Reemplaza al <Select> con productos anidados en un ScrollView (que rompía el
+// scroll/touch interno del Select). El usuario escribe y se filtra la lista de
+// productos en tiempo real (por nombre). Al tocar un resultado se guarda su id.
+function ProductSearchSelect({
+  value,
+  onChange,
+  productData,
+  error,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  productData: any[];
+  error?: string;
+}) {
+  const [query, setQuery] = React.useState("");
+  const [isOpen, setIsOpen] = React.useState(false);
+  const blurTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const selectedProduct = useMemo(
+    () => productData?.find((p) => String(p.id) === value),
+    [productData, value],
+  );
+
+  // Cuando el campo tiene un valor seleccionado y el buscador está cerrado,
+  // se muestra el nombre del producto seleccionado en el input.
+  React.useEffect(() => {
+    if (!isOpen) {
+      setQuery(selectedProduct?.name ?? "");
+    }
+  }, [selectedProduct, isOpen]);
+
+  const filtered = useMemo(() => {
+    const list = productData ?? [];
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((p) => p.name?.toLowerCase().includes(q));
+  }, [query, productData]);
+
+  const handleSelect = (p: any) => {
+    onChange(String(p.id));
+    setQuery(p.name);
+    setIsOpen(false);
+  };
+
+  const handleChangeText = (text: string) => {
+    setQuery(text);
+    if (!isOpen) setIsOpen(true);
+    // Si el texto ya no coincide con el producto seleccionado, se invalida
+    // la selección hasta que el usuario escoja uno de la lista de nuevo.
+    if (value && text !== selectedProduct?.name) {
+      onChange("");
+    }
+  };
+
+  return (
+    <FormControl isInvalid={!!error}>
+      <FormControlLabel>
+        <FormControlLabelText style={{ color: "#000" }}>
+          Producto
+        </FormControlLabelText>
+      </FormControlLabel>
+
+      <Input>
+        <Icon
+          as={SearchIcon}
+          size="sm"
+          style={{ color: "#999", marginLeft: 10 }}
+        />
+        <InputField
+          style={{ color: "#171717" }}
+          placeholder="Escribe para buscar un producto..."
+          value={query}
+          onChangeText={handleChangeText}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => {
+            // Pequeño delay para que el onPress de un item de la lista
+            // alcance a dispararse antes de cerrar el dropdown.
+            blurTimeout.current = setTimeout(() => setIsOpen(false), 150);
+          }}
+        />
+        <Icon
+          as={ChevronDownIcon}
+          size="sm"
+          style={{ color: "#999", marginRight: 10 }}
+        />
+      </Input>
+
+      {isOpen && (
+        <Box style={styles.dropdown} className="w-full bg-white rounded-[10px]">
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+            style={{ maxHeight: 220 }}
+          >
+            {filtered.length === 0 ? (
+              <Text style={{ padding: 12, color: "#999" }}>
+                Sin resultados para “{query}”
+              </Text>
+            ) : (
+              filtered.map((p) => (
+                <Pressable
+                  key={p.id}
+                  onPress={() => {
+                    if (blurTimeout.current) clearTimeout(blurTimeout.current);
+                    handleSelect(p);
+                  }}
+                  style={({ pressed }) => [
+                    styles.dropdownItem,
+                    pressed && { backgroundColor: "#f0f9ff" },
+                    String(p.id) === value && { backgroundColor: "#eff6ff" },
+                  ]}
+                >
+                  <Text style={{ color: "#171717" }}>{p.name}</Text>
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
+        </Box>
+      )}
+
+      <FormControlError>
+        <FormControlErrorIcon as={AlertCircleIcon} />
+        <FormControlErrorText>{error}</FormControlErrorText>
+      </FormControlError>
+    </FormControl>
+  );
+}
 
 export default function AdjustmentForm() {
   const router = useRouter();
@@ -162,7 +296,6 @@ export default function AdjustmentForm() {
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
-    console.log(values.movement_type);
     const payload: Adjustment = {
       warehouse_id: parseInt(values.warehouse_id),
       product_id: parseInt(values.product_id),
@@ -233,17 +366,73 @@ export default function AdjustmentForm() {
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="branch_id"
-                        rules={{ required: "La sucursal es obligatoria." }}
+                        name="product_id"
+                        rules={{ required: "El producto es obligatorio." }}
+                        render={({ field: { onChange, value } }) => (
+                          <ProductSearchSelect
+                            value={value}
+                            onChange={onChange}
+                            productData={productData ?? []}
+                            error={errors.product_id?.message}
+                          />
+                        )}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      {/* N° Referencia */}
+                      <Controller
+                        control={control}
+                        name="reference_number"
+                        rules={{
+                          required: "El número de referencia es obligatorio.",
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.reference_number}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                N° Referencia
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Ej. ADJ-BATCH-002"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                autoCapitalize="characters"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.reference_number?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Tipo de movimiento + Razón */}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="movement_type"
+                        rules={{ required: "El tipo es obligatorio." }}
                         render={({ field: { onChange, value } }) => {
                           const selectedLabel =
-                            branchOptions.find((b) => String(b.id) === value)
-                              ?.name || "";
+                            MOVEMENT_TYPE_OPTIONS.find((m) => m.value === value)
+                              ?.label || "";
+
                           return (
-                            <FormControl isInvalid={!!errors.branch_id}>
+                            <FormControl isInvalid={!!errors.movement_type}>
                               <FormControlLabel>
                                 <FormControlLabelText style={{ color: "#000" }}>
-                                  Sucursal
+                                  Tipo de movimiento
                                 </FormControlLabelText>
                               </FormControlLabel>
                               <Select
@@ -253,7 +442,7 @@ export default function AdjustmentForm() {
                                 <SelectTrigger>
                                   <SelectInput
                                     style={{ color: "#000" }}
-                                    placeholder="Selecciona una sucursal"
+                                    placeholder="Selecciona tipo"
                                     value={selectedLabel}
                                   />
                                 </SelectTrigger>
@@ -735,5 +924,21 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#555",
     fontSize: 13,
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    marginTop: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
 });
