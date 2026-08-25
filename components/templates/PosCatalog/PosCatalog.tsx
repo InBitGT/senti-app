@@ -249,7 +249,7 @@ function ProductCard({
         <Text
           className={`font-mono text-[10px] ${duplicatedSku ? "text-amber-600" : "text-gray-400"}`}
         >
-          {product.sku}
+          {product.sku} - {product?.brand ?? ""}
           {duplicatedSku ? "  ⚠ SKU duplicado" : ""}
         </Text>
 

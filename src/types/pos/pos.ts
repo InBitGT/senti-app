@@ -88,6 +88,7 @@ export interface CatalogProduct {
   // `final_price` del backend). Solo se debe usar cuando la cantidad en
   // el carrito alcanza `wholesale_min_qty` — ver `has_wholesale` /
   // `wholesale_min_qty` abajo.
+  brand?: string;
   wholesalePrice: number;
   hasPrice: boolean;
   has_wholesale: boolean;

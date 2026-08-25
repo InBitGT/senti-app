@@ -1188,7 +1188,7 @@ export default function MerchandiseForm() {
                               </View>
                             </View>
 
-                            <View style={row}>
+                            {/* <View style={row}>
                               <View style={half}>
                                 <Controller
                                   control={control}
@@ -1259,7 +1259,7 @@ export default function MerchandiseForm() {
                                   )}
                                 />
                               </View>
-                            </View>
+                            </View> */}
                           </>
                         )}
 
