@@ -1,0 +1,50 @@
+name: Build Tauri App (Dev)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Rama a compilar"
+        required: true
+        default: "version-desktop"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+          - platform: windows-latest
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build and release Tauri app (dev)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXPO_PUBLIC_PRODUCTION_API_URL: ${{ secrets.EXPO_PUBLIC_DEV_API_URL }}
+        with:
+          tagName: dev-v__VERSION__-${{ github.run_number }}
+          releaseName: "Senti Dev v__VERSION__ (${{ github.event.inputs.branch }})"
+          releaseDraft: true
+          prerelease: true
