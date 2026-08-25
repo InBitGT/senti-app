@@ -13,7 +13,10 @@ export async function loginFn(credentials: LoginCredentials) {
 }
 
 export async function logoutFn(idUser: number) {
-  const response = await post<LoginResponse>(ENDPOINT.auth.logout, idUser);
+  const data ={
+    user_id: idUser
+  }
+  const response = await post<LoginResponse>(ENDPOINT.auth.logout, data);
 
   if (response.code !== "200") {
     throw new Error(response.message);

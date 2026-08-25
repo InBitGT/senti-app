@@ -5,15 +5,18 @@ const routeTitles: Record<string, Record<string, string>> = {
     warehouse: 'Almacén',
     supplier: 'Proveedores',
     categorie: 'Categorias',
-    entry_stock: 'Inventario Entrante',
+    entry_stock: 'Ingreso de inventario',
     inventory_adjustment: 'Ajuste de inventario',
-    inventory_movement: 'Inventario movimientos',
+    inventory_movement: 'Movimientos de inventario',
     product: 'Productos',
     inventory_stock: "Stock de inventario"
   },
   '(config)': {
     tenant: 'Empresa',
     users: 'Usuarios',
+  },
+  '(menu)': {
+    recipe: 'Productos del Menú',
   },
 };
 

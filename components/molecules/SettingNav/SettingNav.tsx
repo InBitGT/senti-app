@@ -24,7 +24,17 @@ export function SettingsNav({
   onSectionChange,
 }: SettingsNavProps) {
   const {logout} = useLogin()
-  const {claims}= useAuthStore.getState()
+  const {claims, clearClaims}= useAuthStore.getState()
+
+
+  const handle = async()=>{
+    if(!claims?.sub)return
+    await logout.mutateAsync(claims?.sub)
+    clearClaims()
+    router.dismissAll()
+    router.replace("/(auth)/Login")
+  }
+
   return (
     <VStack className="gap-1 bg-white rounded-xl p-2">
       <VStack className="mb-2 px-3 py-2">
@@ -79,12 +89,7 @@ export function SettingsNav({
       <Divider className="my-3 bg-gray-100" />
 
       <TouchableOpacity
-        onPress={() => {
-          if(!claims?.sub)return
-          logout.mutate(claims?.sub)
-          router.dismissAll()
-          router.navigate("/(auth)/Login")
-        }}
+        onPress={handle}
         style={{
           flexDirection: "row",
           alignItems: "center",

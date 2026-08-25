@@ -56,6 +56,10 @@ export default function DrawerLayout() {
           options={{ title: 'Dashboard' }}
         />
         <Drawer.Screen
+          name="order"
+          options={{ title: 'Orden' }}
+        />
+        <Drawer.Screen
           name="(inventory)"
           options={({ route }) => ({
             headerShown: !isForm,
@@ -67,6 +71,13 @@ export default function DrawerLayout() {
           options={({ route }) => ({
             headerShown: !isForm,
             title: getGroupTitle('(config)', route, 'Configuraciones'),
+          })}
+        />
+        <Drawer.Screen
+          name="(menu)"
+          options={({ route }) => ({
+            headerShown: !isForm,
+            title: getGroupTitle('(menu)', route, 'Configuraciones'),
           })}
         />
       </Drawer>
