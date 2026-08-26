@@ -57,14 +57,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 interface CartLine {
   product: CatalogProduct;
   unit: SellUnit;
-  // Siempre en unidades base (mismas de stock_qty). Elegir "Caja" no
-  // cambia lo que significa `quantity`, solo de cuánto en cuánto salta el
-  // stepper (ver useCartStore: addLine/stepLine usan unit.factorToBase).
   quantity: number;
 }
 
-// A partir de este ancho se muestra el panel fijo a la derecha (tablet/web).
-// Debajo, se usa el modal tipo drawer de móvil.
 const DESKTOP_BREAKPOINT = 768;
 
 export const Pos: React.FC = () => {
@@ -72,8 +67,6 @@ export const Pos: React.FC = () => {
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
 
-  // Única consulta de la sesión de caja en toda la pantalla — se la
-  // pasamos a CashRegisterGate como prop en vez de que él también la pida.
   const { session } = useCashRegisterSession();
   const setSession = useCashRegisterSessionStore((s) => s.setSession);
   const [cashInfoOpen, setCashInfoOpen] = useState(false);
@@ -96,10 +89,6 @@ export const Pos: React.FC = () => {
   const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
 
-  // -------------------------------------------------------------------
-  // Validación de stock del carrito (ver explicación completa más abajo,
-  // junto a maxQtyForLine).
-  // -------------------------------------------------------------------
   function qtyInOtherLines(productId: number, excludeIndex: number) {
     return cart.reduce((sum, l, i) => {
       if (i === excludeIndex) return sum;
@@ -114,22 +103,12 @@ export const Pos: React.FC = () => {
     return Math.max(0, line.product.stock_qty - otherQty);
   }
 
-  // Un valor por línea con el máximo permitido, para pasarle a cada
-  // CartLineRow y que pueda deshabilitar el "+" cuando corresponda.
   const maxQuantities = useMemo(
     () => cart.map((_, index) => maxQtyForLine(index)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cart],
   );
 
-  // -------------------------------------------------------------------
-  // Mayoreo: el umbral (`wholesale_min_qty`) es por PRODUCTO, sumando la
-  // cantidad de TODAS sus líneas en el carrito — no importa si esa
-  // cantidad está repartida entre "Caja" y "Unidad" suelta del mismo
-  // producto, ni con qué unidad se agregó cada línea. Por eso esto se
-  // calcula acá (donde está el carrito completo) y no en cada tarjeta o
-  // línea por separado.
-  // -------------------------------------------------------------------
   const productTotalQty = useMemo(() => {
     const map = new Map<number, number>();
     cart.forEach((l) => {
@@ -149,17 +128,12 @@ export const Pos: React.FC = () => {
     return totalQty >= product.wholesale_min_qty;
   }
 
-  // Precio de UNA unidad de la línea, según si ya aplica mayoreo o no.
   function unitPriceForLine(line: CartLine): number {
     return isWholesaleActiveFor(line.product)
       ? line.unit.wholesaleUnitPrice
       : line.unit.unitPrice;
   }
 
-  // Total de una línea. `quantity` está en unidades base, así que
-  // `quantity / factorToBase` es la cantidad de "paquetes" de esa unidad
-  // (ej. cuántas Cajas), multiplicado por el precio efectivo de un
-  // paquete (normal o de mayoreo, según corresponda).
   function lineTotal(line: CartLine): number {
     return (line.quantity / line.unit.factorToBase) * unitPriceForLine(line);
   }
@@ -173,8 +147,6 @@ export const Pos: React.FC = () => {
       const line = cart[index];
       if (!line) return;
       const max = maxQtyForLine(index);
-      // No dejamos sumar otro "salto" completo de esta unidad (ej. una
-      // Caja entera) si ya no entra en lo que queda de stock.
       if (line.quantity + line.unit.factorToBase > max) return;
     }
     stepLine(index, direction);
@@ -190,7 +162,6 @@ export const Pos: React.FC = () => {
     if (!Number.isNaN(parsed) && parsed >= 0) {
       const max = maxQtyForLine(index);
       if (parsed > max) {
-        // En vez de rechazar el tipeo, dejamos el valor tope permitido.
         setLineQty(index, String(max));
         return;
       }
@@ -214,8 +185,6 @@ export const Pos: React.FC = () => {
     return !!p.parent_category_id && !!p.parent_category_name?.trim();
   }
 
-  // Categorías únicas derivadas del JSON crudo, con el fallback de arriba.
-  // Se descartan productos sin ninguna categoría utilizable.
   const categories = useMemo(() => {
     const map = new Map<number, string>();
     (catalog ?? []).forEach((p) => {
@@ -226,9 +195,6 @@ export const Pos: React.FC = () => {
     return [...map.entries()].map(([id, name]) => ({ id, name }));
   }, [catalog]);
 
-  // Subcategorías: solo existen para productos que SÍ tienen padre real
-  // (parent_category_id) dentro de la categoría elegida — category_id/name
-  // en esos casos es la subcategoría, no un fallback de nivel superior.
   const subcategories = useMemo(() => {
     if (categoryId == null) return [];
     const map = new Map<number, string>();
@@ -243,7 +209,7 @@ export const Pos: React.FC = () => {
 
   function pickCategory(id: number | null) {
     setCategoryId(id);
-    setSubcategoryId(null); // al cambiar de categoría, se resetea la subcategoría
+    setSubcategoryId(null);
   }
 
   const filtered = useMemo(() => {
@@ -272,14 +238,9 @@ export const Pos: React.FC = () => {
       0,
     );
     const remaining = product.stock_qty - alreadyInCart;
-    // Defensa extra: ProductCard ya deshabilita "Añadir" cuando no alcanza
-    // el stock, pero validamos de nuevo acá por si esta función se llega a
-    // invocar desde otro lado más adelante.
     if (unit.factorToBase > remaining) return;
 
     addLine(product, unit);
-    // En escritorio/tablet el carrito ya está visible en el panel derecho;
-    // el modal solo se abre en móvil, donde es la única forma de verlo.
     if (!isDesktop) setCartOpen(true);
   }
 
@@ -361,11 +322,6 @@ export const Pos: React.FC = () => {
 
               {categories.length > 0 &&
                 (Platform.OS === "web" ? (
-                  // En Tauri (webview), envolver DesktopScrollView (que ya
-                  // scrollea con overflow-x + drag de mouse) DENTRO de un
-                  // <ScrollView> de RN generaba dos contenedores de scroll
-                  // horizontal anidados peleándose entre sí. En web/Tauri
-                  // usamos SOLO DesktopScrollView.
                   <DesktopScrollView horizontal>
                     <HStack space="xs">
                       <CategoryPill
@@ -384,8 +340,6 @@ export const Pos: React.FC = () => {
                     </HStack>
                   </DesktopScrollView>
                 ) : (
-                  // En iOS/Android seguimos usando el ScrollView nativo de
-                  // RN, que ahí sí funciona bien con touch.
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <HStack space="xs">
                       <CategoryPill
@@ -405,7 +359,6 @@ export const Pos: React.FC = () => {
                   </ScrollView>
                 ))}
 
-              {/* Subcategorías: solo si hay una categoría elegida y tiene hijas reales */}
               {categoryId != null &&
                 subcategories.length > 0 &&
                 (Platform.OS === "web" ? (
@@ -455,7 +408,6 @@ export const Pos: React.FC = () => {
               />
             </Box>
 
-            {/* Barra de carrito: solo en móvil, abre el modal al tocarla */}
             {!isDesktop && (
               <TouchableOpacity
                 onPress={() => setCartOpen(true)}
@@ -483,7 +435,6 @@ export const Pos: React.FC = () => {
             )}
           </VStack>
 
-          {/* Panel fijo a la derecha: solo en tablet/web */}
           {isDesktop && (
             <CartSidePanel
               {...cartProps}
@@ -493,7 +444,6 @@ export const Pos: React.FC = () => {
             />
           )}
 
-          {/* Drawer modal: solo en móvil */}
           {!isDesktop && (
             <CartModal
               isOpen={cartOpen}
@@ -527,9 +477,6 @@ export const Pos: React.FC = () => {
   );
 };
 
-// ---------------------------------------------------------------------------
-// Línea de carrito (compartida entre el panel de escritorio y el modal)
-// ---------------------------------------------------------------------------
 function CartLineRow({
   line,
   index,
@@ -543,23 +490,14 @@ function CartLineRow({
 }: {
   line: CartLine;
   index: number;
-  // Máximo de unidades base que puede tener ESTA línea sin pasarse del
-  // stock del producto (ya descuenta lo que ocupan otras líneas del mismo
-  // producto con otra unidad).
   maxQuantity: number;
-  // Precio de UNA unidad, ya resuelto (normal o de mayoreo).
   unitPrice: number;
-  // Total de la línea, ya resuelto.
   total: number;
-  // Si el producto de esta línea ya alcanzó el mínimo de mayoreo (sumando
-  // TODAS sus líneas en el carrito).
   isWholesale: boolean;
   onStepLine: (index: number, direction: 1 | -1) => void;
   onSetQty: (index: number, raw: string) => void;
   onRemoveLine: (index: number) => void;
 }) {
-  // Si sumar un "salto" completo de la unidad elegida (ej. una Caja) ya no
-  // entra en lo que queda de stock, deshabilitamos el "+".
   const atMax = line.quantity + line.unit.factorToBase > maxQuantity;
 
   return (
@@ -624,7 +562,6 @@ function CartLineRow({
               />
             </Box>
           </TouchableOpacity>
-          {/* Unidad real de esta línea (no la unidad base del producto). */}
           <Text className="text-[11px] text-gray-400">{line.unit.code}</Text>
         </HStack>
 

@@ -213,7 +213,7 @@ export default function CustomerForm() {
                         <Input>
                           <InputField
                             style={{ color: "#171717" }}
-                            placeholder="Ej. Juan Pérez"
+                            placeholder="Juan Pérez"
                             value={value}
                             onChangeText={onChange}
                             onBlur={onBlur}
@@ -303,9 +303,11 @@ export default function CustomerForm() {
                             <Input>
                               <InputField
                                 style={{ color: "#171717" }}
-                                placeholder="Ej. 1234567890101"
+                                placeholder="1234567890101"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.replace(/[^0-9A-Z-]/g, ""))
+                                }
                                 onBlur={onBlur}
                                 keyboardType="number-pad"
                               />
@@ -339,11 +341,14 @@ export default function CustomerForm() {
                             <Input>
                               <InputField
                                 style={{ color: "#171717" }}
-                                placeholder="Ej. +50212345678"
+                                placeholder="12345678"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.replace(/[^0-9.-]/g, ""))
+                                }
                                 onBlur={onBlur}
                                 keyboardType="phone-pad"
+                                maxLength={9}
                               />
                             </Input>
                             <FormControlError>
@@ -361,7 +366,6 @@ export default function CustomerForm() {
                         control={control}
                         name="email"
                         rules={{
-                          required: "El email es obligatorio.",
                           pattern: {
                             value: /\S+@\S+\.\S+/,
                             message: "Email inválido.",

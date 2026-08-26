@@ -227,7 +227,9 @@ export default function CashRegisterForm() {
                             style={{ color: "#171717" }}
                             placeholder="Ej. CAJA-01"
                             value={value}
-                            onChangeText={onChange}
+                            onChangeText={(text) =>
+                              onChange(text.toUpperCase())
+                            }
                             onBlur={onBlur}
                             autoCapitalize="characters"
                           />

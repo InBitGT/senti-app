@@ -33,6 +33,8 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -54,6 +56,7 @@ export default function SupplierForm() {
   const clearData = useSupplierStore((state) => state.clearData);
   const setIsEdit = useSupplierStore((state) => state.setIsEdit);
   const { showToast } = useCustomToast();
+  const { width } = useWindowDimensions();
 
   const {
     control,
@@ -101,6 +104,10 @@ export default function SupplierForm() {
       showToast({ message: "Error al guardar el proveedor", type: "error" });
     }
   };
+  const isLarge = width >= 768;
+
+  const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
+  const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
   if (isLoading) {
     return (
@@ -156,211 +163,236 @@ export default function SupplierForm() {
                 </Text>
 
                 <VStack space="lg">
-                  {/* Nombre */}
-                  <Controller
-                    control={control}
-                    name="name"
-                    rules={{
-                      required: "El nombre es obligatorio.",
-                      minLength: { value: 2, message: "Mínimo 2 caracteres." },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.name}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Nombre
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Distribuidora ABC"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.name?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
+                  <View style={row}>
+                    <View style={half}>
+                      {/* Nombre */}
+                      <Controller
+                        control={control}
+                        name="name"
+                        rules={{
+                          required: "El nombre es obligatorio.",
+                          minLength: {
+                            value: 2,
+                            message: "Mínimo 2 caracteres.",
+                          },
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.name}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Nombre
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Distribuidora ABC"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.name?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      {/* NIT */}
+                      <Controller
+                        control={control}
+                        name="nit"
+                        rules={{
+                          required: "El NIT es obligatorio.",
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.nit}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                NIT
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="123456-7"
+                                value={value}
+                                onChangeText={(text) =>
+                                  onChange(text.toUpperCase())
+                                }
+                                onBlur={onBlur}
+                                maxLength={10}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.nit?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
 
-                  {/* NIT */}
-                  <Controller
-                    control={control}
-                    name="nit"
-                    rules={{
-                      required: "El NIT es obligatorio.",
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.nit}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            NIT
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 123456-7"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.nit?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
+                  <View style={row}>
+                    <View style={half}>
+                      {/* Teléfono */}
+                      <Controller
+                        control={control}
+                        name="phone"
+                        rules={{
+                          required: "El teléfono es obligatorio.",
+                          minLength: { value: 8, message: "Mínimo 8 dígitos." },
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.phone}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Teléfono
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="55551234"
+                                value={value}
+                                onChangeText={(text) =>
+                                  onChange(text.replace(/[^0-9-]/g, ""))
+                                }
+                                onBlur={onBlur}
+                                keyboardType="phone-pad"
+                                maxLength={8}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.phone?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      {/* Email */}
+                      <Controller
+                        control={control}
+                        name="email"
+                        rules={{
+                          pattern: {
+                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                            message: "Correo no válido.",
+                          },
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.email}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Correo electrónico
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="proveedor@email.com"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.email?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
 
-                  {/* Teléfono */}
-                  <Controller
-                    control={control}
-                    name="phone"
-                    rules={{
-                      required: "El teléfono es obligatorio.",
-                      minLength: { value: 8, message: "Mínimo 8 dígitos." },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.phone}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Teléfono
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 5555-1234"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="phone-pad"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.phone?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
-
-                  {/* Email */}
-                  <Controller
-                    control={control}
-                    name="email"
-                    rules={{
-                      required: "El correo es obligatorio.",
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Correo no válido.",
-                      },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.email}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Correo electrónico
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. proveedor@email.com"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.email?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
-
-                  {/* Nombre de contacto */}
-                  <Controller
-                    control={control}
-                    name="contact_name"
-                    rules={{
-                      required: "El nombre de contacto es obligatorio.",
-                      minLength: { value: 2, message: "Mínimo 2 caracteres." },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.contact_name}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Nombre de contacto
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Juan Pérez"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.contact_name?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
-
-                  {/* Descripción */}
-                  <Controller
-                    control={control}
-                    name="description"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.description}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descripción (opcional)
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Textarea>
-                          <TextareaInput
-                            style={{ color: "#171717" }}
-                            placeholder="Información adicional del proveedor..."
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Textarea>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.description?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
-                    )}
-                  />
-
+                  <View style={row}>
+                    <View style={half}>
+                      {/* Nombre de contacto */}
+                      <Controller
+                        control={control}
+                        name="contact_name"
+                        rules={{
+                          required: "El nombre de contacto es obligatorio.",
+                          minLength: {
+                            value: 2,
+                            message: "Mínimo 2 caracteres.",
+                          },
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.contact_name}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Nombre de contacto
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Input>
+                              <InputField
+                                style={{ color: "#171717" }}
+                                placeholder="Juan Pérez"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                              />
+                            </Input>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.contact_name?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      {/* Descripción */}
+                      <Controller
+                        control={control}
+                        name="description"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <FormControl isInvalid={!!errors.description}>
+                            <FormControlLabel>
+                              <FormControlLabelText style={{ color: "#000" }}>
+                                Descripción (opcional)
+                              </FormControlLabelText>
+                            </FormControlLabel>
+                            <Textarea>
+                              <TextareaInput
+                                style={{ color: "#171717" }}
+                                placeholder="Información adicional del proveedor..."
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                              />
+                            </Textarea>
+                            <FormControlError>
+                              <FormControlErrorIcon as={AlertCircleIcon} />
+                              <FormControlErrorText>
+                                {errors.description?.message}
+                              </FormControlErrorText>
+                            </FormControlError>
+                          </FormControl>
+                        )}
+                      />
+                    </View>
+                  </View>
                   {/* Botones */}
                   <HStack style={{ justifyContent: "flex-end" }}>
                     <Button

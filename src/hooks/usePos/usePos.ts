@@ -23,7 +23,15 @@ export const useCatalog = () => {
     onSuccess: (data) => {
       if (data) {
         setOrder(data);
-        queryClient.invalidateQueries({ queryKey: ["pos-catalog"] });
+        queryClient.invalidateQueries({
+          queryKey: [
+            "credit",
+            "loan-payments",
+            "pos-catalog",
+            "customers",
+            "fiscal-documents",
+          ],
+        });
       }
     },
   });

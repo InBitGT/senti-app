@@ -528,7 +528,9 @@ export default function AdjustmentForm() {
                                 style={{ color: "#171717" }}
                                 placeholder="Ej. ADJ-BATCH-002"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.toUpperCase())
+                                }
                                 onBlur={onBlur}
                                 autoCapitalize="characters"
                               />
@@ -677,9 +679,11 @@ export default function AdjustmentForm() {
                             <Input>
                               <InputField
                                 style={{ color: "#171717" }}
-                                placeholder="Ej. 4"
+                                placeholder="4"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.replace(/[^0-9]/g, ""))
+                                }
                                 onBlur={onBlur}
                                 keyboardType="decimal-pad"
                               />
@@ -712,9 +716,11 @@ export default function AdjustmentForm() {
                             <Input>
                               <InputField
                                 style={{ color: "#171717" }}
-                                placeholder="Ej. 5.50"
+                                placeholder="5.50"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.replace(/[^0-9.-]/g, ""))
+                                }
                                 onBlur={onBlur}
                                 keyboardType="decimal-pad"
                               />

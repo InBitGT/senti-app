@@ -33,6 +33,9 @@ export const useStockCounAdjustment = (
       queryClient.invalidateQueries({
         queryKey: ["stock-adjusment-count", warehouseId],
       });
+      queryClient.invalidateQueries({ queryKey: ["merchandise"] });
+      queryClient.invalidateQueries({ queryKey: ["pos-catalog"] });
+      queryClient.invalidateQueries({ queryKey: ["entry_stock"] });
     },
   });
   const approve = useMutation({
@@ -49,6 +52,9 @@ export const useStockCounAdjustment = (
       queryClient.invalidateQueries({
         queryKey: ["stock-adjusment-count", warehouseId, status],
       });
+      queryClient.invalidateQueries({ queryKey: ["merchandise"] });
+      queryClient.invalidateQueries({ queryKey: ["pos-catalog"] });
+      queryClient.invalidateQueries({ queryKey: ["entry_stock"] });
     },
   });
 

@@ -241,7 +241,9 @@ export default function WarehouseForm() {
                                 style={{ color: "#171717" }}
                                 placeholder="Ej. BOD-02"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.toUpperCase())
+                                }
                                 onBlur={onBlur}
                                 autoCapitalize="characters"
                               />

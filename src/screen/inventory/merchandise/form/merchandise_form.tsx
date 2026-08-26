@@ -599,7 +599,9 @@ export default function MerchandiseForm() {
                                 style={{ color: "#171717" }}
                                 placeholder="Ej. LAP-001"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.toUpperCase())
+                                }
                                 onBlur={onBlur}
                                 autoCapitalize="characters"
                               />
@@ -634,7 +636,9 @@ export default function MerchandiseForm() {
                                 style={{ color: "#171717" }}
                                 placeholder="Ej. 123"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.toUpperCase())
+                                }
                                 onBlur={onBlur}
                                 keyboardType="number-pad"
                               />
@@ -689,9 +693,11 @@ export default function MerchandiseForm() {
                             <Input>
                               <InputField
                                 style={{ color: "#171717" }}
-                                placeholder="Ej. 0.60"
+                                placeholder="0.60"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.replace(/[^0-9.-]/g, ""))
+                                }
                                 onBlur={onBlur}
                                 keyboardType="decimal-pad"
                               />
@@ -846,9 +852,11 @@ export default function MerchandiseForm() {
                             <Input>
                               <InputField
                                 style={{ color: "#171717" }}
-                                placeholder="Ej. 1.00"
+                                placeholder="1.00"
                                 value={value}
-                                onChangeText={onChange}
+                                onChangeText={(text) =>
+                                  onChange(text.replace(/[^0-9.-]/g, ""))
+                                }
                                 onBlur={onBlur}
                                 keyboardType="decimal-pad"
                               />
@@ -1086,9 +1094,11 @@ export default function MerchandiseForm() {
                               <Input>
                                 <InputField
                                   style={{ color: "#171717" }}
-                                  placeholder="Ej. 10"
+                                  placeholder="10"
                                   value={value}
-                                  onChangeText={onChange}
+                                  onChangeText={(text) =>
+                                    onChange(text.replace(/[^0-9]/g, ""))
+                                  }
                                   onBlur={onBlur}
                                   keyboardType="decimal-pad"
                                 />
@@ -1131,9 +1141,13 @@ export default function MerchandiseForm() {
                                       <Input>
                                         <InputField
                                           style={{ color: "#171717" }}
-                                          placeholder="Ej. 8.00"
+                                          placeholder="8.00"
                                           value={value}
-                                          onChangeText={onChange}
+                                          onChangeText={(text) =>
+                                            onChange(
+                                              text.replace(/[^0-9.-]/g, ""),
+                                            )
+                                          }
                                           onBlur={onBlur}
                                           keyboardType="decimal-pad"
                                         />
