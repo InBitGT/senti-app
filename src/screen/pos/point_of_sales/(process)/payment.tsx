@@ -34,8 +34,6 @@ export const Payment: React.FC = () => {
   const { data: paymentMethods } = usePaymentMethod();
 
   function methodName(payment: VaucherPayment) {
-    // El backend a veces manda payment_method_id 0 para líneas de crédito
-    // (no hay un método "0" real en el catálogo).
     if (!payment.payment_method_id) return "Crédito";
     return (
       paymentMethods?.find((m) => m.id === payment.payment_method_id)?.method ??

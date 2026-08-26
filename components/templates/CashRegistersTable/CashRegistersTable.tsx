@@ -30,8 +30,6 @@ export function CashRegistersTable({
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
 
-  // El GET no trae warehouse anidado, así que resolvemos el nombre cruzando
-  // warehouse_id contra las bodegas que el usuario tiene en sus claims.
   const warehouseNameById = useMemo(() => {
     const map = new Map<number, string>();
     claims?.branches?.forEach((branch) => {

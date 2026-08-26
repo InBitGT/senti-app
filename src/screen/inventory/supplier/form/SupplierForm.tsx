@@ -31,6 +31,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -52,6 +53,7 @@ export default function SupplierForm() {
   const clearData = useSupplierStore((state) => state.clearData);
   const setIsEdit = useSupplierStore((state) => state.setIsEdit);
   const { showToast } = useCustomToast();
+  const { width } = useWindowDimensions();
 
   const {
     control,
@@ -99,6 +101,10 @@ export default function SupplierForm() {
       showToast({ message: "Error al guardar el proveedor", type: "error" });
     }
   };
+  const isLarge = width >= 768;
+
+  const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
+  const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
   if (isLoading) {
     return (

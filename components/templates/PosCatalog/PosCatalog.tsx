@@ -46,21 +46,11 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
   const finalPrice = toNumber(api.final_price);
   const customerTypePrice = toNumber(api.customer_type_price);
 
-  // FIX: precio NORMAL (sin mayoreo). Antes se priorizaba `final_price`
-  // sin importar la cantidad, y `final_price` es justo el precio YA con
-  // el descuento de mayoreo aplicado por el backend — por eso se veía
-  // descontado desde la unidad 1. El precio normal es `base_price` (o
-  // `customer_type_price` si el cliente tiene tarifa especial), nunca
-  // `final_price`.
   const normalPrice =
     api.has_customer_type_price && customerTypePrice > 0
       ? customerTypePrice
       : basePrice;
 
-  // Precio de MAYOREO: este sí es `final_price`. Solo debe usarse una vez
-  // que la cantidad en el carrito de este producto alcanza
-  // `wholesale_min_qty` — esa decisión no se toma acá (esta función no
-  // sabe qué hay en el carrito), se resuelve donde se muestra el precio.
   const wholesalePrice = finalPrice > 0 ? finalPrice : normalPrice;
 
   if (__DEV__ && normalPrice === 0) {
@@ -80,11 +70,6 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
   };
 
   const conversionUnits: SellUnit[] = (api.conversions ?? []).map((c) => {
-    // `price_per_uom_amount` puede venir vacío/null/0 — en ese caso el
-    // precio normal de 1 de esta unidad se calcula como
-    // `normalPrice * factor`, como antes. No hay un campo de precio
-    // especial de mayoreo por conversión, así que el precio de mayoreo
-    // de esta unidad siempre se calcula como `wholesalePrice * factor`.
     const specialPrice = toNumber(c.price_per_uom_amount);
     const unitPrice = specialPrice > 0 ? specialPrice : normalPrice * c.factor;
     const wholesaleUnitPrice = wholesalePrice * c.factor;
@@ -97,9 +82,6 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     }
 
     return {
-      // `c.id` (id propio de la fila de conversión) como uom_id: es
-      // único garantizado, a diferencia de from_uom_id/to_uom_id, que
-      // pueden coincidir con el uom_id de la unidad base.
       uom_id: Number(c.id),
       code: c.from_uom_code,
       name: c.from_uom_name,
@@ -124,10 +106,6 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     );
   }
 
-  // Si no hay categoría "padre" real (parent_category_id null/vacío, como
-  // pasa con varios productos), la categoría de nivel superior cae hacia
-  // la categoría normal — así category_id/name nunca queda en null y lo
-  // que se manda al backend en el checkout sigue siendo válido.
   const hasParent =
     !!api.parent_category_id && !!api.parent_category_name?.trim();
 
@@ -147,6 +125,7 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     has_wholesale: api.has_wholesale,
     wholesale_min_qty: api.wholesale_min_qty ?? null,
     wholesale_discount_pct: api.wholesale_discount_pct ?? 0,
+    brand: api.brand,
   };
 }
 
@@ -160,16 +139,6 @@ function formatQty(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, "");
 }
 
-// ---------------------------------------------------------------------------
-// Tarjeta de producto
-// ---------------------------------------------------------------------------
-// FIX: la unidad seleccionada ahora vive como useState LOCAL de la tarjeta,
-// no como un Record<product_id, uom_id> en el padre. Antes, dentro del
-// FlatList, el mapa `unitSel` del padre podía quedar un render atrás del
-// Select (o el onAdd cerraba sobre un `unitSel` viejo), así que al tocar
-// "Añadir" se usaba el fallback `item.units[0]` (la unidad base) en vez de
-// la unidad realmente elegida. Con estado local, `unit` y `onAdd` siempre
-// leen el mismo valor, en el mismo render, sin desfase posible.
 function ProductCard({
   product,
   onAdd,
@@ -185,11 +154,6 @@ function ProductCard({
   const unit =
     product.units.find((u) => u.uom_id === selectedUomId) ?? product.units[0];
 
-  // ---------------------------------------------------------------------
-  // Validación de stock + mayoreo: cuánto de este producto ya está en el
-  // carrito (sumado en unidades base, sin importar con qué unidad se
-  // agregó cada línea).
-  // ---------------------------------------------------------------------
   const cart = useCartStore((s) => s.cart);
   const qtyInCart = useMemo(
     () =>
@@ -203,16 +167,8 @@ function ProductCard({
   const remainingStock = Math.max(0, product.stock_qty - qtyInCart);
 
   const noStockAtAll = product.stock_qty <= 0;
-  // La unidad elegida "pesa" unit.factorToBase en unidades base (ej. una
-  // Caja pesa 10). Si eso no entra en lo que queda disponible, no dejamos
-  // agregar con esa unidad.
   const wouldExceedStock = !noStockAtAll && unit.factorToBase > remainingStock;
   const soldOut = noStockAtAll || wouldExceedStock;
-
-  // FIX: el precio de mayoreo (unit.wholesaleUnitPrice) solo debe
-  // mostrarse/usarse una vez que la cantidad YA en el carrito para este
-  // producto alcanza wholesale_min_qty. Antes no había ningún chequeo de
-  // cantidad — el precio con descuento se mostraba siempre.
   const isWholesaleActive =
     product.has_wholesale &&
     product.wholesale_min_qty != null &&
@@ -221,6 +177,7 @@ function ProductCard({
     ? unit.wholesaleUnitPrice
     : unit.unitPrice;
 
+  console.log("product card", product);
   return (
     <Box className="m-1.5 flex-1 rounded-xl border border-gray-200 bg-white p-3">
       <VStack space="xs">
@@ -249,7 +206,7 @@ function ProductCard({
         <Text
           className={`font-mono text-[10px] ${duplicatedSku ? "text-amber-600" : "text-gray-400"}`}
         >
-          {product.sku} - {product?.brand ?? ""}
+          {product.sku} - {product?.brand}
           {duplicatedSku ? "  ⚠ SKU duplicado" : ""}
         </Text>
 
@@ -407,7 +364,7 @@ export function ProductCatalog({
         <Icon as={Package} size="xl" className="text-gray-300" />
         <Text className="text-gray-400">Sin resultados</Text>
         <Button onPress={onPress}>
-          <Text className="text-center text-base font-medium text-gray-700">
+          <Text className="text-center text-base font-medium text-white">
             Recargar información
           </Text>
         </Button>
@@ -431,8 +388,6 @@ export function ProductCatalog({
 
       <FlatList
         data={products}
-        // La key debe cambiar junto con numColumns — FlatList no puede
-        // recalcular el layout de columnas en caliente sin remontarse.
         key={`catalog-grid-${numColumns}col`}
         numColumns={numColumns}
         keyExtractor={(item) => String(item.product_id)}

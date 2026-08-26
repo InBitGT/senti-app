@@ -1,64 +1,80 @@
-import { Action, Buttons, ColumnDef, CustomTable, ModalDelete } from '@/components';
-import { TableSkeleton } from '@/components/atom/TableSkeleton/TableSkeleton';
-import { useCategorie } from '@/src/hooks';
-import { useCategorieStore } from '@/src/store/useCategorieStore';
-import { Category, CategoryDetail } from '@/src/types';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { View } from 'react-native';
+import {
+  Action,
+  Buttons,
+  ColumnDef,
+  CustomTable,
+  ModalDelete,
+} from "@/components";
+import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
+import { ModalCategorieDetail } from "@/components/molecules/ModalCategorieDetail/ModalCategorieDetail";
+import { useCategorie } from "@/src/hooks";
+import { useCategorieStore } from "@/src/store/useCategorieStore";
+import { Category } from "@/src/types";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import { View } from "react-native";
 
 export const Categorie: React.FC = () => {
-  const [showModal,setShowModal] = useState<boolean>(false)
-  const [modal,setmodal] = useState<Category| undefined>(undefined)
-  const { data:categorie, isLoading, remove } = useCategorie()
-  const {setData, setIsEdit}= useCategorieStore.getState()
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [modal, setmodal] = useState<Category | undefined>(undefined);
+  const [showModalData, setShowModalData] = useState<boolean>(false);
+  const [modalData, setmodalData] = useState<Category | undefined>(undefined);
+  const { data: categorie, isLoading, remove } = useCategorie();
+  const { setData, setIsEdit } = useCategorieStore.getState();
 
   const handleEdit = (data: Category) => {
-    setIsEdit(true)
-    setData(data as unknown as CategoryDetail)
-    router.navigate("/(drawer)/(inventory)/(form)/categorie_form")
-  }
+    setIsEdit(true);
+    console.log(data, "valores de la data");
+    setData(data);
+    router.navigate("/(drawer)/(inventory)/(form)/categorie_form");
+  };
 
-  const hadleModal = (data:Category)=>{
-    setShowModal(true)
-    setmodal(data)
-  }
+  const hadleModal = (data: Category) => {
+    setShowModal(true);
+    setmodal(data);
+  };
 
-  const handleDelete = ()=>{
-    if(!modal) return
-    remove.mutate(modal.id)
-    setShowModal(false)
-  }
+  const hadleModalData = (data: Category) => {
+    setShowModalData(true);
+    setmodalData(data);
+  };
+
+  const handleDelete = () => {
+    if (!modal) return;
+    remove.mutate(modal.id);
+    setShowModal(false);
+  };
 
   const columns: ColumnDef<Category>[] = [
-    { key: 'id', title: 'ID' },
-    { key: 'name', title: 'Nombre' },
-    { key: 'description', title: 'Descripción' },
+    { key: "id", title: "ID" },
+    { key: "name", title: "Nombre" },
+    { key: "description", title: "Descripción" },
   ];
 
   const actions: Action<Category>[] = [
     {
-      icon: 'pencil',
-      label: 'Editar',
+      icon: "pencil",
+      label: "Editar",
       onPress: (row) => handleEdit(row),
     },
     {
-      icon: 'delete',
-      label: 'Eliminar',
-      onPress: (row) => hadleModal(row)
+      icon: "delete",
+      label: "Eliminar",
+      onPress: (row) => hadleModal(row),
     },
   ];
 
-  const dataButton :Buttons[]=[
+  const dataButton: Buttons[] = [
     {
-      name: "Crear Categoria", 
-      onPress: ()=> router.navigate("/(drawer)/(inventory)/(form)/categorie_form"),
-      variant: "solid" 
+      name: "Crear Categoria",
+      onPress: () =>
+        router.navigate("/(drawer)/(inventory)/(form)/categorie_form"),
+      variant: "solid",
     },
-  ]
+  ];
 
-  if(isLoading){
-    return <TableSkeleton/>
+  if (isLoading) {
+    return <TableSkeleton />;
   }
 
   return (
@@ -68,10 +84,20 @@ export const Categorie: React.FC = () => {
         data={categorie || []}
         keyExtractor={(row) => row.id}
         actions={actions}
-        itemsPerPage={5}
+        itemsPerPage={10}
         button={dataButton}
+        onRowPress={hadleModalData}
       />
-      <ModalDelete isOpen={showModal} onClose={()=>setShowModal(false)} onSuccess={handleDelete}/>
+      <ModalCategorieDetail
+        isOpen={showModalData}
+        onClose={() => setShowModalData(false)}
+        data={modalData}
+      />
+      <ModalDelete
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={handleDelete}
+      />
     </View>
   );
 };
