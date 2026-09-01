@@ -25,7 +25,6 @@ import {
   SelectPortal,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCredit } from "@/src/hooks/useCredit/useCredit";
@@ -243,7 +242,7 @@ export default function CustomerCreditForm() {
                   />
 
                   {/* Tiene crédito */}
-                  <Controller
+                  {/* <Controller
                     control={control}
                     name="has_credit"
                     render={({ field: { onChange, value } }) => (
@@ -261,7 +260,7 @@ export default function CustomerCreditForm() {
                         </HStack>
                       </FormControl>
                     )}
-                  />
+                  /> */}
 
                   {/* Límite + Plazo */}
                   <View style={row}>
