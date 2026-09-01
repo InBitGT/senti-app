@@ -115,17 +115,6 @@ function ProductSearchSelect({
     }
   }, [selectedProduct, isOpen]);
 
-  // DEBUG
-  React.useEffect(() => {
-    console.log(
-      "[DEBUG] value cambió a:",
-      value,
-      "| selectedProduct:",
-      selectedProduct?.id,
-      selectedProduct?.name,
-    );
-  }, [value, selectedProduct]);
-
   const filtered = useMemo(() => {
     const list = productData ?? [];
     const q = query.trim().toLowerCase();
@@ -134,13 +123,9 @@ function ProductSearchSelect({
   }, [query, productData]);
 
   const handleSelect = (p: any) => {
-    // DEBUG
-    console.log("[DEBUG] handleSelect() llamado con:", p.id, p.name);
     onChange(String(p.id));
     setQuery(p.name);
     setIsOpen(false);
-    // DEBUG
-    console.log("[DEBUG] handleSelect() terminó, isOpen -> false");
   };
 
   const handleChangeText = (text: string) => {
@@ -172,25 +157,9 @@ function ProductSearchSelect({
           placeholder="Escribe para buscar un producto..."
           value={query}
           onChangeText={handleChangeText}
-          onFocus={() => {
-            // DEBUG
-            console.log("[DEBUG] onFocus -> setIsOpen(true)");
-            setIsOpen(true);
-          }}
+          onFocus={() => setIsOpen(true)}
           onBlur={() => {
-            // DEBUG
-            console.log(
-              "[DEBUG] onBlur disparado, programando cierre en 150ms",
-            );
-            // Pequeño delay para que el onPress de un item de la lista
-            // alcance a dispararse antes de cerrar el dropdown.
-            blurTimeout.current = setTimeout(() => {
-              // DEBUG
-              console.log(
-                "[DEBUG] timeout de onBlur EJECUTADO -> setIsOpen(false)",
-              );
-              setIsOpen(false);
-            }, 150);
+            setIsOpen(false);
           }}
         />
         <Icon
@@ -216,20 +185,8 @@ function ProductSearchSelect({
               filtered.map((p) => (
                 <Pressable
                   key={p.id}
-                  onPressIn={() => {
-                    // DEBUG
-                    console.log("[DEBUG] onPressIn item:", p.id, p.name);
-                  }}
                   onPress={() => {
-                    // DEBUG
-                    console.log(
-                      "[DEBUG] onPress item:",
-                      p.id,
-                      p.name,
-                      "| blurTimeout activo?",
-                      !!blurTimeout.current,
-                    );
-                    if (blurTimeout.current) clearTimeout(blurTimeout.current);
+                    // if (blurTimeout.current) clearTimeout(blurTimeout.current);
                     handleSelect(p);
                   }}
                   style={({ pressed }) => [
