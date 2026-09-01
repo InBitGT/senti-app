@@ -1,4 +1,4 @@
-import { Action, ModalDelete } from "@/components";
+import { Action } from "@/components";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalCustomerCreditDetail } from "@/components/molecules/ModalCustomerCredit/ModalCustomerCredit";
 import { CustomerCreditsTable } from "@/components/templates/CustomerCreditTable/CustomerCreditTable";
@@ -10,13 +10,11 @@ import React, { useState } from "react";
 import { View } from "react-native";
 
 export const CustomerCreditScreen: React.FC = () => {
-  const [showModal, setShowModal] = useState<boolean>(false);
   const [showModalData, setShowModalData] = useState<boolean>(false);
   const [modalData, setmodalData] = useState<CustomerCredit | undefined>(
     undefined,
   );
-  const [modal, setmodal] = useState<CustomerCredit | undefined>(undefined);
-  const { data: customerCredits, isLoading, remove } = useCredit();
+  const { data: customerCredits, isLoading } = useCredit();
   const { setData, setIsEdit } = useCustomerCreditStore.getState();
 
   const hadleModalData = (data: CustomerCredit) => {
@@ -30,27 +28,11 @@ export const CustomerCreditScreen: React.FC = () => {
     router.navigate("/(drawer)/(portfolio)/(form)/credit_form");
   };
 
-  const hadleModal = (data: CustomerCredit) => {
-    setShowModal(true);
-    setmodal(data);
-  };
-
-  const handleDelete = () => {
-    if (!modal) return;
-    remove.mutate(modal.id);
-    setShowModal(false);
-  };
-
   const actions: Action<CustomerCredit>[] = [
     {
       icon: "pencil",
       label: "Editar",
       onPress: (row) => handleEdit(row),
-    },
-    {
-      icon: "delete",
-      label: "Eliminar",
-      onPress: (row) => hadleModal(row),
     },
   ];
 
@@ -79,11 +61,6 @@ export const CustomerCreditScreen: React.FC = () => {
         isOpen={showModalData}
         onClose={() => setShowModalData(false)}
         data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
       />
     </View>
   );

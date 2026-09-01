@@ -153,7 +153,7 @@ export function CustomerCreditsTable({
       <DataTable style={defaultStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title>Cliente</DataTable.Title>
-          <DataTable.Title>Tiene crédito</DataTable.Title>
+          {/* <DataTable.Title>Tiene crédito</DataTable.Title> */}
           <DataTable.Title numeric>Límite</DataTable.Title>
           <DataTable.Title numeric>Disponible</DataTable.Title>
           <DataTable.Title numeric>Usado</DataTable.Title>
@@ -179,10 +179,10 @@ export function CustomerCreditsTable({
               <DataTable.Cell>
                 <Text style={{ color: "#000000" }}>{item.customer?.name}</Text>
               </DataTable.Cell>
-
+              {/* 
               <DataTable.Cell>
                 <Badge active={item.has_credit} />
-              </DataTable.Cell>
+              </DataTable.Cell> */}
 
               <DataTable.Cell numeric>
                 <Text style={{ color: "#000000" }}>
