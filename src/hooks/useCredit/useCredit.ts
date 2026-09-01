@@ -1,9 +1,11 @@
 import {
-    creditFn,
-    DeleteCustomerCredit,
-    PostCustomerCredit,
-    PutCustomerCredit,
+  creditFn,
+  DeleteCustomerCredit,
+  PostCustomerCredit,
+  PreviousCustomerCredit,
+  PutCustomerCredit,
 } from "@/src/service/credit/credit";
+import { CreatePreviousCredit } from "@/src/types/credit/credit";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const KEY = ["credit"];
@@ -31,5 +33,20 @@ export function useCredit() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: KEY }),
   });
 
-  return { data, isLoading, post, put, remove };
+  const previousCredit = useMutation({
+    mutationFn: ({
+      data,
+      idCustomer,
+    }: {
+      data: CreatePreviousCredit;
+      idCustomer: number;
+    }) => PreviousCustomerCredit(data, idCustomer),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEY });
+      queryClient.invalidateQueries({ queryKey: ["loan-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["movement-credit"] });
+    },
+  });
+
+  return { data, isLoading, post, put, remove, previousCredit };
 }
