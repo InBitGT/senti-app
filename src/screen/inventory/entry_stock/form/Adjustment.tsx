@@ -356,7 +356,7 @@ export default function AdjustmentForm() {
                 className="w-full bg-white rounded-[20px] py-8 px-7"
               >
                 <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  Nuevo Movimiento
+                  Ajuste de inventario
                 </Heading>
                 <Text size="sm" className="text-typography-400 mb-6">
                   Registra un movimiento de inventario

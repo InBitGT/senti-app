@@ -1,45 +1,43 @@
-export type EntryStatus = 'confirmed' | 'pending' | 'cancelled'
+export type EntryStatus = "confirmed" | "pending" | "cancelled";
 
-export type WarehouseType = 'main' | 'secondary'
+export type WarehouseType = "main" | "secondary";
 
 export interface StockEntryWarehouse {
-  id: number
-  branch_id: number
-  code: string | null
-  name: string
-  type: WarehouseType
-  description: string | null
-  is_default: boolean
+  id: number;
+  branch_id: number;
+  code: string | null;
+  name: string;
+  type: WarehouseType;
+  description: string | null;
+  is_default: boolean;
 }
 
 export interface StockEntrySupplier {
-  id: number
-  tenant_id: number
-  address_id: number | null
-  name: string
-  description: string | null
-  nit: string
-  phone: string
-  email: string
-  contact_name: string
+  id: number;
+  tenant_id: number;
+  address_id: number | null;
+  name: string;
+  description: string | null;
+  nit: string;
+  phone: string;
+  email: string;
+  contact_name: string;
 }
 
 export interface StockEntry {
-  id: number
-  tenant_id: number
-  warehouse_id: number
-  warehouse: StockEntryWarehouse
-  supplier_id: number
-  supplier: StockEntrySupplier
-  user_id: number
-  document_number: string
-  document_date: string
-  total: number
-  entry_status: EntryStatus
-  notes: string | null
+  id: number;
+  tenant_id: number;
+  warehouse_id: number;
+  warehouse: StockEntryWarehouse;
+  supplier_id: number;
+  supplier: StockEntrySupplier;
+  user_id: number;
+  document_number: string;
+  document_date: string;
+  total: number;
+  entry_status: EntryStatus;
+  notes: string | null;
 }
-
-
 
 export interface InventoryItem {
   product_id: number;
@@ -50,6 +48,7 @@ export interface InventoryItem {
   expiration_date: string | null;
   batch_number: string | null;
   notes: string;
+  new_sale_price: number | null;
 }
 
 export interface InventoryDetail {

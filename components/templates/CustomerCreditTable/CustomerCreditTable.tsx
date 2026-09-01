@@ -5,7 +5,7 @@ import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { CustomerCredit } from "@/src/types/credit/credit";
-import { Plus, SearchIcon } from "lucide-react-native";
+import { History, Plus, SearchIcon } from "lucide-react-native";
 import React, { useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { DataTable } from "react-native-paper";
@@ -16,6 +16,7 @@ export interface CustomerCreditsTableProps {
   itemsPerPage?: number;
   onNewCustomerCredit?: () => void;
   onRowPress?: (row: CustomerCredit) => void;
+  onCreditBefore?: () => void;
 }
 
 const Badge = ({
@@ -31,7 +32,7 @@ const Badge = ({
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 20,
-      alignSelf: "flex-start",
+      alignSelf: "center",
     }}
   >
     <Text
@@ -55,6 +56,7 @@ export function CustomerCreditsTable({
   itemsPerPage = 5,
   onNewCustomerCredit,
   onRowPress,
+  onCreditBefore,
 }: CustomerCreditsTableProps) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
@@ -115,19 +117,37 @@ export function CustomerCreditsTable({
             onChangeText={setSearch}
           />
         </Input>
+        <HStack>
+          {onCreditBefore && (
+            <Button
+              size="md"
+              variant="outline"
+              style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
+              className="px-3 sm:px-4 mr-2"
+              onPress={onCreditBefore}
+            >
+              <History size={16} color="#000000" className="sm:hidden" />{" "}
+              <ButtonText className="hidden sm:flex">
+                Asignar crédito anterior
+              </ButtonText>
+            </Button>
+          )}
 
-        {onNewCustomerCredit && (
-          <Button
-            size="md"
-            variant="solid"
-            style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
-            className="px-3 sm:px-4"
-            onPress={onNewCustomerCredit}
-          >
-            <Plus size={16} color="#ffffff" className="sm:hidden" />
-            <ButtonText className="hidden sm:flex">Asignar crédito</ButtonText>
-          </Button>
-        )}
+          {onNewCustomerCredit && (
+            <Button
+              size="md"
+              variant="solid"
+              style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
+              className="px-3 sm:px-4"
+              onPress={onNewCustomerCredit}
+            >
+              <Plus size={16} color="#ffffff" className="sm:hidden" />
+              <ButtonText className="hidden sm:flex">
+                Asignar crédito
+              </ButtonText>
+            </Button>
+          )}
+        </HStack>
       </HStack>
 
       <DataTable style={defaultStyle}>

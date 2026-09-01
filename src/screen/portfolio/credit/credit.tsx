@@ -57,6 +57,9 @@ export const CustomerCreditScreen: React.FC = () => {
   const handleCreate = () => {
     router.navigate("/(drawer)/(portfolio)/(form)/credit_form");
   };
+  const handleBeforeCredit = () => {
+    router.navigate("/(drawer)/(portfolio)/(form)/credit_form");
+  };
 
   if (isLoading) {
     return <TableSkeleton />;
@@ -70,6 +73,7 @@ export const CustomerCreditScreen: React.FC = () => {
         onNewCustomerCredit={handleCreate}
         onRowPress={hadleModalData}
         actions={actions}
+        // onCreditBefore={handleBeforeCredit}
       />
       <ModalCustomerCreditDetail
         isOpen={showModalData}
