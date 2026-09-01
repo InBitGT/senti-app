@@ -68,6 +68,7 @@ interface ItemFormValues {
   expiration_date: string;
   batch_number: string;
   notes: string;
+  new_sale_price: string;
 }
 
 interface FormValues {
@@ -89,11 +90,9 @@ const EMPTY_ITEM: ItemFormValues = {
   expiration_date: "",
   batch_number: "",
   notes: "",
+  new_sale_price: "",
 };
 
-// ── Buscador de producto (autocomplete) ────────────────────────────────────────
-// Reemplaza al <Select> plano: el usuario escribe y se filtra la lista de
-// productos en tiempo real (por nombre). Al tocar un resultado se guarda su id.
 function ProductSearchSelect({
   value,
   onChange,
@@ -522,31 +521,73 @@ function ItemRow({
         )}
 
         {/* Notas del item */}
-        <Controller
-          control={control}
-          name={`items.${index}.notes`}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <FormControl>
-              <FormControlLabel>
-                <FormControlLabelText style={{ color: "#000" }}>
-                  Notas{" "}
-                  <Text size="xs" style={{ color: "#999" }}>
-                    (opcional)
-                  </Text>
-                </FormControlLabelText>
-              </FormControlLabel>
-              <Input>
-                <InputField
-                  style={{ color: "#171717" }}
-                  placeholder="Observaciones del item..."
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                />
-              </Input>
-            </FormControl>
-          )}
-        />
+        <View style={row}>
+          <View style={half}>
+            <Controller
+              control={control}
+              name={`items.${index}.new_sale_price`}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <FormControl
+                  isInvalid={!!errors?.items?.[index]?.new_sale_price}
+                >
+                  <FormControlLabel>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Nuevo precio de venta{" "}
+                      <Text size="xs" style={{ color: "#999" }}>
+                        (opcional)
+                      </Text>
+                    </FormControlLabelText>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      style={{ color: "#171717" }}
+                      placeholder="8.00"
+                      value={value}
+                      onChangeText={(text) =>
+                        onChange(text.replace(/[^0-9.-]/g, ""))
+                      }
+                      onBlur={onBlur}
+                      keyboardType="decimal-pad"
+                    />
+                  </Input>
+                  <FormControlError>
+                    <FormControlErrorIcon as={AlertCircleIcon} />
+                    <FormControlErrorText>
+                      {errors?.items?.[index]?.new_sale_price?.message}
+                    </FormControlErrorText>
+                  </FormControlError>
+                </FormControl>
+              )}
+            />
+          </View>
+          <View style={half}>
+            <Controller
+              control={control}
+              name={`items.${index}.notes`}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <FormControl>
+                  <FormControlLabel>
+                    <FormControlLabelText style={{ color: "#000" }}>
+                      Notas{" "}
+                      <Text size="xs" style={{ color: "#999" }}>
+                        (opcional)
+                      </Text>
+                    </FormControlLabelText>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      style={{ color: "#171717" }}
+                      placeholder="Observaciones del item..."
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </Input>
+                </FormControl>
+              )}
+            />
+          </View>
+        </View>
       </VStack>
     </Box>
   );
@@ -658,6 +699,9 @@ export default function InventoryForm() {
         expiration_date: item.expiration_date || null,
         batch_number: item.batch_number || null,
         notes: item.notes.trim(),
+        new_sale_price: item.new_sale_price
+          ? parseFloat(item.new_sale_price)
+          : null,
       })),
     };
 
