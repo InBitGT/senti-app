@@ -114,6 +114,13 @@ function ProductSearchSelect({
     }
   }, [selectedProduct, isOpen]);
 
+  // Limpieza del timeout al desmontar el componente
+  React.useEffect(() => {
+    return () => {
+      if (blurTimeout.current) clearTimeout(blurTimeout.current);
+    };
+  }, []);
+
   const filtered = useMemo(() => {
     const list = productData ?? [];
     const q = query.trim().toLowerCase();
@@ -156,11 +163,19 @@ function ProductSearchSelect({
           placeholder="Escribe para buscar un producto..."
           value={query}
           onChangeText={handleChangeText}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            if (blurTimeout.current) {
+              clearTimeout(blurTimeout.current);
+              blurTimeout.current = null;
+            }
+            setIsOpen(true);
+          }}
           onBlur={() => {
-            // Pequeño delay para que el onPress de un item de la lista
-            // alcance a dispararse antes de cerrar el dropdown.
-            blurTimeout.current = setTimeout(() => setIsOpen(false), 150);
+            // Espera un poco antes de cerrar, para darle tiempo al onPress
+            // del item a ejecutarse primero (evita la race condition)
+            blurTimeout.current = setTimeout(() => {
+              setIsOpen(false);
+            }, 150);
           }}
         />
         <Icon
@@ -171,12 +186,13 @@ function ProductSearchSelect({
       </Input>
 
       {isOpen && (
-        <Box style={styles.dropdown} className="w-full bg-white rounded-[10px]">
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-            style={{ maxHeight: 220 }}
-          >
+        <Box
+          style={styles.dropdown}
+          className="w-full bg-white rounded-[10px]"
+          // @ts-expect-error onMouseDown no está tipado en Box pero sí funciona en RN Web
+          onMouseDown={(e: any) => e.preventDefault?.()}
+        >
+          <DesktopScrollView>
             {filtered.length === 0 ? (
               <Text style={{ padding: 12, color: "#999" }}>
                 Sin resultados para “{query}”
@@ -186,7 +202,10 @@ function ProductSearchSelect({
                 <Pressable
                   key={p.id}
                   onPress={() => {
-                    if (blurTimeout.current) clearTimeout(blurTimeout.current);
+                    if (blurTimeout.current) {
+                      clearTimeout(blurTimeout.current);
+                      blurTimeout.current = null;
+                    }
                     handleSelect(p);
                   }}
                   style={({ pressed }) => [
@@ -199,7 +218,7 @@ function ProductSearchSelect({
                 </Pressable>
               ))
             )}
-          </ScrollView>
+          </DesktopScrollView>
         </Box>
       )}
 
