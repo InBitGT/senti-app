@@ -1,7 +1,11 @@
 import { get, post, put, remove } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import { useAuthStore } from "@/src/store";
-import { CreateCredit, CustomerCredit } from "@/src/types/credit/credit";
+import {
+  CreateCredit,
+  CreatePreviousCredit,
+  CustomerCredit,
+} from "@/src/types/credit/credit";
 
 export async function creditFn() {
   const { claims } = useAuthStore.getState();
@@ -20,6 +24,22 @@ export async function creditFn() {
 
 export async function PostCustomerCredit(data: CreateCredit) {
   const response = await post<CreateCredit>(ENDPOINT.credit.info, data);
+  console.log(response, "post");
+  if (response.code !== "201") {
+    throw new Error(response.message);
+  }
+
+  return response.data;
+}
+
+export async function PreviousCustomerCredit(
+  data: CreatePreviousCredit,
+  idCustomer: number,
+) {
+  const response = await post<CreateCredit>(
+    ENDPOINT.credit.previousCredit(idCustomer),
+    data,
+  );
   console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);

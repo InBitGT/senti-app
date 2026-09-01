@@ -45,3 +45,9 @@ export interface CustomerType {
   created_at: string;
   update_at: string;
 }
+
+export interface CreatePreviousCredit {
+  amount: number;
+  user_id: number;
+  description: string;
+}

@@ -16,7 +16,7 @@ export interface CustomerCreditsTableProps {
   itemsPerPage?: number;
   onNewCustomerCredit?: () => void;
   onRowPress?: (row: CustomerCredit) => void;
-  onCreditBefore?: () => void;
+  onCreditPrevious?: () => void;
 }
 
 const Badge = ({
@@ -56,7 +56,7 @@ export function CustomerCreditsTable({
   itemsPerPage = 5,
   onNewCustomerCredit,
   onRowPress,
-  onCreditBefore,
+  onCreditPrevious,
 }: CustomerCreditsTableProps) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
@@ -118,13 +118,13 @@ export function CustomerCreditsTable({
           />
         </Input>
         <HStack>
-          {onCreditBefore && (
+          {onCreditPrevious && (
             <Button
               size="md"
               variant="outline"
               style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
               className="px-3 sm:px-4 mr-2"
-              onPress={onCreditBefore}
+              onPress={onCreditPrevious}
             >
               <History size={16} color="#000000" className="sm:hidden" />{" "}
               <ButtonText className="hidden sm:flex">

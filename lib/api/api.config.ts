@@ -125,6 +125,8 @@ export const ENDPOINT = {
     info: `customer-service/api/customer-credit`,
     detail: (idTenant: string | number) =>
       `customer-service/api/customer-credit?tenant_id=${idTenant}`,
+    previousCredit: (idCustomer: string | number) =>
+      `customer-service/api/customer-credit/customer/${idCustomer}/reverse-payment`,
   },
   warehouse_zone: {
     info: `inventory-service/api/warehouse-zone`,
