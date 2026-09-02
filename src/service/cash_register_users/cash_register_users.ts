@@ -10,7 +10,7 @@ export async function CashRegisterUserFn() {
   }
 
   const response = await get<CashRegisterUsers[]>(
-    ENDPOINT.cash_register_users.detail(claims.sub),
+    ENDPOINT.cash_register_users.detail(claims.tenant_id),
   );
 
   if (response.message === "CLOSED_REGISTER_CASH") {
