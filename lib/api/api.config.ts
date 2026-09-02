@@ -168,8 +168,8 @@ export const ENDPOINT = {
   },
   cash_register_session: {
     info: `payment-client-service/api/cash-register-session/open`,
-    detail: (idTenant: number | string) =>
-      `payment-client-service/api/cash-register-session?session_status=open&user_id=${idTenant}`,
+    detail: (iduser: number | string) =>
+      `payment-client-service/api/cash-register-session?session_status=open&user_id=${iduser}`,
   },
   cash_register_users: {
     detail: (idTenant: number | string) =>
