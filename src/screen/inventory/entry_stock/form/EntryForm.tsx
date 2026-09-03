@@ -199,7 +199,7 @@ function ProductSearchSelect({
           // @ts-expect-error onMouseDown no está tipado en Box pero sí funciona en RN Web
           onMouseDown={(e: any) => e.preventDefault?.()}
         >
-          <DesktopScrollView>
+          <ScrollView>
             {filtered.length === 0 ? (
               <Text style={{ padding: 12, color: "#999" }}>
                 Sin resultados para “{query}”
@@ -225,7 +225,7 @@ function ProductSearchSelect({
                 </Pressable>
               ))
             )}
-          </DesktopScrollView>
+          </ScrollView>
         </Box>
       )}
 

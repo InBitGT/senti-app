@@ -192,33 +192,31 @@ function ProductSearchSelect({
           // @ts-expect-error onMouseDown no está tipado en Box pero sí funciona en RN Web
           onMouseDown={(e: any) => e.preventDefault?.()}
         >
-          <DesktopScrollView>
-            {filtered.length === 0 ? (
-              <Text style={{ padding: 12, color: "#999" }}>
-                Sin resultados para “{query}”
-              </Text>
-            ) : (
-              filtered.map((p) => (
-                <Pressable
-                  key={p.id}
-                  onPress={() => {
-                    if (blurTimeout.current) {
-                      clearTimeout(blurTimeout.current);
-                      blurTimeout.current = null;
-                    }
-                    handleSelect(p);
-                  }}
-                  style={({ pressed }) => [
-                    styles.dropdownItem,
-                    pressed && { backgroundColor: "#f0f9ff" },
-                    String(p.id) === value && { backgroundColor: "#eff6ff" },
-                  ]}
-                >
-                  <Text style={{ color: "#171717" }}>{p.name}</Text>
-                </Pressable>
-              ))
-            )}
-          </DesktopScrollView>
+          {filtered.length === 0 ? (
+            <Text style={{ padding: 12, color: "#999" }}>
+              Sin resultados para “{query}”
+            </Text>
+          ) : (
+            filtered.map((p) => (
+              <Pressable
+                key={p.id}
+                onPress={() => {
+                  if (blurTimeout.current) {
+                    clearTimeout(blurTimeout.current);
+                    blurTimeout.current = null;
+                  }
+                  handleSelect(p);
+                }}
+                style={({ pressed }) => [
+                  styles.dropdownItem,
+                  pressed && { backgroundColor: "#f0f9ff" },
+                  String(p.id) === value && { backgroundColor: "#eff6ff" },
+                ]}
+              >
+                <Text style={{ color: "#171717" }}>{p.name}</Text>
+              </Pressable>
+            ))
+          )}
         </Box>
       )}
 
@@ -385,75 +383,18 @@ export default function AdjustmentForm() {
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="product_id"
-                        rules={{ required: "El producto es obligatorio." }}
-                        render={({ field: { onChange, value } }) => (
-                          <ProductSearchSelect
-                            value={value}
-                            onChange={onChange}
-                            productData={productData ?? []}
-                            error={errors.product_id?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      {/* N° Referencia */}
-                      <Controller
-                        control={control}
-                        name="reference_number"
-                        rules={{
-                          required: "El número de referencia es obligatorio.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.reference_number}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                N° Referencia
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. ADJ-BATCH-002"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.toUpperCase())
-                                }
-                                onBlur={onBlur}
-                                autoCapitalize="characters"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.reference_number?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Tipo de movimiento + Razón */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="movement_type"
-                        rules={{ required: "El tipo es obligatorio." }}
+                        name="branch_id"
+                        rules={{ required: "La sucursal es obligatoria." }}
                         render={({ field: { onChange, value } }) => {
                           const selectedLabel =
-                            MOVEMENT_TYPE_OPTIONS.find((m) => m.value === value)
-                              ?.label || "";
+                            branchOptions.find((b) => String(b.id) === value)
+                              ?.name || "";
 
                           return (
-                            <FormControl isInvalid={!!errors.movement_type}>
+                            <FormControl isInvalid={!!errors.branch_id}>
                               <FormControlLabel>
                                 <FormControlLabelText style={{ color: "#000" }}>
-                                  Tipo de movimiento
+                                  Sucursal
                                 </FormControlLabelText>
                               </FormControlLabel>
                               <Select
@@ -463,7 +404,7 @@ export default function AdjustmentForm() {
                                 <SelectTrigger>
                                   <SelectInput
                                     style={{ color: "#000" }}
-                                    placeholder="Selecciona tipo"
+                                    placeholder="Selecciona sucursal"
                                     value={selectedLabel}
                                   />
                                 </SelectTrigger>
@@ -565,58 +506,14 @@ export default function AdjustmentForm() {
                       control={control}
                       name="product_id"
                       rules={{ required: "El producto es obligatorio." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          productData?.find((p: any) => String(p.id) === value)
-                            ?.name || "";
-                        return (
-                          <FormControl isInvalid={!!errors.product_id}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Producto
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona producto"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent style={{ maxHeight: 320 }}>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  <ScrollView
-                                    style={{ maxHeight: 280 }}
-                                    nestedScrollEnabled
-                                  >
-                                    {(productData ?? []).map((p: any) => (
-                                      <SelectItem
-                                        key={p.id}
-                                        label={p.name}
-                                        value={String(p.id)}
-                                      />
-                                    ))}
-                                  </ScrollView>
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.product_id?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
-                        );
-                      }}
+                      render={({ field: { onChange, value } }) => (
+                        <ProductSearchSelect
+                          value={value}
+                          onChange={onChange}
+                          productData={productData ?? []}
+                          error={errors.product_id?.message}
+                        />
+                      )}
                     />
                   </View>
 
@@ -640,7 +537,9 @@ export default function AdjustmentForm() {
                               style={{ color: "#171717" }}
                               placeholder="Ej. ADJ-BATCH-002"
                               value={value}
-                              onChangeText={onChange}
+                              onChangeText={(text) =>
+                                onChange(text.toUpperCase())
+                              }
                               onBlur={onBlur}
                               autoCapitalize="characters"
                             />
