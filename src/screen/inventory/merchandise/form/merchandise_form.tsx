@@ -88,14 +88,10 @@ interface FormValues {
   average_cost: string;
   requires_batch: boolean;
   availability_status: string;
-  // Precio base
   price_amount: string;
   price_currency: string;
-  // Conversiones de unidad (0..n), cada una con su propio precio opcional
   conversions: ConversionRow[];
-  // Precios por tipo de cliente (0..n)
   customer_type_prices: CustomerTypePriceRow[];
-  // Regla de mayoreo general del producto (única, opcional)
   has_wholesale_rule: boolean;
   wholesale_min_quantity: string;
   wholesale_discount_percentage: string;
@@ -108,21 +104,6 @@ const CURRENCIES = [
   { label: "USD", value: "USD" },
 ];
 
-// -----------------------------------------------------------------------
-// FIX: el precio por conversión puede venir de DOS lugares distintos en
-// la respuesta del GET:
-//   1) Anidado: `conversion.price_per_uom` (lo único que se leía antes).
-//   2) Suelto: `MerchandiseListItem.price_per_uom` (un array aparte a
-//      nivel raíz, sin relación explícita con su conversión salvo por
-//      los campos que agregamos a `PricePerUom`).
-// Si el backend llena el (2) y no el (1), `buildDefaultValues` nunca
-// encontraba el precio — por eso el switch "Definir precio para esta
-// unidad" se veía siempre apagado al editar.
-//
-// Esta función intenta (1) primero, y si no hay nada ahí, busca en (2)
-// por `conversion_id` y, si tampoco está ese campo, por el par
-// from_uom_id/to_uom_id.
-// -----------------------------------------------------------------------
 function findPricePerUomForConversion(
   conversion: MerchandiseConversion,
   rootPricePerUom: PricePerUom[] | undefined,
@@ -140,9 +121,6 @@ function findPricePerUomForConversion(
 
   if (!rootPricePerUom?.length) return null;
 
-  // FIX: confirmado con datos reales — el campo de relación es `uom_id`,
-  // que coincide con `from_uom_id` de la conversión (la unidad que se
-  // está definiendo, ej. "Caja"). Esta es la vía principal de matcheo.
   const byUomId = rootPricePerUom.find(
     (p) => p.uom_id === conversion.from_uom_id,
   );
@@ -157,9 +135,6 @@ function findPricePerUomForConversion(
     return byUomId;
   }
 
-  // Respaldo: en los datos reales vistos hasta ahora, `id` coincide entre
-  // la conversión y su price_per_uom (probable relación 1:1 con mismo id
-  // en ambas tablas del lado del backend).
   if (conversion.id != null) {
     const byId = rootPricePerUom.find((p) => p.id === conversion.id);
     if (byId) {
@@ -184,8 +159,6 @@ function findPricePerUomForConversion(
   return null;
 }
 
-// Extraída como función aparte para poder llamarla también desde reset(),
-// no solo desde el defaultValues inicial de useForm.
 function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
   const product = data?.product;
 
@@ -208,8 +181,6 @@ function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
     price_currency: data?.price?.currency || "GTQ",
     conversions: data?.conversions?.length
       ? data.conversions.map((c) => {
-          // FIX: antes era `c.price_per_uom` directo. Ahora busca también
-          // en el array raíz `data.price_per_uom` si no está anidado.
           const pricePerUom = findPricePerUomForConversion(
             c,
             data?.price_per_uom,
@@ -285,16 +256,6 @@ export default function MerchandiseForm() {
   } = useForm<FormValues>({
     defaultValues: buildDefaultValues(data),
   });
-
-  // ⚠️ FIX CLAVE (edición): useForm's defaultValues solo se lee UNA VEZ, al
-  // montar el componente. Si esta pantalla ya estaba montada (ej. quedó en el
-  // stack de navegación de una visita anterior), cambiar de producto a editar
-  // NO repuebla el formulario solo — hay que forzarlo con reset().
-  //
-  // Blindado para modo creación: si "data" es undefined (estamos creando un
-  // producto nuevo, no editando), este efecto NO debe tocar el formulario en
-  // absoluto — así nunca corre el riesgo de resetear conversiones que el
-  // usuario ya agregó a mano con "Agregar conversión".
   React.useEffect(() => {
     if (!data) return;
     reset(buildDefaultValues(data));
@@ -1294,7 +1255,7 @@ export default function MerchandiseForm() {
                     );
                   })}
 
-                  {/* <Divider className="my-2" />
+                  <Divider className="my-2" />
                   <HStack
                     style={{
                       justifyContent: "space-between",
@@ -1318,11 +1279,11 @@ export default function MerchandiseForm() {
                       style={styles.addRowButton}
                     >
                       <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                      <Text style={styles.addRowText}>Agregar precio</Text> 
+                      <Text style={styles.addRowText}>Agregar precio</Text>
                     </Pressable>
-                  </HStack> */}
+                  </HStack>
 
-                  {/* {customerPriceFields.map((field, index) => (
+                  {customerPriceFields.map((field, index) => (
                     <View key={field.id} style={styles.dynamicRow}>
                       <HStack style={{ gap: 10 }}>
                         <View style={{ flex: 2 }}>
@@ -1418,7 +1379,7 @@ export default function MerchandiseForm() {
                         </Pressable>
                       </HStack>
                     </View>
-                  ))} */}
+                  ))}
 
                   <Divider className="my-2" />
                   <View style={styles.switchRow}>
