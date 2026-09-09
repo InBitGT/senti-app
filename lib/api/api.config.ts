@@ -176,11 +176,8 @@ export const ENDPOINT = {
       `payment-client-service/api/cash-register-session/available-users?tenant_id=${idTenant}`,
   },
   invenrtory: {
-    detail: (
-      idTenant: number | string,
-      idWarehouse: number | string,
-    ) => `inventory-service/api/inventory-stock/summary?tenant_id=${idTenant}&warehouse_id=${idWarehouse}
-    }`,
+    detail: (idTenant: number | string, idWarehouse: number | string) =>
+      `inventory-service/api/inventory-stock/summary?tenant_id=${idTenant}&warehouse_id=${idWarehouse}`,
   },
   dashboard: {
     detail: (idTenant: number | string) =>
