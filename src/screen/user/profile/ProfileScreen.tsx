@@ -54,7 +54,6 @@ export function ProfileScreen() {
               </VStack>
             </Box>
           </DesktopScrollView>
-        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

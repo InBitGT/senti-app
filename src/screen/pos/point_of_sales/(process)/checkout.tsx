@@ -1,5 +1,13 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from "@/components/ui/alert-dialog";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -31,16 +39,17 @@ import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
 import { CatalogProduct } from "@/src/types/pos/pos";
 import { router } from "expo-router";
 import {
+  AlertTriangle,
   ArrowLeft,
   ChevronDown,
   CreditCard,
-  FileText,
   Pencil,
   Plus,
   X,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CASH_ALIASES = ["efectivo", "cash", "contado"];
 
@@ -113,6 +122,13 @@ function isCashMethod(method?: PaymentMethod | null) {
   return CASH_ALIASES.some((alias) => normalized.includes(alias));
 }
 
+// Detecta específicamente el error de stock insuficiente que devuelve el
+// backend ({ code: 400, message: "stock insuficiente" }), sin capturar
+// otros errores de checkout.
+function isInsufficientStockError(err: unknown): boolean {
+  return err instanceof Error && /stock insuficiente/i.test(err.message);
+}
+
 interface PaymentEntryState {
   key: string;
   paymentMethodId: number | null; // null solo cuando isCredit = true
@@ -137,7 +153,8 @@ export const Checkout: React.FC = () => {
   const claims = useAuthStore((s) => s.claims);
   const cart = useCartStore((s) => s.cart);
   const clearCart = useCartStore((s) => s.clearCart);
-  const { checkout } = useCatalog();
+  const removeLine = useCartStore((s) => s.removeLine);
+  const { checkout, refetch, catalog } = useCatalog();
   const { data: customerCredits } = useCredit();
   const { data: paymentMethods, isLoading: isLoadingPayment } =
     usePaymentMethod();
@@ -177,6 +194,17 @@ export const Checkout: React.FC = () => {
 
   const [entries, setEntries] = useState<PaymentEntryState[]>([newEntry()]);
 
+  // Modal de stock insuficiente. `blockedProductIds` guarda los productos
+  // del carrito cuyo stock real (recién refrescado) ya no alcanza para lo
+  // pedido. No se reinicia el carrito: esas líneas se marcan como
+  // bloqueadas, se excluyen del total y del payload de checkout, pero el
+  // resto de la venta sigue intacta.
+  const [stockErrorOpen, setStockErrorOpen] = useState(false);
+  const [checkingStock, setCheckingStock] = useState(false);
+  const [blockedProductIds, setBlockedProductIds] = useState<Set<number>>(
+    new Set(),
+  );
+
   // En cuanto cargan los métodos de pago, la primera línea toma el de
   // menor display_order como valor por defecto (si el usuario no la tocó).
   useEffect(() => {
@@ -201,10 +229,43 @@ export const Checkout: React.FC = () => {
     );
   }, [creditAvailable, methods]);
 
+  // Si un producto bloqueado desaparece del carrito (el usuario lo quitó
+  // manualmente) o cambia de cantidad, limpiamos su bloqueo para no dejar
+  // basura en el set.
+  useEffect(() => {
+    setBlockedProductIds((prev) => {
+      if (prev.size === 0) return prev;
+      const stillInCart = new Set(cart.map((l) => l.product.product_id));
+      const next = new Set([...prev].filter((id) => stillInCart.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [cart]);
+
+  // Carrito "cobrable": excluye las líneas de productos bloqueados por
+  // falta de stock. Es lo que se usa para el total y para el payload.
+  const purchasableCart = useMemo(
+    () => cart.filter((l) => !blockedProductIds.has(l.product.product_id)),
+    [cart, blockedProductIds],
+  );
+
+  const blockedProductNames = useMemo(() => {
+    const names: string[] = [];
+    cart.forEach((l) => {
+      if (
+        blockedProductIds.has(l.product.product_id) &&
+        !names.includes(l.product.name)
+      ) {
+        names.push(l.product.name);
+      }
+    });
+    return names;
+  }, [cart, blockedProductIds]);
+
   // FIX: antes era `sum + l.product.price * l.quantity`, que ignoraba el
   // precio especial de conversión y el de mayoreo. Ahora usa `lineTotal`,
   // que respeta ambos (ver definición arriba, igual que en Pos.tsx).
-  const total = cart.reduce((sum, l) => sum + lineTotal(cart, l), 0);
+  // Solo suma líneas "cobrables" (no bloqueadas por stock).
+  const total = purchasableCart.reduce((sum, l) => sum + lineTotal(cart, l), 0);
 
   // Con un solo método de pago, SIEMPRE se cobra el 100% del total — el
   // campo queda de solo lectura y no hace falta que el usuario escriba
@@ -272,19 +333,68 @@ export const Checkout: React.FC = () => {
     );
   }
 
+  // Quita del carrito todas las líneas de un producto bloqueado (puede
+  // tener más de una línea si se agregó en distintas unidades).
+  function removeBlockedProduct(productId: number) {
+    cart
+      .map((l, i) => (l.product.product_id === productId ? i : -1))
+      .filter((i) => i !== -1)
+      .sort((a, b) => b - a) // de mayor a menor índice: evita que se
+      // corran los índices restantes al remover
+      .forEach((i) => removeLine(i));
+
+    setBlockedProductIds((prev) => {
+      const next = new Set(prev);
+      next.delete(productId);
+      return next;
+    });
+  }
+
   const missingFiscal =
     generateFiscal && (!fiscalNit.trim() || !fiscalName.trim());
   const missingMethod = entries.some(
     (e) => !e.isCredit && e.paymentMethodId == null,
   );
   const blocked =
-    cart.length === 0 ||
+    purchasableCart.length === 0 ||
     Math.abs(remaining) > 0.005 ||
     missingFiscal ||
     missingMethod ||
     creditOverLimit ||
     methods.length === 0 ||
-    checkout.isPending;
+    checkout.isPending ||
+    checkingStock;
+
+  // Refresca el catálogo y, comparando el stock real contra lo pedido en
+  // el carrito, determina qué producto(s) ya no tienen stock suficiente.
+  // No reinicia el carrito: solo marca esas líneas como bloqueadas.
+  async function handleInsufficientStock() {
+    setStockErrorOpen(true);
+    setCheckingStock(true);
+    try {
+      const result = await refetch();
+      const freshCatalog = result.data ?? catalog ?? [];
+
+      const stockByProduct = new Map<number, number>();
+      freshCatalog.forEach((p) =>
+        stockByProduct.set(p.product_id, p.stock_qty),
+      );
+
+      const nowBlocked = new Set<number>();
+      cart.forEach((line) => {
+        const productId = line.product.product_id;
+        const availableStock = stockByProduct.get(productId) ?? 0;
+        const requestedQty = totalQtyForProduct(cart, productId);
+        if (requestedQty > availableStock) {
+          nowBlocked.add(productId);
+        }
+      });
+
+      setBlockedProductIds(nowBlocked);
+    } finally {
+      setCheckingStock(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!claims) return;
@@ -336,7 +446,9 @@ export const Checkout: React.FC = () => {
           : {}),
         channel: "pos",
         tax: 0,
-        items: cart.map((l) => ({
+        // Solo se mandan las líneas "cobrables": las bloqueadas por falta
+        // de stock quedan fuera del pedido.
+        items: purchasableCart.map((l) => ({
           product_id: l.product.product_id,
           product_name: l.product.name,
           // TODO: si el backend espera la subcategoría (hoja) en vez de la
@@ -366,14 +478,19 @@ export const Checkout: React.FC = () => {
       });
 
       clearCart();
+      setBlockedProductIds(new Set());
       router.navigate("/(drawer)/(pos)/(process)/payment");
-    } catch {
-      // El error queda disponible en checkout.error para mostrarlo abajo.
+    } catch (err) {
+      if (isInsufficientStockError(err)) {
+        handleInsufficientStock();
+      }
+      // Otros errores quedan disponibles en checkout.error para mostrarse
+      // abajo con el mensaje genérico.
     }
   }
 
   return (
-    <VStack className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={["bottom"]}>
       <HStack className="items-center gap-3 border-b border-gray-200 bg-white p-3">
         <TouchableOpacity
           onPress={() => router.back()}
@@ -399,39 +516,60 @@ export const Checkout: React.FC = () => {
                 Resumen del pedido
               </Text>
               {cart.map((line) => {
-                // FIX: antes se mostraba y calculaba todo con
-                // `line.product.price` fijo. Ahora se resuelve el precio
-                // real de esta línea (por unidad base) igual que en el
-                // total y en el payload de checkout.
                 const pricePerBaseUnit = basePriceForLine(cart, line);
                 const wholesale = isWholesaleActiveFor(cart, line.product);
+                const isBlocked = blockedProductIds.has(
+                  line.product.product_id,
+                );
 
                 return (
-                  <HStack
+                  <VStack
                     key={`${line.product.product_id}-${line.unit.uom_id}`}
-                    className="items-center justify-between border-b border-gray-100 p-3"
+                    className={`border-b border-gray-100 p-3 ${
+                      isBlocked ? "bg-red-50" : ""
+                    }`}
+                    space="xs"
                   >
+                    <HStack className="items-center justify-between">
                     <VStack className="flex-1">
                       <HStack space="xs" className="items-center">
                         <Text
-                          className="text-sm font-medium text-gray-900"
+                            className={`text-sm font-medium ${
+                              isBlocked ? "text-gray-400" : "text-gray-900"
+                            }`}
                           numberOfLines={1}
                         >
                           {line.product.name}
                         </Text>
-                        {wholesale && (
+                          {wholesale && !isBlocked && (
                           <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
                             <Text className="text-[9px] font-semibold text-green-700">
                               mayoreo
                             </Text>
                           </Box>
                         )}
+                          {isBlocked && (
+                            <Box className="flex-row items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5">
+                              <Icon
+                                as={AlertTriangle}
+                                size="xs"
+                                className="text-red-600"
+                              />
+                              <Text className="text-[9px] font-semibold text-red-600">
+                                sin stock
+                              </Text>
+                            </Box>
+                          )}
                       </HStack>
                       {/* `quantity` ya está en unidades base: se muestra junto
                         al código de la unidad base, y si se compró en una
                         unidad distinta (ej. "Caja"), se aclara entre
                         paréntesis cuántas de esas representa. */}
-                      <Text className="text-xs text-gray-400">
+                        <Text
+                          className={`text-xs ${
+                            isBlocked ? "text-gray-300" : "text-gray-400"
+                          }`}
+                        >
                         {line.quantity} {line.product.units[0]?.code}
                         {line.unit.factorToBase !== 1 &&
                           ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
@@ -439,10 +577,35 @@ export const Checkout: React.FC = () => {
                         {formatCurrency(pricePerBaseUnit)}
                       </Text>
                     </VStack>
-                    <Text className="text-sm font-semibold text-gray-900">
+                      <Text
+                        className={`text-sm font-semibold ${
+                          isBlocked
+                            ? "text-gray-400 line-through"
+                            : "text-gray-900"
+                        }`}
+                      >
                       {formatCurrency(lineTotal(cart, line))}
                     </Text>
                   </HStack>
+
+                    {isBlocked && (
+                      <HStack className="items-center justify-between">
+                        <Text className="flex-1 text-[11px] text-red-600">
+                          No hay stock suficiente. No se incluye en el total.
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() =>
+                            removeBlockedProduct(line.product.product_id)
+                          }
+                          className="rounded-md border border-red-300 px-2 py-1"
+                        >
+                          <Text className="text-[11px] font-medium text-red-600">
+                            Quitar del carrito
+                          </Text>
+                        </TouchableOpacity>
+                      </HStack>
+                    )}
+                  </VStack>
                 );
               })}
               <HStack className="items-center justify-between p-3">
@@ -863,6 +1026,71 @@ export const Checkout: React.FC = () => {
           </ButtonText>
         </Button>
       </VStack>
+
+      {/* Modal de stock insuficiente: al fallar el checkout por esta
+        razón, se refresca el catálogo y se identifica cuál producto ya
+        no tiene stock. Ese producto se marca en el resumen (arriba) y
+        queda excluido del total; el resto del carrito no se toca. */}
+      <AlertDialog
+        isOpen={stockErrorOpen}
+        onClose={() => setStockErrorOpen(false)}
+      >
+        <AlertDialogBackdrop />
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <HStack space="sm" className="items-center">
+              <Icon as={AlertTriangle} size="md" className="text-red-600" />
+              <Heading size="sm" className="text-gray-900">
+                Stock insuficiente
+              </Heading>
+            </HStack>
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            {checkingStock ? (
+              <HStack space="xs" className="items-center py-2">
+                <Spinner size="small" />
+                <Text className="text-sm text-gray-600">
+                  Verificando existencias actualizadas...
+                </Text>
+              </HStack>
+            ) : blockedProductNames.length > 0 ? (
+              <VStack space="xs">
+                <Text className="text-sm text-gray-600">
+                  No se pudo registrar la venta: los siguientes productos ya no
+                  tienen existencias suficientes. Quedaron marcados en el
+                  resumen y no se incluyen en el total — puedes quitarlos o
+                  ajustar la cantidad y volver a intentar.
+                </Text>
+                <VStack space="xs" className="mt-1">
+                  {blockedProductNames.map((name) => (
+                    <Text
+                      key={name}
+                      className="text-sm font-medium text-red-600"
+                    >
+                      • {name}
+                    </Text>
+                  ))}
     </VStack>
+              </VStack>
+            ) : (
+              <Text className="text-sm text-gray-600">
+                No se pudo registrar la venta por falta de stock. Ya
+                actualizamos las existencias; revisa el resumen del pedido y
+                vuelve a intentar.
+              </Text>
+            )}
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <Button
+              className="bg-blue-600"
+              onPress={() => setStockErrorOpen(false)}
+              isDisabled={checkingStock}
+            >
+              <ButtonText className="text-white">Entendido</ButtonText>
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </SafeAreaView>
   );
 };
