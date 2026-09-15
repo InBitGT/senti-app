@@ -14,7 +14,7 @@ import { useLogin } from "@/src/hooks";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "./Login.styles";
 
@@ -54,130 +54,124 @@ export const LoginScreen = () => {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView
+        <DesktopScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
-          <DesktopScrollView>
-            <Box
-              style={styles.card}
-              className="w-full max-w-[400px] bg-white rounded-[20px] py-8 px-7"
-            >
-              <VStack space="xs" style={styles.header}>
-                <Heading size="2xl" style={styles.title}>
-                  Bienvenido
-                </Heading>
-                <Text size="sm" style={styles.subtitle}>
-                  Inicia sesión para continuar
-                </Text>
-              </VStack>
+          <Box
+            style={styles.card}
+            className="w-full max-w-[400px] bg-white rounded-[20px] py-8 px-7"
+          >
+            <VStack space="xs" style={styles.header}>
+              <Heading size="2xl" style={styles.title}>
+                Bienvenido
+              </Heading>
+              <Text size="sm" style={styles.subtitle}>
+                Inicia sesión para continuar
+              </Text>
+            </VStack>
 
-              <VStack space="md" style={styles.form}>
-                <Controller
-                  control={control}
-                  name="email"
-                  rules={{
-                    required: "El correo es obligatorio.",
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Ingresa un correo válido.",
-                    },
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl
-                      size="md"
-                      isInvalid={!!errors.email}
-                      isRequired
-                    >
-                      <FormControlLabel>
-                        <FormControlLabelText className="text-gray-700">
-                          Correo electrónico
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input className="my-1 bg-white" size="md">
-                        <InputField
-                          className="text-gray-900"
-                          type="text"
-                          placeholder="correo@ejemplo.com"
-                          placeholderTextColor="#9ca3af"
-                          keyboardType="email-address"
-                          autoCapitalize="none"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                      </Input>
-                      <Text style={styles.errorText}>
-                        {errors.email?.message ?? ""}
-                      </Text>
-                    </FormControl>
-                  )}
-                />
+            <VStack space="md" style={styles.form}>
+              <Controller
+                control={control}
+                name="email"
+                rules={{
+                  required: "El correo es obligatorio.",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Ingresa un correo válido.",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <FormControl size="md" isInvalid={!!errors.email} isRequired>
+                    <FormControlLabel>
+                      <FormControlLabelText className="text-gray-700">
+                        Correo electrónico
+                      </FormControlLabelText>
+                    </FormControlLabel>
+                    <Input className="my-1 bg-white" size="md">
+                      <InputField
+                        className="text-gray-900"
+                        type="text"
+                        placeholder="correo@ejemplo.com"
+                        placeholderTextColor="#9ca3af"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
+                    </Input>
+                    <Text style={styles.errorText}>
+                      {errors.email?.message ?? ""}
+                    </Text>
+                  </FormControl>
+                )}
+              />
 
-                <Controller
-                  control={control}
-                  name="password"
-                  rules={{
-                    required: "La contraseña es obligatoria.",
-                    minLength: {
-                      value: 6,
-                      message: "Se requieren al menos 6 caracteres.",
-                    },
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl
-                      size="md"
-                      isInvalid={!!errors.password}
-                      isRequired
-                    >
-                      <FormControlLabel>
-                        <FormControlLabelText className="text-gray-700">
-                          Contraseña
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input className="my-1 bg-white" size="md">
-                        <InputField
-                          className="text-gray-900"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          placeholderTextColor="#9ca3af"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                        />
-                        <InputSlot
-                          className="pr-3"
-                          onPress={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <Eye size={20} color="#6b7280" />
-                          ) : (
-                            <EyeOff size={20} color="#6b7280" />
-                          )}
-                        </InputSlot>
-                      </Input>
-                      <Text style={styles.errorText}>
-                        {errors.password?.message ?? ""}
-                      </Text>
-                    </FormControl>
-                  )}
-                />
+              <Controller
+                control={control}
+                name="password"
+                rules={{
+                  required: "La contraseña es obligatoria.",
+                  minLength: {
+                    value: 6,
+                    message: "Se requieren al menos 6 caracteres.",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <FormControl
+                    size="md"
+                    isInvalid={!!errors.password}
+                    isRequired
+                  >
+                    <FormControlLabel>
+                      <FormControlLabelText className="text-gray-700">
+                        Contraseña
+                      </FormControlLabelText>
+                    </FormControlLabel>
+                    <Input className="my-1 bg-white" size="md">
+                      <InputField
+                        className="text-gray-900"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        placeholderTextColor="#9ca3af"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
+                      <InputSlot
+                        className="pr-3"
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <Eye size={20} color="#6b7280" />
+                        ) : (
+                          <EyeOff size={20} color="#6b7280" />
+                        )}
+                      </InputSlot>
+                    </Input>
+                    <Text style={styles.errorText}>
+                      {errors.password?.message ?? ""}
+                    </Text>
+                  </FormControl>
+                )}
+              />
 
-                <Button
-                  size="md"
-                  variant="solid"
-                  style={styles.submitButton}
-                  onPress={handleSubmit(onSubmit)}
-                  isDisabled={login.isPending}
-                >
-                  <ButtonText>
-                    {login.isPending ? "Cargando..." : "Iniciar sesión"}
-                  </ButtonText>
-                </Button>
-              </VStack>
-            </Box>
-          </DesktopScrollView>
-        </ScrollView>
+              <Button
+                size="md"
+                variant="solid"
+                style={styles.submitButton}
+                onPress={handleSubmit(onSubmit)}
+                isDisabled={login.isPending}
+              >
+                <ButtonText>
+                  {login.isPending ? "Cargando..." : "Iniciar sesión"}
+                </ButtonText>
+              </Button>
+            </VStack>
+          </Box>
+        </DesktopScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

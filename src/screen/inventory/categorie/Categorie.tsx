@@ -5,6 +5,7 @@ import {
   CustomTable,
   ModalDelete,
 } from "@/components";
+import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalCategorieDetail } from "@/components/molecules/ModalCategorieDetail/ModalCategorieDetail";
 import { useCategorie } from "@/src/hooks";
@@ -12,7 +13,7 @@ import { useCategorieStore } from "@/src/store/useCategorieStore";
 import { Category } from "@/src/types";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
 
 export const Categorie: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -78,26 +79,28 @@ export const Categorie: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomTable<Category>
-        columns={columns}
-        data={categorie || []}
-        keyExtractor={(row) => row.id}
-        actions={actions}
-        itemsPerPage={10}
-        button={dataButton}
-        onRowPress={hadleModalData}
-      />
-      <ModalCategorieDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <ScrollView style={{ flex: 1 }}>
+      <DesktopScrollView>
+        <CustomTable<Category>
+          columns={columns}
+          data={categorie || []}
+          keyExtractor={(row) => row.id}
+          actions={actions}
+          itemsPerPage={10}
+          button={dataButton}
+          onRowPress={hadleModalData}
+        />
+        <ModalCategorieDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </DesktopScrollView>
+    </ScrollView>
   );
 };

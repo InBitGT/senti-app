@@ -170,8 +170,9 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    // paddingHorizontal: 16,
+    // paddingTop: 24,
+    margin: 20,
   },
   title: { fontSize: 17, fontWeight: "600", color: "#1a1a1a" },
   subtitle: { fontSize: 13, color: "#888", marginTop: 4 },

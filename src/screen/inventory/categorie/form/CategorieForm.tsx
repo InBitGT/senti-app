@@ -124,12 +124,13 @@ export default function CategoryForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
+          style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
+          <DesktopScrollView useWindowHeight>
             <Pressable
               onPress={() => {
                 clearData();

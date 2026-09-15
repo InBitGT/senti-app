@@ -1,4 +1,7 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -14,6 +17,7 @@ import {
   DOCUMENT_TYPE_LABELS,
   FiscalDocument,
 } from "@/src/types/fiscal_document/fiscal_document";
+import { formatCurrency } from "@/src/utils/formatCurrency/formatCurrency";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -21,31 +25,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   data?: FiscalDocument;
+  onViewDetail?: (id: number) => void;
 }
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean;
-}) => {
-  const display =
-    typeof value === "boolean" ? (value ? "Sí" : "No") : (value ?? "—");
-
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const Divider = () => <View style={styles.divider} />;
 
 const StatusBadge = ({ status }: { status: string }) => {
   const isVoided = status === "voided";
@@ -61,14 +42,17 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const formatCurrency = (value: number) =>
-  `Q${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
 export const ModalFiscalDocumentDetail: React.FC<Props> = ({
   isOpen,
   onClose,
   data,
+  onViewDetail,
 }) => {
+  const handleViewDetail = () => {
+    if (!data?.id) return;
+    onViewDetail?.(data.id);
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalBackdrop />
@@ -162,6 +146,9 @@ export const ModalFiscalDocumentDetail: React.FC<Props> = ({
         </ModalBody>
 
         <ModalFooter>
+          <Button variant="solid" size="sm" onPress={handleViewDetail}>
+            <ButtonText>Ver detalle</ButtonText>
+          </Button>
           <Button variant="outline" size="sm" onPress={onClose}>
             <ButtonText>Cerrar</ButtonText>
           </Button>

@@ -6,6 +6,7 @@ export default function InventoryLayout() {
       <Stack.Screen name="warehouse" options={{ title: "Almacén" }} />
       <Stack.Screen name="supplier" options={{ title: "Proveedores" }} />
       <Stack.Screen name="categorie" options={{ title: "Categorias" }} />
+
       <Stack.Screen
         name="entry_stock"
         options={{ title: "Inventario Entrante" }}

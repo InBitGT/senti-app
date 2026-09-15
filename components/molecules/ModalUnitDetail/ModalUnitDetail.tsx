@@ -1,4 +1,7 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -11,6 +14,7 @@ import {
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
+import { formatDateTime } from "@/src/utils/formatDateTime/formatDateTime";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -27,34 +31,6 @@ const UOM_TYPE_LABELS: Record<string, string> = {
   length: "Longitud",
 };
 
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean | null;
-}) => {
-  const display =
-    value === null || value === undefined
-      ? "—"
-      : typeof value === "boolean"
-        ? value
-          ? "Sí"
-          : "No"
-        : value;
-
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
 const StatusBadge = ({ status }: { status?: boolean }) => (
   <View
     style={[styles.badge, { backgroundColor: status ? "#dcfce7" : "#fee2e2" }]}
@@ -64,17 +40,6 @@ const StatusBadge = ({ status }: { status?: boolean }) => (
     </Text>
   </View>
 );
-
-function formatDateTime(dateStr?: string) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("es-GT", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export const ModalUnitDetail: React.FC<Props> = ({ isOpen, onClose, data }) => {
   return (
@@ -117,7 +82,7 @@ export const ModalUnitDetail: React.FC<Props> = ({ isOpen, onClose, data }) => {
               />
               <InfoRow label="Estado" value={data?.status} />
 
-              <View style={styles.divider} />
+              <Divider />
 
               <SectionTitle title="Metadatos" />
               <InfoRow label="ID" value={data?.id} />
@@ -164,21 +129,10 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: "row", gap: 6, marginTop: 6 },
   badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   badgeText: { fontSize: 11, fontWeight: "500" },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    marginBottom: 8,
-    marginTop: 4,
-  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 6,
     alignItems: "flex-start",
   },
-  label: { color: "#6b7280", fontSize: 13, flex: 1 },
-  value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
-  divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
 });

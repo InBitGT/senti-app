@@ -1,15 +1,22 @@
 import { get, post } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import { useAuthStore } from "@/src/store";
-import { Adjustment, InventoryDetail, StockEntry } from "@/src/types/entry_stock/entry_stock.types";
+import {
+  Adjustment,
+  EntryStockDetail,
+  InventoryDetail,
+  StockEntry,
+} from "@/src/types/entry_stock/entry_stock.types";
 
 export async function entryStockFn() {
-  const { claims } = useAuthStore.getState() 
-   
-  if (!claims){
+  const { claims } = useAuthStore.getState();
+
+  if (!claims) {
     throw new Error();
   }
-  const response = await get<StockEntry[]>(ENDPOINT.stockEntry.detail(claims.tenant_id));
+  const response = await get<StockEntry[]>(
+    ENDPOINT.stockEntry.detail(claims.tenant_id),
+  );
   if (response.code !== "200") {
     throw new Error(response.message);
   }
@@ -19,7 +26,7 @@ export async function entryStockFn() {
 
 export async function PostEntry(data: InventoryDetail) {
   const response = await post<InventoryDetail>(ENDPOINT.stockEntry.info, data);
-  console.log(response,"post")
+  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -28,9 +35,26 @@ export async function PostEntry(data: InventoryDetail) {
 }
 
 export async function PostAdjustment(data: Adjustment) {
-  const response = await post<InventoryDetail>(ENDPOINT.stockEntry.adjustment, data);
-  console.log(response,"post")
+  const response = await post<InventoryDetail>(
+    ENDPOINT.stockEntry.adjustment,
+    data,
+  );
+  console.log(response, "post");
   if (response.code !== "201") {
+    throw new Error(response.message);
+  }
+
+  return response.data;
+}
+
+export async function entryStockByIDFn(ID: number | string) {
+  const { claims } = useAuthStore.getState();
+
+  if (!claims) {
+    throw new Error();
+  }
+  const response = await get<EntryStockDetail>(ENDPOINT.stockEntry.byID(ID));
+  if (response.code !== "200") {
     throw new Error(response.message);
   }
 

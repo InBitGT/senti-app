@@ -31,24 +31,15 @@ import { useCashRegister } from "@/src/hooks/useCashRegister/useCashRegister";
 import { useCashRegisterUsers } from "@/src/hooks/useCashRegisterUsers/useCashRegisterUsers";
 import { useOpenCashRegister } from "@/src/hooks/useOpenCashRegister/useOpenCashRegister";
 import { useAuthStore } from "@/src/store";
+import { sanitizeDecimal } from "@/src/utils/sanitizeDecimal/sanitizeDecimal";
 import { ChevronDown, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { ScrollView, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 
 interface OpenCashRegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpened: () => void;
-}
-
-function sanitizeDecimal(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, "");
-  const firstDot = cleaned.indexOf(".");
-  if (firstDot === -1) return cleaned;
-  return (
-    cleaned.slice(0, firstDot + 1) +
-    cleaned.slice(firstDot + 1).replace(/\./g, "")
-  );
 }
 
 export const OpenCashRegisterModal: React.FC<OpenCashRegisterModalProps> = ({
@@ -245,45 +236,41 @@ export const OpenCashRegisterModal: React.FC<OpenCashRegisterModalProps> = ({
               )}
 
               {otherUsers.length > 0 && (
-                <ScrollView className="max-h-40">
-                  <DesktopScrollView>
-                    <VStack space="xs">
-                      {otherUsers.map((u) => {
-                        const active = !!coUsers[u.id];
-                        return (
-                          <TouchableOpacity
-                            key={u.id}
-                            onPress={() => toggleCoUser(u.id)}
-                          >
-                            <HStack className="items-center justify-between rounded-md border border-gray-200 px-3 py-2">
-                              <Text className="text-sm text-gray-900">
-                                {u.first_name}
+                <DesktopScrollView className="max-h-40">
+                  <VStack space="xs">
+                    {otherUsers.map((u) => {
+                      const active = !!coUsers[u.id];
+                      return (
+                        <TouchableOpacity
+                          key={u.id}
+                          onPress={() => toggleCoUser(u.id)}
+                        >
+                          <HStack className="items-center justify-between rounded-md border border-gray-200 px-3 py-2">
+                            <Text className="text-sm text-gray-900">
+                              {u.first_name}
+                            </Text>
+                            <HStack space="xs" className="items-center">
+                              <Text className="text-[10px] text-gray-400">
+                                puede cerrar
                               </Text>
-                              <HStack space="xs" className="items-center">
-                                <Text className="text-[10px] text-gray-400">
-                                  puede cerrar
-                                </Text>
-                                <Box
-                                  className={`h-5 w-5 items-center justify-center rounded border ${
-                                    active
-                                      ? "border-blue-600 bg-blue-600"
-                                      : "border-gray-300 bg-white"
-                                  }`}
-                                >
-                                  {active && (
-                                    <Text className="text-xs text-white">
-                                      ✓
-                                    </Text>
-                                  )}
-                                </Box>
-                              </HStack>
+                              <Box
+                                className={`h-5 w-5 items-center justify-center rounded border ${
+                                  active
+                                    ? "border-blue-600 bg-blue-600"
+                                    : "border-gray-300 bg-white"
+                                }`}
+                              >
+                                {active && (
+                                  <Text className="text-xs text-white">✓</Text>
+                                )}
+                              </Box>
                             </HStack>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </VStack>
-                  </DesktopScrollView>
-                </ScrollView>
+                          </HStack>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </VStack>
+                </DesktopScrollView>
               )}
             </VStack>
 

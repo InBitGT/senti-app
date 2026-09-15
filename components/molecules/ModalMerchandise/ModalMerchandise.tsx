@@ -1,4 +1,8 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -26,40 +30,6 @@ const TYPE_LABELS: Record<string, string> = {
   finished_product: "Producto terminado",
   menu_item: "Ítem de menú",
 };
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean | null;
-}) => {
-  const display =
-    value === null || value === undefined
-      ? "—"
-      : typeof value === "boolean"
-        ? value
-          ? "Sí"
-          : "No"
-        : value;
-
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const Divider = () => <View style={styles.divider} />;
-
-const EmptySection = ({ text }: { text: string }) => (
-  <Text style={styles.emptyText}>{text}</Text>
-);
 
 const StatusBadge = ({ status }: { status?: string }) => {
   const map: Record<string, { bg: string; text: string; label: string }> = {
@@ -157,7 +127,7 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
                   value={`${data.price.currency ?? ""} ${data.price.amount.toFixed(2)}`}
                 />
               ) : (
-                <EmptySection text="Este producto no tiene precio de venta definido." />
+                <EmptyHint label="Este producto no tiene precio de venta definido." />
               )}
 
               {/* ── CONVERSIONES Y PRECIOS POR CLIENTE (resumen) ── */}
@@ -195,7 +165,7 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
                   />
                 </>
               ) : (
-                <EmptySection text="No aplica regla de mayoreo general." />
+                <EmptyHint label="No aplica regla de mayoreo general." />
               )}
 
               {/* ── MODIFICADOR ── */}
@@ -276,27 +246,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#e0e7ff",
   },
   typeBadgeText: { fontSize: 11, fontWeight: "500", color: "#4338ca" },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    marginBottom: 8,
-    marginTop: 4,
-  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 6,
     alignItems: "flex-start",
-  },
-  label: { color: "#6b7280", fontSize: 13, flex: 1 },
-  value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
-  divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
-  emptyText: {
-    fontSize: 12,
-    color: "#9ca3af",
-    fontStyle: "italic",
-    marginBottom: 8,
   },
 });

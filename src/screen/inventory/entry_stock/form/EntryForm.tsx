@@ -742,7 +742,7 @@ export default function InventoryForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"

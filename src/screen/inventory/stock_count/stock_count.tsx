@@ -231,7 +231,7 @@ export function CountScreen() {
     <SafeAreaView style={styles.screen} edges={["bottom", "left", "right"]}>
       <ScrollView
         style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 20 }}
-        contentContainerStyle={{ gap: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ gap: 20, paddingBottom: 100 }}
       >
         <DesktopScrollView>
           <HStack className="items-center gap-3">
@@ -399,6 +399,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0C447C",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 10,
   },
   headerTitle: { fontSize: 18, fontWeight: "600", color: "#1a1a1a" },
   headerSubtitle: { fontSize: 13, color: "#888" },
@@ -409,6 +410,7 @@ const styles = StyleSheet.create({
     borderColor: "#d4d4d4",
     padding: 16,
     gap: 10,
+    marginTop: 10,
   },
   cardLabel: { fontSize: 13, fontWeight: "500", color: "#1a1a1a" },
   cardTitle: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
@@ -421,18 +423,16 @@ const styles = StyleSheet.create({
   },
   loadingText: { fontSize: 13, color: "#888" },
   footerBar: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 16,
     justifyContent: "space-between",
     alignItems: "center",
     borderRadius: 15,
     borderWidth: 0.5,
     borderColor: "#d4d4d4",
     backgroundColor: "#ffffffF2",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    // paddingHorizontal: 16,
+    // paddingVertical: 14,
+    margin: 10,
+    padding: 15,
   },
   footerText: { fontSize: 13 },
   footerCount: { fontWeight: "600", color: "#1a1a1a" },

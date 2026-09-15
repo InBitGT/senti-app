@@ -29,7 +29,7 @@ import {
   Plus,
   Tag,
 } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { FlatList, useWindowDimensions } from "react-native";
 
 function toNumber(v: unknown): number {
@@ -53,13 +53,6 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
 
   const wholesalePrice = finalPrice > 0 ? finalPrice : normalPrice;
 
-  if (__DEV__ && normalPrice === 0) {
-    console.warn(
-      `[POS] "${api.name}" (id ${api.product_id}) llegó sin precio normal utilizable. base_price=${api.base_price} customer_type_price=${api.customer_type_price}`,
-      api,
-    );
-  }
-
   const baseUnit: SellUnit = {
     uom_id: Number(api.unit_of_measure_id),
     code: api.unit_of_measure_code,
@@ -74,13 +67,6 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
     const unitPrice = specialPrice > 0 ? specialPrice : normalPrice * c.factor;
     const wholesaleUnitPrice = wholesalePrice * c.factor;
 
-    if (__DEV__ && specialPrice > 0) {
-      console.warn(
-        `[POS] "${api.name}": la unidad "${c.from_uom_name}" tiene precio especial de conversión Q${specialPrice} ` +
-          `(en vez de Q${normalPrice * c.factor} que daría normalPrice * factor).`,
-      );
-    }
-
     return {
       uom_id: Number(c.id),
       code: c.from_uom_code,
@@ -92,19 +78,6 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
   });
 
   const units = [baseUnit, ...conversionUnits];
-
-  if (__DEV__ && conversionUnits.length > 0) {
-    console.warn(
-      `[POS] unidades de "${api.name}" (id ${api.product_id}):`,
-      units.map(
-        (u) =>
-          `${u.name} (uom_id=${u.uom_id}) = ${u.factorToBase} ${baseUnit.name}(s), ` +
-          `normal=Q${u.unitPrice}, mayoreo=Q${u.wholesaleUnitPrice}`,
-      ),
-      "conversions crudo del API:",
-      api.conversions,
-    );
-  }
 
   const hasParent =
     !!api.parent_category_id && !!api.parent_category_name?.trim();
@@ -148,7 +121,7 @@ function ProductCard({
   onAdd: (unit: SellUnit) => void;
   duplicatedSku: boolean;
 }) {
-  const [selectedUomId, setSelectedUomId] = useState<number>(
+  const [selectedUomId, setSelectedUomId] = React.useState<number>(
     Number(product.units[0].uom_id),
   );
   const unit =
@@ -177,23 +150,24 @@ function ProductCard({
     ? unit.wholesaleUnitPrice
     : unit.unitPrice;
 
-  console.log("product card", product);
   return (
-    <Box className="m-1.5 flex-1 rounded-xl border border-gray-200 bg-white p-3">
-      <VStack space="xs">
-        <HStack className="items-start justify-between">
-          <Text
-            className="flex-1 text-sm font-semibold text-gray-900"
-            numberOfLines={2}
-          >
-            {product.name}
-          </Text>
+    <Box className="m-1.5 min-w-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white p-3">
+      <VStack space="xs" className="flex-grow">
+        <HStack className="items-start justify-between" space="xs">
+          <Box className="min-w-0 flex-1">
+            <Text
+              className="text-sm font-semibold text-gray-900"
+              numberOfLines={2}
+            >
+              {product.name}
+            </Text>
+          </Box>
           <Badge
             size="sm"
             variant="solid"
-            className={`ml-1.5 rounded-full ${noStockAtAll ? "bg-red-500" : "bg-gray-400"}`}
+            className={`shrink-0 rounded-full ${noStockAtAll ? "bg-red-500" : "bg-gray-400"}`}
           >
-            <BadgeText className="text-white">
+            <BadgeText className="text-white" numberOfLines={1}>
               {noStockAtAll
                 ? "Agotado"
                 : qtyInCart > 0
@@ -205,6 +179,7 @@ function ProductCard({
 
         <Text
           className={`font-mono text-[10px] ${duplicatedSku ? "text-amber-600" : "text-gray-400"}`}
+          numberOfLines={1}
         >
           {product.sku} - {product?.brand}
           {duplicatedSku ? "  ⚠ SKU duplicado" : ""}
@@ -218,9 +193,10 @@ function ProductCard({
               className={isWholesaleActive ? "text-green-600" : "text-blue-600"}
             />
             <Text
-              className={`text-[10px] font-medium ${
+              className={`flex-1 text-[10px] font-medium ${
                 isWholesaleActive ? "text-green-600" : "text-blue-600"
               }`}
+              numberOfLines={1}
             >
               mayoreo x{product.wholesale_min_qty} (-
               {product.wholesale_discount_pct}%)
@@ -232,8 +208,6 @@ function ProductCard({
         <HStack className="items-baseline">
           {product.hasPrice ? (
             <>
-              {/* Muestra el precio de mayoreo solo si ya se alcanzó la
-                  cantidad mínima en el carrito; si no, el precio normal. */}
               <Text className="text-base font-semibold text-gray-900">
                 {formatCurrency(displayUnitPrice)}
               </Text>
@@ -248,7 +222,6 @@ function ProductCard({
           )}
         </HStack>
 
-        {/* Aviso cuando la unidad elegida no entra en lo que queda de stock */}
         {wouldExceedStock && (
           <Text className="text-[10px] font-medium text-amber-600">
             Solo quedan {formatQty(remainingStock)} disponibles, no alcanza para
@@ -256,86 +229,96 @@ function ProductCard({
           </Text>
         )}
 
-        <HStack space="xs" className="items-center">
-          {product.units.length > 1 && (
-            <Select
-              // Forzamos remount del Select cada vez que cambia la unidad
-              // elegida, para que el SelectInput siempre refleje
-              // `unit.name` actual y no se quede mostrando texto viejo.
-              key={`unit-select-${product.product_id}-${unit.uom_id}`}
-              selectedValue={String(unit.uom_id)}
-              onValueChange={(v) => setSelectedUomId(Number(v))}
-              className="flex-1"
-            >
-              <SelectTrigger
-                variant="outline"
-                size="sm"
-                className="justify-between border-gray-300 bg-white"
-              >
-                <SelectInput
-                  placeholder="Unidad"
-                  value={unit.name}
-                  className="text-xs text-gray-900"
-                />
-                <Icon
-                  as={ChevronDown}
-                  size="xs"
-                  className="mr-2 text-gray-400"
-                />
-              </SelectTrigger>
-              <SelectPortal>
-                <SelectBackdrop />
-                <SelectContent className="bg-white">
-                  <SelectDragIndicatorWrapper>
-                    <SelectDragIndicator />
-                  </SelectDragIndicatorWrapper>
-                  {product.units.map((u) => (
-                    <SelectItem
-                      key={u.uom_id}
-                      label={
-                        u.factorToBase !== 1
-                          ? `${u.name} (=${u.factorToBase}) — ${formatCurrency(isWholesaleActive ? u.wholesaleUnitPrice : u.unitPrice)}`
-                          : u.name
-                      }
-                      value={String(u.uom_id)}
-                    />
-                  ))}
-                </SelectContent>
-              </SelectPortal>
-            </Select>
-          )}
-          <Button
-            size="sm"
-            variant="solid"
-            isDisabled={soldOut}
-            onPress={() => {
-              if (__DEV__) {
-                console.warn(
-                  `[POS] Añadir "${product.name}" con unidad:`,
-                  unit,
-                  `remainingStock=${remainingStock}`,
-                  `isWholesaleActive=${isWholesaleActive}`,
-                );
-              }
-              onAdd(unit);
-            }}
-            className="shrink-0 bg-blue-600 disabled:bg-gray-300"
+        {/* El select de unidades va en su propia fila a ancho completo:
+            antes competía por espacio horizontal con el botón "Añadir" y en
+            cards angostas (3-4 columnas) quedaba invisible/cortado. */}
+        {product.units.length > 1 && (
+          <Select
+            key={`unit-select-${product.product_id}-${unit.uom_id}`}
+            selectedValue={String(unit.uom_id)}
+            onValueChange={(v) => setSelectedUomId(Number(v))}
           >
-            <ButtonIcon as={Plus} className="text-white" />
-            <ButtonText className="text-white">Añadir</ButtonText>
-          </Button>
-        </HStack>
+            <SelectTrigger
+              variant="outline"
+              size="sm"
+              className="w-full justify-between border-gray-300 bg-white"
+            >
+              <SelectInput
+                placeholder="Unidad"
+                value={unit.name}
+                className="flex-1 text-xs text-gray-900"
+              />
+              <Icon
+                as={ChevronDown}
+                size="xs"
+                className="mr-2 shrink-0 text-gray-400"
+              />
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectBackdrop />
+              <SelectContent className="bg-white">
+                <SelectDragIndicatorWrapper>
+                  <SelectDragIndicator />
+                </SelectDragIndicatorWrapper>
+                {product.units.map((u) => (
+                  <SelectItem
+                    key={u.uom_id}
+                    label={
+                      u.factorToBase !== 1
+                        ? `${u.name} (=${u.factorToBase}) — ${formatCurrency(isWholesaleActive ? u.wholesaleUnitPrice : u.unitPrice)}`
+                        : u.name
+                    }
+                    value={String(u.uom_id)}
+                  />
+                ))}
+              </SelectContent>
+            </SelectPortal>
+          </Select>
+        )}
       </VStack>
+      <Button
+        size="sm"
+        variant="solid"
+        isDisabled={soldOut}
+        onPress={() => onAdd(unit)}
+        className="w-full bg-blue-600 disabled:bg-gray-300 mt-3"
+      >
+        <ButtonIcon as={Plus} className="text-white" />
+        <ButtonText className="text-white">Añadir</ButtonText>
+      </Button>
     </Box>
   );
 }
 
-// Mismo breakpoint que Pos.tsx para decidir layout desktop/tablet vs móvil.
-const DESKTOP_BREAKPOINT = 768;
-
 // ---------------------------------------------------------------------------
 // Grid del catálogo
 // ---------------------------------------------------------------------------
+
+// Mismo breakpoint que Pos.tsx para decidir layout desktop/tablet vs móvil.
+const MOBILE_BREAKPOINT = 768;
+const TABLET_BREAKPOINT = 1024;
+
+// Sin medición de contenedor (onLayout): eso causaba que en móvil el
+// FlatList a veces no llegara a pintar contenido (altura 0 durante el
+// primer layout) y además generaba remounts al fluctuar la medición.
+// Ahora las columnas se derivan solo de useWindowDimensions, igual que
+// hace Pos.tsx para decidir isDesktop.
+function computeNumColumns(windowWidth: number): number {
+  if (windowWidth < MOBILE_BREAKPOINT) return 2; // teléfono: siempre 2
+  if (windowWidth < TABLET_BREAKPOINT) return 3; // tablet / desktop angosto
+  return 4; // desktop ancho
+}
+
+// Item real o "relleno" invisible para completar la última fila y que
+// todas las cards del grid tengan siempre el mismo ancho (evita que la
+// última fila, al tener menos elementos, se estire y se vea distinta).
+type FillerItem = { __filler: true; product_id: string };
+type GridItem = CatalogProduct | FillerItem;
+
+function isFiller(item: GridItem): item is FillerItem {
+  return "__filler" in item;
+}
+
 export function ProductCatalog({
   data,
   onAddToCart,
@@ -345,10 +328,17 @@ export function ProductCatalog({
   onAddToCart?: (product: CatalogProduct, unit: SellUnit) => void;
   onPress: () => void;
 }) {
-  const { width } = useWindowDimensions();
-  const numColumns = width >= DESKTOP_BREAKPOINT ? 4 : 2;
+  const { width: windowWidth } = useWindowDimensions();
+  const numColumns = computeNumColumns(windowWidth);
 
-  const products = useMemo(() => data.map(mapApiProductToProduct), [data]);
+  const products = useMemo(() => {
+    const mapped = data.map(mapApiProductToProduct);
+    return [...mapped].sort((a, b) => {
+      const aOut = a.stock_qty <= 0 ? 1 : 0;
+      const bOut = b.stock_qty <= 0 ? 1 : 0;
+      return aOut - bOut;
+    });
+  }, [data]);
 
   const dupSkus = useMemo(() => {
     const seen = new Map<string, number>();
@@ -357,6 +347,17 @@ export function ProductCatalog({
       [...seen].filter(([, count]) => count > 1).map(([sku]) => sku),
     );
   }, [products]);
+
+  const gridItems = useMemo<GridItem[]>(() => {
+    const remainder = products.length % numColumns;
+    if (remainder === 0) return products;
+    const fillersNeeded = numColumns - remainder;
+    const fillers: FillerItem[] = Array.from(
+      { length: fillersNeeded },
+      (_, i) => ({ __filler: true, product_id: `filler-${i}` }),
+    );
+    return [...products, ...fillers];
+  }, [products, numColumns]);
 
   if (products.length === 0) {
     return (
@@ -387,17 +388,23 @@ export function ProductCatalog({
       )}
 
       <FlatList
-        data={products}
+        data={gridItems}
         key={`catalog-grid-${numColumns}col`}
         numColumns={numColumns}
-        keyExtractor={(item) => String(item.product_id)}
-        renderItem={({ item }) => (
-          <ProductCard
-            product={item}
-            duplicatedSku={dupSkus.has(item.sku)}
-            onAdd={(unit) => onAddToCart?.(item, unit)}
-          />
-        )}
+        keyExtractor={(item) =>
+          isFiller(item) ? item.product_id : String(item.product_id)
+        }
+        renderItem={({ item }) =>
+          isFiller(item) ? (
+            <Box className="m-1.5 flex-1" />
+          ) : (
+            <ProductCard
+              product={item}
+              duplicatedSku={dupSkus.has(item.sku)}
+              onAdd={(unit) => onAddToCart?.(item, unit)}
+            />
+          )
+        }
       />
     </VStack>
   );

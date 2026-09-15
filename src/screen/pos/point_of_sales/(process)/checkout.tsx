@@ -35,8 +35,10 @@ import { useCatalog } from "@/src/hooks/usePos/usePos";
 import { useAuthStore } from "@/src/store";
 import { CartLine, useCartStore } from "@/src/store/useCartStore/useCartStore";
 import { useCashRegisterSessionStore } from "@/src/store/useCashRegisterSessionStore/useCashRegisterSessionStore";
+import { useStockAlertStore } from "@/src/store/useStockAlertStore/useStockAlertStore";
 import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
 import { CatalogProduct } from "@/src/types/pos/pos";
+import { sanitizeDecimal } from "@/src/utils/sanitizeDecimal/sanitizeDecimal";
 import { router } from "expo-router";
 import {
   AlertTriangle,
@@ -100,22 +102,6 @@ function lineTotal(cart: CartLine[], line: CartLine): number {
   return line.quantity * basePriceForLine(cart, line);
 }
 
-// Deja pasar solo dígitos y un único punto decimal (para montos).
-function sanitizeDecimal(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, "");
-  const firstDot = cleaned.indexOf(".");
-  if (firstDot === -1) return cleaned;
-  return (
-    cleaned.slice(0, firstDot + 1) +
-    cleaned.slice(firstDot + 1).replace(/\./g, "")
-  );
-}
-
-// Deja pasar solo dígitos (para el NIT).
-function sanitizeDigits(raw: string): string {
-  return raw.replace(/[^0-9]/g, "");
-}
-
 function isCashMethod(method?: PaymentMethod | null) {
   if (!method) return false;
   const normalized = method.method.toLowerCase();
@@ -159,6 +145,7 @@ export const Checkout: React.FC = () => {
   const { data: paymentMethods, isLoading: isLoadingPayment } =
     usePaymentMethod();
   const { data: customerType } = useCustomerType();
+  const setStockAlert = useStockAlertStore((s) => s.setAlert);
 
   const methods = useMemo(
     () =>
@@ -196,14 +183,17 @@ export const Checkout: React.FC = () => {
 
   // Modal de stock insuficiente. `blockedProductIds` guarda los productos
   // del carrito cuyo stock real (recién refrescado) ya no alcanza para lo
-  // pedido. No se reinicia el carrito: esas líneas se marcan como
-  // bloqueadas, se excluyen del total y del payload de checkout, pero el
-  // resto de la venta sigue intacta.
+  // pedido. No se reinicia el carrito completo: esas líneas se marcan
+  // como bloqueadas, se excluyen del total y del payload de checkout,
+  // pero el resto de la venta sigue intacta.
   const [stockErrorOpen, setStockErrorOpen] = useState(false);
   const [checkingStock, setCheckingStock] = useState(false);
   const [blockedProductIds, setBlockedProductIds] = useState<Set<number>>(
     new Set(),
   );
+  // Si es true, al cerrar el modal se limpia el carrito y se regresa a la
+  // pantalla anterior — caso del único producto del carrito sin stock.
+  const [returnAfterStockAck, setReturnAfterStockAck] = useState(false);
 
   // En cuanto cargan los métodos de pago, la primera línea toma el de
   // menor display_order como valor por defecto (si el usuario no la tocó).
@@ -367,7 +357,12 @@ export const Checkout: React.FC = () => {
 
   // Refresca el catálogo y, comparando el stock real contra lo pedido en
   // el carrito, determina qué producto(s) ya no tienen stock suficiente.
-  // No reinicia el carrito: solo marca esas líneas como bloqueadas.
+  // El modal SIEMPRE se muestra para avisarle al usuario.
+  //
+  // Caso especial: si el carrito tenía un ÚNICO producto (sin importar en
+  // cuántas líneas/unidades esté repartido) y ese es el que se quedó sin
+  // stock, no queda nada que cobrar — se avisa igual con el modal, pero
+  // al cerrarlo se limpia todo y se regresa a la pantalla anterior.
   async function handleInsufficientStock() {
     setStockErrorOpen(true);
     setCheckingStock(true);
@@ -380,6 +375,8 @@ export const Checkout: React.FC = () => {
         stockByProduct.set(p.product_id, p.stock_qty),
       );
 
+      const cartProductIds = new Set(cart.map((l) => l.product.product_id));
+
       const nowBlocked = new Set<number>();
       cart.forEach((line) => {
         const productId = line.product.product_id;
@@ -390,9 +387,34 @@ export const Checkout: React.FC = () => {
         }
       });
 
+      const onlyProductInCart = cartProductIds.size === 1;
+      const thatProductIsBlocked =
+        onlyProductInCart && nowBlocked.has([...cartProductIds][0]);
+
       setBlockedProductIds(nowBlocked);
+      setReturnAfterStockAck(thatProductIsBlocked);
     } finally {
       setCheckingStock(false);
+    }
+  }
+
+  // Se llama al cerrar/confirmar el modal de stock insuficiente. Si era
+  // el caso de "único producto y sin stock", recién ahí se limpia el
+  // carrito y se regresa a la pantalla anterior — dejando antes un aviso
+  // en useStockAlertStore para que Pos.tsx muestre un banner señalando
+  // el producto (router.back() no puede pasarle datos directamente).
+  function handleStockModalClose() {
+    setStockErrorOpen(false);
+    if (returnAfterStockAck) {
+      const productId = [...blockedProductIds][0];
+      const productName = blockedProductNames[0];
+      if (productId != null && productName) {
+        setStockAlert({ productId, productName });
+      }
+      clearCart();
+      setBlockedProductIds(new Set());
+      setReturnAfterStockAck(false);
+      router.back();
     }
   }
 
@@ -516,6 +538,10 @@ export const Checkout: React.FC = () => {
                 Resumen del pedido
               </Text>
               {cart.map((line) => {
+                // FIX: antes se mostraba y calculaba todo con
+                // `line.product.price` fijo. Ahora se resuelve el precio
+                // real de esta línea (por unidad base) igual que en el
+                // total y en el payload de checkout.
                 const pricePerBaseUnit = basePriceForLine(cart, line);
                 const wholesale = isWholesaleActiveFor(cart, line.product);
                 const isBlocked = blockedProductIds.has(
@@ -531,23 +557,23 @@ export const Checkout: React.FC = () => {
                     space="xs"
                   >
                     <HStack className="items-center justify-between">
-                    <VStack className="flex-1">
-                      <HStack space="xs" className="items-center">
-                        <Text
+                      <VStack className="flex-1">
+                        <HStack space="xs" className="items-center">
+                          <Text
                             className={`text-sm font-medium ${
                               isBlocked ? "text-gray-400" : "text-gray-900"
                             }`}
-                          numberOfLines={1}
-                        >
-                          {line.product.name}
-                        </Text>
+                            numberOfLines={1}
+                          >
+                            {line.product.name}
+                          </Text>
                           {wholesale && !isBlocked && (
-                          <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
-                            <Text className="text-[9px] font-semibold text-green-700">
-                              mayoreo
-                            </Text>
-                          </Box>
-                        )}
+                            <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
+                              <Text className="text-[9px] font-semibold text-green-700">
+                                mayoreo
+                              </Text>
+                            </Box>
+                          )}
                           {isBlocked && (
                             <Box className="flex-row items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5">
                               <Icon
@@ -560,23 +586,23 @@ export const Checkout: React.FC = () => {
                               </Text>
                             </Box>
                           )}
-                      </HStack>
-                      {/* `quantity` ya está en unidades base: se muestra junto
-                        al código de la unidad base, y si se compró en una
-                        unidad distinta (ej. "Caja"), se aclara entre
-                        paréntesis cuántas de esas representa. */}
+                        </HStack>
+                        {/* `quantity` ya está en unidades base: se muestra junto
+                          al código de la unidad base, y si se compró en una
+                          unidad distinta (ej. "Caja"), se aclara entre
+                          paréntesis cuántas de esas representa. */}
                         <Text
                           className={`text-xs ${
                             isBlocked ? "text-gray-300" : "text-gray-400"
                           }`}
                         >
-                        {line.quantity} {line.product.units[0]?.code}
-                        {line.unit.factorToBase !== 1 &&
-                          ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
-                        {" × "}
-                        {formatCurrency(pricePerBaseUnit)}
-                      </Text>
-                    </VStack>
+                          {line.quantity} {line.product.units[0]?.code}
+                          {line.unit.factorToBase !== 1 &&
+                            ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
+                          {" × "}
+                          {formatCurrency(pricePerBaseUnit)}
+                        </Text>
+                      </VStack>
                       <Text
                         className={`text-sm font-semibold ${
                           isBlocked
@@ -584,9 +610,9 @@ export const Checkout: React.FC = () => {
                             : "text-gray-900"
                         }`}
                       >
-                      {formatCurrency(lineTotal(cart, line))}
-                    </Text>
-                  </HStack>
+                        {formatCurrency(lineTotal(cart, line))}
+                      </Text>
+                    </HStack>
 
                     {isBlocked && (
                       <HStack className="items-center justify-between">
@@ -656,41 +682,6 @@ export const Checkout: React.FC = () => {
 
               {showCustomer && (
                 <VStack space="sm" className="border-t border-gray-100 pt-3">
-                  {/* <Text className="text-xs font-medium text-gray-500">
-                    Tipo de cliente
-                  </Text>
-                  <HStack space="xs">
-                    {customerTypes.map((t) => {
-                      const active =
-                        customerId == null && customerTypeId === t.id;
-                      return (
-                        <TouchableOpacity
-                          key={t.id}
-                          onPress={() => {
-                            setCustomerId(null);
-                            setCustomerTypeId(t.id);
-                          }}
-                        >
-                          <Box
-                            className={`rounded-md border px-2.5 py-1.5 ${
-                              active
-                                ? "border-blue-600 bg-blue-600"
-                                : "border-gray-300 bg-white"
-                            }`}
-                          >
-                            <Text
-                              className={`text-xs font-medium ${
-                                active ? "text-white" : "text-gray-700"
-                              }`}
-                            >
-                              {t.name}
-                            </Text>
-                          </Box>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </HStack> */}
-
                   <Text className="text-xs font-medium text-gray-500">
                     Cliente específico (habilita crédito si aplica)
                   </Text>
@@ -947,64 +938,7 @@ export const Checkout: React.FC = () => {
               )}
             </VStack>
 
-            {/* Documento fiscal */}
-            <VStack
-              className="rounded-xl border border-gray-200 bg-white p-3"
-              space="sm"
-            >
-              <TouchableOpacity
-                onPress={() => setGenerateFiscal((v) => !v)}
-                className="flex-row items-center gap-2"
-              >
-                <Box
-                  className={`h-5 w-5 items-center justify-center rounded border ${
-                    generateFiscal
-                      ? "border-blue-600 bg-blue-600"
-                      : "border-gray-300 bg-white"
-                  }`}
-                >
-                  {generateFiscal && (
-                    <Text className="text-xs text-white">✓</Text>
-                  )}
-                </Box>
-                <Icon as={FileText} size="sm" className="text-gray-500" />
-                <Text className="text-sm font-medium text-gray-900">
-                  Generar documento fiscal (factura)
-                </Text>
-              </TouchableOpacity>
-
-              {generateFiscal && (
-                <VStack space="xs">
-                  <Input
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-300 bg-white"
-                  >
-                    <InputField
-                      value={fiscalNit}
-                      onChangeText={(v) => setFiscalNit(sanitizeDigits(v))}
-                      placeholder="NIT del cliente"
-                      keyboardType="number-pad"
-                      className="text-sm text-gray-900"
-                    />
-                  </Input>
-                  <Input
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-300 bg-white"
-                  >
-                    <InputField
-                      value={fiscalName}
-                      onChangeText={setFiscalName}
-                      placeholder="Nombre del cliente"
-                      className="text-sm text-gray-900"
-                    />
-                  </Input>
-                </VStack>
-              )}
-            </VStack>
-
-            {checkout.isError && (
+            {checkout.isError && !isInsufficientStockError(checkout.error) && (
               <Text className="text-sm font-medium text-red-600">
                 No se pudo registrar la venta. Intenta de nuevo.
               </Text>
@@ -1029,12 +963,11 @@ export const Checkout: React.FC = () => {
 
       {/* Modal de stock insuficiente: al fallar el checkout por esta
         razón, se refresca el catálogo y se identifica cuál producto ya
-        no tiene stock. Ese producto se marca en el resumen (arriba) y
-        queda excluido del total; el resto del carrito no se toca. */}
-      <AlertDialog
-        isOpen={stockErrorOpen}
-        onClose={() => setStockErrorOpen(false)}
-      >
+        no tiene stock. Si era el único producto del carrito, al cerrar
+        el modal se limpia todo y se regresa a la pantalla anterior; si
+        hay más productos, ese queda marcado en el resumen (arriba) y
+        excluido del total, y el resto del carrito no se toca. */}
+      <AlertDialog isOpen={stockErrorOpen} onClose={handleStockModalClose}>
         <AlertDialogBackdrop />
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
@@ -1053,6 +986,11 @@ export const Checkout: React.FC = () => {
                   Verificando existencias actualizadas...
                 </Text>
               </HStack>
+            ) : returnAfterStockAck ? (
+              <Text className="text-sm text-gray-600">
+                &quot;{blockedProductNames[0]}&quot; ya no tiene existencias
+                disponibles. Vas a volver al catálogo para elegir otro producto.
+              </Text>
             ) : blockedProductNames.length > 0 ? (
               <VStack space="xs">
                 <Text className="text-sm text-gray-600">
@@ -1070,7 +1008,7 @@ export const Checkout: React.FC = () => {
                       • {name}
                     </Text>
                   ))}
-    </VStack>
+                </VStack>
               </VStack>
             ) : (
               <Text className="text-sm text-gray-600">
@@ -1083,7 +1021,7 @@ export const Checkout: React.FC = () => {
           <AlertDialogFooter>
             <Button
               className="bg-blue-600"
-              onPress={() => setStockErrorOpen(false)}
+              onPress={handleStockModalClose}
               isDisabled={checkingStock}
             >
               <ButtonText className="text-white">Entendido</ButtonText>

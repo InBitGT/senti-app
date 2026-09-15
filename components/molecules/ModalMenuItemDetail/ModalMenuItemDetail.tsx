@@ -1,4 +1,9 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { Pill } from "@/components/atom/Pill/Pill";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -82,53 +87,6 @@ interface Props {
   onClose: () => void;
   data?: MenuItemDetail;
 }
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean | null;
-}) => {
-  const display =
-    value === null || value === undefined || value === ""
-      ? "—"
-      : typeof value === "boolean"
-        ? value
-          ? "Sí"
-          : "No"
-        : value;
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const Divider = () => <View style={styles.divider} />;
-
-const EmptyHint = ({ label }: { label: string }) => (
-  <Text style={styles.emptyHint}>{label}</Text>
-);
-
-const Pill = ({
-  label,
-  color = "#e0e7ff",
-  textColor = "#4338ca",
-}: {
-  label: string;
-  color?: string;
-  textColor?: string;
-}) => (
-  <View style={[styles.pill, { backgroundColor: color }]}>
-    <Text style={[styles.pillText, { color: textColor }]}>{label}</Text>
-  </View>
-);
 
 const StatusBadge = ({ status }: { status?: string }) => {
   const map: Record<string, { bg: string; text: string; label: string }> = {
@@ -359,19 +317,10 @@ const styles = StyleSheet.create({
   name: { color: "#111827", fontWeight: "600" },
   sku: { color: "#6b7280", fontSize: 12, marginTop: 2 },
   badgeRow: { flexDirection: "row", gap: 6, marginTop: 6 },
-  pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
-  pillText: { fontSize: 11, fontWeight: "500" },
+
   priceBox: { alignItems: "flex-end", marginLeft: 8 },
   priceAmount: { fontSize: 16, fontWeight: "600", color: "#111827" },
   priceBase: { fontSize: 11, color: "#9ca3af", marginTop: 2 },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    marginBottom: 8,
-    marginTop: 4,
-  },
   subTitle: {
     fontSize: 12,
     fontWeight: "500",
@@ -388,12 +337,7 @@ const styles = StyleSheet.create({
   label: { color: "#6b7280", fontSize: 13, flex: 1 },
   value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
   divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
-  emptyHint: {
-    color: "#9ca3af",
-    fontSize: 13,
-    fontStyle: "italic",
-    marginBottom: 4,
-  },
+
   cardRow: {
     flexDirection: "row",
     justifyContent: "space-between",

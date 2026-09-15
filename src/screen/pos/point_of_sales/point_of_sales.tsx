@@ -27,6 +27,7 @@ import { useCashRegisterSession } from "@/src/hooks/useCashRegisterSession/useCa
 import { useCatalog } from "@/src/hooks/usePos/usePos";
 import { useCartStore } from "@/src/store/useCartStore/useCartStore";
 import { useCashRegisterSessionStore } from "@/src/store/useCashRegisterSessionStore/useCashRegisterSessionStore";
+import { useStockAlertStore } from "@/src/store/useStockAlertStore/useStockAlertStore";
 import {
   ApiCatalogProduct,
   CatalogProduct,
@@ -35,9 +36,11 @@ import {
 
 import { router } from "expo-router";
 import {
+  AlertTriangle,
   ArrowLeftRight,
   Minus,
   Plus,
+  RefreshCcw,
   Search,
   ShoppingCart,
   Tag,
@@ -72,11 +75,30 @@ export const Pos: React.FC = () => {
   const [cashInfoOpen, setCashInfoOpen] = useState(false);
   const [cashMovementOpen, setCashMovementOpen] = useState(false);
 
+  // Aviso de "producto sin stock" dejado por Checkout.tsx antes de
+  // regresar con router.back() — como esa navegación no puede pasar
+  // datos directamente, se usa este store como puente.
+  const stockAlert = useStockAlertStore((s) => s.alert);
+  const clearStockAlert = useStockAlertStore((s) => s.clearAlert);
+
   useEffect(() => {
     if (session.data) {
       setSession(session.data);
     }
   }, [session.data, setSession]);
+
+  // Al volver del checkout por falta de stock, refrescamos el catálogo
+  // por si acaso: Checkout ya hizo su propio refetch (mismo queryKey
+  // "pos-catalog", así que la caché normalmente ya viene actualizada),
+  // pero este refetch extra cubre el caso de que haya quedado obsoleta o
+  // esta pantalla se haya vuelto a montar.
+  useEffect(() => {
+    if (stockAlert) {
+      refetch();
+    }
+    // Solo debe dispararse cuando aparece un aviso nuevo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stockAlert]);
 
   const cart = useCartStore((s) => s.cart);
   const addLine = useCartStore((s) => s.addLine);
@@ -302,6 +324,15 @@ export const Pos: React.FC = () => {
                 {/* Ambos solo aparecen si la persona tiene una caja abierta */}
                 {session.data && (
                   <>
+                    <TouchableOpacity onPress={() => refetch()}>
+                      <Box className="h-11 w-11 items-center justify-center rounded-lg border border-gray-300 bg-white">
+                        <Icon
+                          as={RefreshCcw}
+                          size="sm"
+                          className="text-blue-600"
+                        />
+                      </Box>
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => setCashInfoOpen(true)}>
                       <Box className="h-11 w-11 items-center justify-center rounded-lg border border-gray-300 bg-white">
                         <Icon as={Wallet} size="sm" className="text-blue-600" />
@@ -363,7 +394,7 @@ export const Pos: React.FC = () => {
                 subcategories.length > 0 &&
                 (Platform.OS === "web" ? (
                   <DesktopScrollView horizontal>
-                    <HStack space="xs" className="mb-24">
+                    <HStack space="xs">
                       <SubcategoryPill
                         label="Todo"
                         active={subcategoryId === null}
@@ -401,6 +432,24 @@ export const Pos: React.FC = () => {
             </VStack>
 
             <Box className="flex-1 px-1.5 pt-2">
+              {stockAlert && (
+                <HStack
+                  space="xs"
+                  className="mb-2 items-center rounded-lg border border-red-300 bg-red-50 p-2.5"
+                >
+                  <Icon as={AlertTriangle} size="sm" className="text-red-600" />
+                  <Text className="flex-1 text-xs text-red-700">
+                    <Text className="font-semibold text-red-700">
+                      {stockAlert.productName}
+                    </Text>{" "}
+                    ya no tiene existencias disponibles.
+                  </Text>
+                  <TouchableOpacity onPress={clearStockAlert}>
+                    <Icon as={X} size="xs" className="text-red-400" />
+                  </TouchableOpacity>
+                </HStack>
+              )}
+
               <ProductCatalog
                 data={filtered as ApiCatalogProduct[]}
                 onAddToCart={handleAddToCart}

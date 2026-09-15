@@ -18,19 +18,10 @@ import { useCashMovement } from "@/src/hooks/useCashMovement/useCashMovement";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useAuthStore } from "@/src/store";
 import { CashMovementType } from "@/src/types/cash_register/cash_register";
+import { sanitizeDecimal } from "@/src/utils/sanitizeDecimal/sanitizeDecimal";
 import { ArrowDownCircle, ArrowUpCircle, X } from "lucide-react-native";
 import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
-
-function sanitizeDecimal(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, "");
-  const firstDot = cleaned.indexOf(".");
-  if (firstDot === -1) return cleaned;
-  return (
-    cleaned.slice(0, firstDot + 1) +
-    cleaned.slice(firstDot + 1).replace(/\./g, "")
-  );
-}
 
 export const CashMovementModal: React.FC<{
   isOpen: boolean;

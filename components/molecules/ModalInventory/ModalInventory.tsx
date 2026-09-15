@@ -1,4 +1,9 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
+import { StatBox } from "@/components/atom/StatBox/StatBox";
+import { StatusBadge } from "@/components/atom/StatusBadge/StatusBadge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -11,6 +16,7 @@ import {
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { InventoryStockItem } from "@/src/types/inventory/inventory";
+import { formatCurrency } from "@/src/utils/formatCurrency/formatCurrency";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -19,55 +25,6 @@ interface Props {
   onClose: () => void;
   data?: InventoryStockItem;
 }
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | null;
-}) => (
-  <View style={styles.row}>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value ?? "—"}</Text>
-  </View>
-);
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const Divider = () => <View style={styles.divider} />;
-
-const StatBox = ({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string | number;
-  color: string;
-}) => (
-  <View style={styles.statBox}>
-    <Text style={styles.statLabel}>{label}</Text>
-    <Text style={[styles.statValue, { color }]}>{value}</Text>
-  </View>
-);
-
-const StatusBadge = ({ availableQty }: { availableQty: number }) => {
-  const isEmpty = availableQty <= 0;
-  const bg = isEmpty ? "#fee2e2" : "#dcfce7";
-  const color = isEmpty ? "#dc2626" : "#16a34a";
-  const label = isEmpty ? "Sin stock" : "Disponible";
-  return (
-    <View style={[styles.badge, { backgroundColor: bg }]}>
-      <Text style={[styles.badgeText, { color }]}>{label}</Text>
-    </View>
-  );
-};
-
-const formatCurrency = (value: number) =>
-  `Q${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export const ModalInventoryStockDetail: React.FC<Props> = ({
   isOpen,
@@ -154,8 +111,6 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "center", flex: 1 },
   name: { color: "#111827", fontWeight: "600" },
   sku: { color: "#6b7280", fontSize: 12, marginTop: 2 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  badgeText: { fontSize: 12, fontWeight: "500" },
   sectionTitle: {
     fontSize: 11,
     fontWeight: "600",
@@ -170,18 +125,5 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     alignItems: "flex-start",
   },
-  label: { color: "#6b7280", fontSize: 13, flex: 1 },
-  value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
-  divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
   statsRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
-  statBox: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-    borderRadius: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-  statLabel: { fontSize: 11, color: "#6b7280", marginBottom: 2 },
-  statValue: { fontSize: 16, fontWeight: "700" },
 });

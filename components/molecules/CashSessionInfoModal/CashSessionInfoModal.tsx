@@ -17,27 +17,12 @@ import { VStack } from "@/components/ui/vstack";
 import { useCloseCashRegister } from "@/src/hooks/useCloseCashRegister/useCloseCashRegister";
 import { useAuthStore } from "@/src/store";
 import { CashRegisterSession } from "@/src/types/cash_register_session/cash_register_session";
+import { formatDateTime } from "@/src/utils/formatDateTime/formatDateTime";
+import { sanitizeDecimal } from "@/src/utils/sanitizeDecimal/sanitizeDecimal";
 import { router } from "expo-router";
 import { CreditCard, User, Wallet, X } from "lucide-react-native";
 import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("es-GT", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
-}
-
-function sanitizeDecimal(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, "");
-  const firstDot = cleaned.indexOf(".");
-  if (firstDot === -1) return cleaned;
-  return (
-    cleaned.slice(0, firstDot + 1) +
-    cleaned.slice(firstDot + 1).replace(/\./g, "")
-  );
-}
 
 export const CashSessionInfoModal: React.FC<{
   isOpen: boolean;
@@ -105,7 +90,7 @@ export const CashSessionInfoModal: React.FC<{
               <HStack className="items-center justify-between">
                 <Text className="text-xs text-gray-500">Abierta desde</Text>
                 <Text className="text-sm font-medium text-gray-900">
-                  {formatDate(session.opening_datetime)}
+                  {formatDateTime(session.opening_datetime)}
                 </Text>
               </HStack>
               <HStack className="items-center justify-between">
