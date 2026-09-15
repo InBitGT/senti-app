@@ -3,27 +3,27 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
 import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
 } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -38,12 +38,12 @@ import { AlertCircleIcon, ArrowLeftIcon } from "lucide-react-native";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -106,7 +106,7 @@ export default function PreviousCreditForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}

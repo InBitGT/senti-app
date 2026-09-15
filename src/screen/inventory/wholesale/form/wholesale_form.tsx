@@ -128,7 +128,7 @@ export default function ProductWholesaleForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}

@@ -138,7 +138,7 @@ export default function LoanPaymentForm() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+        <SafeAreaView className="flex-1" edges={["top"]} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }}>
             <DesktopScrollView>
               <Center style={{ flex: 1 }}>
@@ -222,7 +222,7 @@ export default function LoanPaymentForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
