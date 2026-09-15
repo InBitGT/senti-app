@@ -6,47 +6,41 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useAuthStore } from "@/src/store";
 import { CashRegisterSession } from "@/src/types/cash_register_session/cash_register_session";
+import { UseQueryResult } from "@tanstack/react-query";
 import { Lock } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const ROLES_THAT_CAN_OPEN_REGISTER = [1, 2];
 
 interface CashRegisterGateProps {
   children: React.ReactNode;
-  session: {
-    data: CashRegisterSession | null | undefined;
-    isLoading: boolean;
-    refetch: () => void;
-  };
+  session: UseQueryResult<CashRegisterSession | null, Error>;
+  refetchProduct?: () => void;
 }
 
 export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
   children,
   session,
+  refetchProduct,
 }) => {
   const claims = useAuthStore((s) => s.claims);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   const canOpenRegister =
     !!claims && ROLES_THAT_CAN_OPEN_REGISTER.includes(claims.role_id);
 
-  const hasAutoOpened = useRef(false);
-
   useEffect(() => {
-    if (
-      !session.isLoading &&
-      !session.data &&
-      canOpenRegister &&
-      !hasAutoOpened.current
-    ) {
-      hasAutoOpened.current = true;
+    if (!session.isLoading && !session.data && canOpenRegister && !dismissed) {
       setModalOpen(true);
     }
     if (session.data) {
-      hasAutoOpened.current = false;
+      // Si la caja se abrió, "reseteamos" el dismissed para que si en el
+      // futuro se vuelve a cerrar, el modal pueda auto-abrirse de nuevo.
+      setDismissed(false);
     }
-  }, [session.isLoading, session.data, canOpenRegister]);
+  }, [session.isLoading, session.data, canOpenRegister, dismissed]);
 
   if (session.isLoading) {
     return (
@@ -72,7 +66,12 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
           No tenés una caja abierta y no tenés permiso para abrir una. Pedile a
           un encargado que la abra para poder vender.
         </Text>
-        <Button onPress={() => session.refetch}>
+        <Button
+          onPress={() => {
+            session.refetch();
+            refetchProduct?.();
+          }}
+        >
           <Text className="text-center text-base font-medium text-white">
             Recargar información
           </Text>
@@ -91,12 +90,22 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
         <Text className="text-center text-sm text-gray-500">
           Abrí la caja para empezar a vender.
         </Text>
-        <Button onPress={() => setModalOpen(true)}>
+        <Button
+          onPress={() => {
+            setDismissed(false);
+            setModalOpen(true);
+          }}
+        >
           <Text className="text-center text-base font-medium text-white">
             Abrir caja
           </Text>
         </Button>
-        <Button onPress={() => session.refetch}>
+        <Button
+          onPress={() => {
+            session.refetch();
+            refetchProduct?.();
+          }}
+        >
           <Text className="text-center text-base font-medium text-white">
             Recargar información
           </Text>
@@ -104,11 +113,13 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
       </VStack>
 
       <OpenCashRegisterModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onOpened={() => {
-          session.refetch();
+        isOpen={!session.isLoading && modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setDismissed(true);
         }}
+        onRefresh={() => session.refetch()}
+        isRefreshing={session.isFetching}
       />
     </>
   );

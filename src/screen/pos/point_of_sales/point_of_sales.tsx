@@ -74,10 +74,6 @@ export const Pos: React.FC = () => {
   const setSession = useCashRegisterSessionStore((s) => s.setSession);
   const [cashInfoOpen, setCashInfoOpen] = useState(false);
   const [cashMovementOpen, setCashMovementOpen] = useState(false);
-
-  // Aviso de "producto sin stock" dejado por Checkout.tsx antes de
-  // regresar con router.back() — como esa navegación no puede pasar
-  // datos directamente, se usa este store como puente.
   const stockAlert = useStockAlertStore((s) => s.alert);
   const clearStockAlert = useStockAlertStore((s) => s.clearAlert);
 
@@ -87,16 +83,10 @@ export const Pos: React.FC = () => {
     }
   }, [session.data, setSession]);
 
-  // Al volver del checkout por falta de stock, refrescamos el catálogo
-  // por si acaso: Checkout ya hizo su propio refetch (mismo queryKey
-  // "pos-catalog", así que la caché normalmente ya viene actualizada),
-  // pero este refetch extra cubre el caso de que haya quedado obsoleta o
-  // esta pantalla se haya vuelto a montar.
   useEffect(() => {
     if (stockAlert) {
       refetch();
     }
-    // Solo debe dispararse cuando aparece un aviso nuevo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stockAlert]);
 
@@ -324,7 +314,12 @@ export const Pos: React.FC = () => {
                 {/* Ambos solo aparecen si la persona tiene una caja abierta */}
                 {session.data && (
                   <>
-                    <TouchableOpacity onPress={() => refetch()}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        refetch();
+                        session.refetch();
+                      }}
+                    >
                       <Box className="h-11 w-11 items-center justify-center rounded-lg border border-gray-300 bg-white">
                         <Icon
                           as={RefreshCcw}
