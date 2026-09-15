@@ -1,4 +1,4 @@
-// app/(drawer)/(inventory)/entry_stock_info.tsx
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { Button, ButtonIcon } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -6,33 +6,16 @@ import { useEntryStockDetail } from "@/src/hooks/useEntryStock/useEntryStock";
 import { EntryStockDetailItem } from "@/src/types/entry_stock/entry_stock.types";
 import { router } from "expo-router";
 import {
-    ArrowLeftIcon,
-    BoxIcon,
-    FileTextIcon,
-    PackageIcon,
-    ReceiptIcon,
-    TruckIcon,
+  ArrowLeftIcon,
+  BoxIcon,
+  FileTextIcon,
+  PackageIcon,
+  ReceiptIcon,
+  TruckIcon,
 } from "lucide-react-native";
 import React from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean | null;
-}) => {
-  if (value === undefined || value === null || value === "") return null;
-  const display = typeof value === "boolean" ? (value ? "Sí" : "No") : value;
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
 
 const SectionCard = ({
   title,

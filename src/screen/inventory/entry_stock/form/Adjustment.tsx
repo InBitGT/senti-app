@@ -1,4 +1,5 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { ProductSearchSelect } from "@/components/atom/ProductSearchSelect/ProductSearchSelect";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -34,11 +35,7 @@ import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useAuthStore } from "@/src/store";
 import { Adjustment } from "@/src/types/entry_stock/entry_stock.types";
 import { useRouter } from "expo-router";
-import {
-  ArrowLeftIcon,
-  ChevronDownIcon,
-  SearchIcon,
-} from "lucide-react-native";
+import { ArrowLeftIcon } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
@@ -83,154 +80,6 @@ const REASON_OPTIONS = [
   { value: "other", label: "Otro" },
 ];
 
-// ── Buscador de producto (autocomplete) ────────────────────────────────────────
-// Reemplaza al <Select> con productos anidados en un ScrollView (que rompía el
-// scroll/touch interno del Select). El usuario escribe y se filtra la lista de
-// productos en tiempo real (por nombre). Al tocar un resultado se guarda su id.
-function ProductSearchSelect({
-  value,
-  onChange,
-  productData,
-  error,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  productData: any[];
-  error?: string;
-}) {
-  const [query, setQuery] = React.useState("");
-  const [isOpen, setIsOpen] = React.useState(false);
-  const blurTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const selectedProduct = useMemo(
-    () => productData?.find((p) => String(p.id) === value),
-    [productData, value],
-  );
-
-  // Cuando el campo tiene un valor seleccionado y el buscador está cerrado,
-  // se muestra el nombre del producto seleccionado en el input.
-  React.useEffect(() => {
-    if (!isOpen) {
-      setQuery(selectedProduct?.name ?? "");
-    }
-  }, [selectedProduct, isOpen]);
-
-  // Limpieza del timeout al desmontar el componente
-  React.useEffect(() => {
-    return () => {
-      if (blurTimeout.current) clearTimeout(blurTimeout.current);
-    };
-  }, []);
-
-  const filtered = useMemo(() => {
-    const list = productData ?? [];
-    const q = query.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((p) => p.name?.toLowerCase().includes(q));
-  }, [query, productData]);
-
-  const handleSelect = (p: any) => {
-    onChange(String(p.id));
-    setQuery(p.name);
-    setIsOpen(false);
-  };
-
-  const handleChangeText = (text: string) => {
-    setQuery(text);
-    if (!isOpen) setIsOpen(true);
-    // Si el texto ya no coincide con el producto seleccionado, se invalida
-    // la selección hasta que el usuario escoja uno de la lista de nuevo.
-    if (value && text !== selectedProduct?.name) {
-      onChange("");
-    }
-  };
-
-  return (
-    <FormControl isInvalid={!!error}>
-      <FormControlLabel>
-        <FormControlLabelText style={{ color: "#000" }}>
-          Producto
-        </FormControlLabelText>
-      </FormControlLabel>
-
-      <Input>
-        <Icon
-          as={SearchIcon}
-          size="sm"
-          style={{ color: "#999", marginLeft: 10 }}
-        />
-        <InputField
-          style={{ color: "#171717" }}
-          placeholder="Escribe para buscar un producto..."
-          value={query}
-          onChangeText={handleChangeText}
-          onFocus={() => {
-            if (blurTimeout.current) {
-              clearTimeout(blurTimeout.current);
-              blurTimeout.current = null;
-            }
-            setIsOpen(true);
-          }}
-          onBlur={() => {
-            // Espera un poco antes de cerrar, para darle tiempo al onPress
-            // del item a ejecutarse primero (evita la race condition)
-            blurTimeout.current = setTimeout(() => {
-              setIsOpen(false);
-            }, 150);
-          }}
-        />
-        <Icon
-          as={ChevronDownIcon}
-          size="sm"
-          style={{ color: "#999", marginRight: 10 }}
-        />
-      </Input>
-
-      {isOpen && (
-        <Box
-          style={styles.dropdown}
-          className="w-full bg-white rounded-[10px]"
-          // @ts-expect-error onMouseDown no está tipado en Box pero sí funciona en RN Web
-          onMouseDown={(e: any) => e.preventDefault?.()}
-        >
-          <DesktopScrollView>
-            {filtered.length === 0 ? (
-              <Text style={{ padding: 12, color: "#999" }}>
-                Sin resultados para “{query}”
-              </Text>
-            ) : (
-              filtered.map((p) => (
-                <Pressable
-                  key={p.id}
-                  onPress={() => {
-                    if (blurTimeout.current) {
-                      clearTimeout(blurTimeout.current);
-                      blurTimeout.current = null;
-                    }
-                    handleSelect(p);
-                  }}
-                  style={({ pressed }) => [
-                    styles.dropdownItem,
-                    pressed && { backgroundColor: "#f0f9ff" },
-                    String(p.id) === value && { backgroundColor: "#eff6ff" },
-                  ]}
-                >
-                  <Text style={{ color: "#171717" }}>{p.name}</Text>
-                </Pressable>
-              ))
-            )}
-          </DesktopScrollView>
-        </Box>
-      )}
-
-      <FormControlError>
-        <FormControlErrorIcon as={AlertCircleIcon} />
-        <FormControlErrorText>{error}</FormControlErrorText>
-      </FormControlError>
-    </FormControl>
-  );
-}
-
 export default function AdjustmentForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
@@ -243,7 +92,6 @@ export default function AdjustmentForm() {
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
-  // Sucursales + bodegas a las que el usuario tiene acceso, según sus claims.
   const branchOptions = useMemo(
     () =>
       (claims?.branches ?? []).map((b) => ({
@@ -259,8 +107,6 @@ export default function AdjustmentForm() {
     [branchOptions],
   );
 
-  // Si el usuario tiene exactamente 1 sucursal y 1 bodega, no se le muestra nada:
-  // se preselecciona automáticamente esa única combinación.
   const hideBranchWarehouseInputs =
     branchOptions.length === 1 && totalWarehouses === 1;
 

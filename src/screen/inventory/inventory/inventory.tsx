@@ -24,7 +24,6 @@ import { ScrollView, View } from "react-native";
 export const InventoryStockScreen: React.FC = () => {
   const { claims } = useAuthStore();
 
-  // Sucursales + bodegas a las que el usuario tiene acceso, según sus claims.
   const branchOptions = useMemo(
     () =>
       (claims?.branches ?? []).map((b) => ({
@@ -40,8 +39,6 @@ export const InventoryStockScreen: React.FC = () => {
     [branchOptions],
   );
 
-  // Si el usuario tiene exactamente 1 sucursal y 1 bodega en total, no se le
-  // muestra ningún select: se usa esa única combinación automáticamente.
   const hideBranchWarehouseSelects =
     branchOptions.length === 1 && totalWarehouses === 1;
 
@@ -49,7 +46,6 @@ export const InventoryStockScreen: React.FC = () => {
     hideBranchWarehouseSelects ? String(branchOptions[0]?.id ?? "") : "",
   );
 
-  // Autoselecciona la primera sucursal en cuanto cargan los claims, si aún no hay ninguna elegida.
   React.useEffect(() => {
     if (!selectedBranchId && branchOptions.length > 0) {
       setSelectedBranchId(String(branchOptions[0].id));
@@ -63,7 +59,6 @@ export const InventoryStockScreen: React.FC = () => {
 
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
 
-  // Al cambiar de sucursal, se limpia la bodega seleccionada (pertenecía a la sucursal anterior).
   const isFirstRender = React.useRef(true);
   React.useEffect(() => {
     if (isFirstRender.current) {
@@ -73,7 +68,6 @@ export const InventoryStockScreen: React.FC = () => {
     setSelectedWarehouseId("");
   }, [selectedBranchId]);
 
-  // Autoselecciona la bodega si la sucursal actual solo tiene una.
   React.useEffect(() => {
     if (!selectedWarehouseId && warehouseOptionsForBranch.length === 1) {
       setSelectedWarehouseId(String(warehouseOptionsForBranch[0].warehouse_id));
@@ -98,7 +92,6 @@ export const InventoryStockScreen: React.FC = () => {
     setModalData(data);
   };
 
-  console.log(stock, "stock");
   return (
     <ScrollView style={{ flex: 1 }}>
       <DesktopScrollView>

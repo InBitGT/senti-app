@@ -6,6 +6,7 @@ import { MerchandiseTable } from "@/components/templates/MerchandiseTable/Mercha
 import { useMerchandise } from "@/src/hooks/useMerchandise/useMerchandise";
 import { useMerchandiseStore } from "@/src/store/useMerchandiseStore/useMerchandiseStore";
 import { MerchandiseListItem } from "@/src/types/merchandise/merchandise.types";
+import { useDimensions } from "@/src/utils/dimentions/dimentions";
 import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
 import React, { useState } from "react";
@@ -20,6 +21,7 @@ export const MerchandiseScreen: React.FC = () => {
   const [modalData, setmodalData] = useState<MerchandiseListItem>();
   const { data: merchandise, isLoading, remove } = useMerchandise();
   const { setData, setIsEdit } = useMerchandiseStore.getState();
+  const isDesktopWeb = useDimensions();
 
   const hadleModalData = (data: MerchandiseListItem) => {
     setShowModalData(true);
@@ -28,9 +30,6 @@ export const MerchandiseScreen: React.FC = () => {
 
   const handleEdit = (data: MerchandiseListItem) => {
     setIsEdit(true);
-    // ⚠️ Si tu merchandise_form.tsx ya esperaba el shape plano (Merchandise),
-    // ahora recibe el nested (MerchandiseListItem) y hay que ajustar ahí los
-    // defaultValues para leer de data.product.* / data.price / data.wholesale_rule.
     setData(data);
     router.navigate("/(drawer)/(inventory)/(form)/merchandise_form");
   };
@@ -68,7 +67,7 @@ export const MerchandiseScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1, margin: 20 }}>
+    <ScrollView style={{ flex: 1, margin: isDesktopWeb ? 20 : 0 }}>
       <DesktopScrollView>
         <MerchandiseTable
           data={merchandise || []}

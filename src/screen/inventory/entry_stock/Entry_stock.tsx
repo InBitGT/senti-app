@@ -8,24 +8,22 @@ import { StockEntryTable } from "@/components/templates/StockEntryTable/StockEnt
 import { useEntryStock } from "@/src/hooks/useEntryStock/useEntryStock";
 import { useEntryStockStore } from "@/src/store/useEntryStockStore/useEntryStockStore";
 import { StockEntry } from "@/src/types/entry_stock/entry_stock.types";
+import { useDimensions } from "@/src/utils/dimentions/dimentions";
 import { router } from "expo-router";
 import { ClipboardEdit, PackagePlus } from "lucide-react-native";
 import React, { useState } from "react";
-import { Platform, ScrollView, useWindowDimensions } from "react-native";
-
-const DESKTOP_BREAKPOINT = 768; // mismo breakpoint que Pos.tsx
+import { ScrollView } from "react-native";
 
 export const Entry_stock = () => {
   const { data: entries, isLoading } = useEntryStock();
   const [showModalData, setShowModalData] = useState<boolean>(false);
   const [modalData, setmodalData] = useState<EntryDetail>();
   const setSelectedId = useEntryStockStore((s) => s.setSelectedId);
-  const { width } = useWindowDimensions();
-
-  const isDesktopWeb = Platform.OS === "web" && width >= DESKTOP_BREAKPOINT;
+  const isDesktopWeb = useDimensions();
 
   const hadleModalData = (data: StockEntry) => {
     setShowModalData(true);
+
     setmodalData(data as EntryDetail);
   };
 

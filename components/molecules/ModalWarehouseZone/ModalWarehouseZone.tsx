@@ -1,4 +1,3 @@
-import { Badge } from "@/components/atom/Badge/Badge";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
@@ -49,7 +48,6 @@ export const ModalWarehouseZoneDetail: React.FC<Props> = ({
               </Heading>
               <Text style={styles.code}>{data?.code}</Text>
             </View>
-            <Badge active={data?.status ?? false} />
           </View>
         </ModalHeader>
 

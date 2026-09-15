@@ -1,4 +1,5 @@
 import { Text } from "@/components/ui/text";
+import { useDimensions } from "@/src/utils/dimentions/dimentions";
 import { StyleSheet, View } from "react-native";
 
 export const StatBox = ({
@@ -9,12 +10,16 @@ export const StatBox = ({
   label: string;
   value: string | number;
   color: string;
-}) => (
-  <View style={styles.statBox}>
-    <Text style={styles.statLabel}>{label}</Text>
-    <Text style={[styles.statValue, { color }]}>{value}</Text>
-  </View>
-);
+}) => {
+  const isDesktopWeb = useDimensions();
+
+  return (
+    <View style={[styles.statBox, { margin: isDesktopWeb ? 1 : 0 }]}>
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, { color }]}>{value}</Text>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   statBox: {
@@ -24,7 +29,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    margin: 1,
   },
   statLabel: {
     fontSize: 11,
