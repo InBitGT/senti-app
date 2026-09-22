@@ -1,4 +1,4 @@
-import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
+import { getFocusedRouteNameFromRoute } from "expo-router/react-navigation";
 
 const routeTitles: Record<string, Record<string, string>> = {
   "(inventory)": {
