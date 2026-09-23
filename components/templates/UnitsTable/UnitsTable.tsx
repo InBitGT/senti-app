@@ -1,14 +1,14 @@
 import { Action, ActionsMenu } from "@/components/atom";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { Buttons } from "@/components/templates/CustomTable/CustomTable";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { SearchIcon } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { DataTable } from "react-native-paper";
 
 const UOM_TYPE_LABELS: Record<string, string> = {
@@ -44,9 +44,6 @@ export function UnitsTable({
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
 
-  const { width } = useWindowDimensions();
-  const isMobile = width < 640;
-
   const validData = useMemo(() => data.filter((r) => r?.name != null), [data]);
 
   const filtered = useMemo(() => {
@@ -72,43 +69,29 @@ export function UnitsTable({
   return (
     <VStack style={styles.container}>
       <HStack className="justify-between items-center mb-4">
-        <Input
-          className="bg-white rounded-lg"
-          variant="outline"
-          size="md"
-          style={{ flex: 1, marginRight: 12 }}
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <AppInput
             placeholder="Buscar unidad, código…"
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         <HStack className="gap-3 items-center">
-          {button?.map((btn) => (
-            <Button
-              key={btn.key}
-              size="md"
-              variant={btn.variant}
-              style={{
-                borderColor: "#949292",
-                borderWidth: 1,
-                ...(isMobile ? styles.buttonIconOnly : {}),
-              }}
+          {button?.map((btn, index) => (
+            <AppButton
+              key={btn.key ?? `btn-${index}`}
+              label={btn.name}
+              icon={btn.icon}
+              outline
+              outlineBorderColor="#949292"
+              outlineTextColor="#000000"
+              fullWidth={false}
+              shrinkOnMobile
               onPress={btn.onPress}
-            >
-              {btn.icon && (
-                <ButtonIcon as={btn.icon} style={{ color: "#000" }} />
-              )}
-              {!isMobile && (
-                <ButtonText style={{ color: "#000" }}>{btn.name}</ButtonText>
-              )}
-            </Button>
+            />
           ))}
         </HStack>
       </HStack>
@@ -212,11 +195,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#e0e7ff",
   },
   typeBadgeText: { fontSize: 11, fontWeight: "500", color: "#4338ca" },
-  buttonIconOnly: {
-    width: 40,
-    height: 40,
-    paddingHorizontal: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
 });

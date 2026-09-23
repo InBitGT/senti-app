@@ -1,14 +1,14 @@
 import { Action, ActionsMenu } from "@/components/atom";
-import { Button, ButtonText } from "@/components/ui/button";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useAuthStore } from "@/src/store";
 import { CashRegister } from "@/src/types/cash_register/cash_register";
 import { Plus, SearchIcon } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { ViewStyle } from "react-native";
+import { View, ViewStyle } from "react-native";
 import { DataTable } from "react-native-paper";
 
 export interface CashRegistersTableProps {
@@ -82,33 +82,25 @@ export function CashRegistersTable({
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
       <HStack className="justify-between items-center mb-4 gap-2">
-        <Input
-          className="flex-1 sm:w-64 sm:flex-none bg-white rounded-lg"
-          variant="outline"
-          size="md"
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View className="flex-1 sm:w-64 sm:flex-none">
+          <AppInput
             placeholder="Buscar caja..."
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         {onNewCashRegister && (
-          <Button
-            size="md"
-            variant="solid"
-            style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
-            className="px-3 sm:px-4"
+          <AppButton
+            label="Crear caja"
+            icon={Plus}
+            variant="black"
+            fullWidth={false}
+            shrinkOnMobile
             onPress={onNewCashRegister}
-          >
-            <Plus size={16} color="#ffffff" className="sm:hidden" />
-            <ButtonText className="hidden sm:flex">Crear caja</ButtonText>
-          </Button>
+          />
         )}
       </HStack>
 

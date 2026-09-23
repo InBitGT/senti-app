@@ -39,6 +39,7 @@ import {
   CreditCard,
   Pencil,
   Plus,
+  UserCheck,
   X,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
@@ -86,6 +87,14 @@ function basePriceForLine(cart: CartLine[], line: CartLine): number {
 
 function lineTotal(cart: CartLine[], line: CartLine): number {
   return line.quantity * basePriceForLine(cart, line);
+}
+
+// Reemplaza producto y unidad de una línea por la versión indicada,
+// conservando la cantidad y la unidad elegida.
+function withProduct(line: CartLine, product: CatalogProduct): CartLine {
+  const unit =
+    product.units.find((u) => u.uom_id === line.unit.uom_id) ?? line.unit;
+  return { ...line, product, unit };
 }
 
 function isCashMethod(method?: PaymentMethod | null) {
@@ -174,42 +183,69 @@ export const Checkout: React.FC = () => {
   const creditLimit = selectedCustomer?.credit?.credit_available ?? 0;
 
   // Tipo de cliente que define los precios. Sin cliente = precios normales.
-  // Se normaliza a número: si el backend manda el id como string ("6"),
-  // la comparación estricta contra customer_type_prices fallaba en silencio.
   const rawCustomerTypeId =
     selectedCustomer?.customer_type_id || selectedCustomer?.customer_type?.id;
   const customerTypeId =
     rawCustomerTypeId != null && Number(rawCustomerTypeId) > 0
       ? Number(rawCustomerTypeId)
       : null;
+  const customerTypeName = selectedCustomer?.customer_type?.name ?? "cliente";
 
-  // El catálogo trae en cada producto `customer_type_prices` con los precios
-  // de todos los tipos. Aquí se vuelve a mapear pasando el tipo del cliente:
-  // solo los productos que tienen precio para ese tipo cambian; el resto
-  // conserva su precio base.
   const { checkout, refetch, catalog } = useCatalog();
 
-  const pricedProducts = useMemo(() => {
-    const map = new Map<number, CatalogProduct>();
-    (catalog ?? []).forEach((p) =>
-      map.set(p.product_id, mapApiProductToProduct(p, customerTypeId)),
-    );
-    return map;
+  // Por cada producto se calculan dos versiones: con precio normal y con
+  // precio del tipo de cliente. Así se puede alternar entre ambas por
+  // producto sin volver a pedir nada al backend.
+  const { normalProducts, typedProducts } = useMemo(() => {
+    const normal = new Map<number, CatalogProduct>();
+    const typed = new Map<number, CatalogProduct>();
+    (catalog ?? []).forEach((p) => {
+      const base = mapApiProductToProduct(p);
+      normal.set(p.product_id, base);
+      if (customerTypeId != null) {
+        const withType = mapApiProductToProduct(p, customerTypeId);
+        // Solo cuenta como "precio por tipo" si realmente cambia algo.
+        const changed =
+          withType.price !== base.price ||
+          withType.units.some(
+            (u, i) => u.unitPrice !== base.units[i]?.unitPrice,
+          );
+        if (changed) typed.set(p.product_id, withType);
+      }
+    });
+    return { normalProducts: normal, typedProducts: typed };
   }, [catalog, customerTypeId]);
 
-  // Carrito con los precios del tipo de cliente aplicados. Se conserva la
-  // cantidad y la unidad elegidas; solo se reemplazan producto y precios.
-  // Mismo orden e índices que `cart`, así removeLine(i) sigue funcionando.
+  // Productos a los que el usuario decidió NO aplicarles el precio del tipo.
+  const [typePriceOff, setTypePriceOff] = useState<Set<number>>(new Set());
+
+  // Al cambiar de cliente/tipo, todos los productos vuelven a tomar el
+  // precio del tipo por defecto.
+  useEffect(() => {
+    setTypePriceOff(new Set());
+  }, [customerTypeId]);
+
+  function toggleTypePrice(productId: number) {
+    setTypePriceOff((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
+  }
+
+  // Carrito con los precios que realmente se van a cobrar. Mismo orden e
+  // índices que `cart`, así removeLine(i) sigue funcionando.
   const pricedCart = useMemo<CartLine[]>(
     () =>
       cart.map((line) => {
-        const priced = pricedProducts.get(line.product.product_id);
-        if (!priced) return line;
-        const unit =
-          priced.units.find((u) => u.uom_id === line.unit.uom_id) ?? line.unit;
-        return { ...line, product: priced, unit };
+        const id = line.product.product_id;
+        const typed = typedProducts.get(id);
+        if (typed && !typePriceOff.has(id)) return withProduct(line, typed);
+        const normal = normalProducts.get(id);
+        return normal ? withProduct(line, normal) : line;
       }),
-    [cart, pricedProducts],
+    [cart, typedProducts, normalProducts, typePriceOff],
   );
 
   // ----- Métodos de pago -----------------------------------------------
@@ -482,8 +518,9 @@ export const Checkout: React.FC = () => {
           category_id: l.product.category_id,
           category_name: l.product.category_name,
           quantity: l.quantity,
-          // Precio por unidad base ya con tipo de cliente, conversión y
-          // mayoreo aplicados.
+          // Precio por unidad base que realmente se cobra: con o sin el
+          // precio del tipo según lo que eligió el usuario, más conversión
+          // y mayoreo.
           unit_price: basePriceForLine(pricedCart, l),
         })),
         payments,
@@ -520,6 +557,16 @@ export const Checkout: React.FC = () => {
     [activeCustomers],
   );
 
+  // Para mostrar el precio normal junto al del tipo (referencia).
+  const normalCart = useMemo<CartLine[]>(
+    () =>
+      cart.map((line) => {
+        const normal = normalProducts.get(line.product.product_id);
+        return normal ? withProduct(line, normal) : line;
+      }),
+    [cart, normalProducts],
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={["bottom"]}>
       <HStack className="items-center gap-3 border-b border-gray-200 bg-white p-3">
@@ -546,19 +593,28 @@ export const Checkout: React.FC = () => {
               <Text className="border-b border-gray-100 p-3 text-sm font-semibold text-gray-900">
                 Resumen del pedido
               </Text>
-              {pricedCart.map((line) => {
+              {pricedCart.map((line, index) => {
+                const productId = line.product.product_id;
                 const pricePerBaseUnit = basePriceForLine(pricedCart, line);
                 const wholesale = isWholesaleActiveFor(
                   pricedCart,
                   line.product,
                 );
-                const isBlocked = blockedProductIds.has(
-                  line.product.product_id,
-                );
+                const isBlocked = blockedProductIds.has(productId);
+
+                // Precio por tipo: disponible para este producto y si está
+                // aplicado o el usuario lo quitó.
+                const hasTypePrice = typedProducts.has(productId);
+                const typePriceApplied =
+                  hasTypePrice && !typePriceOff.has(productId);
+                const normalLine = normalCart[index];
+                const normalPerBaseUnit = normalLine
+                  ? basePriceForLine(normalCart, normalLine)
+                  : pricePerBaseUnit;
 
                 return (
                   <VStack
-                    key={`${line.product.product_id}-${line.unit.uom_id}`}
+                    key={`${productId}-${line.unit.uom_id}`}
                     className={`border-b border-gray-100 p-3 ${
                       isBlocked ? "bg-red-50" : ""
                     }`}
@@ -575,6 +631,18 @@ export const Checkout: React.FC = () => {
                           >
                             {line.product.name}
                           </Text>
+                          {typePriceApplied && !isBlocked && (
+                            <Box className="flex-row items-center gap-1 rounded-full bg-purple-100 px-1.5 py-0.5">
+                              <Icon
+                                as={UserCheck}
+                                size="xs"
+                                className="text-purple-700"
+                              />
+                              <Text className="text-[9px] font-semibold text-purple-700">
+                                precio {customerTypeName}
+                              </Text>
+                            </Box>
+                          )}
                           {wholesale && !isBlocked && (
                             <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
                               <Text className="text-[9px] font-semibold text-green-700">
@@ -605,6 +673,10 @@ export const Checkout: React.FC = () => {
                             ` (${line.quantity / line.unit.factorToBase} ${line.unit.name})`}
                           {" × "}
                           {formatCurrency(pricePerBaseUnit)}
+                          {typePriceApplied &&
+                            Math.abs(normalPerBaseUnit - pricePerBaseUnit) >
+                              0.005 &&
+                            ` (normal ${formatCurrency(normalPerBaseUnit)})`}
                         </Text>
                       </VStack>
                       <Text
@@ -618,15 +690,28 @@ export const Checkout: React.FC = () => {
                       </Text>
                     </HStack>
 
+                    {/* Permite quitar/volver a aplicar el precio del tipo
+                        solo en este producto. */}
+                    {hasTypePrice && !isBlocked && (
+                      <TouchableOpacity
+                        onPress={() => toggleTypePrice(productId)}
+                        className="self-start"
+                      >
+                        <Text className="text-[11px] font-medium text-blue-600">
+                          {typePriceApplied
+                            ? "Usar precio normal"
+                            : `Aplicar precio ${customerTypeName}`}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
                     {isBlocked && (
                       <HStack className="items-center justify-between">
                         <Text className="flex-1 text-[11px] text-red-600">
                           No hay stock suficiente. No se incluye en el total.
                         </Text>
                         <TouchableOpacity
-                          onPress={() =>
-                            removeBlockedProduct(line.product.product_id)
-                          }
+                          onPress={() => removeBlockedProduct(productId)}
                           className="rounded-md border border-red-300 px-2 py-1"
                         >
                           <Text className="text-[11px] font-medium text-red-600">

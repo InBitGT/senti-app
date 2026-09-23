@@ -38,7 +38,7 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
 
   const refresh = useCallback(async () => {
     await session.refetch();
-    refetchProduct?.();
+    await refetchProduct?.();
   }, [session, refetchProduct]);
 
   // Marca si esta pantalla es la visible. Al perder el foco (o

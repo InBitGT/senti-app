@@ -1,7 +1,8 @@
-import { AlertCircle } from "lucide-react-native";
-import { forwardRef } from "react";
+import { AlertCircle, X } from "lucide-react-native";
+import React, { forwardRef } from "react";
 import {
   Platform,
+  Pressable,
   StyleProp,
   StyleSheet,
   Text,
@@ -22,63 +23,34 @@ interface AppInputProps extends Omit<TextInputProps, "style"> {
   textareaHeight?: number;
   /**
    * Override del contenedor (wrapper). Util para casos compactos donde
-   * NO se quiere el ancho 100% por defecto -- por ejemplo, un input
-   * angosto dentro de una fila (ej. contador de denominaciones de
-   * efectivo). No afecta el layout de un AppInput "normal" de form.
+   * NO se quiere el ancho 100% por defecto.
    */
   containerStyle?: StyleProp<ViewStyle>;
   /**
    * Override del estilo del TextInput en si (ej. textAlign, fontSize,
-   * padding mas chico). Se aplica DESPUES de los estilos base, asi que
-   * puede sobreescribirlos.
+   * padding mas chico). Se aplica DESPUES de los estilos base.
    */
   inputStyle?: StyleProp<TextStyle>;
+  /**
+   * Icono opcional del lado izquierdo. Se manda ya renderizado:
+   * leftIcon={<Search size={16} color="#9ca3af" />}
+   * Si no se manda, no se reserva espacio.
+   */
+  leftIcon?: React.ReactNode;
+  /**
+   * Si es true, muestra una X del lado derecho cuando hay texto.
+   * Al tocarla limpia el contenido (llama onChangeText("")).
+   */
+  clearable?: boolean;
+  /** Callback extra al limpiar con la X (opcional). */
+  onClear?: () => void;
+  /**
+   * Componente de input a usar internamente. Default: TextInput.
+   * Dentro de un BottomSheet pasa BottomSheetTextInput.
+   */
+  TextInputComponent?: React.ComponentType<any>;
 }
 
-/**
- * Input de texto estandar de la app, construido SOLO con
- * primitivos de React Native (TextInput, View, Text, StyleSheet).
- *
- * Mismo criterio que AppSelect: no depende de gluestack-ui ni de
- * NativeWind/cssInterop, asi que se ve identico en iOS, Android,
- * Web y Tauri sin importar el estado de esa configuracion, y
- * comparte el mismo lenguaje visual (bordes, colores, tamaños de
- * texto) que AppSelect para que los formularios se vean
- * consistentes.
- *
- * Sirve tanto para inputs de una linea como para textareas
- * (usando la prop `multiline`).
- *
- * Uso basico:
- * <Controller
- *   control={control}
- *   name="amount"
- *   rules={{ required: "El monto es obligatorio." }}
- *   render={({ field: { onChange, onBlur, value } }) => (
- *     <AppInput
- *       label="Monto"
- *       placeholder="Ej. 100.00"
- *       value={value}
- *       onChangeText={onChange}
- *       onBlur={onBlur}
- *       keyboardType="decimal-pad"
- *       errorMessage={errors.amount?.message}
- *     />
- *   )}
- * />
- *
- * Como textarea:
- * <AppInput
- *   label="Descripción"
- *   placeholder="Ej. Corrección de abono ingresado por error"
- *   value={value}
- *   onChangeText={onChange}
- *   onBlur={onBlur}
- *   multiline
- *   textareaHeight={120}
- *   errorMessage={errors.description?.message}
- * />
- */
 export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
   {
     label,
@@ -89,31 +61,76 @@ export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
     editable,
     containerStyle,
     inputStyle,
+    leftIcon,
+    clearable = true,
+    onClear,
+    value,
+    onChangeText,
+    TextInputComponent,
     ...props
   },
   ref,
 ) {
+  const InputComponent: React.ComponentType<any> =
+    TextInputComponent ?? TextInput;
+
   const disabled = isDisabled || editable === false;
+  const showClear = !!clearable && !disabled && !!value && value.length > 0;
+
+  const handleClear = () => {
+    onChangeText?.("");
+    onClear?.();
+  };
 
   return (
     <View style={[styles.wrapper, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
 
-      <TextInput
-        ref={ref}
-        editable={!disabled}
-        multiline={multiline}
-        textAlignVertical={multiline ? "top" : "center"}
-        placeholderTextColor="#9ca3af"
+      <View
         style={[
-          styles.input,
-          multiline && { height: textareaHeight, paddingTop: 12 },
+          styles.inputContainer,
+          multiline && { alignItems: "flex-start" },
           !!errorMessage && styles.inputError,
           disabled && styles.inputDisabled,
-          inputStyle,
         ]}
-        {...props}
-      />
+      >
+        {!!leftIcon && (
+          <View style={[styles.leftIcon, multiline && styles.iconMultiline]}>
+            {leftIcon}
+          </View>
+        )}
+
+        <InputComponent
+          // ref={ref}
+          value={value}
+          onChangeText={onChangeText}
+          editable={!disabled}
+          multiline={multiline}
+          textAlignVertical={multiline ? "top" : "center"}
+          placeholderTextColor="#9ca3af"
+          style={[
+            styles.input,
+            !!leftIcon && { paddingLeft: 8 },
+            showClear && { paddingRight: 4 },
+            multiline && { height: textareaHeight, paddingTop: 12 },
+            Platform.OS === "web" && ({ outlineStyle: "none" } as any),
+            inputStyle,
+          ]}
+          {...props}
+        />
+
+        {showClear && (
+          <Pressable
+            onPress={handleClear}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={[styles.clearBtn, multiline && styles.iconMultiline]}
+            accessibilityRole="button"
+            accessibilityLabel="Limpiar texto"
+          >
+            <X size={16} color="#6b7280" />
+          </Pressable>
+        )}
+      </View>
 
       {!!errorMessage && (
         <View style={styles.errorRow}>
@@ -135,15 +152,37 @@ const styles = StyleSheet.create({
     color: "#000",
     marginBottom: 6,
   },
-  input: {
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: "#d1d5db",
     borderRadius: 8,
-    paddingVertical: Platform.OS === "ios" ? 12 : 10,
-    paddingHorizontal: 12,
     backgroundColor: "#fff",
+  },
+  input: {
+    flex: 1,
+    minWidth: 0,
+    paddingTop: Platform.OS === "ios" ? 12 : 10,
+    paddingBottom: Platform.OS === "ios" ? 12 : 10,
+    paddingLeft: 12,
+    paddingRight: 12,
     fontSize: 14,
     color: "#171717",
+  },
+  leftIcon: {
+    paddingLeft: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  clearBtn: {
+    paddingLeft: 4,
+    paddingRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconMultiline: {
+    paddingTop: 12,
   },
   inputError: {
     borderColor: "#dc2626",

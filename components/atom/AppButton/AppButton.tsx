@@ -1,10 +1,11 @@
+import { useDimensions } from "@/src/utils/dimentions/dimentions";
 import { LucideIcon } from "lucide-react-native";
 import {
-    ActivityIndicator,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export type AppButtonVariant = "black" | "primary" | "info";
@@ -19,6 +20,23 @@ interface AppButtonProps {
   icon?: LucideIcon;
   /** Ocupa el 100% del ancho disponible. Default: true. */
   fullWidth?: boolean;
+  /** Fondo blanco, borde y texto del color de la variante (en vez de relleno). */
+  outline?: boolean;
+  /**
+   * Solo aplica con `outline`. Overridea el color del borde en vez de
+   * usar el color de la variante (ej. un gris neutro para botones
+   * secundarios de toolbar).
+   */
+  outlineBorderColor?: string;
+  /** Solo aplica con `outline`. Overridea el color del texto/ícono. */
+  outlineTextColor?: string;
+  /**
+   * Si es true, fuera de desktop web (ver `useDimensions`) el botón se
+   * encoge a un cuadrado que muestra solo el ícono (sin texto).
+   * Requiere `icon` -- si no hay ícono, se ignora y se muestra el
+   * botón normal igual. Default: false.
+   */
+  shrinkOnMobile?: boolean;
 }
 
 // Colores base por variante y su versión "desactivada" (más clara/apagada,
@@ -32,19 +50,6 @@ const VARIANT_COLORS: Record<
   info: { base: "#0EA5E9", disabled: "#BAE6FD" },
 };
 
-/**
- * Botón estándar de la app, construido solo con primitivos de React
- * Native (TouchableOpacity, Text, ActivityIndicator, StyleSheet).
- *
- * Mismo criterio que AppInput/AppSelect: no depende de gluestack-ui ni
- * de NativeWind/cssInterop.
- *
- * Uso básico:
- * <AppButton label="Guardar" variant="primary" onPress={handleSubmit} />
- *
- * Deshabilitado (usa automáticamente el color "disabled" de la variante):
- * <AppButton label="Guardar" variant="primary" isDisabled />
- */
 export function AppButton({
   label,
   onPress,
@@ -53,10 +58,21 @@ export function AppButton({
   isLoading = false,
   icon: IconComponent,
   fullWidth = true,
+  outline = false,
+  outlineBorderColor,
+  outlineTextColor,
+  shrinkOnMobile = false,
 }: AppButtonProps) {
+  const isDesktopWeb = useDimensions();
+  const iconOnly = shrinkOnMobile && !isDesktopWeb && !!IconComponent;
+
   const disabled = isDisabled || isLoading;
   const colors = VARIANT_COLORS[variant];
-  const backgroundColor = disabled ? colors.disabled : colors.base;
+  const mainColor = disabled ? colors.disabled : colors.base;
+
+  const backgroundColor = outline ? "#ffffff" : mainColor;
+  const borderColor = outline ? (outlineBorderColor ?? mainColor) : mainColor;
+  const contentColor = outline ? (outlineTextColor ?? mainColor) : "#ffffff";
 
   return (
     <TouchableOpacity
@@ -65,18 +81,26 @@ export function AppButton({
       activeOpacity={0.85}
       style={[
         styles.button,
-        fullWidth && styles.fullWidth,
-        { backgroundColor },
+        fullWidth && !iconOnly && styles.fullWidth,
+        iconOnly && styles.iconOnly,
+        { backgroundColor, borderColor },
       ]}
+      accessibilityLabel={iconOnly ? label : undefined}
     >
       {isLoading ? (
-        <ActivityIndicator color="#fff" size="small" />
+        <ActivityIndicator color={contentColor} size="small" />
       ) : (
-        <View style={styles.content}>
+        <View style={[styles.content, iconOnly && styles.contentIconOnly]}>
           {IconComponent && (
-            <IconComponent size={16} color="#fff" style={styles.icon} />
+            <IconComponent
+              size={16}
+              color={contentColor}
+              style={!iconOnly ? styles.icon : undefined}
+            />
           )}
-          <Text style={styles.label}>{label}</Text>
+          {!iconOnly && (
+            <Text style={[styles.label, { color: contentColor }]}>{label}</Text>
+          )}
         </View>
       )}
     </TouchableOpacity>
@@ -86,6 +110,7 @@ export function AppButton({
 const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
+    borderWidth: 1.5,
     paddingVertical: 12,
     paddingHorizontal: 20,
     alignItems: "center",
@@ -94,17 +119,26 @@ const styles = StyleSheet.create({
   fullWidth: {
     width: "100%",
   },
+  iconOnly: {
+    width: 40,
+    height: 40,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
   content: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  contentIconOnly: {
+    flex: 1,
   },
   icon: {
     marginRight: 6,
   },
   label: {
-    color: "#fff",
     fontSize: 14,
     fontWeight: "600",
-    minHeight: 20,
+    minHeight: 10,
   },
 });

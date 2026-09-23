@@ -76,34 +76,44 @@ const formatDate = (value?: string | null, withTime = false) => {
       });
 };
 
-const ItemRow = ({ item }: { item: EntryStockDetailItem }) => (
-  <View style={styles.itemRow}>
-    <View style={styles.itemQtyBadge}>
-      <Text style={styles.itemQtyText}>{item.quantity}</Text>
-    </View>
-    <View style={{ flex: 1 }}>
-      <Text style={styles.itemName}>
-        {item.product?.name ?? `#${item.product_id}`}
-      </Text>
-      {(item.product?.sku || item.product?.brand) && (
-        <Text style={styles.itemMeta}>
-          {[item.product?.brand, item.product?.sku].filter(Boolean).join(" · ")}
+const ItemRow = ({ item }: { item: EntryStockDetailItem }) => {
+  // El lote ahora llega como objeto; tomamos solo lo que se muestra.
+  const batchNumber = item.batch?.batch_number;
+  const expiration = formatDate(
+    item.expiration_date ?? item.batch?.expiration_date,
+  );
+
+  return (
+    <View style={styles.itemRow}>
+      <View style={styles.itemQtyBadge}>
+        <Text style={styles.itemQtyText}>{item.quantity}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.itemName}>
+          {item.product?.name ?? `#${item.product_id}`}
         </Text>
-      )}
-      {item.batch && <Text style={styles.itemMeta}>Lote: {item.batch}</Text>}
-      {formatDate(item.expiration_date) && (
-        <Text style={styles.itemMeta}>
-          Vence: {formatDate(item.expiration_date)}
+        {(item.product?.sku || item.product?.brand) && (
+          <Text style={styles.itemMeta}>
+            {[item.product?.brand, item.product?.sku]
+              .filter(Boolean)
+              .join(" · ")}
+          </Text>
+        )}
+        {!!batchNumber && (
+          <Text style={styles.itemMeta}>Lote: {batchNumber}</Text>
+        )}
+        {!!expiration && (
+          <Text style={styles.itemMeta}>Vence: {expiration}</Text>
+        )}
+        {!!item.notes && <Text style={styles.itemNotes}>{item.notes}</Text>}
+        <Text style={styles.itemUnitPrice}>
+          {formatCurrency(item.unit_cost)} c/u · {item.unit}
         </Text>
-      )}
-      {item.notes && <Text style={styles.itemNotes}>{item.notes}</Text>}
-      <Text style={styles.itemUnitPrice}>
-        {formatCurrency(item.unit_cost)} c/u · {item.unit}
-      </Text>
+      </View>
+      <Text style={styles.itemSubtotal}>{formatCurrency(item.subtotal)}</Text>
     </View>
-    <Text style={styles.itemSubtotal}>{formatCurrency(item.subtotal)}</Text>
-  </View>
-);
+  );
+};
 
 export default function EntryStockInfoScreen() {
   const { data, isLoading } = useEntryStockDetail();
@@ -199,7 +209,7 @@ export default function EntryStockInfoScreen() {
           </SectionCard>
         )}
 
-        {data.notes && (
+        {!!data.notes && (
           <SectionCard title="Notas" icon={FileTextIcon}>
             <Text style={styles.notesText}>{data.notes}</Text>
           </SectionCard>

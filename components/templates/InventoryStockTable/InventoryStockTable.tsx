@@ -1,9 +1,10 @@
-import { Button, ButtonText } from "@/components/ui/button";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { InventoryStockItem } from "@/src/types/inventory/inventory";
+import { formatCurrency } from "@/src/utils/formatCurrency/formatCurrency";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
@@ -15,8 +16,6 @@ export interface InventoryStockTableProps {
   itemsPerPage?: number;
 }
 
-// Fijas siempre visibles: Producto, En existencia, Disponible, Estado.
-// Solo estas dos quedan como columnas opcionales, ocultas por defecto.
 type OptionalColumnKey = "reserved" | "cost";
 
 const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
@@ -49,9 +48,6 @@ const StockBadge = ({ item }: { item: InventoryStockItem }) => {
     </View>
   );
 };
-
-const formatCurrency = (value: number) =>
-  `Q${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function InventoryStockTable({
   data,
@@ -107,41 +103,30 @@ export function InventoryStockTable({
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
       <HStack className="justify-between items-center mb-4">
-        <Input
-          className="flex-1 bg-white rounded-lg"
-          variant="outline"
-          size="md"
-          style={{ marginRight: 12 }}
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <AppInput
             placeholder="Buscar producto o SKU…"
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         <Menu
           visible={menuVisible}
           onDismiss={() => setMenuVisible(false)}
           anchor={
-            <Button
-              size="md"
-              variant="outline"
-              style={{ borderColor: "#949292", borderWidth: 1 }}
+            <AppButton
+              label="Columnas"
+              icon={SlidersHorizontal}
+              outline
+              outlineBorderColor="#949292"
+              outlineTextColor="#374151"
+              fullWidth={false}
+              shrinkOnMobile
               onPress={() => setMenuVisible(true)}
-            >
-              <SlidersHorizontal size={16} color="#374151" />
-              <ButtonText
-                className="hidden sm:flex sm:ml-1.5"
-                style={{ color: "#374151" }}
-              >
-                Columnas
-              </ButtonText>
-            </Button>
+            />
           }
           contentStyle={{ backgroundColor: "#ffffff" }}
         >

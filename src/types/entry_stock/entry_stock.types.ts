@@ -76,8 +76,6 @@ export interface Adjustment {
   reference_number: string;
 }
 
-// @/src/types/entry_stock/entry_stock.types.ts (agregar)
-
 export interface EntryStockProduct {
   id: number;
   tenant_id: number;
@@ -117,12 +115,30 @@ export interface EntryStockSupplier {
   contact_name: string;
 }
 
+/** Lote tal como lo devuelve el detalle del ingreso. */
+export interface EntryStockBatch {
+  id: number;
+  product_id: number;
+  product?: EntryStockProduct | null;
+  supplier_id?: number | null;
+  supplier?: EntryStockSupplier | null;
+  stock_entry_id?: number | null;
+  stock_entry?: unknown;
+  batch_number: string;
+  unit_cost?: number;
+  production_date?: string | null;
+  expiration_date?: string | null;
+  alert_date?: string | null;
+  batch_status?: string;
+  notes?: string | null;
+}
+
 export interface EntryStockDetailItem {
   id: number;
   product_id: number;
   product?: EntryStockProduct;
   batch_id?: number | null;
-  batch?: string | null;
+  batch?: EntryStockBatch | null;
   quantity: number;
   unit: string;
   unit_cost: number;

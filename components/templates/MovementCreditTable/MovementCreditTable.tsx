@@ -1,17 +1,7 @@
-import { Button, ButtonText } from "@/components/ui/button";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -66,6 +56,11 @@ const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
   { key: "balance_after", label: "Saldo después" },
   { key: "description", label: "Descripción" },
   { key: "user", label: "Usuario" },
+];
+
+const TYPE_SELECT_OPTIONS = [
+  { label: "Todos los tipos", value: "" },
+  ...MOVEMENT_TYPE_OPTIONS.map((t) => ({ label: t.label, value: t.value })),
 ];
 
 export function CustomerCreditMovementsTable({
@@ -158,76 +153,45 @@ export function CustomerCreditMovementsTable({
     borderBottomColor: "#d4d4d4",
   };
 
-  const selectedTypeLabel =
-    MOVEMENT_TYPE_OPTIONS.find((t) => t.value === typeFilter)?.label || "";
-
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
       <VStack className="mb-4 gap-2">
         <HStack className="justify-between items-center gap-2">
-          <Input
-            className="flex-1 sm:w-64 sm:flex-none bg-white rounded-lg"
-            variant="outline"
-            size="md"
-          >
-            <InputSlot style={{ marginLeft: 10 }}>
-              <InputIcon as={SearchIcon} size="sm" />
-            </InputSlot>
-            <InputField
-              style={{ color: "#000" }}
+          <View className="flex-1 sm:w-64 sm:flex-none">
+            <AppInput
               placeholder="Buscar movimiento..."
               value={search}
               onChangeText={setSearch}
+              leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+              inputStyle={{ color: "#000" }}
             />
-          </Input>
+          </View>
 
           <HStack className="gap-2 items-center">
             <View style={{ width: 180 }}>
-              <Select selectedValue={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectInput
-                    style={{ color: "#000" }}
-                    placeholder="Todos los tipos"
-                    value={selectedTypeLabel}
-                  />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    <SelectItem label="Todos los tipos" value="" />
-                    {MOVEMENT_TYPE_OPTIONS.map((t) => (
-                      <SelectItem
-                        key={t.value}
-                        label={t.label}
-                        value={t.value}
-                      />
-                    ))}
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
+              <AppSelect
+                placeholder="Todos los tipos"
+                searchable={false}
+                options={TYPE_SELECT_OPTIONS}
+                value={typeFilter}
+                onChange={setTypeFilter}
+              />
             </View>
 
             <Menu
               visible={menuVisible}
               onDismiss={() => setMenuVisible(false)}
               anchor={
-                <Button
-                  size="md"
-                  variant="outline"
-                  style={{ borderColor: "#949292", borderWidth: 1 }}
+                <AppButton
+                  label="Columnas"
+                  icon={SlidersHorizontal}
+                  outline
+                  outlineBorderColor="#949292"
+                  outlineTextColor="#000000"
+                  fullWidth={false}
+                  shrinkOnMobile
                   onPress={() => setMenuVisible(true)}
-                >
-                  <SlidersHorizontal size={16} color="#374151" />
-                  <ButtonText
-                    className="hidden sm:flex sm:ml-1.5"
-                    style={{ color: "#000" }}
-                  >
-                    Columnas
-                  </ButtonText>
-                </Button>
+                />
               }
               contentStyle={{ backgroundColor: "#ffffff" }}
             >
@@ -253,33 +217,25 @@ export function CustomerCreditMovementsTable({
         </HStack>
 
         <HStack className="items-center gap-2">
-          <Input
-            className="flex-1 bg-white rounded-lg"
-            variant="outline"
-            size="md"
-          >
-            <InputField
-              style={{ color: "#000" }}
+          <View style={{ flex: 1 }}>
+            <AppInput
               placeholder="Desde (AAAA-MM-DD)"
               value={dateFrom}
               onChangeText={setDateFrom}
               keyboardType="numbers-and-punctuation"
+              inputStyle={{ color: "#000" }}
             />
-          </Input>
+          </View>
 
-          <Input
-            className="flex-1 bg-white rounded-lg"
-            variant="outline"
-            size="md"
-          >
-            <InputField
-              style={{ color: "#000" }}
+          <View style={{ flex: 1 }}>
+            <AppInput
               placeholder="Hasta (AAAA-MM-DD)"
               value={dateTo}
               onChangeText={setDateTo}
               keyboardType="numbers-and-punctuation"
+              inputStyle={{ color: "#000" }}
             />
-          </Input>
+          </View>
         </HStack>
       </VStack>
 

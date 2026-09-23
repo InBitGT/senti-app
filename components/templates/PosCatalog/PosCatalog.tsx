@@ -367,11 +367,6 @@ export function ProductCatalog({
       <VStack className="items-center justify-center py-16" space="sm">
         <Icon as={Package} size="xl" className="text-gray-300" />
         <Text className="text-gray-400">Sin resultados</Text>
-        <AppButton
-          label="Recargar información"
-          variant="info"
-          onPress={onPress}
-        />
       </VStack>
     );
   }
@@ -385,7 +380,7 @@ export function ProductCatalog({
         >
           <Icon as={AlertTriangle} size="xs" className="text-amber-700" />
           <Text className="flex-1 text-xs text-amber-700">
-            Hay productos con el mismo SKU. Verifica el catálogo en el backend.
+            Hay productos con el mismo SKU. Verifica el catálogo.
           </Text>
         </HStack>
       )}

@@ -1,15 +1,15 @@
 import { Action, ActionsMenu } from "@/components/atom";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { FilterPill } from "@/components/atom/FilterPill/FilterPill";
 import { Buttons } from "@/components/templates/CustomTable/CustomTable";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { MerchandiseListItem } from "@/src/types/merchandise/merchandise.types";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Checkbox, DataTable, Menu } from "react-native-paper";
 
 const TYPE_CONFIG: Record<
@@ -90,8 +90,6 @@ export function MerchandiseTable({
     price: false,
     modifier: false,
   });
-  const { width } = useWindowDimensions();
-  const isMobile = width < 640;
 
   const toggleColumn = (key: OptionalColumnKey) => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -148,39 +146,31 @@ export function MerchandiseTable({
   return (
     <VStack style={styles.container}>
       <HStack className="justify-between items-center mb-4">
-        <Input
-          className="bg-white rounded-lg text-black"
-          variant="outline"
-          size="md"
-          style={{ flex: 1, marginRight: 12 }}
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <AppInput
             placeholder="Buscar producto, SKU, marca, categoría…"
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         <HStack className="gap-3 items-center">
           <Menu
             visible={menuVisible}
             onDismiss={() => setMenuVisible(false)}
             anchor={
-              <Button
-                size="md"
-                variant="outline"
-                style={{ borderColor: "#949292", borderWidth: 1 }}
+              <AppButton
+                label="Columnas"
+                icon={SlidersHorizontal}
+                outline
+                outlineBorderColor="#949292"
+                outlineTextColor="#374151"
+                fullWidth={false}
+                shrinkOnMobile
                 onPress={() => setMenuVisible(true)}
-              >
-                <SlidersHorizontal size={16} color="#374151" />
-                <ButtonText className="hidden sm:flex sm:ml-1.5">
-                  Columnas
-                </ButtonText>
-              </Button>
+              />
             }
             contentStyle={{ backgroundColor: "#ffffff" }}
           >
@@ -202,24 +192,17 @@ export function MerchandiseTable({
           </Menu>
 
           {button?.map((btn, index) => (
-            <Button
+            <AppButton
               key={btn.key ?? `btn-${index}`}
-              size="md"
-              variant={btn.variant}
-              style={{
-                borderColor: "#949292",
-                borderWidth: 1,
-                ...(isMobile && styles.buttonIconOnly),
-              }}
+              label={btn.name}
+              icon={btn.icon}
+              outline
+              outlineBorderColor="#949292"
+              outlineTextColor="#000000"
+              fullWidth={false}
+              shrinkOnMobile
               onPress={btn.onPress}
-            >
-              {btn.icon && (
-                <ButtonIcon as={btn.icon} style={{ color: "#000" }} />
-              )}
-              {!isMobile && (
-                <ButtonText style={{ color: "#000" }}>{btn.name}</ButtonText>
-              )}
-            </Button>
+            />
           ))}
         </HStack>
       </HStack>
@@ -442,11 +425,4 @@ const styles = StyleSheet.create({
   cost: { fontSize: 13, fontWeight: "500", color: "#1a1a1a" },
   muted: { fontSize: 13, color: "#aaa" },
   availDot: { width: 10, height: 10, borderRadius: 5 },
-  buttonIconOnly: {
-    width: 40,
-    height: 40,
-    paddingHorizontal: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
 });

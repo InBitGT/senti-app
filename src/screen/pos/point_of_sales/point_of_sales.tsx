@@ -1,6 +1,9 @@
-import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { CategoryPill } from "@/components/atom/CategoryPill/CategoryPill";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { SubcategoryPill } from "@/components/atom/SubcategoryPill/SubcategoryPill";
+import { CartModal } from "@/components/molecules/CartModal/CartModal";
+import { CartSidePanel } from "@/components/molecules/CartSidePanel/CartSidePanel";
 import { CashMovementModal } from "@/components/molecules/CashMovementModal/CashMovementModal";
 import { CashSessionInfoModal } from "@/components/molecules/CashSessionInfoModal/CashSessionInfoModal";
 import { OpenCashRegisterModal } from "@/components/molecules/OpenCashRegisterModal/OpenCashRegisterModal";
@@ -10,17 +13,8 @@ import {
   ProductCatalog,
 } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
-import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
-import {
-  Modal,
-  ModalBackdrop,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -39,13 +33,9 @@ import { router } from "expo-router";
 import {
   AlertTriangle,
   ArrowLeftRight,
-  Minus,
-  Plus,
   RefreshCcw,
   Search,
   ShoppingCart,
-  Tag,
-  Trash2,
   Wallet,
   X,
 } from "lucide-react-native";
@@ -55,11 +45,10 @@ import {
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface CartLine {
+export interface CartLine {
   product: CatalogProduct;
   unit: SellUnit;
   quantity: number;
@@ -319,6 +308,7 @@ export const Pos: React.FC = () => {
                     value={query}
                     onChangeText={setQuery}
                     inputStyle={{ paddingLeft: 36 }}
+                    clearable
                   />
                 </Box>
 
@@ -532,344 +522,3 @@ export const Pos: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-function CartLineRow({
-  line,
-  index,
-  maxQuantity,
-  unitPrice,
-  total,
-  isWholesale,
-  onStepLine,
-  onSetQty,
-  onRemoveLine,
-}: {
-  line: CartLine;
-  index: number;
-  maxQuantity: number;
-  unitPrice: number;
-  total: number;
-  isWholesale: boolean;
-  onStepLine: (index: number, direction: 1 | -1) => void;
-  onSetQty: (index: number, raw: string) => void;
-  onRemoveLine: (index: number) => void;
-}) {
-  const atMax = line.quantity + line.unit.factorToBase > maxQuantity;
-
-  return (
-    <VStack space="xs" className="border-b border-gray-100 pb-3">
-      <HStack className="items-center justify-between" space="sm">
-        <VStack className="flex-1">
-          <HStack space="xs" className="items-center">
-            <Text
-              className="text-sm font-medium text-gray-900"
-              numberOfLines={1}
-            >
-              {line.product.name}
-            </Text>
-            {isWholesale && (
-              <Box className="rounded-full bg-green-100 px-1.5 py-0.5">
-                <Icon as={Tag} size="xs" className={"text-green-600"} />
-              </Box>
-            )}
-          </HStack>
-          <Text className="text-xs text-gray-400">
-            {formatCurrency(unitPrice)}/{line.unit.code}
-          </Text>
-        </VStack>
-
-        <HStack space="xs" className="items-center">
-          <TouchableOpacity onPress={() => onStepLine(index, -1)}>
-            <Box className="h-7 w-7 items-center justify-center rounded-md border border-gray-300 bg-white">
-              <Icon as={Minus} size="xs" className="text-gray-600" />
-            </Box>
-          </TouchableOpacity>
-
-          <AppInput
-            value={String(line.quantity)}
-            onChangeText={(v) => onSetQty(index, v)}
-            keyboardType="numeric"
-            selectTextOnFocus
-            containerStyle={{ width: 48 }}
-            inputStyle={{
-              textAlign: "center",
-              fontSize: 14,
-              fontWeight: "500",
-              paddingVertical: 6,
-              paddingHorizontal: 4,
-            }}
-          />
-
-          <TouchableOpacity
-            onPress={() => onStepLine(index, 1)}
-            disabled={atMax}
-          >
-            <Box
-              className={`h-7 w-7 items-center justify-center rounded-md border ${
-                atMax
-                  ? "border-gray-200 bg-gray-50"
-                  : "border-gray-300 bg-white"
-              }`}
-            >
-              <Icon
-                as={Plus}
-                size="xs"
-                className={atMax ? "text-gray-300" : "text-gray-600"}
-              />
-            </Box>
-          </TouchableOpacity>
-          <Text className="text-[11px] text-gray-400">{line.unit.code}</Text>
-        </HStack>
-
-        <Text className="w-16 text-right text-sm font-semibold text-gray-900">
-          {formatCurrency(total)}
-        </Text>
-
-        <TouchableOpacity onPress={() => onRemoveLine(index)}>
-          <Icon as={Trash2} size="xs" className="text-red-500" />
-        </TouchableOpacity>
-      </HStack>
-
-      {atMax && (
-        <Text className="text-[10px] font-medium text-amber-600">
-          Alcanzaste el stock disponible de &quot;{line.product.name}&quot;.
-        </Text>
-      )}
-    </VStack>
-  );
-}
-
-function CartEmptyState() {
-  return (
-    <VStack className="items-center py-8" space="sm">
-      <Icon as={ShoppingCart} size="xl" className="text-gray-300" />
-      <Text className="text-gray-400">El carrito está vacío</Text>
-    </VStack>
-  );
-}
-
-function CartSidePanel({
-  cart,
-  maxQuantities,
-  lineUnitPrices,
-  lineTotals,
-  lineIsWholesale,
-  cartCount,
-  total,
-  onStepLine,
-  onSetQty,
-  onRemoveLine,
-  onCheckout,
-}: {
-  cart: CartLine[];
-  maxQuantities: number[];
-  lineUnitPrices: number[];
-  lineTotals: number[];
-  lineIsWholesale: boolean[];
-  cartCount: number;
-  total: number;
-  onStepLine: (index: number, direction: 1 | -1) => void;
-  onSetQty: (index: number, raw: string) => void;
-  onRemoveLine: (index: number) => void;
-  onCheckout: () => void;
-}) {
-  return (
-    <VStack className="w-96 border-l border-gray-200 bg-white">
-      <HStack className="items-center justify-between border-b border-gray-100 p-4">
-        <HStack space="xs" className="items-center">
-          <Icon as={ShoppingCart} size="sm" className="text-blue-600" />
-          <Heading size="md" className="text-gray-900">
-            Venta
-          </Heading>
-        </HStack>
-        <Text className="text-xs text-gray-400">
-          {cartCount} {cartCount === 1 ? "artículo" : "artículos"}
-        </Text>
-      </HStack>
-
-      <ScrollView className="flex-1 px-4 pt-3">
-        <DesktopScrollView>
-          {cart.length === 0 ? (
-            <CartEmptyState />
-          ) : (
-            <VStack space="md">
-              {cart.map((line, index) => (
-                <CartLineRow
-                  key={`${line.product.product_id}-${line.unit.uom_id}`}
-                  line={line}
-                  index={index}
-                  maxQuantity={maxQuantities[index] ?? 0}
-                  unitPrice={lineUnitPrices[index] ?? 0}
-                  total={lineTotals[index] ?? 0}
-                  isWholesale={lineIsWholesale[index] ?? false}
-                  onStepLine={onStepLine}
-                  onSetQty={onSetQty}
-                  onRemoveLine={onRemoveLine}
-                />
-              ))}
-            </VStack>
-          )}
-        </DesktopScrollView>
-      </ScrollView>
-
-      {cart.length > 0 && (
-        <VStack space="sm" className="border-t border-gray-100 p-4 ">
-          <HStack className="items-center justify-between">
-            <Text className="text-sm text-gray-600">Total</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              {formatCurrency(total)}
-            </Text>
-          </HStack>
-          <View>
-            <AppButton
-              label={`Cobrar ${formatCurrency(total)}`}
-              variant="info"
-              onPress={onCheckout}
-            />
-          </View>
-        </VStack>
-      )}
-    </VStack>
-  );
-}
-
-function CartModal({
-  isOpen,
-  onClose,
-  cart,
-  maxQuantities,
-  lineUnitPrices,
-  lineTotals,
-  lineIsWholesale,
-  total,
-  onStepLine,
-  onSetQty,
-  onRemoveLine,
-  onCheckout,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  cart: CartLine[];
-  maxQuantities: number[];
-  lineUnitPrices: number[];
-  lineTotals: number[];
-  lineIsWholesale: boolean[];
-  total: number;
-  onStepLine: (index: number, direction: 1 | -1) => void;
-  onSetQty: (index: number, raw: string) => void;
-  onRemoveLine: (index: number) => void;
-  onCheckout: () => void;
-}) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalBackdrop />
-      <ModalContent className="bg-white" style={{ maxHeight: "85%" }}>
-        <ModalHeader className="items-center justify-between">
-          <Heading size="md" className="text-gray-900">
-            Carrito
-          </Heading>
-          <TouchableOpacity onPress={onClose}>
-            <Icon as={X} size="sm" className="text-gray-400" />
-          </TouchableOpacity>
-        </ModalHeader>
-
-        <ModalBody style={{ flexGrow: 0, flexShrink: 1 }}>
-          <ScrollView style={{ flexGrow: 0 }}>
-            {cart.length === 0 ? (
-              <CartEmptyState />
-            ) : (
-              <VStack space="md">
-                {cart.map((line, index) => (
-                  <CartLineRow
-                    key={`${line.product.product_id}-${line.unit.uom_id}`}
-                    line={line}
-                    index={index}
-                    maxQuantity={maxQuantities[index] ?? 0}
-                    unitPrice={lineUnitPrices[index] ?? 0}
-                    total={lineTotals[index] ?? 0}
-                    isWholesale={lineIsWholesale[index] ?? false}
-                    onStepLine={onStepLine}
-                    onSetQty={onSetQty}
-                    onRemoveLine={onRemoveLine}
-                  />
-                ))}
-              </VStack>
-            )}
-          </ScrollView>
-        </ModalBody>
-
-        {cart.length > 0 && (
-          <ModalFooter className="flex-col items-stretch gap-3">
-            <HStack className="items-center justify-between">
-              <Text className="text-sm text-gray-600">Total</Text>
-              <Text className="text-lg font-semibold text-gray-900">
-                {formatCurrency(total)}
-              </Text>
-            </HStack>
-            <AppButton
-              label={`Cobrar  ${formatCurrency(total)}`}
-              variant="info"
-              onPress={onCheckout}
-            />
-          </ModalFooter>
-        )}
-      </ModalContent>
-    </Modal>
-  );
-}
-
-function CategoryPill({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity onPress={onPress}>
-      <Box
-        className={`rounded-full px-3 py-1.5 ${
-          active ? "bg-violet-500" : "bg-gray-100"
-        }`}
-      >
-        <Text
-          className={`text-sm font-medium ${
-            active ? "text-white" : "text-gray-700"
-          }`}
-        >
-          {label}
-        </Text>
-      </Box>
-    </TouchableOpacity>
-  );
-}
-
-function SubcategoryPill({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity onPress={onPress}>
-      <Box
-        className={`rounded-full border px-2.5 py-1 ${
-          active ? "border-violet-500 bg-violet-50" : "border-gray-300 bg-white"
-        }`}
-      >
-        <Text
-          className={`text-xs font-medium ${
-            active ? "text-violet-700" : "text-gray-600"
-          }`}
-        >
-          {label}
-        </Text>
-      </Box>
-    </TouchableOpacity>
-  );
-}

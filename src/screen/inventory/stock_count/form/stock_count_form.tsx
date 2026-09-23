@@ -1,4 +1,3 @@
-// stock_count_adjustment.tsx (pantalla de diferencias / ajuste)
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";

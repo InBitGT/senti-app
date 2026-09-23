@@ -1,16 +1,6 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -137,9 +127,6 @@ export function StockAdjustmentsTable({
     minHeight: 48,
   };
 
-  const selectedStatusLabel =
-    STATUS_OPTIONS.find((s) => s.value === statusFilter)?.label || "";
-
   return (
     <VStack
       className="flex-1 px-4 py-6 md:px-10"
@@ -154,49 +141,26 @@ export function StockAdjustmentsTable({
           gap: 8,
         }}
       >
-        <Input
-          className="flex-1 sm:w-64 sm:flex-none bg-white rounded-lg"
-          variant="outline"
-          size="md"
-          style={{ flex: 1, backgroundColor: "#fff", borderRadius: 8 }}
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View style={{ flex: 1 }}>
+          <AppInput
             placeholder="Buscar ajuste..."
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         <View style={{ width: 200, marginLeft: 8 }}>
-          <Select
-            selectedValue={statusFilter}
-            onValueChange={(value) =>
+          <AppSelect
+            placeholder="Estado"
+            searchable={false}
+            options={STATUS_OPTIONS}
+            value={statusFilter}
+            onChange={(value) =>
               onStatusFilterChange(value as StatusAdjustmentStockSelect)
             }
-          >
-            <SelectTrigger>
-              <SelectInput
-                style={{ color: "#000" }}
-                placeholder="Estado"
-                value={selectedStatusLabel}
-              />
-            </SelectTrigger>
-            <SelectPortal>
-              <SelectBackdrop />
-              <SelectContent>
-                <SelectDragIndicatorWrapper>
-                  <SelectDragIndicator />
-                </SelectDragIndicatorWrapper>
-                {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s.value} label={s.label} value={s.value} />
-                ))}
-              </SelectContent>
-            </SelectPortal>
-          </Select>
+          />
         </View>
       </HStack>
 

@@ -1,7 +1,7 @@
 import { Action, ActionsMenu } from "@/components/atom";
-import { Button, ButtonText } from "@/components/ui/button";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Customer } from "@/src/types/customer/customer";
@@ -96,39 +96,31 @@ export function CustomersTable({
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
       <HStack className="justify-between items-center mb-4 gap-2">
-        <Input
-          className="flex-1 sm:w-64 sm:flex-none bg-white rounded-lg"
-          variant="outline"
-          size="md"
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View className="flex-1 sm:w-64 sm:flex-none">
+          <AppInput
             placeholder="Buscar cliente..."
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         <HStack className="gap-2 items-center shrink-0">
           <Menu
             visible={menuVisible}
             onDismiss={() => setMenuVisible(false)}
             anchor={
-              <Button
-                size="md"
-                variant="outline"
-                style={{ borderColor: "#d4d4d4" }}
-                className="px-3 sm:px-4"
+              <AppButton
+                label="Columnas"
+                icon={SlidersHorizontal}
+                outline
+                outlineBorderColor="#d4d4d4"
+                outlineTextColor="#374151"
+                fullWidth={false}
+                shrinkOnMobile
                 onPress={() => setMenuVisible(true)}
-              >
-                <SlidersHorizontal size={16} color="#374151" />
-                <ButtonText className="text-gray-700 hidden sm:flex sm:ml-1.5">
-                  Columnas
-                </ButtonText>
-              </Button>
+              />
             }
             contentStyle={{ backgroundColor: "#ffffff" }}
           >
@@ -150,16 +142,14 @@ export function CustomersTable({
           </Menu>
 
           {onNewCustomer && (
-            <Button
-              size="md"
-              variant="solid"
-              style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
-              className="px-3 sm:px-4"
+            <AppButton
+              label="Crear cliente"
+              icon={Plus}
+              variant="black"
+              fullWidth={false}
+              shrinkOnMobile
               onPress={onNewCustomer}
-            >
-              <Plus size={16} color="#ffffff" className="sm:hidden" />
-              <ButtonText className="hidden sm:flex">Crear cliente</ButtonText>
-            </Button>
+            />
           )}
         </HStack>
       </HStack>

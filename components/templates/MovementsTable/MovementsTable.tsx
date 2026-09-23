@@ -1,9 +1,8 @@
-// MovementsTable.tsx
 import { SummaryCard } from "@/components/atom";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { FilterPill } from "@/components/atom/FilterPill/FilterPill";
-import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -172,37 +171,30 @@ export function MovementsTable({
   return (
     <VStack style={styles.container}>
       <HStack style={{ gap: 8, marginBottom: 12, alignItems: "center" }}>
-        <Input
-          className="bg-white rounded-lg flex-1"
-          variant="outline"
-          size="md"
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000000" }}
+        <View style={{ flex: 1 }}>
+          <AppInput
             placeholder="Buscar producto, SKU, referencia, lote…"
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000000" }}
           />
-        </Input>
+        </View>
 
         <Menu
           visible={menuVisible}
           onDismiss={() => setMenuVisible(false)}
           anchor={
-            <Button
-              size="md"
-              variant="outline"
-              style={{ borderColor: "#d4d4d4" }}
+            <AppButton
+              label="Columnas"
+              icon={SlidersHorizontal}
+              outline
+              outlineBorderColor="#d4d4d4"
+              outlineTextColor="#374151"
+              fullWidth={false}
+              shrinkOnMobile
               onPress={() => setMenuVisible(true)}
-            >
-              <SlidersHorizontal size={16} color="#374151" />
-              <ButtonText className="text-gray-700 hidden sm:flex sm:ml-1.5">
-                Columnas
-              </ButtonText>
-            </Button>
+            />
           }
           contentStyle={{ backgroundColor: "#ffffff" }}
         >

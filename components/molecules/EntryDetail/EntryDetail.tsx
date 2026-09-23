@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 export interface EntryDetail {
   id: number;
@@ -91,24 +91,29 @@ export const ModalEntryDetail: React.FC<Props> = ({
             <StatusBadge status={data?.entry_status} />
           </View>
         </ModalHeader>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
+          showsVerticalScrollIndicator
+        >
+          <ModalBody>
+            <SectionTitle title="Factura" />
+            <InfoRow label="No. Documento" value={data?.document_number} />
+            <InfoRow label="Fecha" value={formattedDate} />
+            <InfoRow label="Total" value={`Q ${data?.total?.toFixed(2)}`} />
+            <InfoRow label="Notas" value={data?.notes} />
 
-        <ModalBody>
-          <SectionTitle title="Factura" />
-          <InfoRow label="No. Documento" value={data?.document_number} />
-          <InfoRow label="Fecha" value={formattedDate} />
-          <InfoRow label="Total" value={`Q ${data?.total?.toFixed(2)}`} />
-          <InfoRow label="Notas" value={data?.notes} />
+            <Divider />
 
-          <Divider />
-
-          <SectionTitle title="Proveedor" />
-          <InfoRow label="Nombre" value={data?.supplier?.name} />
-          <InfoRow label="NIT" value={data?.supplier?.nit} />
-          <InfoRow label="Teléfono" value={data?.supplier?.phone} />
-          <InfoRow label="Email" value={data?.supplier?.email} />
-          <InfoRow label="Contacto" value={data?.supplier?.contact_name} />
-        </ModalBody>
-
+            <SectionTitle title="Proveedor" />
+            <InfoRow label="Nombre" value={data?.supplier?.name} />
+            <InfoRow label="NIT" value={data?.supplier?.nit} />
+            <InfoRow label="Teléfono" value={data?.supplier?.phone} />
+            <InfoRow label="Email" value={data?.supplier?.email} />
+            <InfoRow label="Contacto" value={data?.supplier?.contact_name} />
+          </ModalBody>
+        </ScrollView>
         <ModalFooter>
           <Button variant="solid" size="sm" onPress={handleViewDetail}>
             <ButtonText>Ver detalle</ButtonText>

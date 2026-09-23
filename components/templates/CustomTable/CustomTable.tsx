@@ -1,7 +1,7 @@
 import { Action, ActionsMenu } from "@/components/atom";
-import { Button, ButtonText } from "@/components/ui/button";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -137,22 +137,15 @@ export function CustomTable<T extends Record<string, any>>({
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
       <HStack className="justify-between items-center mb-4">
-        <Input
-          className="bg-white rounded-lg flex-1"
-          variant="outline"
-          size="md"
-          style={{ marginRight: 12 }}
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <AppInput
             placeholder="Buscar..."
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         <HStack className="gap-3 items-center">
           {optionalColumns.length > 0 && (
@@ -160,18 +153,16 @@ export function CustomTable<T extends Record<string, any>>({
               visible={menuVisible}
               onDismiss={() => setMenuVisible(false)}
               anchor={
-                <Button
-                  size="md"
-                  variant="outline"
-                  className="px-3 sm:px-4"
-                  style={{ borderColor: "#d4d4d4", borderWidth: 1 }}
+                <AppButton
+                  label="Columnas"
+                  icon={SlidersHorizontal}
+                  outline
+                  outlineBorderColor="#d4d4d4"
+                  outlineTextColor="#374151"
+                  fullWidth={false}
+                  shrinkOnMobile
                   onPress={() => setMenuVisible(true)}
-                >
-                  <SlidersHorizontal size={16} color="#374151" />
-                  <ButtonText className="hidden sm:flex sm:ml-1.5">
-                    Columnas
-                  </ButtonText>
-                </Button>
+                />
               }
               contentStyle={{ backgroundColor: "#ffffff" }}
             >
@@ -196,24 +187,20 @@ export function CustomTable<T extends Record<string, any>>({
           )}
 
           {button?.map((btn) => {
-            const Icon = btn.icon ?? Plus;
+            const isSolid = btn.variant === "solid";
             return (
-              <Button
+              <AppButton
                 key={btn.key}
-                size="md"
-                variant={btn.variant}
-                className="px-3 sm:px-4"
-                style={[btn.style, { borderColor: "#d4d4d4", borderWidth: 1 }]}
+                label={btn.name}
+                icon={btn.icon ?? Plus}
+                variant="black"
+                outline={!isSolid}
+                outlineBorderColor="#d4d4d4"
+                outlineTextColor="#374151"
+                fullWidth={false}
+                shrinkOnMobile
                 onPress={btn.onPress}
-              >
-                <Icon
-                  size={16}
-                  color={btn.variant === "solid" ? "#ffffff" : "#374151"}
-                />
-                <ButtonText className="hidden sm:flex sm:ml-1.5">
-                  {btn.name}
-                </ButtonText>
-              </Button>
+              />
             );
           })}
         </HStack>
