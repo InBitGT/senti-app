@@ -5,15 +5,12 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    // padding: 10,
-    // marginHorizontal: 8,
-    // marginVertical: 1,
     borderRadius: 10,
     paddingTop: 6,
     paddingBottom: 6,
+    paddingLeft: 12,
   },
   itemChild: {
-    paddingLeft: 12,
     marginVertical: 0,
   },
   itemActive: {
