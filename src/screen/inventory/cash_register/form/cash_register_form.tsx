@@ -1,30 +1,12 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCashRegister } from "@/src/hooks/useCashRegister/useCashRegister";
@@ -185,28 +167,14 @@ export default function CashRegisterForm() {
                     name="name"
                     rules={{ required: "El nombre es obligatorio." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.name}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Nombre
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Caja Principal"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.name?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Nombre"
+                        placeholder="Ej. Caja Principal"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.name?.message}
+                      />
                     )}
                   />
 
@@ -216,31 +184,15 @@ export default function CashRegisterForm() {
                     name="code"
                     rules={{ required: "El código es obligatorio." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.code}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Código
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. CAJA-01"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.toUpperCase())
-                            }
-                            onBlur={onBlur}
-                            autoCapitalize="characters"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.code?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Código"
+                        placeholder="Ej. CAJA-01"
+                        value={value}
+                        onChangeText={(text) => onChange(text.toUpperCase())}
+                        onBlur={onBlur}
+                        autoCapitalize="characters"
+                        errorMessage={errors.code?.message}
+                      />
                     )}
                   />
 
@@ -250,54 +202,21 @@ export default function CashRegisterForm() {
                       control={control}
                       name="warehouse_id"
                       rules={{ required: "La bodega es obligatoria." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          warehouseOptions.find((w) => String(w.id) === value)
-                            ?.label || "";
-
-                        return (
-                          <FormControl isInvalid={!!errors.warehouse_id}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Bodega
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona una bodega"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {warehouseOptions.map((w) => (
-                                    <SelectItem
-                                      key={w.id}
-                                      label={w.label}
-                                      value={String(w.id)}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.warehouse_id?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
-                        );
-                      }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Bodega"
+                          placeholder="Selecciona una bodega"
+                          searchable={warehouseOptions.length > 6}
+                          searchPlaceholder="Buscar bodega..."
+                          options={warehouseOptions.map((w) => ({
+                            label: w.label,
+                            value: String(w.id),
+                          }))}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.warehouse_id?.message}
+                        />
+                      )}
                     />
                   )}
 

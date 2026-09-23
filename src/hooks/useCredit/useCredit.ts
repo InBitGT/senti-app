@@ -1,6 +1,7 @@
 import {
   creditFn,
   DeleteCustomerCredit,
+  noCreditFn,
   PostCustomerCredit,
   PreviousCustomerCredit,
   PutCustomerCredit,
@@ -16,6 +17,11 @@ export function useCredit() {
   const { data, isLoading } = useQuery({
     queryKey: KEY,
     queryFn: creditFn,
+  });
+
+  const { data: NoCreditData, isLoading: isLoadingNoCredit } = useQuery({
+    queryKey: ["no-credit-users"],
+    queryFn: noCreditFn,
   });
 
   const post = useMutation({
@@ -48,5 +54,14 @@ export function useCredit() {
     },
   });
 
-  return { data, isLoading, post, put, remove, previousCredit };
+  return {
+    data,
+    isLoading,
+    post,
+    put,
+    remove,
+    previousCredit,
+    NoCreditData,
+    isLoadingNoCredit,
+  };
 }

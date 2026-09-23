@@ -1,20 +1,10 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { ProductCountList } from "@/components/molecules/ProductCountList/ProductCountList";
 import { ProductPicker } from "@/components/molecules/ProductPicker/ProductPicker";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -249,79 +239,42 @@ export function CountScreen() {
           <VStack style={styles.card}>
             {hasMultipleBranches && (
               <VStack style={{ marginBottom: 3 }}>
-                <Text style={styles.cardLabel}>Sucursal</Text>
-                <Select
-                  selectedValue={selectedBranchId}
-                  onValueChange={setSelectedBranchId}
-                >
-                  <SelectTrigger style={{ marginTop: 8 }}>
-                    <SelectInput
-                      style={{ color: "#000" }}
-                      placeholder="Selecciona una sucursal"
-                      value={selectedBranch?.branch_name ?? ""}
-                    />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      <SelectDragIndicatorWrapper>
-                        <SelectDragIndicator />
-                      </SelectDragIndicatorWrapper>
-                      {branches.map((b) => (
-                        <SelectItem
-                          key={b.branch_id}
-                          label={b.branch_name}
-                          value={String(b.branch_id)}
-                        />
-                      ))}
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
+                <AppSelect
+                  label="Sucursal"
+                  placeholder="Selecciona una sucursal"
+                  searchable={branches.length > 6}
+                  options={branches.map((b) => ({
+                    label: b.branch_name,
+                    value: String(b.branch_id),
+                  }))}
+                  value={selectedBranchId}
+                  onChange={setSelectedBranchId}
+                />
               </VStack>
             )}
 
             {selectedBranchId && hasMultipleWarehouses && (
               <VStack style={{ marginBottom: 2 }}>
-                <Text style={styles.cardLabel}>Bodega</Text>
-                <Select
-                  selectedValue={selectedWarehouseId}
-                  onValueChange={setSelectedWarehouseId}
-                >
-                  <SelectTrigger style={{ marginTop: 8 }}>
-                    <SelectInput
-                      style={{ color: "#000" }}
-                      placeholder="Selecciona una bodega"
-                      value={selectedWarehouse?.warehouse_name ?? ""}
-                    />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      <SelectDragIndicatorWrapper>
-                        <SelectDragIndicator />
-                      </SelectDragIndicatorWrapper>
-                      {warehouses.map((w) => (
-                        <SelectItem
-                          key={w.warehouse_id}
-                          label={w.warehouse_name}
-                          value={String(w.warehouse_id)}
-                        />
-                      ))}
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
+                <AppSelect
+                  label="Bodega"
+                  placeholder="Selecciona una bodega"
+                  searchable={warehouses.length > 6}
+                  options={warehouses.map((w) => ({
+                    label: w.warehouse_name,
+                    value: String(w.warehouse_id),
+                  }))}
+                  value={selectedWarehouseId}
+                  onChange={setSelectedWarehouseId}
+                />
               </VStack>
             )}
             <VStack>
-              <Text style={styles.cardLabel}>Notas de alcance</Text>
-              <Input variant="outline" size="md" style={{ marginTop: 8 }}>
-                <InputField
-                  style={{ color: "#000000" }}
-                  placeholder="Ej. Papelería zona A"
-                  value={scopeNotes}
-                  onChangeText={setScopeNotes}
-                />
-              </Input>
+              <AppInput
+                label="Notas de alcance"
+                placeholder="Ej. Papelería zona A"
+                value={scopeNotes}
+                onChangeText={setScopeNotes}
+              />
             </VStack>
           </VStack>
 

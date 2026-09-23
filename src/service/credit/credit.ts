@@ -5,6 +5,7 @@ import {
   CreateCredit,
   CreatePreviousCredit,
   CustomerCredit,
+  NoCredit,
 } from "@/src/types/credit/credit";
 
 export async function creditFn() {
@@ -14,6 +15,21 @@ export async function creditFn() {
   }
   const response = await get<CustomerCredit[]>(
     ENDPOINT.credit.detail(claims.tenant_id),
+  );
+  if (response.code !== "200") {
+    throw new Error(response.message);
+  }
+
+  return response.data;
+}
+
+export async function noCreditFn() {
+  const { claims } = useAuthStore.getState();
+  if (!claims) {
+    throw new Error();
+  }
+  const response = await get<NoCredit[]>(
+    ENDPOINT.credit.noCredit(claims.tenant_id),
   );
   if (response.code !== "200") {
     throw new Error(response.message);

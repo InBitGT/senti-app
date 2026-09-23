@@ -1,19 +1,11 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -26,7 +18,6 @@ import {
 } from "@/src/types/customer_type/customer_type";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
-import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -155,28 +146,14 @@ export default function CustomerTypeForm() {
                     name="name"
                     rules={{ required: "El nombre es obligatorio." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.name}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Nombre
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Persona Natural"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.name?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Nombre"
+                        placeholder="Ej. Persona Natural"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.name?.message}
+                      />
                     )}
                   />
 
@@ -185,25 +162,13 @@ export default function CustomerTypeForm() {
                     control={control}
                     name="description"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descripción{" "}
-                            <Text size="xs" style={{ color: "#999" }}>
-                              (opcional)
-                            </Text>
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Clientes individuales sin razón social"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                      </FormControl>
+                      <AppInput
+                        label="Descripción (opcional)"
+                        placeholder="Ej. Clientes individuales sin razón social"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
                     )}
                   />
 

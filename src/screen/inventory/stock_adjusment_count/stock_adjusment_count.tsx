@@ -1,18 +1,8 @@
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalStockAdjustmentDetail } from "@/components/molecules/ModalStockAdjusmentCount/ModalStockAdjusmentCount";
 import { StockAdjustmentsTable } from "@/components/templates/StockAdjustmentCount/StockAdjustmentCount";
 import { HStack } from "@/components/ui/hstack";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useStockCounAdjustment } from "@/src/hooks/useStockCountAdjustment/useStockCountAdjustment";
@@ -78,10 +68,6 @@ export const StockAdjustmentCountScreen: React.FC = () => {
   } = useStockCounAdjustment(selectedWarehouseId, selectedStatus);
   const { showToast } = useCustomToast();
 
-  const selectedWarehouseLabel =
-    warehouseOptions.find((w) => String(w.id) === selectedWarehouseId)?.label ||
-    "";
-
   const handleRowPress = (data: StockAdjustmentModel) => {
     setShowModalData(true);
     setModalData(data);
@@ -140,7 +126,6 @@ export const StockAdjustmentCountScreen: React.FC = () => {
         <WarehouseSelect
           options={warehouseOptions}
           selectedValue={selectedWarehouseId}
-          selectedLabel={selectedWarehouseLabel}
           onValueChange={setSelectedWarehouseId}
         />
         <TableSkeleton />
@@ -153,7 +138,6 @@ export const StockAdjustmentCountScreen: React.FC = () => {
       <WarehouseSelect
         options={warehouseOptions}
         selectedValue={selectedWarehouseId}
-        selectedLabel={selectedWarehouseLabel}
         onValueChange={setSelectedWarehouseId}
       />
       <StockAdjustmentsTable
@@ -182,14 +166,12 @@ export const StockAdjustmentCountScreen: React.FC = () => {
 interface WarehouseSelectProps {
   options: WarehouseOption[];
   selectedValue: string;
-  selectedLabel: string;
   onValueChange: (value: string) => void;
 }
 
 const WarehouseSelect: React.FC<WarehouseSelectProps> = ({
   options,
   selectedValue,
-  selectedLabel,
   onValueChange,
 }) => {
   if (options.length <= 1) return null; // no tiene sentido filtrar si solo hay una bodega
@@ -198,26 +180,16 @@ const WarehouseSelect: React.FC<WarehouseSelectProps> = ({
     <VStack className="px-4 pt-6 md:px-10">
       <HStack className="items-center gap-2">
         <View style={{ width: 260 }}>
-          <Select selectedValue={selectedValue} onValueChange={onValueChange}>
-            <SelectTrigger>
-              <SelectInput
-                style={{ color: "#000" }}
-                placeholder="Selecciona una bodega"
-                value={selectedLabel}
-              />
-            </SelectTrigger>
-            <SelectPortal>
-              <SelectBackdrop />
-              <SelectContent>
-                <SelectDragIndicatorWrapper>
-                  <SelectDragIndicator />
-                </SelectDragIndicatorWrapper>
-                {options.map((w) => (
-                  <SelectItem key={w.id} label={w.label} value={String(w.id)} />
-                ))}
-              </SelectContent>
-            </SelectPortal>
-          </Select>
+          <AppSelect
+            placeholder="Selecciona una bodega"
+            searchable={options.length > 6}
+            options={options.map((w) => ({
+              label: w.label,
+              value: String(w.id),
+            }))}
+            value={selectedValue}
+            onChange={onValueChange}
+          />
         </View>
       </HStack>
     </VStack>

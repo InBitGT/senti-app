@@ -1,9 +1,9 @@
 // stock_count_adjustment.tsx (pantalla de diferencias / ajuste)
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useStockCounAdjustment } from "@/src/hooks/useStockCountAdjustment/useStockCountAdjustment";
@@ -124,21 +124,14 @@ export default function StockCountDetail() {
           )}
 
           <VStack>
-            <Text style={styles.label}>Notas del ajuste</Text>
-            <Textarea>
-              <TextareaInput
-                style={{
-                  color: "#000",
-                  backgroundColor: "#fff",
-                  borderWidth: 1,
-                  borderColor: "#d4d4d4",
-                  borderRadius: 10,
-                }}
-                placeholder="Ej. Diferencia encontrada en conteo del 01/07"
-                value={notes}
-                onChangeText={setNotes}
-              />
-            </Textarea>
+            <AppInput
+              label="Notas del ajuste"
+              placeholder="Ej. Diferencia encontrada en conteo del 01/07"
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              textareaHeight={100}
+            />
           </VStack>
         </DesktopScrollView>
       </ScrollView>

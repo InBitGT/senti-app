@@ -1,30 +1,12 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -38,7 +20,7 @@ import {
 } from "@/src/types/warehouse_zone/warehouse_zone";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -161,6 +143,17 @@ export default function WarehouseZoneForm() {
 
   const isPending = post.isPending || put.isPending;
 
+  const parentZoneOptions = useMemo(
+    () => [
+      { label: "Ninguna (zona raíz)", value: "" },
+      ...parentOptions.map((z) => ({
+        label: z.name,
+        value: String(z.id),
+      })),
+    ],
+    [parentOptions],
+  );
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -213,28 +206,14 @@ export default function WarehouseZoneForm() {
                         name="name"
                         rules={{ required: "El nombre es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.name}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Nombre
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. Zona A"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.name?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Nombre"
+                            placeholder="Ej. Zona A"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.name?.message}
+                          />
                         )}
                       />
                     </View>
@@ -244,29 +223,15 @@ export default function WarehouseZoneForm() {
                         name="code"
                         rules={{ required: "El código es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.code}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Código
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. ZA"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                autoCapitalize="characters"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.code?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Código"
+                            placeholder="Ej. ZA"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            autoCapitalize="characters"
+                            errorMessage={errors.code?.message}
+                          />
                         )}
                       />
                     </View>
@@ -280,50 +245,15 @@ export default function WarehouseZoneForm() {
                         name="zone_type"
                         rules={{ required: "El tipo es obligatorio." }}
                         render={({ field: { onChange, value } }) => (
-                          <FormControl isInvalid={!!errors.zone_type}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Tipo
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un tipo"
-                                  value={
-                                    ZONE_TYPE_OPTIONS.find(
-                                      (t) => t.value === value,
-                                    )?.label || ""
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {ZONE_TYPE_OPTIONS.map((t) => (
-                                    <SelectItem
-                                      key={t.value}
-                                      label={t.label}
-                                      value={t.value}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.zone_type?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppSelect
+                            label="Tipo"
+                            placeholder="Selecciona un tipo"
+                            searchable={ZONE_TYPE_OPTIONS.length > 6}
+                            options={ZONE_TYPE_OPTIONS}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.zone_type?.message}
+                          />
                         )}
                       />
                     </View>
@@ -331,55 +261,16 @@ export default function WarehouseZoneForm() {
                       <Controller
                         control={control}
                         name="parent_zone_id"
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            parentOptions.find((z) => String(z.id) === value)
-                              ?.name || "";
-
-                          return (
-                            <FormControl>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Zona padre{" "}
-                                  <Text size="xs" style={{ color: "#999" }}>
-                                    (opcional)
-                                  </Text>
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder="Ninguna (zona raíz)"
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    <SelectItem
-                                      label="Ninguna (zona raíz)"
-                                      value=""
-                                    />
-                                    {parentOptions.map((z) => (
-                                      <SelectItem
-                                        key={z.id}
-                                        label={z.name}
-                                        value={String(z.id)}
-                                      />
-                                    ))}
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                            </FormControl>
-                          );
-                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Zona padre (opcional)"
+                            placeholder="Ninguna (zona raíz)"
+                            searchable={parentZoneOptions.length > 6}
+                            options={parentZoneOptions}
+                            value={value}
+                            onChange={onChange}
+                          />
+                        )}
                       />
                     </View>
                   </View>

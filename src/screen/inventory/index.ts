@@ -1,7 +1,6 @@
-export * from "./categorie"
-export * from "./entry_stock"
-export * from "./inventory_adjustment"
-export * from "./product"
-export * from "./supplier"
-export * from "./warehouse"
+export * from "./categorie";
+export * from "./entry_stock";
+export * from "./product";
+export * from "./supplier";
+export * from "./warehouse";
 

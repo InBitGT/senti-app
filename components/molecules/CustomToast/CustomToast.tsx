@@ -1,5 +1,5 @@
-import { Toast, ToastTitle } from '@/components/ui/toast';
-import React from 'react';
+import { Toast, ToastTitle } from "@/components/ui/toast";
+import React from "react";
 
 interface Props {
   Icon: React.ElementType;
@@ -11,11 +11,14 @@ export const CustomToast: React.FC<Props> = ({ Icon, toastId, message }) => {
   return (
     <Toast
       nativeID={toastId}
-      className="px-5 py-3 gap-4 shadow-soft-1 items-center flex-row"
+      action="muted"
+      variant="solid"
+      className="bg-neutral-800 px-5 py-3 gap-3 rounded-xl items-center flex-row"
     >
-      <Icon className="fill-typography-100 stroke-none" />
-
-      <ToastTitle size="sm">{message}</ToastTitle>
+      <Icon size={20} color="#ffffff" />
+      <ToastTitle size="sm" className="text-white flex-shrink">
+        {message}
+      </ToastTitle>
     </Toast>
   );
 };

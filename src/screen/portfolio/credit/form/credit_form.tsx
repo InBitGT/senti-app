@@ -1,44 +1,26 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCredit } from "@/src/hooks/useCredit/useCredit";
-import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useCustomer } from "@/src/hooks/useCustomer/useCustomer";
+import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useAuthStore } from "@/src/store";
 import { useCustomerCreditStore } from "@/src/store/useCreditStore/useCreditStore";
 import { CreateCredit, CustomerCredit } from "@/src/types/credit/credit";
+import { formatCurrency } from "@/src/utils/formatCurrency/formatCurrency";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
-import React from "react";
+import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -56,14 +38,12 @@ interface FormValues {
   payment_term_days: string;
 }
 
-const formatCurrency = (value: number) =>
-  `Q${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
 export default function CustomerCreditForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
-  const { post, put } = useCredit();
-  const { data: customerData, isLoading: isLoadingCustomer } = useCustomer();
+  const { post, put, NoCreditData, isLoadingNoCredit } = useCredit();
+  const { data: CustomerData, isLoading: isLoadingCustomers } = useCustomer();
+
   const data = useCustomerCreditStore((state) => state.data);
   const isEdit = useCustomerCreditStore((state) => state.isEdit);
   const clearData = useCustomerCreditStore((state) => state.clearData);
@@ -92,6 +72,26 @@ export default function CustomerCreditForm() {
   });
 
   const hasCreditValue = watch("has_credit");
+
+  // En edición: el cliente ya tiene crédito, así que no aparece en
+  // NoCreditData (que es la lista de clientes SIN crédito). Para
+  // poder mostrar su nombre correctamente, usamos el listado
+  // completo de clientes (useCustomer) cuando isEdit es true.
+  const customerList = isEdit ? CustomerData : NoCreditData;
+
+  // Se pasa la lista completa; AppSelect normaliza y filtra
+  // internamente por lo que el usuario escriba en el buscador.
+  const customerOptions = useMemo(() => {
+    const list = customerList ?? [];
+    return list.map((c) => ({
+      label: c.name,
+      value: String(c.id),
+    }));
+  }, [customerList]);
+
+  const isLoadingCustomerOptions = isEdit
+    ? isLoadingCustomers
+    : isLoadingNoCredit;
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
@@ -184,61 +184,19 @@ export default function CustomerCreditForm() {
                     control={control}
                     name="customer_id"
                     rules={{ required: "El cliente es obligatorio." }}
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        customerData?.find((c) => String(c.id) === value)
-                          ?.name || "";
-
-                      return (
-                        <FormControl isInvalid={!!errors.customer_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Cliente
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          {isLoadingCustomer ? (
-                            <View style={{ paddingVertical: 10 }}>
-                              <ActivityIndicator size="small" />
-                            </View>
-                          ) : (
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                              isDisabled={isEdit}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un cliente"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {(customerData ?? []).map((c) => (
-                                    <SelectItem
-                                      key={c.id}
-                                      label={c.name}
-                                      value={String(c.id)}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                          )}
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.customer_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      );
-                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Cliente"
+                        placeholder="Selecciona un cliente"
+                        searchPlaceholder="Buscar por nombre..."
+                        options={customerOptions}
+                        value={value}
+                        onChange={onChange}
+                        isDisabled={isEdit}
+                        isLoading={isLoadingCustomerOptions}
+                        errorMessage={errors.customer_id?.message}
+                      />
+                    )}
                   />
 
                   {/* Tiene crédito */}
@@ -275,30 +233,16 @@ export default function CustomerCreditForm() {
                             "Debe ser un número válido.",
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.credit_limit}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Límite de crédito (Q)
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. 500"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                keyboardType="decimal-pad"
-                                editable={hasCreditValue}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.credit_limit?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Límite de crédito (Q)"
+                            placeholder="Ej. 500"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                            editable={hasCreditValue}
+                            errorMessage={errors.credit_limit?.message}
+                          />
                         )}
                       />
                     </View>
@@ -312,30 +256,16 @@ export default function CustomerCreditForm() {
                             !isNaN(parseInt(v)) || "Debe ser un número entero.",
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.payment_term_days}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Plazo de pago (días)
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. 30"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                keyboardType="number-pad"
-                                editable={hasCreditValue}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.payment_term_days?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Plazo de pago (días)"
+                            placeholder="Ej. 30"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                            editable={hasCreditValue}
+                            errorMessage={errors.payment_term_days?.message}
+                          />
                         )}
                       />
                     </View>

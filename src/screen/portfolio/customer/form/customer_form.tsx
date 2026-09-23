@@ -1,30 +1,12 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -35,10 +17,8 @@ import { useCustomerStore } from "@/src/store/useCustomerStore/useCustomerStore"
 import { CreateCustomer, Customer } from "@/src/types/customer/customer";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
-import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -49,7 +29,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// ⚠️ Ajusta estas opciones si tus tipos de documento reales son otros
 const DOCUMENT_TYPE_OPTIONS = [
   { value: "DPI", label: "DPI" },
   { value: "PASAPORTE", label: "Pasaporte" },
@@ -204,28 +183,14 @@ export default function CustomerForm() {
                     name="name"
                     rules={{ required: "El nombre es obligatorio." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.name}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Nombre
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Juan Pérez"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.name?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Nombre"
+                        placeholder="Juan Pérez"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.name?.message}
+                      />
                     )}
                   />
 
@@ -239,50 +204,15 @@ export default function CustomerForm() {
                           required: "El tipo de documento es obligatorio.",
                         }}
                         render={({ field: { onChange, value } }) => (
-                          <FormControl isInvalid={!!errors.document_type}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Tipo de documento
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un tipo"
-                                  value={
-                                    DOCUMENT_TYPE_OPTIONS.find(
-                                      (t) => t.value === value,
-                                    )?.label || ""
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {DOCUMENT_TYPE_OPTIONS.map((t) => (
-                                    <SelectItem
-                                      key={t.value}
-                                      label={t.label}
-                                      value={t.value}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.document_type?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppSelect
+                            label="Tipo de documento"
+                            placeholder="Selecciona un tipo"
+                            searchable={false}
+                            options={DOCUMENT_TYPE_OPTIONS}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.document_type?.message}
+                          />
                         )}
                       />
                     </View>
@@ -294,31 +224,17 @@ export default function CustomerForm() {
                           required: "El número de documento es obligatorio.",
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.document_number}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Número de documento
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="1234567890101"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.replace(/[^0-9A-Z-]/g, ""))
-                                }
-                                onBlur={onBlur}
-                                keyboardType="number-pad"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.document_number?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Número de documento"
+                            placeholder="1234567890101"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.replace(/[^0-9A-Z-]/g, ""))
+                            }
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                            errorMessage={errors.document_number?.message}
+                          />
                         )}
                       />
                     </View>
@@ -332,32 +248,18 @@ export default function CustomerForm() {
                         name="phone"
                         rules={{ required: "El teléfono es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.phone}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Teléfono
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="12345678"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.replace(/[^0-9.-]/g, ""))
-                                }
-                                onBlur={onBlur}
-                                keyboardType="phone-pad"
-                                maxLength={9}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.phone?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Teléfono"
+                            placeholder="12345678"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.replace(/[^0-9.-]/g, ""))
+                            }
+                            onBlur={onBlur}
+                            keyboardType="phone-pad"
+                            maxLength={9}
+                            errorMessage={errors.phone?.message}
+                          />
                         )}
                       />
                     </View>
@@ -372,30 +274,16 @@ export default function CustomerForm() {
                           },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.email}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Email
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. juan.perez@example.com"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.email?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Email"
+                            placeholder="Ej. juan.perez@example.com"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            errorMessage={errors.email?.message}
+                          />
                         )}
                       />
                     </View>
@@ -407,28 +295,14 @@ export default function CustomerForm() {
                     name="address"
                     rules={{ required: "La dirección es obligatoria." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.address}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Dirección
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Zona 10, Ciudad de Guatemala"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.address?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Dirección"
+                        placeholder="Ej. Zona 10, Ciudad de Guatemala"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.address?.message}
+                      />
                     )}
                   />
 
@@ -437,60 +311,21 @@ export default function CustomerForm() {
                     control={control}
                     name="customer_type_id"
                     rules={{ required: "El tipo de cliente es obligatorio." }}
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        customerTypeData?.find((c) => String(c.id) === value)
-                          ?.name || "";
-
-                      return (
-                        <FormControl isInvalid={!!errors.customer_type_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Tipo de cliente
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          {isLoadingCustomerType ? (
-                            <View style={{ paddingVertical: 10 }}>
-                              <ActivityIndicator size="small" />
-                            </View>
-                          ) : (
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un tipo de cliente"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {(customerTypeData ?? []).map((c) => (
-                                    <SelectItem
-                                      key={c.id}
-                                      label={c.name}
-                                      value={String(c.id)}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                          )}
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.customer_type_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      );
-                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Tipo de cliente"
+                        placeholder="Selecciona un tipo de cliente"
+                        searchable={false}
+                        options={(customerTypeData ?? []).map((c) => ({
+                          label: c.name,
+                          value: String(c.id),
+                        }))}
+                        value={value}
+                        onChange={onChange}
+                        isLoading={isLoadingCustomerType}
+                        errorMessage={errors.customer_type_id?.message}
+                      />
+                    )}
                   />
 
                   {/* Botones */}

@@ -1,7 +1,7 @@
 import { CustomToast } from "@/components";
 import { useToast } from "@/components/ui/toast";
 import { BadgeCheck, CircleAlert, Info, LucideIcon } from "lucide-react-native";
-import React from "react";
+import { useCallback } from "react";
 
 type ToastType = "success" | "error" | "info";
 
@@ -15,24 +15,28 @@ interface ShowToastProps {
   message: string;
   type?: ToastType;
   icon?: LucideIcon;
+  duration?: number;
 }
 
 export const useCustomToast = () => {
   const toast = useToast();
 
-  const showToast = ({ message, type = "success", icon }: ShowToastProps) => {
-    const Icon = icon ?? TOAST_ICONS[type];
+  const showToast = useCallback(
+    ({ message, type = "success", icon, duration = 3000 }: ShowToastProps) => {
+      const Icon = icon ?? TOAST_ICONS[type];
+      const newId = Math.random().toString();
 
-    toast.show({
-      placement: "bottom",
-      render: ({ id }) => {
-        const toastId = "toast-" + id;
-        return (
-          <CustomToast toastId={toastId} Icon={Icon} message={message} />
-        ) as React.ReactNode;
-      },
-    });
-  };
+      toast.show({
+        id: newId,
+        placement: "bottom right",
+        duration,
+        render: ({ id }) => (
+          <CustomToast toastId={"toast-" + id} Icon={Icon} message={message} />
+        ),
+      });
+    },
+    [toast],
+  );
 
   return { showToast };
 };

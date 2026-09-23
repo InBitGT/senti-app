@@ -1,21 +1,12 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
@@ -24,7 +15,6 @@ import { useSupplierStore } from "@/src/store/useSupplierStore/useSupplierStore"
 import { SupplierDetail } from "@/src/types/supplier/supplier.types";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
-import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -177,28 +167,14 @@ export default function SupplierForm() {
                           },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.name}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Nombre
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Distribuidora ABC"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.name?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Nombre"
+                            placeholder="Distribuidora ABC"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.name?.message}
+                          />
                         )}
                       />
                     </View>
@@ -211,31 +187,17 @@ export default function SupplierForm() {
                           required: "El NIT es obligatorio.",
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.nit}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                NIT
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="123456-7"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.toUpperCase())
-                                }
-                                onBlur={onBlur}
-                                maxLength={10}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.nit?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="NIT"
+                            placeholder="123456-7"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.toUpperCase())
+                            }
+                            onBlur={onBlur}
+                            maxLength={10}
+                            errorMessage={errors.nit?.message}
+                          />
                         )}
                       />
                     </View>
@@ -252,32 +214,18 @@ export default function SupplierForm() {
                           minLength: { value: 8, message: "Mínimo 8 dígitos." },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.phone}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Teléfono
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="55551234"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.replace(/[^0-9-]/g, ""))
-                                }
-                                onBlur={onBlur}
-                                keyboardType="phone-pad"
-                                maxLength={8}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.phone?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Teléfono"
+                            placeholder="55551234"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.replace(/[^0-9-]/g, ""))
+                            }
+                            onBlur={onBlur}
+                            keyboardType="phone-pad"
+                            maxLength={8}
+                            errorMessage={errors.phone?.message}
+                          />
                         )}
                       />
                     </View>
@@ -293,30 +241,16 @@ export default function SupplierForm() {
                           },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.email}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Correo electrónico
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="proveedor@email.com"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.email?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Correo electrónico"
+                            placeholder="proveedor@email.com"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            errorMessage={errors.email?.message}
+                          />
                         )}
                       />
                     </View>
@@ -336,28 +270,14 @@ export default function SupplierForm() {
                           },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.contact_name}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Nombre de contacto
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Juan Pérez"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.contact_name?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Nombre de contacto"
+                            placeholder="Juan Pérez"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.contact_name?.message}
+                          />
                         )}
                       />
                     </View>
@@ -367,28 +287,16 @@ export default function SupplierForm() {
                         control={control}
                         name="description"
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.description}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Descripción (opcional)
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Textarea>
-                              <TextareaInput
-                                style={{ color: "#171717" }}
-                                placeholder="Información adicional del proveedor..."
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Textarea>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.description?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Descripción (opcional)"
+                            placeholder="Información adicional del proveedor..."
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            multiline
+                            textareaHeight={100}
+                            errorMessage={errors.description?.message}
+                          />
                         )}
                       />
                     </View>

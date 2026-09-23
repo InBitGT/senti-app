@@ -1,40 +1,22 @@
 // payment_form.tsx
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCredit } from "@/src/hooks/useCredit/useCredit";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useLoanPayments } from "@/src/hooks/useLoanPayments/useLoanPayments";
 import { useAuthStore } from "@/src/store";
+import { useDimensions } from "@/src/utils/dimentions/dimentions";
+import { formatCurrency } from "@/src/utils/formatCurrency/formatCurrency";
 import { CheckCircle2 } from "lucide-react-native";
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -66,15 +48,13 @@ interface PaymentResult {
   clientName?: string;
 }
 
-const currencyFormat = (value: number) =>
-  `Q${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
 export default function LoanPaymentForm() {
   const { post } = useLoanPayments();
   const { data: clients, isLoading: isLoadingClients } = useCredit();
   const { claims } = useAuthStore();
   const { showToast } = useCustomToast();
   const [result, setResult] = useState<PaymentResult | null>(null);
+  const desktop = useDimensions();
 
   const {
     control,
@@ -97,6 +77,16 @@ export default function LoanPaymentForm() {
     (c) => String(c.customer_id) === selectedUserId,
   );
   const hasNoPendingDebt = !!selectedClient && selectedClient.credit_used === 0;
+
+  // Se pasa la lista completa; AppSelect normaliza y filtra
+  // internamente por lo que el usuario escriba en el buscador.
+  const clientOptions = useMemo(() => {
+    const list = clients ?? [];
+    return list.map((c) => ({
+      label: c.customer.name,
+      value: String(c.customer_id),
+    }));
+  }, [clients]);
 
   const onSubmit = async (values: FormValues) => {
     const payload: PaymentDetail = {
@@ -166,7 +156,7 @@ export default function LoanPaymentForm() {
                     <HStack style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Monto abonado</Text>
                       <Text style={styles.summaryValue}>
-                        {currencyFormat(result.payment.amount)}
+                        {formatCurrency(result.payment.amount)}
                       </Text>
                     </HStack>
                     <HStack style={styles.summaryRow}>
@@ -246,86 +236,49 @@ export default function LoanPaymentForm() {
                     control={control}
                     name="user_id"
                     rules={{ required: "Selecciona un cliente." }}
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        clients?.find((c) => String(c.customer_id) === value)
-                          ?.customer.name || "";
-                      return (
-                        <FormControl isInvalid={!!errors.user_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Cliente
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          {isLoadingClients ? (
-                            <View style={{ paddingVertical: 10 }}>
-                              <ActivityIndicator size="small" />
-                            </View>
-                          ) : (
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un cliente"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {(clients ?? []).map((c) => (
-                                    <SelectItem
-                                      key={c.customer_id}
-                                      label={c.customer.name}
-                                      value={String(c.customer_id)}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                          )}
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.user_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                          {selectedClient && (
-                            <HStack
+                    render={({ field: { onChange, value } }) => (
+                      <View>
+                        <AppSelect
+                          label="Cliente"
+                          placeholder="Selecciona un cliente"
+                          searchPlaceholder="Buscar por nombre..."
+                          options={clientOptions}
+                          value={value}
+                          onChange={onChange}
+                          isLoading={isLoadingClients}
+                          errorMessage={errors.user_id?.message}
+                        />
+                        {selectedClient && (
+                          <HStack
+                            style={{
+                              ...styles.debtBox,
+                              ...(hasNoPendingDebt && styles.debtBoxOk),
+                            }}
+                          >
+                            <Text
                               style={{
-                                ...styles.debtBox,
-                                ...(hasNoPendingDebt && styles.debtBoxOk),
+                                ...styles.debtLabel,
+                                ...(hasNoPendingDebt && styles.debtLabelOk),
+                                ...(desktop ? { margin: 10 } : { margin: 3 }),
                               }}
                             >
-                              <Text
-                                style={{
-                                  ...styles.debtLabel,
-                                  ...(hasNoPendingDebt && styles.debtLabelOk),
-                                }}
-                              >
-                                {hasNoPendingDebt
-                                  ? "Este cliente no tiene saldo pendiente"
-                                  : "Saldo pendiente"}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.debtValue,
-                                  hasNoPendingDebt && styles.debtLabelOk,
-                                ]}
-                              >
-                                {currencyFormat(selectedClient.credit_used)}
-                              </Text>
-                            </HStack>
-                          )}
-                        </FormControl>
-                      );
-                    }}
+                              {hasNoPendingDebt
+                                ? "Este cliente no tiene saldo pendiente"
+                                : "Saldo pendiente"}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.debtValue,
+                                hasNoPendingDebt && styles.debtLabelOk,
+                                { margin: desktop ? 10 : 3 },
+                              ]}
+                            >
+                              {formatCurrency(selectedClient.credit_used)}
+                            </Text>
+                          </HStack>
+                        )}
+                      </View>
+                    )}
                   />
 
                   {/* Monto */}
@@ -339,29 +292,17 @@ export default function LoanPaymentForm() {
                         "Ingresa un monto válido mayor a 0.",
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.amount}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Monto a abonar
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 300.00"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.amount?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Monto a abonar"
+                        placeholder="Ej. 300.00"
+                        value={value}
+                        onChangeText={(t) =>
+                          onChange(t.replace(/[^0-9.]/g, ""))
+                        }
+                        onBlur={onBlur}
+                        keyboardType="decimal-pad"
+                        errorMessage={errors.amount?.message}
+                      />
                     )}
                   />
 
@@ -376,29 +317,15 @@ export default function LoanPaymentForm() {
                         "Ingresa un plazo en días válido.",
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.payment_term_days}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Aplazar el tiempo de pago (días)
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 15"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.payment_term_days?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Aplazar el tiempo de pago (días)"
+                        placeholder="Ej. 15"
+                        value={value}
+                        onChangeText={(t) => onChange(t.replace(/[^0-9]/g, ""))}
+                        onBlur={onBlur}
+                        keyboardType="number-pad"
+                        errorMessage={errors.payment_term_days?.message}
+                      />
                     )}
                   />
 
@@ -407,25 +334,15 @@ export default function LoanPaymentForm() {
                     control={control}
                     name="description"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.description}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descripción{" "}
-                            <Text size="xs" style={{ color: "#999" }}>
-                              (opcional)
-                            </Text>
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Textarea>
-                          <TextareaInput
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Pago parcial, nuevo plazo acordado"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Textarea>
-                      </FormControl>
+                      <AppInput
+                        label="Descripción (opcional)"
+                        placeholder="Ej. Pago parcial, nuevo plazo acordado"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        multiline
+                        textareaHeight={90}
+                      />
                     )}
                   />
 
@@ -508,7 +425,7 @@ const styles = StyleSheet.create({
   debtBoxOk: {
     backgroundColor: "#dcfce7",
   },
-  debtLabel: { fontSize: 13, color: "#633806" },
+  debtLabel: { fontSize: 13, color: "#633806", margin: 5 },
   debtLabelOk: { color: "#166534" },
-  debtValue: { fontSize: 14, fontWeight: "600", color: "#633806" },
+  debtValue: { fontSize: 14, fontWeight: "600", color: "#633806", margin: 5 },
 });
