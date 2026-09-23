@@ -841,7 +841,7 @@ export default function MerchandiseForm() {
                               </View>
                             </View>
 
-                            {/* <View style={row}>
+                            <View style={row}>
                               <View style={half}>
                                 <Controller
                                   control={control}
@@ -849,31 +849,14 @@ export default function MerchandiseForm() {
                                   render={({
                                     field: { onChange, onBlur, value },
                                   }) => (
-                                    <FormControl>
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Cant. mínima mayoreo{" "}
-                                          <Text
-                                            size="xs"
-                                            style={{ color: "#999" }}
-                                          >
-                                            (opcional)
-                                          </Text>
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Input>
-                                        <InputField
-                                          style={{ color: "#171717" }}
-                                          placeholder="Ej. 5"
-                                          value={value}
-                                          onChangeText={onChange}
-                                          onBlur={onBlur}
-                                          keyboardType="number-pad"
-                                        />
-                                      </Input>
-                                    </FormControl>
+                                    <AppInput
+                                      label="Cant. mínima mayoreo (opcional)"
+                                      placeholder="Ej. 5"
+                                      value={value}
+                                      onChangeText={onChange}
+                                      onBlur={onBlur}
+                                      keyboardType="number-pad"
+                                    />
                                   )}
                                 />
                               </View>
@@ -884,35 +867,18 @@ export default function MerchandiseForm() {
                                   render={({
                                     field: { onChange, onBlur, value },
                                   }) => (
-                                    <FormControl>
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Precio mayoreo{" "}
-                                          <Text
-                                            size="xs"
-                                            style={{ color: "#999" }}
-                                          >
-                                            (opcional)
-                                          </Text>
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Input>
-                                        <InputField
-                                          style={{ color: "#171717" }}
-                                          placeholder="Ej. 7.50"
-                                          value={value}
-                                          onChangeText={onChange}
-                                          onBlur={onBlur}
-                                          keyboardType="decimal-pad"
-                                        />
-                                      </Input>
-                                    </FormControl>
+                                    <AppInput
+                                      label="Precio mayoreo (opcional)"
+                                      placeholder="Ej. 7.50"
+                                      value={value}
+                                      onChangeText={onChange}
+                                      onBlur={onBlur}
+                                      keyboardType="decimal-pad"
+                                    />
                                   )}
                                 />
                               </View>
-                            </View> */}
+                            </View>
                           </>
                         )}
 
@@ -933,7 +899,7 @@ export default function MerchandiseForm() {
                     );
                   })}
 
-                  {/* <Divider className="my-2" />
+                  <Divider className="my-2" />
                   <HStack
                     style={{
                       justifyContent: "space-between",
@@ -959,59 +925,28 @@ export default function MerchandiseForm() {
                       <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
                       <Text style={styles.addRowText}>Agregar precio</Text>
                     </Pressable>
-                  </HStack> */}
+                  </HStack>
 
-                  {/* {customerPriceFields.map((field, index) => (
+                  {customerPriceFields.map((field, index) => (
                     <View key={field.id} style={styles.dynamicRow}>
-                      <HStack style={{ gap: 10 }}>
+                      <HStack style={{ gap: 10, alignItems: "flex-end" }}>
                         <View style={{ flex: 2 }}>
                           <Controller
                             control={control}
                             name={`customer_type_prices.${index}.customer_type_id`}
-                            render={({ field: { onChange, value } }) => {
-                              const label =
-                                customerTypes?.find(
-                                  (c) => String(c.id) === value,
-                                )?.name || "";
-                              return (
-                                <FormControl>
-                                  <FormControlLabel>
-                                    <FormControlLabelText
-                                      style={{ color: "#000" }}
-                                    >
-                                      Tipo de cliente
-                                    </FormControlLabelText>
-                                  </FormControlLabel>
-                                  <Select
-                                    selectedValue={value}
-                                    onValueChange={onChange}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectInput
-                                        style={{ color: "#000" }}
-                                        placeholder="Selecciona tipo"
-                                        value={label}
-                                      />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                      <SelectBackdrop />
-                                      <SelectContent>
-                                        <SelectDragIndicatorWrapper>
-                                          <SelectDragIndicator />
-                                        </SelectDragIndicatorWrapper>
-                                        {(customerTypes ?? []).map((c) => (
-                                          <SelectItem
-                                            key={c.id}
-                                            label={c.name}
-                                            value={String(c.id)}
-                                          />
-                                        ))}
-                                      </SelectContent>
-                                    </SelectPortal>
-                                  </Select>
-                                </FormControl>
-                              );
-                            }}
+                            render={({ field: { onChange, value } }) => (
+                              <AppSelect
+                                label="Tipo de cliente"
+                                placeholder="Selecciona tipo"
+                                searchable={(customerTypes ?? []).length > 6}
+                                options={(customerTypes ?? []).map((c) => ({
+                                  label: c.name,
+                                  value: String(c.id),
+                                }))}
+                                value={value}
+                                onChange={onChange}
+                              />
+                            )}
                           />
                         </View>
 
@@ -1022,25 +957,14 @@ export default function MerchandiseForm() {
                             render={({
                               field: { onChange, onBlur, value },
                             }) => (
-                              <FormControl>
-                                <FormControlLabel>
-                                  <FormControlLabelText
-                                    style={{ color: "#000" }}
-                                  >
-                                    Precio
-                                  </FormControlLabelText>
-                                </FormControlLabel>
-                                <Input>
-                                  <InputField
-                                    style={{ color: "#171717" }}
-                                    placeholder="Ej. 177.76"
-                                    value={value}
-                                    onChangeText={onChange}
-                                    onBlur={onBlur}
-                                    keyboardType="decimal-pad"
-                                  />
-                                </Input>
-                              </FormControl>
+                              <AppInput
+                                label="Precio"
+                                placeholder="Ej. 177.76"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                              />
                             )}
                           />
                         </View>
@@ -1057,7 +981,7 @@ export default function MerchandiseForm() {
                         </Pressable>
                       </HStack>
                     </View>
-                  ))} */}
+                  ))}
 
                   <Divider className="my-2" />
                   <View style={styles.switchRow}>

@@ -1,31 +1,46 @@
 import { Box } from "@/components/ui/box";
 import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlLabel,
+  FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalCloseButton,
-    ModalContent,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { useDimensions } from "@/src/utils/dimentions/dimentions";
 import {
-    AlertCircleIcon,
-    ChevronDownIcon,
-    SearchIcon,
-    XIcon,
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetFlatList,
+  BottomSheetModal,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
+import {
+  AlertCircleIcon,
+  ChevronDownIcon,
+  SearchIcon,
+  XIcon,
 } from "lucide-react-native";
-import React, { useMemo } from "react";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import React, { useCallback, useMemo, useRef } from "react";
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
+
+const isWeb = Platform.OS === "web";
 
 interface Product {
   id: number | string;
@@ -43,9 +58,13 @@ export function ProductSearchSelect({
   productData: Product[];
   error?: string;
 }) {
-  const [isOpen, setIsOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
+  const [isWebOpen, setIsWebOpen] = React.useState(false);
   const isDesktop = useDimensions();
+
+  const sheetRef = useRef<BottomSheetModal>(null);
+  const inputRef = useRef<TextInput>(null);
+  const snapPoints = useMemo(() => ["90%"], []);
 
   const selectedProduct = useMemo(
     () => productData?.find((p) => String(p.id) === value),
@@ -59,15 +78,85 @@ export function ProductSearchSelect({
     return list.filter((p) => p.name?.toLowerCase().includes(q));
   }, [query, productData]);
 
-  const handleSelect = (p: Product) => {
-    onChange(String(p.id));
-    setIsOpen(false);
+  const handleOpen = useCallback(() => {
+    if (isWeb) setIsWebOpen(true);
+    else sheetRef.current?.present();
+  }, []);
+
+  const handleClose = useCallback(() => {
+    if (isWeb) {
+      setIsWebOpen(false);
+      setQuery("");
+    } else {
+      sheetRef.current?.dismiss();
+    }
+  }, []);
+
+  const handleSelect = useCallback(
+    (p: Product) => {
+      onChange(String(p.id));
+      handleClose();
+    },
+    [onChange, handleClose],
+  );
+
+  // Solo nativo: enfocar al terminar de abrir
+  const handleSheetChange = useCallback((index: number) => {
+    if (index >= 0) inputRef.current?.focus();
+  }, []);
+
+  // Solo nativo: limpiar al cerrar por gesto, backdrop o botón
+  const handleDismiss = useCallback(() => {
     setQuery("");
+  }, []);
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item: p }: { item: Product }) => (
+      <Pressable
+        onPress={() => handleSelect(p)}
+        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+        style={({ pressed }) => [
+          styles.item,
+          pressed && { backgroundColor: "#f0f9ff" },
+          String(p.id) === value && { backgroundColor: "#eff6ff" },
+        ]}
+      >
+        <Text style={{ color: "#171717", fontSize: 16 }}>{p.name}</Text>
+      </Pressable>
+    ),
+    [handleSelect, value],
+  );
+
+  const listProps = {
+    data: filtered,
+    keyExtractor: (item: Product) => String(item.id),
+    keyboardShouldPersistTaps: "handled" as const,
+    contentContainerStyle: styles.listContent,
+    ItemSeparatorComponent: () => <View style={styles.separator} />,
+    ListEmptyComponent: (
+      <Text style={styles.emptyText}>Sin resultados para “{query}”</Text>
+    ),
+    renderItem,
   };
 
-  const handleClose = () => {
-    setIsOpen(false);
-    setQuery("");
+  const inputProps = {
+    style: styles.searchField,
+    placeholder: "Escribe para buscar...",
+    placeholderTextColor: "#999",
+    value: query,
+    onChangeText: setQuery,
   };
 
   return (
@@ -78,7 +167,7 @@ export function ProductSearchSelect({
         </FormControlLabelText>
       </FormControlLabel>
 
-      <Pressable onPress={() => setIsOpen(true)}>
+      <Pressable onPress={handleOpen}>
         <Box style={styles.trigger} className="p-4">
           <Icon
             as={SearchIcon}
@@ -104,64 +193,50 @@ export function ProductSearchSelect({
         <FormControlErrorText>{error}</FormControlErrorText>
       </FormControlError>
 
-      <Modal isOpen={isOpen} onClose={handleClose} size="full">
-        <ModalBackdrop />
-        <ModalContent style={styles.modalContent}>
-          <ModalHeader>
-            <Text style={{ fontWeight: "bold", fontSize: 16, color: "#000" }}>
-              Selecciona un producto
-            </Text>
-            <ModalCloseButton className="bg-black" style={styles.closeBtn}>
+      {isWeb ? (
+        <Modal isOpen={isWebOpen} onClose={handleClose} size="full">
+          <ModalBackdrop />
+          <ModalContent style={styles.webModalContent}>
+            <ModalHeader>
+              <Text style={styles.title}>Selecciona un producto</Text>
+              <ModalCloseButton style={styles.closeBtn}>
+                <Icon as={XIcon} size="sm" style={{ color: "#fff" }} />
+              </ModalCloseButton>
+            </ModalHeader>
+            <View style={styles.webBody}>
+              <View style={styles.searchInput}>
+                <Icon as={SearchIcon} size="sm" style={{ color: "#999" }} />
+                <TextInput autoFocus {...inputProps} />
+              </View>
+              <FlatList style={{ flex: 1 }} {...listProps} />
+            </View>
+          </ModalContent>
+        </Modal>
+      ) : (
+        <BottomSheetModal
+          ref={sheetRef}
+          snapPoints={snapPoints}
+          enableDynamicSizing={false}
+          onChange={handleSheetChange}
+          onDismiss={handleDismiss}
+          backdropComponent={renderBackdrop}
+          keyboardBehavior="extend"
+          keyboardBlurBehavior="restore"
+          android_keyboardInputMode="adjustResize"
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>Selecciona un producto</Text>
+            <Pressable onPress={handleClose} style={styles.closeBtn}>
               <Icon as={XIcon} size="sm" style={{ color: "#fff" }} />
-            </ModalCloseButton>
-          </ModalHeader>
-          <View style={styles.modalBody}>
-            <Input style={styles.searchInput}>
-              <Icon
-                as={SearchIcon}
-                size="sm"
-                style={{ color: "#999", marginLeft: 10 }}
-              />
-              <InputField
-                autoFocus
-                style={{ color: "#171717", fontSize: 16 }}
-                placeholder="Escribe para buscar..."
-                value={query}
-                onChangeText={setQuery}
-              />
-            </Input>
-
-            <FlatList
-              style={styles.list}
-              contentContainerStyle={styles.listContent}
-              data={filtered}
-              keyExtractor={(item) => String(item.id)}
-              keyboardShouldPersistTaps="handled"
-              ItemSeparatorComponent={() => <View style={styles.separator} />}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>
-                  Sin resultados para “{query}”
-                </Text>
-              }
-              renderItem={({ item: p }) => (
-                <Pressable
-                  onPress={() => handleSelect(p)}
-                  hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                  style={({ pressed }) => [
-                    styles.item,
-                    pressed && { backgroundColor: "#f0f9ff" },
-                    String(p.id) === value && { backgroundColor: "#eff6ff" },
-                  ]}
-                >
-                  <Text style={{ color: "#171717", fontSize: 16 }}>
-                    {p.name}
-                  </Text>
-                </Pressable>
-              )}
-            />
+            </Pressable>
           </View>
-        </ModalContent>
-      </Modal>
+          <View style={[styles.searchInput, { marginHorizontal: 16 }]}>
+            <Icon as={SearchIcon} size="sm" style={{ color: "#999" }} />
+            <BottomSheetTextInput ref={inputRef as any} {...inputProps} />
+          </View>
+          <BottomSheetFlatList {...listProps} />
+        </BottomSheetModal>
+      )}
     </FormControl>
   );
 }
@@ -178,9 +253,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: "#fff",
   },
-  modalContent: {
-    height: "90%",
-    marginTop: "auto",
+  title: {
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#000",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   closeBtn: {
     minWidth: 32,
@@ -189,23 +272,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 6,
+    backgroundColor: "#000",
   },
-  modalBody: {
+  webModalContent: {
+    height: "90%",
+    marginTop: "auto",
+  },
+  webBody: {
     flex: 1,
     paddingTop: 8,
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
   searchInput: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
     minHeight: 48,
+    borderWidth: 1,
+    borderColor: "#d4d4d4",
+    borderRadius: 8,
+    paddingHorizontal: 10,
   },
-  list: {
+  searchField: {
     flex: 1,
+    marginLeft: 8,
+    color: "#171717",
+    fontSize: 16,
+    paddingVertical: 10,
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   item: {
     paddingVertical: 22,

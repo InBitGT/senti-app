@@ -1,29 +1,19 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
-import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -34,13 +24,12 @@ import { useAuthStore } from "@/src/store";
 import { sanitizeDecimal } from "@/src/utils/sanitizeDecimal/sanitizeDecimal";
 import { router } from "expo-router";
 import {
-    AlertTriangle,
-    ChevronDown,
-    ChevronLeft,
-    KeyRound,
-    UserCheck,
+  AlertTriangle,
+  ChevronLeft,
+  KeyRound,
+  UserCheck,
 } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 
 type UserFlags = {
@@ -149,6 +138,15 @@ export default function OpenCashRegisterScreen() {
     }
   }
 
+  const cashRegisterOptions = useMemo(
+    () =>
+      cashRegisters.map((r) => ({
+        label: `${r.name} · ${r.code}`,
+        value: String(r.id),
+      })),
+    [cashRegisters],
+  );
+
   return (
     <VStack className="flex-1 bg-white">
       <HStack className="items-center border-b border-gray-100 px-4 py-3">
@@ -168,50 +166,14 @@ export default function OpenCashRegisterScreen() {
           </Text>
 
           {cashRegisters.length > 1 && (
-            <VStack space="xs">
-              <Text className="text-xs font-medium text-gray-500">Caja</Text>
-              <Select
-                selectedValue={
-                  cashRegisterId != null ? String(cashRegisterId) : ""
-                }
-                onValueChange={(v) => setCashRegisterId(v ? Number(v) : null)}
-              >
-                <SelectTrigger
-                  variant="outline"
-                  size="md"
-                  className="justify-between border-gray-300 bg-white"
-                >
-                  <SelectInput
-                    placeholder="Selecciona una caja"
-                    value={
-                      cashRegisters.find((r) => r.id === cashRegisterId)
-                        ?.name ?? ""
-                    }
-                    className="text-sm text-gray-900"
-                  />
-                  <Icon
-                    as={ChevronDown}
-                    size="xs"
-                    className="mr-2 text-gray-400"
-                  />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent className="bg-white">
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    {cashRegisters.map((r) => (
-                      <SelectItem
-                        key={r.id}
-                        label={`${r.name} · ${r.code}`}
-                        value={String(r.id)}
-                      />
-                    ))}
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
-            </VStack>
+            <AppSelect
+              label="Caja"
+              placeholder="Selecciona una caja"
+              searchable={cashRegisterOptions.length > 6}
+              options={cashRegisterOptions}
+              value={cashRegisterId != null ? String(cashRegisterId) : ""}
+              onChange={(v) => setCashRegisterId(v ? Number(v) : null)}
+            />
           )}
 
           {cashRegisters.length === 1 && (
@@ -229,24 +191,13 @@ export default function OpenCashRegisterScreen() {
             </Text>
           )}
 
-          <VStack space="xs">
-            <Text className="text-xs font-medium text-gray-500">
-              Monto de apertura
-            </Text>
-            <Input
-              variant="outline"
-              size="md"
-              className="border-gray-300 bg-white"
-            >
-              <InputField
-                value={openingAmount}
-                onChangeText={(v) => setOpeningAmount(sanitizeDecimal(v))}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                className="text-sm text-gray-900"
-              />
-            </Input>
-          </VStack>
+          <AppInput
+            label="Monto de apertura"
+            placeholder="0.00"
+            value={openingAmount}
+            onChangeText={(v) => setOpeningAmount(sanitizeDecimal(v))}
+            keyboardType="decimal-pad"
+          />
 
           <VStack space="xs" className="border-t border-gray-100 pt-3">
             <Text className="text-xs font-medium text-gray-500">

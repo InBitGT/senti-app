@@ -1,17 +1,18 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { CashMovementModal } from "@/components/molecules/CashMovementModal/CashMovementModal";
 import { CashSessionInfoModal } from "@/components/molecules/CashSessionInfoModal/CashSessionInfoModal";
+import { OpenCashRegisterModal } from "@/components/molecules/OpenCashRegisterModal/OpenCashRegisterModal";
 import { CashRegisterGate } from "@/components/templates/CashRegisterGate/CashRegisterGate";
 import {
   formatCurrency,
   ProductCatalog,
 } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import {
   Modal,
   ModalBackdrop,
@@ -54,6 +55,7 @@ import {
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -285,8 +287,8 @@ export const Pos: React.FC = () => {
   };
 
   return (
-    <CashRegisterGate session={session}>
-      <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <CashRegisterGate session={session}>
         <HStack className="flex-1">
           <VStack className="flex-1 bg-gray-50">
             <VStack
@@ -294,22 +296,31 @@ export const Pos: React.FC = () => {
               className="border-b border-gray-100 bg-white p-3"
             >
               <HStack space="xs" className="items-center">
-                <Input
-                  variant="outline"
-                  size="md"
-                  className="flex-1 border-gray-300 bg-white"
+                <Box
+                  style={{
+                    flex: 1,
+                    position: "relative",
+                    justifyContent: "center",
+                  }}
                 >
-                  <InputSlot className="pl-3">
-                    <InputIcon as={Search} className="text-gray-400" />
-                  </InputSlot>
-                  <InputField
+                  <Icon
+                    as={Search}
+                    size="sm"
+                    className="text-gray-400"
+                    style={{
+                      position: "absolute",
+                      left: 12,
+                      top: 12,
+                      zIndex: 1,
+                    }}
+                  />
+                  <AppInput
                     placeholder="Buscar por nombre o SKU..."
-                    placeholderTextColor="#9CA3AF"
                     value={query}
                     onChangeText={setQuery}
-                    className="text-gray-900"
+                    inputStyle={{ paddingLeft: 36 }}
                   />
-                </Input>
+                </Box>
 
                 {/* Ambos solo aparecen si la persona tiene una caja abierta */}
                 {session.data && (
@@ -498,26 +509,27 @@ export const Pos: React.FC = () => {
             />
           )}
         </HStack>
-      </SafeAreaView>
 
-      {session.data && (
-        <CashSessionInfoModal
-          isOpen={cashInfoOpen}
-          onClose={() => setCashInfoOpen(false)}
-          session={session.data}
-          onClosed={() => session.refetch()}
-        />
-      )}
+        {session.data && (
+          <CashSessionInfoModal
+            isOpen={cashInfoOpen}
+            onClose={() => setCashInfoOpen(false)}
+            session={session.data}
+            onClosed={() => session.refetch()}
+          />
+        )}
 
-      {session.data && (
-        <CashMovementModal
-          isOpen={cashMovementOpen}
-          sessionId={session.data.id}
-          onDone={() => session.refetch()}
-          onClose={() => setCashMovementOpen(false)}
-        />
-      )}
-    </CashRegisterGate>
+        {session.data && (
+          <CashMovementModal
+            isOpen={cashMovementOpen}
+            sessionId={session.data.id}
+            onDone={() => session.refetch()}
+            onClose={() => setCashMovementOpen(false)}
+          />
+        )}
+      </CashRegisterGate>
+      <OpenCashRegisterModal />
+    </SafeAreaView>
   );
 };
 
@@ -573,20 +585,20 @@ function CartLineRow({
             </Box>
           </TouchableOpacity>
 
-          <Input
-            variant="outline"
-            size="sm"
-            className="w-12 border-gray-300 bg-white"
-          >
-            <InputField
-              value={String(line.quantity)}
-              onChangeText={(v) => onSetQty(index, v)}
-              keyboardType="numeric"
-              textAlign="center"
-              className="text-sm font-medium text-gray-900"
-              selectTextOnFocus
-            />
-          </Input>
+          <AppInput
+            value={String(line.quantity)}
+            onChangeText={(v) => onSetQty(index, v)}
+            keyboardType="numeric"
+            selectTextOnFocus
+            containerStyle={{ width: 48 }}
+            inputStyle={{
+              textAlign: "center",
+              fontSize: 14,
+              fontWeight: "500",
+              paddingVertical: 6,
+              paddingHorizontal: 4,
+            }}
+          />
 
           <TouchableOpacity
             onPress={() => onStepLine(index, 1)}
@@ -701,18 +713,20 @@ function CartSidePanel({
       </ScrollView>
 
       {cart.length > 0 && (
-        <VStack space="sm" className="border-t border-gray-100 p-4">
+        <VStack space="sm" className="border-t border-gray-100 p-4 ">
           <HStack className="items-center justify-between">
             <Text className="text-sm text-gray-600">Total</Text>
             <Text className="text-lg font-semibold text-gray-900">
               {formatCurrency(total)}
             </Text>
           </HStack>
-          <Button className="bg-blue-600" onPress={onCheckout}>
-            <ButtonText className="text-white">
-              Cobrar {formatCurrency(total)}
-            </ButtonText>
-          </Button>
+          <View>
+            <AppButton
+              label={`Cobrar ${formatCurrency(total)}`}
+              variant="info"
+              onPress={onCheckout}
+            />
+          </View>
         </VStack>
       )}
     </VStack>
@@ -792,11 +806,11 @@ function CartModal({
                 {formatCurrency(total)}
               </Text>
             </HStack>
-            <Button className="bg-blue-600" onPress={onCheckout}>
-              <ButtonText className="text-white">
-                Cobrar {formatCurrency(total)}
-              </ButtonText>
-            </Button>
+            <AppButton
+              label={`Cobrar  ${formatCurrency(total)}`}
+              variant="info"
+              onPress={onCheckout}
+            />
           </ModalFooter>
         )}
       </ModalContent>
@@ -817,11 +831,13 @@ function CategoryPill({
     <TouchableOpacity onPress={onPress}>
       <Box
         className={`rounded-full px-3 py-1.5 ${
-          active ? "bg-blue-600" : "bg-gray-100"
+          active ? "bg-violet-500" : "bg-gray-100"
         }`}
       >
         <Text
-          className={`text-sm font-medium ${active ? "text-white" : "text-gray-700"}`}
+          className={`text-sm font-medium ${
+            active ? "text-white" : "text-gray-700"
+          }`}
         >
           {label}
         </Text>
@@ -843,11 +859,13 @@ function SubcategoryPill({
     <TouchableOpacity onPress={onPress}>
       <Box
         className={`rounded-full border px-2.5 py-1 ${
-          active ? "border-blue-600 bg-blue-50" : "border-gray-300 bg-white"
+          active ? "border-violet-500 bg-violet-50" : "border-gray-300 bg-white"
         }`}
       >
         <Text
-          className={`text-xs font-medium ${active ? "text-blue-700" : "text-gray-600"}`}
+          className={`text-xs font-medium ${
+            active ? "text-violet-700" : "text-gray-600"
+          }`}
         >
           {label}
         </Text>

@@ -1,3 +1,4 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
@@ -241,10 +242,12 @@ export const Payment: React.FC = () => {
         </ScrollView>
 
         <VStack className="border-t border-gray-200 bg-white p-4">
-          <Button className="bg-blue-600" onPress={newSale}>
-            <Icon as={Plus} size="sm" className="mr-1 text-white" />
-            <ButtonText className="text-white">Nueva venta</ButtonText>
-          </Button>
+          <AppButton
+            label="Nueva venta"
+            variant="info"
+            icon={Plus}
+            onPress={newSale}
+          />
         </VStack>
       </VStack>
     </SafeAreaView>

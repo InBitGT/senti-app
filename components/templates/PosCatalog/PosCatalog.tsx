@@ -1,19 +1,9 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCartStore } from "@/src/store/useCartStore/useCartStore";
@@ -22,13 +12,7 @@ import {
   CatalogProduct,
   SellUnit,
 } from "@/src/types/pos/pos";
-import {
-  AlertTriangle,
-  ChevronDown,
-  Package,
-  Plus,
-  Tag,
-} from "lucide-react-native";
+import { AlertTriangle, Package, Plus, Tag } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { FlatList, useWindowDimensions } from "react-native";
 
@@ -41,22 +25,66 @@ function toNumber(v: unknown): number {
   return 0;
 }
 
-export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+// Precio del producto para un tipo de cliente, tomado de
+// `customer_type_prices`. Si el mismo tipo tiene varios precios, se usa el
+// más reciente (id mayor). Devuelve 0 cuando no aplica.
+function pickCustomerTypePrice(
+  api: ApiCatalogProduct,
+  customerTypeId?: number | null,
+): number {
+  if (customerTypeId == null) return 0;
+  const matches = (api.customer_type_prices ?? []).filter(
+    (p) =>
+      Number(p.customer_type_id) === Number(customerTypeId) &&
+      toNumber(p.amount) > 0,
+  );
+  if (matches.length === 0) return 0;
+  const latest = matches.reduce((a, b) =>
+    Number(b.id) > Number(a.id) ? b : a,
+  );
+  return toNumber(latest.amount);
+}
+
+export function mapApiProductToProduct(
+  api: ApiCatalogProduct,
+  customerTypeId?: number | null,
+): CatalogProduct {
   const basePrice = toNumber(api.base_price);
   const finalPrice = toNumber(api.final_price);
-  const customerTypePrice = toNumber(api.customer_type_price);
 
-  const normalPrice =
-    api.has_customer_type_price && customerTypePrice > 0
-      ? customerTypePrice
-      : basePrice;
+  const typePrice = pickCustomerTypePrice(api, customerTypeId);
+  const legacyTypePrice = api.has_customer_type_price
+    ? toNumber(api.customer_type_price)
+    : 0;
+  const appliedTypePrice = typePrice > 0 ? typePrice : legacyTypePrice;
+  const hasTypePrice = appliedTypePrice > 0;
 
-  const wholesalePrice = finalPrice > 0 ? finalPrice : normalPrice;
+  const normalPrice = hasTypePrice ? appliedTypePrice : basePrice;
 
+  // Con precio de tipo, el mayoreo se calcula sobre ese precio. Sin precio
+  // de tipo, se usa final_price como antes.
+  const wholesalePct = toNumber(api.wholesale_discount_pct);
+  const wholesalePrice = hasTypePrice
+    ? api.has_wholesale
+      ? round2(normalPrice * (1 - wholesalePct / 100))
+      : normalPrice
+    : finalPrice > 0
+      ? finalPrice
+      : normalPrice;
+
+  // Algunos productos vienen sin unit_of_measure_* (null/"") cuando no
+  // tienen una unidad configurada en el backend. Sin este fallback, esos
+  // productos -si tampoco tienen conversiones- terminan con una sola
+  // unidad "vacía": no se ve el AppSelect (solo aparece con >1 unidad) y
+  // el precio se muestra como "10.00/" sin código.
   const baseUnit: SellUnit = {
-    uom_id: Number(api.unit_of_measure_id),
-    code: api.unit_of_measure_code,
-    name: api.unit_of_measure_name,
+    uom_id: Number(api.unit_of_measure_id) || 0,
+    code: api.unit_of_measure_code?.trim() || "UNI",
+    name: api.unit_of_measure_name?.trim() || "Unidad",
     factorToBase: 1,
     unitPrice: normalPrice,
     wholesaleUnitPrice: wholesalePrice,
@@ -64,8 +92,13 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
 
   const conversionUnits: SellUnit[] = (api.conversions ?? []).map((c) => {
     const specialPrice = toNumber(c.price_per_uom_amount);
-    const unitPrice = specialPrice > 0 ? specialPrice : normalPrice * c.factor;
-    const wholesaleUnitPrice = wholesalePrice * c.factor;
+    const byTypeOrBase = normalPrice * c.factor;
+    const unitPrice =
+      specialPrice > 0
+        ? hasTypePrice
+          ? Math.min(specialPrice, byTypeOrBase)
+          : specialPrice
+        : byTypeOrBase;
 
     return {
       uom_id: Number(c.id),
@@ -73,25 +106,25 @@ export function mapApiProductToProduct(api: ApiCatalogProduct): CatalogProduct {
       name: c.from_uom_name,
       factorToBase: c.factor,
       unitPrice,
-      wholesaleUnitPrice,
+      wholesaleUnitPrice: wholesalePrice * c.factor,
     };
   });
 
-  const units = [baseUnit, ...conversionUnits];
-
   const hasParent =
-    !!api.parent_category_id && !!api.parent_category_name?.trim();
+    api.parent_category_id != null && !!api.parent_category_name?.trim();
 
   return {
     product_id: api.product_id,
     name: api.name,
     sku: api.sku,
-    category_id: hasParent ? api.parent_category_id : api.category_id,
+    category_id: hasParent
+      ? (api.parent_category_id ?? api.category_id)
+      : api.category_id,
     category_name: hasParent ? api.parent_category_name : api.category_name,
     subcategory_id: api.category_id,
     subcategory_name: api.category_name,
     stock_qty: api.stock_qty,
-    units,
+    units: [baseUnit, ...conversionUnits],
     price: normalPrice,
     wholesalePrice,
     hasPrice: normalPrice > 0,
@@ -150,6 +183,18 @@ function ProductCard({
     ? unit.wholesaleUnitPrice
     : unit.unitPrice;
 
+  const unitOptions = useMemo(
+    () =>
+      product.units.map((u) => ({
+        label:
+          u.factorToBase !== 1
+            ? `${u.name} (=${u.factorToBase}) — ${formatCurrency(isWholesaleActive ? u.wholesaleUnitPrice : u.unitPrice)}`
+            : u.name,
+        value: String(u.uom_id),
+      })),
+    [product.units, isWholesaleActive],
+  );
+
   return (
     <Box className="m-1.5 min-w-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white p-3">
       <VStack space="xs" className="flex-grow">
@@ -163,8 +208,6 @@ function ProductCard({
             </Text>
           </Box>
           <Badge
-            size="sm"
-            variant="solid"
             className={`shrink-0 rounded-full ${noStockAtAll ? "bg-red-500" : "bg-gray-400"}`}
           >
             <BadgeText className="text-white" numberOfLines={1}>
@@ -233,59 +276,26 @@ function ProductCard({
             antes competía por espacio horizontal con el botón "Añadir" y en
             cards angostas (3-4 columnas) quedaba invisible/cortado. */}
         {product.units.length > 1 && (
-          <Select
-            key={`unit-select-${product.product_id}-${unit.uom_id}`}
-            selectedValue={String(unit.uom_id)}
-            onValueChange={(v) => setSelectedUomId(Number(v))}
-          >
-            <SelectTrigger
-              variant="outline"
-              size="sm"
-              className="w-full justify-between border-gray-300 bg-white"
-            >
-              <SelectInput
-                placeholder="Unidad"
-                value={unit.name}
-                className="flex-1 text-xs text-gray-900"
-              />
-              <Icon
-                as={ChevronDown}
-                size="xs"
-                className="mr-2 shrink-0 text-gray-400"
-              />
-            </SelectTrigger>
-            <SelectPortal>
-              <SelectBackdrop />
-              <SelectContent className="bg-white">
-                <SelectDragIndicatorWrapper>
-                  <SelectDragIndicator />
-                </SelectDragIndicatorWrapper>
-                {product.units.map((u) => (
-                  <SelectItem
-                    key={u.uom_id}
-                    label={
-                      u.factorToBase !== 1
-                        ? `${u.name} (=${u.factorToBase}) — ${formatCurrency(isWholesaleActive ? u.wholesaleUnitPrice : u.unitPrice)}`
-                        : u.name
-                    }
-                    value={String(u.uom_id)}
-                  />
-                ))}
-              </SelectContent>
-            </SelectPortal>
-          </Select>
+          <AppSelect
+            label="Unidad"
+            placeholder="Selecciona una unidad"
+            searchable={false}
+            options={unitOptions}
+            value={String(unit.uom_id)}
+            onChange={(v) => setSelectedUomId(Number(v))}
+          />
         )}
       </VStack>
-      <Button
-        size="sm"
-        variant="solid"
-        isDisabled={soldOut}
-        onPress={() => onAdd(unit)}
-        className="w-full bg-blue-600 disabled:bg-gray-300 mt-3"
-      >
-        <ButtonIcon as={Plus} className="text-white" />
-        <ButtonText className="text-white">Añadir</ButtonText>
-      </Button>
+
+      <Box className="mt-3 ">
+        <AppButton
+          label="Añadir"
+          variant="info"
+          icon={Plus}
+          isDisabled={soldOut}
+          onPress={() => onAdd(unit)}
+        />
+      </Box>
     </Box>
   );
 }
@@ -294,24 +304,15 @@ function ProductCard({
 // Grid del catálogo
 // ---------------------------------------------------------------------------
 
-// Mismo breakpoint que Pos.tsx para decidir layout desktop/tablet vs móvil.
 const MOBILE_BREAKPOINT = 768;
 const TABLET_BREAKPOINT = 1024;
 
-// Sin medición de contenedor (onLayout): eso causaba que en móvil el
-// FlatList a veces no llegara a pintar contenido (altura 0 durante el
-// primer layout) y además generaba remounts al fluctuar la medición.
-// Ahora las columnas se derivan solo de useWindowDimensions, igual que
-// hace Pos.tsx para decidir isDesktop.
 function computeNumColumns(windowWidth: number): number {
-  if (windowWidth < MOBILE_BREAKPOINT) return 2; // teléfono: siempre 2
-  if (windowWidth < TABLET_BREAKPOINT) return 3; // tablet / desktop angosto
-  return 4; // desktop ancho
+  if (windowWidth < MOBILE_BREAKPOINT) return 2;
+  if (windowWidth < TABLET_BREAKPOINT) return 3;
+  return 4;
 }
 
-// Item real o "relleno" invisible para completar la última fila y que
-// todas las cards del grid tengan siempre el mismo ancho (evita que la
-// última fila, al tener menos elementos, se estire y se vea distinta).
 type FillerItem = { __filler: true; product_id: string };
 type GridItem = CatalogProduct | FillerItem;
 
@@ -332,7 +333,9 @@ export function ProductCatalog({
   const numColumns = computeNumColumns(windowWidth);
 
   const products = useMemo(() => {
-    const mapped = data.map(mapApiProductToProduct);
+    // Arrow explícita: `data.map(mapApiProductToProduct)` le pasaría el
+    // índice como segundo argumento y lo tomaría como customerTypeId.
+    const mapped = data.map((p) => mapApiProductToProduct(p));
     return [...mapped].sort((a, b) => {
       const aOut = a.stock_qty <= 0 ? 1 : 0;
       const bOut = b.stock_qty <= 0 ? 1 : 0;
@@ -364,11 +367,11 @@ export function ProductCatalog({
       <VStack className="items-center justify-center py-16" space="sm">
         <Icon as={Package} size="xl" className="text-gray-300" />
         <Text className="text-gray-400">Sin resultados</Text>
-        <Button onPress={onPress}>
-          <Text className="text-center text-base font-medium text-white">
-            Recargar información
-          </Text>
-        </Button>
+        <AppButton
+          label="Recargar información"
+          variant="info"
+          onPress={onPress}
+        />
       </VStack>
     );
   }

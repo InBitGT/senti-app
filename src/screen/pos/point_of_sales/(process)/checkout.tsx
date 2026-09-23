@@ -1,5 +1,10 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
-import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
+import {
+  formatCurrency,
+  mapApiProductToProduct,
+} from "@/components/templates/PosCatalog/PosCatalog";
 import {
   AlertDialog,
   AlertDialogBackdrop,
@@ -13,29 +18,17 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { useCredit } from "@/src/hooks/useCredit/useCredit";
-import { useCustomerType } from "@/src/hooks/useCustomerType/useCustomerType";
+import { useCustomer } from "@/src/hooks/useCustomer/useCustomer";
 import { usePaymentMethod } from "@/src/hooks/usePaymentsMethods/usePaymentsMethods";
 import { useCatalog } from "@/src/hooks/usePos/usePos";
 import { useAuthStore } from "@/src/store";
 import { CartLine, useCartStore } from "@/src/store/useCartStore/useCartStore";
 import { useCashRegisterSessionStore } from "@/src/store/useCashRegisterSessionStore/useCashRegisterSessionStore";
 import { useStockAlertStore } from "@/src/store/useStockAlertStore/useStockAlertStore";
+import { Customer } from "@/src/types/customer/customer";
 import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
 import { CatalogProduct } from "@/src/types/pos/pos";
 import { sanitizeDecimal } from "@/src/utils/sanitizeDecimal/sanitizeDecimal";
@@ -43,7 +36,6 @@ import { router } from "expo-router";
 import {
   AlertTriangle,
   ArrowLeft,
-  ChevronDown,
   CreditCard,
   Pencil,
   Plus,
@@ -54,18 +46,17 @@ import { ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const CASH_ALIASES = ["efectivo", "cash", "contado"];
+const GENERIC_CHECKOUT_ERROR =
+  "No se pudo registrar la venta. Intenta de nuevo.";
+
+// Valores centinela para los selects. Un SelectItem con value="" no se
+// puede volver a elegir de forma confiable, así que se usan claves fijas.
+const GENERAL_CUSTOMER_VALUE = "general";
+const CREDIT_VALUE = "credit";
 
 // ---------------------------------------------------------------------------
-// Precio efectivo por línea, igual que en Pos.tsx: mayoreo se evalúa por
-// PRODUCTO sumando todas sus líneas del carrito (sin importar la unidad
-// con la que se agregó cada una), y el precio unitario respeta tanto el
-// precio especial de conversión (unit.unitPrice) como el de mayoreo
-// (unit.wholesaleUnitPrice) una vez alcanzado wholesale_min_qty.
-//
-// Este archivo no comparte estado con Pos.tsx (son pantallas distintas),
-// así que la misma lógica se repite acá — si en algún momento se decide
-// centralizarla, el lugar natural sería useCartStore.ts, ya que ambas
-// pantallas ya dependen de él.
+// Precio efectivo por línea (igual que en Pos.tsx). Todas estas funciones
+// reciben el carrito YA REPRECIADO con el tipo de cliente (ver `pricedCart`).
 // ---------------------------------------------------------------------------
 function totalQtyForProduct(cart: CartLine[], productId: number): number {
   return cart.reduce(
@@ -83,21 +74,16 @@ function isWholesaleActiveFor(cart: CartLine[], product: CatalogProduct) {
   );
 }
 
-// Precio de UNA unidad de la línea (ej. 1 Caja), ya resuelto.
 function unitPriceForLine(cart: CartLine[], line: CartLine): number {
   return isWholesaleActiveFor(cart, line.product)
     ? line.unit.wholesaleUnitPrice
     : line.unit.unitPrice;
 }
 
-// Precio de UNA unidad BASE (ej. 1 Unidad suelta) de la línea. Como
-// `quantity` está en unidades base, esto es lo que hay que mandarle al
-// backend como `unit_price` para que `quantity * unit_price` cuadre.
 function basePriceForLine(cart: CartLine[], line: CartLine): number {
   return unitPriceForLine(cart, line) / line.unit.factorToBase;
 }
 
-// Total de una línea completa.
 function lineTotal(cart: CartLine[], line: CartLine): number {
   return line.quantity * basePriceForLine(cart, line);
 }
@@ -108,20 +94,44 @@ function isCashMethod(method?: PaymentMethod | null) {
   return CASH_ALIASES.some((alias) => normalized.includes(alias));
 }
 
-// Detecta específicamente el error de stock insuficiente que devuelve el
-// backend ({ code: 400, message: "stock insuficiente" }), sin capturar
-// otros errores de checkout.
+// Un cliente puede comprar a crédito solo si tiene el crédito habilitado,
+// activo y con saldo. Si no, igual se le vende, pero sin la opción
+// "Crédito" en los métodos de pago.
+function hasActiveCredit(customer: Customer | null | undefined): boolean {
+  const credit = customer?.credit;
+  return (
+    !!credit &&
+    credit.has_credit &&
+    credit.status &&
+    (credit.credit_available ?? 0) > 0
+  );
+}
+
 function isInsufficientStockError(err: unknown): boolean {
   return err instanceof Error && /stock insuficiente/i.test(err.message);
+}
+
+// Muestra el mensaje real del backend cuando existe; si no, uno genérico.
+function checkoutErrorMessage(err: unknown): string {
+  if (err instanceof Error && err.message.trim() !== "") return err.message;
+  return GENERIC_CHECKOUT_ERROR;
+}
+
+function customerLabel(c: Customer): string {
+  const parts = [c.name];
+  if (c.document_number) parts.push(c.document_number);
+  if (c.customer_type?.name) parts.push(c.customer_type.name);
+  if (hasActiveCredit(c)) parts.push("con crédito");
+  return parts.join(" · ");
 }
 
 interface PaymentEntryState {
   key: string;
   paymentMethodId: number | null; // null solo cuando isCredit = true
   isCredit: boolean;
-  amount: string; // vacío = "cubre todo el resto" cuando es la única línea
-  amountReceived: string; // solo efectivo, para calcular cambio
-  reference: string; // solo métodos no efectivo
+  amount: string;
+  amountReceived: string;
+  reference: string;
 }
 
 function newEntry(paymentMethodId: number | null = null): PaymentEntryState {
@@ -140,13 +150,69 @@ export const Checkout: React.FC = () => {
   const cart = useCartStore((s) => s.cart);
   const clearCart = useCartStore((s) => s.clearCart);
   const removeLine = useCartStore((s) => s.removeLine);
-  const { checkout, refetch, catalog } = useCatalog();
-  const { data: customerCredits } = useCredit();
+  const { data: customers } = useCustomer();
   const { data: paymentMethods, isLoading: isLoadingPayment } =
     usePaymentMethod();
-  const { data: customerType } = useCustomerType();
   const setStockAlert = useStockAlertStore((s) => s.setAlert);
+  const { session } = useCashRegisterSessionStore();
 
+  // ----- Cliente --------------------------------------------------------
+  const [showCustomer, setShowCustomer] = useState(false);
+  const [customerId, setCustomerId] = useState<number | null>(null);
+
+  const activeCustomers = useMemo(
+    () => (customers ?? []).filter((c) => c.status),
+    [customers],
+  );
+
+  const selectedCustomer =
+    customerId != null
+      ? (activeCustomers.find((c) => c.id === customerId) ?? null)
+      : null;
+
+  const creditAvailable = hasActiveCredit(selectedCustomer);
+  const creditLimit = selectedCustomer?.credit?.credit_available ?? 0;
+
+  // Tipo de cliente que define los precios. Sin cliente = precios normales.
+  // Se normaliza a número: si el backend manda el id como string ("6"),
+  // la comparación estricta contra customer_type_prices fallaba en silencio.
+  const rawCustomerTypeId =
+    selectedCustomer?.customer_type_id || selectedCustomer?.customer_type?.id;
+  const customerTypeId =
+    rawCustomerTypeId != null && Number(rawCustomerTypeId) > 0
+      ? Number(rawCustomerTypeId)
+      : null;
+
+  // El catálogo trae en cada producto `customer_type_prices` con los precios
+  // de todos los tipos. Aquí se vuelve a mapear pasando el tipo del cliente:
+  // solo los productos que tienen precio para ese tipo cambian; el resto
+  // conserva su precio base.
+  const { checkout, refetch, catalog } = useCatalog();
+
+  const pricedProducts = useMemo(() => {
+    const map = new Map<number, CatalogProduct>();
+    (catalog ?? []).forEach((p) =>
+      map.set(p.product_id, mapApiProductToProduct(p, customerTypeId)),
+    );
+    return map;
+  }, [catalog, customerTypeId]);
+
+  // Carrito con los precios del tipo de cliente aplicados. Se conserva la
+  // cantidad y la unidad elegidas; solo se reemplazan producto y precios.
+  // Mismo orden e índices que `cart`, así removeLine(i) sigue funcionando.
+  const pricedCart = useMemo<CartLine[]>(
+    () =>
+      cart.map((line) => {
+        const priced = pricedProducts.get(line.product.product_id);
+        if (!priced) return line;
+        const unit =
+          priced.units.find((u) => u.uom_id === line.unit.uom_id) ?? line.unit;
+        return { ...line, product: priced, unit };
+      }),
+    [cart, pricedProducts],
+  );
+
+  // ----- Métodos de pago -----------------------------------------------
   const methods = useMemo(
     () =>
       (paymentMethods ?? [])
@@ -154,49 +220,24 @@ export const Checkout: React.FC = () => {
         .sort((a, b) => a.display_order - b.display_order),
     [paymentMethods],
   );
-  const customerTypes = customerType ?? [];
 
   function methodById(id: number | null) {
     return methods.find((m) => m.id === id) ?? null;
   }
 
-  const [showCustomer, setShowCustomer] = useState(false);
-  const [customerTypeId, setCustomerTypeId] = useState<number | null>(null);
-  const [customerId, setCustomerId] = useState<number | null>(null);
-  const { session } = useCashRegisterSessionStore();
-
-  const selectedCredit =
-    customerId != null
-      ? ((customerCredits ?? []).find((c) => c.customer_id === customerId) ??
-        null)
-      : null;
-  const selectedCustomer = selectedCredit?.customer ?? null;
-
-  const creditAvailable =
-    !!selectedCredit?.has_credit && (selectedCredit?.credit_available ?? 0) > 0;
-
-  const [generateFiscal, setGenerateFiscal] = useState(false);
-  const [fiscalNit, setFiscalNit] = useState("");
-  const [fiscalName, setFiscalName] = useState("");
+  const [generateFiscal] = useState(false);
+  const [fiscalNit] = useState("");
+  const [fiscalName] = useState("");
 
   const [entries, setEntries] = useState<PaymentEntryState[]>([newEntry()]);
 
-  // Modal de stock insuficiente. `blockedProductIds` guarda los productos
-  // del carrito cuyo stock real (recién refrescado) ya no alcanza para lo
-  // pedido. No se reinicia el carrito completo: esas líneas se marcan
-  // como bloqueadas, se excluyen del total y del payload de checkout,
-  // pero el resto de la venta sigue intacta.
   const [stockErrorOpen, setStockErrorOpen] = useState(false);
   const [checkingStock, setCheckingStock] = useState(false);
   const [blockedProductIds, setBlockedProductIds] = useState<Set<number>>(
     new Set(),
   );
-  // Si es true, al cerrar el modal se limpia el carrito y se regresa a la
-  // pantalla anterior — caso del único producto del carrito sin stock.
   const [returnAfterStockAck, setReturnAfterStockAck] = useState(false);
 
-  // En cuanto cargan los métodos de pago, la primera línea toma el de
-  // menor display_order como valor por defecto (si el usuario no la tocó).
   useEffect(() => {
     if (methods.length === 0) return;
     setEntries((prev) =>
@@ -208,8 +249,8 @@ export const Checkout: React.FC = () => {
     );
   }, [methods]);
 
-  // Si se cambia/quita el cliente y ya no hay crédito disponible, las
-  // líneas marcadas como "Crédito" bajan al primer método disponible.
+  // Si el cliente cambia a uno sin crédito (o se quita), las líneas en
+  // "Crédito" pasan al primer método disponible. La venta sigue normal.
   useEffect(() => {
     if (creditAvailable) return;
     setEntries((prev) =>
@@ -219,9 +260,6 @@ export const Checkout: React.FC = () => {
     );
   }, [creditAvailable, methods]);
 
-  // Si un producto bloqueado desaparece del carrito (el usuario lo quitó
-  // manualmente) o cambia de cantidad, limpiamos su bloqueo para no dejar
-  // basura en el set.
   useEffect(() => {
     setBlockedProductIds((prev) => {
       if (prev.size === 0) return prev;
@@ -231,16 +269,15 @@ export const Checkout: React.FC = () => {
     });
   }, [cart]);
 
-  // Carrito "cobrable": excluye las líneas de productos bloqueados por
-  // falta de stock. Es lo que se usa para el total y para el payload.
   const purchasableCart = useMemo(
-    () => cart.filter((l) => !blockedProductIds.has(l.product.product_id)),
-    [cart, blockedProductIds],
+    () =>
+      pricedCart.filter((l) => !blockedProductIds.has(l.product.product_id)),
+    [pricedCart, blockedProductIds],
   );
 
   const blockedProductNames = useMemo(() => {
     const names: string[] = [];
-    cart.forEach((l) => {
+    pricedCart.forEach((l) => {
       if (
         blockedProductIds.has(l.product.product_id) &&
         !names.includes(l.product.name)
@@ -249,22 +286,17 @@ export const Checkout: React.FC = () => {
       }
     });
     return names;
-  }, [cart, blockedProductIds]);
+  }, [pricedCart, blockedProductIds]);
 
-  // FIX: antes era `sum + l.product.price * l.quantity`, que ignoraba el
-  // precio especial de conversión y el de mayoreo. Ahora usa `lineTotal`,
-  // que respeta ambos (ver definición arriba, igual que en Pos.tsx).
-  // Solo suma líneas "cobrables" (no bloqueadas por stock).
-  const total = purchasableCart.reduce((sum, l) => sum + lineTotal(cart, l), 0);
+  const total = purchasableCart.reduce(
+    (sum, l) => sum + lineTotal(pricedCart, l),
+    0,
+  );
 
-  // Con un solo método de pago, SIEMPRE se cobra el 100% del total — el
-  // campo queda de solo lectura y no hace falta que el usuario escriba
-  // nada. Solo se vuelve editable al dividir el pago (más de una línea).
   const singleMethod = entries.length === 1;
-  const autoFull = singleMethod;
 
   function amountFor(entry: PaymentEntryState) {
-    if (autoFull) return total;
+    if (singleMethod) return total;
     return Number.parseFloat(entry.amount) || 0;
   }
 
@@ -274,9 +306,7 @@ export const Checkout: React.FC = () => {
   const creditUsed = entries
     .filter((e) => e.isCredit)
     .reduce((sum, e) => sum + amountFor(e), 0);
-  const creditOverLimit =
-    creditAvailable &&
-    creditUsed > (selectedCredit?.credit_available ?? 0) + 0.005;
+  const creditOverLimit = creditAvailable && creditUsed > creditLimit + 0.005;
 
   const cashChange = entries
     .filter((e) => !e.isCredit && isCashMethod(methodById(e.paymentMethodId)))
@@ -323,14 +353,11 @@ export const Checkout: React.FC = () => {
     );
   }
 
-  // Quita del carrito todas las líneas de un producto bloqueado (puede
-  // tener más de una línea si se agregó en distintas unidades).
   function removeBlockedProduct(productId: number) {
     cart
       .map((l, i) => (l.product.product_id === productId ? i : -1))
       .filter((i) => i !== -1)
-      .sort((a, b) => b - a) // de mayor a menor índice: evita que se
-      // corran los índices restantes al remover
+      .sort((a, b) => b - a)
       .forEach((i) => removeLine(i));
 
     setBlockedProductIds((prev) => {
@@ -355,14 +382,6 @@ export const Checkout: React.FC = () => {
     checkout.isPending ||
     checkingStock;
 
-  // Refresca el catálogo y, comparando el stock real contra lo pedido en
-  // el carrito, determina qué producto(s) ya no tienen stock suficiente.
-  // El modal SIEMPRE se muestra para avisarle al usuario.
-  //
-  // Caso especial: si el carrito tenía un ÚNICO producto (sin importar en
-  // cuántas líneas/unidades esté repartido) y ese es el que se quedó sin
-  // stock, no queda nada que cobrar — se avisa igual con el modal, pero
-  // al cerrarlo se limpia todo y se regresa a la pantalla anterior.
   async function handleInsufficientStock() {
     setStockErrorOpen(true);
     setCheckingStock(true);
@@ -378,11 +397,9 @@ export const Checkout: React.FC = () => {
       const cartProductIds = new Set(cart.map((l) => l.product.product_id));
 
       const nowBlocked = new Set<number>();
-      cart.forEach((line) => {
-        const productId = line.product.product_id;
+      cartProductIds.forEach((productId) => {
         const availableStock = stockByProduct.get(productId) ?? 0;
-        const requestedQty = totalQtyForProduct(cart, productId);
-        if (requestedQty > availableStock) {
+        if (totalQtyForProduct(cart, productId) > availableStock) {
           nowBlocked.add(productId);
         }
       });
@@ -398,11 +415,6 @@ export const Checkout: React.FC = () => {
     }
   }
 
-  // Se llama al cerrar/confirmar el modal de stock insuficiente. Si era
-  // el caso de "único producto y sin stock", recién ahí se limpia el
-  // carrito y se regresa a la pantalla anterior — dejando antes un aviso
-  // en useStockAlertStore para que Pos.tsx muestre un banner señalando
-  // el producto (router.back() no puede pasarle datos directamente).
   function handleStockModalClose() {
     setStockErrorOpen(false);
     if (returnAfterStockAck) {
@@ -455,36 +467,24 @@ export const Checkout: React.FC = () => {
         branch_id: session?.cash_register.branch_id ?? 0,
         warehouse_id: session?.cash_register.warehouse_id ?? 0,
         user_id: claims.sub,
-        // TODO: confirmar de dónde viene la sesión de caja abierta real.
         cash_register_session_id: session?.id ?? 0,
-        ...(customerId
+        ...(selectedCustomer
           ? {
-              customer_id: customerId,
-              customer_type_id:
-                selectedCustomer?.customer_type_id ??
-                customerTypeId ??
-                undefined,
+              customer_id: selectedCustomer.id,
+              customer_type_id: customerTypeId ?? undefined,
             }
           : {}),
         channel: "pos",
         tax: 0,
-        // Solo se mandan las líneas "cobrables": las bloqueadas por falta
-        // de stock quedan fuera del pedido.
         items: purchasableCart.map((l) => ({
           product_id: l.product.product_id,
           product_name: l.product.name,
-          // TODO: si el backend espera la subcategoría (hoja) en vez de la
-          // categoría genérica, cambiar a subcategory_id/subcategory_name.
           category_id: l.product.category_id,
           category_name: l.product.category_name,
-          // `quantity` ya está en unidades base.
           quantity: l.quantity,
-          // FIX: antes era `l.product.price` (precio normal fijo, siempre
-          // el mismo sin importar mayoreo o precio especial de
-          // conversión). Ahora es el precio real que se está cobrando por
-          // UNA unidad base de esta línea — respeta tanto el precio
-          // especial de conversión como el de mayoreo si ya aplica.
-          unit_price: basePriceForLine(cart, l),
+          // Precio por unidad base ya con tipo de cliente, conversión y
+          // mayoreo aplicados.
+          unit_price: basePriceForLine(pricedCart, l),
         })),
         payments,
         generate_fiscal_document: generateFiscal,
@@ -506,10 +506,19 @@ export const Checkout: React.FC = () => {
       if (isInsufficientStockError(err)) {
         handleInsufficientStock();
       }
-      // Otros errores quedan disponibles en checkout.error para mostrarse
-      // abajo con el mensaje genérico.
     }
   }
+
+  const customerOptions = useMemo(
+    () => [
+      { label: "Público general", value: GENERAL_CUSTOMER_VALUE },
+      ...activeCustomers.map((c) => ({
+        label: customerLabel(c),
+        value: String(c.id),
+      })),
+    ],
+    [activeCustomers],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={["bottom"]}>
@@ -537,13 +546,12 @@ export const Checkout: React.FC = () => {
               <Text className="border-b border-gray-100 p-3 text-sm font-semibold text-gray-900">
                 Resumen del pedido
               </Text>
-              {cart.map((line) => {
-                // FIX: antes se mostraba y calculaba todo con
-                // `line.product.price` fijo. Ahora se resuelve el precio
-                // real de esta línea (por unidad base) igual que en el
-                // total y en el payload de checkout.
-                const pricePerBaseUnit = basePriceForLine(cart, line);
-                const wholesale = isWholesaleActiveFor(cart, line.product);
+              {pricedCart.map((line) => {
+                const pricePerBaseUnit = basePriceForLine(pricedCart, line);
+                const wholesale = isWholesaleActiveFor(
+                  pricedCart,
+                  line.product,
+                );
                 const isBlocked = blockedProductIds.has(
                   line.product.product_id,
                 );
@@ -587,10 +595,6 @@ export const Checkout: React.FC = () => {
                             </Box>
                           )}
                         </HStack>
-                        {/* `quantity` ya está en unidades base: se muestra junto
-                          al código de la unidad base, y si se compró en una
-                          unidad distinta (ej. "Caja"), se aclara entre
-                          paréntesis cuántas de esas representa. */}
                         <Text
                           className={`text-xs ${
                             isBlocked ? "text-gray-300" : "text-gray-400"
@@ -610,7 +614,7 @@ export const Checkout: React.FC = () => {
                             : "text-gray-900"
                         }`}
                       >
-                        {formatCurrency(lineTotal(cart, line))}
+                        {formatCurrency(lineTotal(pricedCart, line))}
                       </Text>
                     </HStack>
 
@@ -655,10 +659,7 @@ export const Checkout: React.FC = () => {
               >
                 <Text className="text-sm text-gray-500">Cliente:</Text>
                 <Text className="text-sm font-medium text-gray-900">
-                  {selectedCustomer
-                    ? selectedCustomer.name
-                    : (customerTypes.find((t) => t.id === customerTypeId)
-                        ?.name ?? "Público general")}
+                  {selectedCustomer?.name ?? "Público general"}
                 </Text>
                 {creditAvailable && (
                   <HStack
@@ -667,8 +668,7 @@ export const Checkout: React.FC = () => {
                   >
                     <Icon as={CreditCard} size="xs" className="text-blue-600" />
                     <Text className="text-[10px] font-medium text-blue-600">
-                      disponible{" "}
-                      {formatCurrency(selectedCredit?.credit_available ?? 0)}
+                      disponible {formatCurrency(creditLimit)}
                     </Text>
                   </HStack>
                 )}
@@ -682,50 +682,22 @@ export const Checkout: React.FC = () => {
 
               {showCustomer && (
                 <VStack space="sm" className="border-t border-gray-100 pt-3">
-                  <Text className="text-xs font-medium text-gray-500">
-                    Cliente específico (habilita crédito si aplica)
-                  </Text>
-                  <Select
-                    selectedValue={customerId != null ? String(customerId) : ""}
-                    onValueChange={(v) => setCustomerId(v ? Number(v) : null)}
-                  >
-                    <SelectTrigger
-                      variant="outline"
-                      size="sm"
-                      className="justify-between border-gray-300 bg-white"
-                    >
-                      <SelectInput
-                        placeholder="Sin cliente asignado"
-                        value={selectedCustomer?.name ?? ""}
-                        className="text-sm text-gray-900"
-                      />
-                      <Icon
-                        as={ChevronDown}
-                        size="xs"
-                        className="mr-2 text-gray-400"
-                      />
-                    </SelectTrigger>
-                    <SelectPortal>
-                      <SelectBackdrop />
-                      <SelectContent className="bg-white">
-                        <SelectDragIndicatorWrapper>
-                          <SelectDragIndicator />
-                        </SelectDragIndicatorWrapper>
-                        <SelectItem label="Sin cliente asignado" value="" />
-                        {(customerCredits ?? []).map((c) => (
-                          <SelectItem
-                            key={c.id}
-                            label={`${c.customer.name}${
-                              c.customer.document_number
-                                ? " · " + c.customer.document_number
-                                : ""
-                            }`}
-                            value={String(c.customer_id)}
-                          />
-                        ))}
-                      </SelectContent>
-                    </SelectPortal>
-                  </Select>
+                  <AppSelect
+                    placeholder="Público general"
+                    searchable={customerOptions.length > 6}
+                    searchPlaceholder="Buscar cliente..."
+                    options={customerOptions}
+                    value={
+                      customerId != null
+                        ? String(customerId)
+                        : GENERAL_CUSTOMER_VALUE
+                    }
+                    onChange={(v) =>
+                      setCustomerId(
+                        v && v !== GENERAL_CUSTOMER_VALUE ? Number(v) : null,
+                      )
+                    }
+                  />
                 </VStack>
               )}
             </VStack>
@@ -761,12 +733,21 @@ export const Checkout: React.FC = () => {
 
               {entries.map((entry) => {
                 const cash = isCashMethod(methodById(entry.paymentMethodId));
-                // Con un solo método, el monto es fijo (100% del total) y no
-                // se puede tocar; recién se habilita a escribir al dividir.
                 const amountEditable = !singleMethod;
                 const displayedAmount = singleMethod
                   ? total.toFixed(2)
                   : entry.amount;
+
+                const methodOptions = [
+                  ...methods.map((m) => ({
+                    label: m.method,
+                    value: String(m.id),
+                  })),
+                  // Solo si el cliente tiene crédito activo
+                  ...(creditAvailable
+                    ? [{ label: "Crédito", value: CREDIT_VALUE }]
+                    : []),
+                ];
 
                 return (
                   <VStack
@@ -775,86 +756,49 @@ export const Checkout: React.FC = () => {
                     className="rounded-lg border border-gray-100 p-2"
                   >
                     <HStack space="xs" className="items-center">
-                      <Select
-                        selectedValue={
-                          entry.isCredit
-                            ? "credit"
-                            : String(entry.paymentMethodId ?? "")
-                        }
-                        onValueChange={(v) =>
-                          v === "credit"
-                            ? setEntryCredit(entry.key)
-                            : setEntryMethod(entry.key, Number(v))
-                        }
-                        className="flex-1"
-                      >
-                        <SelectTrigger
-                          variant="outline"
-                          size="sm"
-                          className="justify-between border-gray-300 bg-white"
-                        >
-                          <SelectInput
-                            value={
-                              entry.isCredit
-                                ? "Crédito"
-                                : (methodById(entry.paymentMethodId)?.method ??
-                                  "")
-                            }
-                            className="text-sm text-gray-900"
-                          />
-                          <Icon
-                            as={ChevronDown}
-                            size="xs"
-                            className="mr-2 text-gray-400"
-                          />
-                        </SelectTrigger>
-                        <SelectPortal>
-                          <SelectBackdrop />
-                          <SelectContent className="bg-white">
-                            <SelectDragIndicatorWrapper>
-                              <SelectDragIndicator />
-                            </SelectDragIndicatorWrapper>
-                            {methods.map((m) => (
-                              <SelectItem
-                                key={m.id}
-                                label={m.method}
-                                value={String(m.id)}
-                              />
-                            ))}
-                            {/* Crédito solo aparece si hay un cliente con crédito habilitado y saldo disponible */}
-                            {creditAvailable && (
-                              <SelectItem label="Crédito" value="credit" />
-                            )}
-                          </SelectContent>
-                        </SelectPortal>
-                      </Select>
-
-                      <Input
-                        variant="outline"
-                        size="sm"
-                        isReadOnly={!amountEditable}
-                        className={`flex-1 border-gray-300 ${
-                          amountEditable ? "bg-white" : "bg-gray-100"
-                        }`}
-                      >
-                        <InputField
-                          value={displayedAmount}
-                          onChangeText={
-                            amountEditable
-                              ? (v) =>
-                                  updateEntry(entry.key, {
-                                    amount: sanitizeDecimal(v),
-                                  })
-                              : undefined
+                      <Box className="min-w-0 flex-1">
+                        <AppSelect
+                          placeholder="Método de pago"
+                          searchable={false}
+                          options={methodOptions}
+                          value={
+                            entry.isCredit
+                              ? CREDIT_VALUE
+                              : entry.paymentMethodId != null
+                                ? String(entry.paymentMethodId)
+                                : undefined
                           }
-                          editable={amountEditable}
-                          placeholder="0.00"
-                          keyboardType="decimal-pad"
-                          className={`text-sm ${
-                            amountEditable ? "text-gray-900" : "text-gray-500"
-                          }`}
+                          onChange={(v) => {
+                            if (v === CREDIT_VALUE) {
+                              setEntryCredit(entry.key);
+                              return;
+                            }
+                            const id = Number(v);
+                            if (Number.isFinite(id))
+                              setEntryMethod(entry.key, id);
+                          }}
                         />
-                      </Input>
+                      </Box>
+
+                      <AppInput
+                        value={displayedAmount}
+                        onChangeText={
+                          amountEditable
+                            ? (v) =>
+                                updateEntry(entry.key, {
+                                  amount: sanitizeDecimal(v),
+                                })
+                            : undefined
+                        }
+                        isDisabled={!amountEditable}
+                        placeholder="0.00"
+                        keyboardType="decimal-pad"
+                        inputMode="decimal"
+                        returnKeyType="done"
+                        selectTextOnFocus={amountEditable}
+                        containerStyle={{ width: 128 }}
+                        inputStyle={{ textAlign: "right" }}
+                      />
 
                       {entries.length > 1 && (
                         <TouchableOpacity
@@ -866,40 +810,31 @@ export const Checkout: React.FC = () => {
                     </HStack>
 
                     {!entry.isCredit && cash && (
-                      <Input
-                        variant="outline"
-                        size="sm"
-                        className="border-gray-300 bg-white"
-                      >
-                        <InputField
-                          value={entry.amountReceived}
-                          onChangeText={(v) =>
-                            updateEntry(entry.key, {
-                              amountReceived: sanitizeDecimal(v),
-                            })
-                          }
-                          placeholder="Efectivo recibido (para calcular cambio)"
-                          keyboardType="decimal-pad"
-                          className="text-sm text-gray-900"
-                        />
-                      </Input>
+                      <AppInput
+                        value={entry.amountReceived}
+                        onChangeText={(v) =>
+                          updateEntry(entry.key, {
+                            amountReceived: sanitizeDecimal(v),
+                          })
+                        }
+                        placeholder="Efectivo recibido (para calcular cambio)"
+                        keyboardType="decimal-pad"
+                        inputMode="decimal"
+                        returnKeyType="done"
+                      />
                     )}
 
                     {!entry.isCredit && !cash && (
-                      <Input
-                        variant="outline"
-                        size="sm"
-                        className="border-gray-300 bg-white"
-                      >
-                        <InputField
-                          value={entry.reference}
-                          onChangeText={(v) =>
-                            updateEntry(entry.key, { reference: v })
-                          }
-                          placeholder="Referencia (opcional)"
-                          className="text-sm text-gray-900"
-                        />
-                      </Input>
+                      <AppInput
+                        value={entry.reference}
+                        onChangeText={(v) =>
+                          updateEntry(entry.key, { reference: v })
+                        }
+                        placeholder="Referencia (opcional)"
+                        autoCapitalize="characters"
+                        autoCorrect={false}
+                        returnKeyType="done"
+                      />
                     )}
                   </VStack>
                 );
@@ -910,6 +845,11 @@ export const Checkout: React.FC = () => {
                   <Text className="text-sm font-medium text-red-600">
                     Faltan {formatCurrency(remaining)}
                   </Text>
+                ) : remaining < -0.005 ? (
+                  <Text className="text-sm font-medium text-red-600">
+                    Los montos superan el total por{" "}
+                    {formatCurrency(Math.abs(remaining))}
+                  </Text>
                 ) : cashChange > 0.005 ? (
                   <Text className="text-sm font-medium text-blue-600">
                     Cambio: {formatCurrency(cashChange)}
@@ -918,29 +858,21 @@ export const Checkout: React.FC = () => {
 
                 {creditUsed > 0 && (
                   <Text
-                    className={`flex-row items-center text-xs ${
+                    className={`text-xs ${
                       creditOverLimit ? "text-red-600" : "text-gray-500"
                     }`}
                   >
                     Crédito: {formatCurrency(creditUsed)} de{" "}
-                    {formatCurrency(selectedCredit?.credit_available ?? 0)}{" "}
-                    disponibles
+                    {formatCurrency(creditLimit)} disponibles
                     {creditOverLimit && " · excede lo disponible"}
                   </Text>
                 )}
               </VStack>
-
-              {!creditAvailable && (
-                <Text className="text-xs text-gray-400">
-                  El crédito solo está disponible seleccionando un cliente con
-                  crédito habilitado y saldo disponible arriba.
-                </Text>
-              )}
             </VStack>
 
             {checkout.isError && !isInsufficientStockError(checkout.error) && (
               <Text className="text-sm font-medium text-red-600">
-                No se pudo registrar la venta. Intenta de nuevo.
+                {checkoutErrorMessage(checkout.error)}
               </Text>
             )}
           </VStack>
@@ -961,12 +893,6 @@ export const Checkout: React.FC = () => {
         </Button>
       </VStack>
 
-      {/* Modal de stock insuficiente: al fallar el checkout por esta
-        razón, se refresca el catálogo y se identifica cuál producto ya
-        no tiene stock. Si era el único producto del carrito, al cerrar
-        el modal se limpia todo y se regresa a la pantalla anterior; si
-        hay más productos, ese queda marcado en el resumen (arriba) y
-        excluido del total, y el resto del carrito no se toca. */}
       <AlertDialog isOpen={stockErrorOpen} onClose={handleStockModalClose}>
         <AlertDialogBackdrop />
         <AlertDialogContent className="bg-white">
@@ -994,10 +920,9 @@ export const Checkout: React.FC = () => {
             ) : blockedProductNames.length > 0 ? (
               <VStack space="xs">
                 <Text className="text-sm text-gray-600">
-                  No se pudo registrar la venta: los siguientes productos ya no
-                  tienen existencias suficientes. Quedaron marcados en el
-                  resumen y no se incluyen en el total — puedes quitarlos o
-                  ajustar la cantidad y volver a intentar.
+                  Estos productos ya no tienen existencias suficientes. Quedaron
+                  marcados en el resumen y no se incluyen en el total: quítalos
+                  o ajusta la cantidad y vuelve a intentar.
                 </Text>
                 <VStack space="xs" className="mt-1">
                   {blockedProductNames.map((name) => (
@@ -1012,9 +937,9 @@ export const Checkout: React.FC = () => {
               </VStack>
             ) : (
               <Text className="text-sm text-gray-600">
-                No se pudo registrar la venta por falta de stock. Ya
-                actualizamos las existencias; revisa el resumen del pedido y
-                vuelve a intentar.
+                El servidor rechazó la venta por falta de stock, pero las
+                existencias actualizadas alcanzan. Revisa el resumen y vuelve a
+                intentar.
               </Text>
             )}
           </AlertDialogBody>

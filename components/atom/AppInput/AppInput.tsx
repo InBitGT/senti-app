@@ -1,12 +1,15 @@
 import { AlertCircle } from "lucide-react-native";
 import { forwardRef } from "react";
 import {
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TextInputProps,
-    View,
+  Platform,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TextStyle,
+  View,
+  ViewStyle,
 } from "react-native";
 
 interface AppInputProps extends Omit<TextInputProps, "style"> {
@@ -17,8 +20,65 @@ interface AppInputProps extends Omit<TextInputProps, "style"> {
   multiline?: boolean;
   /** Alto del textarea cuando multiline es true. Default: 100. */
   textareaHeight?: number;
+  /**
+   * Override del contenedor (wrapper). Util para casos compactos donde
+   * NO se quiere el ancho 100% por defecto -- por ejemplo, un input
+   * angosto dentro de una fila (ej. contador de denominaciones de
+   * efectivo). No afecta el layout de un AppInput "normal" de form.
+   */
+  containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Override del estilo del TextInput en si (ej. textAlign, fontSize,
+   * padding mas chico). Se aplica DESPUES de los estilos base, asi que
+   * puede sobreescribirlos.
+   */
+  inputStyle?: StyleProp<TextStyle>;
 }
 
+/**
+ * Input de texto estandar de la app, construido SOLO con
+ * primitivos de React Native (TextInput, View, Text, StyleSheet).
+ *
+ * Mismo criterio que AppSelect: no depende de gluestack-ui ni de
+ * NativeWind/cssInterop, asi que se ve identico en iOS, Android,
+ * Web y Tauri sin importar el estado de esa configuracion, y
+ * comparte el mismo lenguaje visual (bordes, colores, tamaños de
+ * texto) que AppSelect para que los formularios se vean
+ * consistentes.
+ *
+ * Sirve tanto para inputs de una linea como para textareas
+ * (usando la prop `multiline`).
+ *
+ * Uso basico:
+ * <Controller
+ *   control={control}
+ *   name="amount"
+ *   rules={{ required: "El monto es obligatorio." }}
+ *   render={({ field: { onChange, onBlur, value } }) => (
+ *     <AppInput
+ *       label="Monto"
+ *       placeholder="Ej. 100.00"
+ *       value={value}
+ *       onChangeText={onChange}
+ *       onBlur={onBlur}
+ *       keyboardType="decimal-pad"
+ *       errorMessage={errors.amount?.message}
+ *     />
+ *   )}
+ * />
+ *
+ * Como textarea:
+ * <AppInput
+ *   label="Descripción"
+ *   placeholder="Ej. Corrección de abono ingresado por error"
+ *   value={value}
+ *   onChangeText={onChange}
+ *   onBlur={onBlur}
+ *   multiline
+ *   textareaHeight={120}
+ *   errorMessage={errors.description?.message}
+ * />
+ */
 export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
   {
     label,
@@ -27,6 +87,8 @@ export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
     multiline,
     textareaHeight = 100,
     editable,
+    containerStyle,
+    inputStyle,
     ...props
   },
   ref,
@@ -34,7 +96,7 @@ export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
   const disabled = isDisabled || editable === false;
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
 
       <TextInput
@@ -48,6 +110,7 @@ export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
           multiline && { height: textareaHeight, paddingTop: 12 },
           !!errorMessage && styles.inputError,
           disabled && styles.inputDisabled,
+          inputStyle,
         ]}
         {...props}
       />

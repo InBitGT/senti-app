@@ -1,17 +1,17 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
 import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalBackdrop,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -21,14 +21,14 @@ import { useCashRegisterSessionStore } from "@/src/store/useCashRegisterSessionS
 import { sanitizeDecimal } from "@/src/utils/sanitizeDecimal/sanitizeDecimal";
 import { router } from "expo-router";
 import {
-    AlertTriangle,
-    ChevronLeft,
-    CreditCard,
-    Landmark,
-    Minus,
-    Plus,
+  AlertTriangle,
+  ChevronLeft,
+  CreditCard,
+  Landmark,
+  Minus,
+  Plus,
 } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -164,20 +164,20 @@ export default function CashCountScreen() {
             <Icon as={Minus} size="xs" className="text-gray-600" />
           </TouchableOpacity>
 
-          <Input
-            variant="outline"
-            size="sm"
-            className="w-14 border-gray-300 bg-white"
-          >
-            <InputField
-              value={String(qty)}
-              onChangeText={(v) => handleCountInput(d.value, v)}
-              keyboardType="numeric"
-              textAlign="center"
-              className="text-sm font-medium text-gray-900"
-              selectTextOnFocus
-            />
-          </Input>
+          <AppInput
+            value={String(qty)}
+            onChangeText={(v) => handleCountInput(d.value, v)}
+            keyboardType="numeric"
+            selectTextOnFocus
+            containerStyle={{ width: 56 }}
+            inputStyle={{
+              textAlign: "center",
+              fontSize: 14,
+              fontWeight: "500",
+              paddingVertical: 6,
+              paddingHorizontal: 4,
+            }}
+          />
 
           <TouchableOpacity
             onPress={() => updateCount(d.value, qty + 1)}
@@ -266,20 +266,19 @@ export default function CashCountScreen() {
                   <Text className="text-sm text-gray-900">
                     Monto total en efectivo
                   </Text>
-                  <Input
-                    variant="outline"
-                    size="sm"
-                    className="w-32 border-gray-300 bg-white"
-                  >
-                    <InputField
-                      value={cashTotalRaw}
-                      onChangeText={(v) => setCashTotalRaw(sanitizeDecimal(v))}
-                      placeholder="0.00"
-                      keyboardType="decimal-pad"
-                      textAlign="right"
-                      className="text-sm font-medium text-gray-900"
-                    />
-                  </Input>
+                  <AppInput
+                    value={cashTotalRaw}
+                    onChangeText={(v) => setCashTotalRaw(sanitizeDecimal(v))}
+                    placeholder="0.00"
+                    keyboardType="decimal-pad"
+                    containerStyle={{ width: 128 }}
+                    inputStyle={{
+                      textAlign: "right",
+                      fontSize: 14,
+                      fontWeight: "500",
+                      paddingVertical: 6,
+                    }}
+                  />
                 </HStack>
               )}
             </VStack>
@@ -315,22 +314,19 @@ export default function CashCountScreen() {
                   <Icon as={Landmark} size="xs" className="text-blue-600" />
                   <Text className="text-sm text-gray-900">Transferencia</Text>
                 </HStack>
-                <Input
-                  variant="outline"
-                  size="sm"
-                  className="w-28 border-gray-300 bg-white"
-                >
-                  <InputField
-                    value={transferAmountRaw}
-                    onChangeText={(v) =>
-                      setTransferAmountRaw(sanitizeDecimal(v))
-                    }
-                    placeholder="0.00"
-                    keyboardType="decimal-pad"
-                    textAlign="right"
-                    className="text-sm font-medium text-gray-900"
-                  />
-                </Input>
+                <AppInput
+                  value={transferAmountRaw}
+                  onChangeText={(v) => setTransferAmountRaw(sanitizeDecimal(v))}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  containerStyle={{ width: 112 }}
+                  inputStyle={{
+                    textAlign: "right",
+                    fontSize: 14,
+                    fontWeight: "500",
+                    paddingVertical: 6,
+                  }}
+                />
               </HStack>
 
               <HStack
@@ -346,22 +342,20 @@ export default function CashCountScreen() {
                     </Text>
                   </VStack>
                 </HStack>
-                <Input
-                  variant="outline"
-                  size="sm"
+                <AppInput
+                  value={cardAmountRaw}
+                  onChangeText={(v) => setCardAmountRaw(sanitizeDecimal(v))}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
                   isDisabled={!CARD_PAYMENTS_ENABLED}
-                  className="w-28 border-gray-200 bg-gray-50"
-                >
-                  <InputField
-                    value={cardAmountRaw}
-                    onChangeText={(v) => setCardAmountRaw(sanitizeDecimal(v))}
-                    placeholder="0.00"
-                    keyboardType="decimal-pad"
-                    textAlign="right"
-                    editable={CARD_PAYMENTS_ENABLED}
-                    className="text-sm font-medium text-gray-400"
-                  />
-                </Input>
+                  containerStyle={{ width: 112 }}
+                  inputStyle={{
+                    textAlign: "right",
+                    fontSize: 14,
+                    fontWeight: "500",
+                    paddingVertical: 6,
+                  }}
+                />
               </HStack>
             </VStack>
           </VStack>

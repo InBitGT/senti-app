@@ -13,31 +13,35 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { useOpenCashModalStore } from "@/src/store/useOpenCashModalStore/useOpenCashModalStore";
 import { router } from "expo-router";
 import { RefreshCcw, Wallet, X } from "lucide-react-native";
-import React from "react";
+import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
 
-interface OpenCashRegisterModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onRefresh: () => void;
-  isRefreshing?: boolean;
-}
+export const OpenCashRegisterModal: React.FC = () => {
+  const isOpen = useOpenCashModalStore((s) => s.isOpen);
+  const onRefresh = useOpenCashModalStore((s) => s.onRefresh);
+  const dismiss = useOpenCashModalStore((s) => s.dismiss);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-export const OpenCashRegisterModal: React.FC<OpenCashRegisterModalProps> = ({
-  isOpen,
-  onClose,
-  onRefresh,
-  isRefreshing = false,
-}) => {
+  async function handleRefresh() {
+    if (!onRefresh || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
+
   function handleGoToOpen() {
-    onClose();
+    dismiss();
     router.push("/(drawer)/(pos)/(process)/open-cash-register");
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={dismiss}>
       <ModalBackdrop />
       <ModalContent className="bg-white">
         <ModalHeader className="items-center justify-between">
@@ -47,7 +51,7 @@ export const OpenCashRegisterModal: React.FC<OpenCashRegisterModalProps> = ({
               Caja cerrada
             </Heading>
           </HStack>
-          <TouchableOpacity onPress={onClose}>
+          <TouchableOpacity onPress={dismiss}>
             <Icon as={X} size="xl" className="text-gray-400" />
           </TouchableOpacity>
         </ModalHeader>
@@ -59,7 +63,7 @@ export const OpenCashRegisterModal: React.FC<OpenCashRegisterModalProps> = ({
               vender.
             </Text>
 
-            <TouchableOpacity onPress={onRefresh} disabled={isRefreshing}>
+            <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing}>
               <HStack
                 space="xs"
                 className="items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
