@@ -1,0 +1,74 @@
+name: Build producción (AAB + IPA)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Rama a compilar"
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: android
+            ext: aab
+          - platform: ios
+            ext: ipa
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Build en EAS
+        id: build
+        run: |
+          eas build \
+            --platform ${{ matrix.platform }} \
+            --profile production \
+            --non-interactive \
+            --wait \
+            --json > build.json
+
+          URL=$(jq -r '.[0].artifacts.buildUrl' build.json)
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "No se encontró la URL del build"
+            cat build.json
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Descargar build
+        run: curl -fL "${{ steps.build.outputs.url }}" -o app-production.${{ matrix.ext }}
+
+      - name: Subir artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-production
+          path: app-production.${{ matrix.ext }}
+          retention-days: 30
