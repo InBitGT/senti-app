@@ -29,12 +29,8 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          packager: npm
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Instalar EAS CLI
+        run: npm install -g eas-cli@latest
 
       - name: Instalar dependencias
         run: npm ci
@@ -49,6 +45,7 @@ jobs:
       - name: Build en EAS
         id: build
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_PRODUCTION_API_URL: ${{ secrets.EXPO_PUBLIC_PRODUCTION_API_URL }}
         run: |
           eas build \
