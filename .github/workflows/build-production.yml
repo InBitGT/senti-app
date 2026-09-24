@@ -39,8 +39,17 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Inyectar variables de entorno en eas.json
+        env:
+          EXPO_PUBLIC_PRODUCTION_API_URL: ${{ secrets.EXPO_PUBLIC_PRODUCTION_API_URL }}
+        run: |
+          jq '.build.production.env.EXPO_PUBLIC_PRODUCTION_API_URL = env.EXPO_PUBLIC_PRODUCTION_API_URL' eas.json > eas.tmp.json
+          mv eas.tmp.json eas.json
+
       - name: Build en EAS
         id: build
+        env:
+          EXPO_PUBLIC_PRODUCTION_API_URL: ${{ secrets.EXPO_PUBLIC_PRODUCTION_API_URL }}
         run: |
           eas build \
             --platform ${{ matrix.platform }} \
