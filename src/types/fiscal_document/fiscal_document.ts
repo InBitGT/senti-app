@@ -17,6 +17,9 @@ export interface FiscalDocument {
   id: number;
   order_id: number;
   branch_id: number;
+  branch_name: string;
+  user_first_name: string;
+  user_last_name: string;
   document_type: DocumentType | string;
   series: string;
   number: string;
@@ -30,10 +33,6 @@ export interface FiscalDocument {
   voided_at?: string | null;
   items?: FiscalDocumentItem[];
   status: boolean;
-  user_first_name?: string | null;
-  user_last_name?: string | null;
-  created_at: string;
-  update_at: string;
 }
 
 // ⚠️ Opciones inferidas de tu ejemplo (receipt, issued/voided) — ajusta si tu backend usa otras.

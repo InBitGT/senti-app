@@ -53,6 +53,10 @@ export const ModalFiscalDocumentDetail: React.FC<Props> = ({
     onViewDetail?.(data.id);
   };
 
+  const userFullName = data
+    ? `${data.user_first_name ?? ""} ${data.user_last_name ?? ""}`.trim() || "—"
+    : "—";
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalBackdrop />
@@ -127,18 +131,64 @@ export const ModalFiscalDocumentDetail: React.FC<Props> = ({
                       }
                     />
                   )}
+                  <InfoRow
+                    label="Registro activo"
+                    value={data.status ? "Sí" : "No"}
+                  />
 
                   <Divider />
 
-                  <SectionTitle title="Registro" />
-                  <InfoRow
-                    label="Creado"
-                    value={new Date(data.created_at).toLocaleString("es-GT")}
-                  />
-                  <InfoRow
-                    label="Actualizado"
-                    value={new Date(data.update_at).toLocaleString("es-GT")}
-                  />
+                  <SectionTitle title="Emisión" />
+                  <InfoRow label="Sucursal" value={data.branch_name || "—"} />
+                  <InfoRow label="Emitido por" value={userFullName} />
+
+                  {data.items && data.items.length > 0 && (
+                    <>
+                      <Divider />
+
+                      <SectionTitle title={`Ítems (${data.items.length})`} />
+                      {data.items.map((item, index) => (
+                        <View
+                          key={`${item.product_id}-${index}`}
+                          style={[
+                            styles.itemRow,
+                            index === data.items!.length - 1 && {
+                              borderBottomWidth: 0,
+                            },
+                          ]}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.itemName}>
+                              {item.product_name}
+                              {item.variant_name
+                                ? ` · ${item.variant_name}`
+                                : ""}
+                            </Text>
+                            {item.category_name && (
+                              <Text style={styles.itemCategory}>
+                                {item.category_name}
+                              </Text>
+                            )}
+                            <Text style={styles.itemMeta}>
+                              {item.quantity} x{" "}
+                              {formatCurrency(item.unit_price)}
+                            </Text>
+                            {item.discount > 0 && (
+                              <Text style={styles.itemDiscount}>
+                                Descuento: -{formatCurrency(item.discount)}
+                              </Text>
+                            )}
+                            {item.notes && (
+                              <Text style={styles.itemNotes}>{item.notes}</Text>
+                            )}
+                          </View>
+                          <Text style={styles.itemTotal}>
+                            {formatCurrency(item.subtotal)}
+                          </Text>
+                        </View>
+                      ))}
+                    </>
+                  )}
                 </>
               )}
             </DesktopScrollView>
@@ -166,23 +216,6 @@ const styles = StyleSheet.create({
   subtitle: { color: "#6b7280", fontSize: 13, marginTop: 2 },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   badgeText: { fontSize: 12, fontWeight: "500" },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    marginBottom: 8,
-    marginTop: 4,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 6,
-    alignItems: "flex-start",
-  },
-  label: { color: "#6b7280", fontSize: 13, flex: 1 },
-  value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
-  divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
   statsRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
   statBox: {
     flex: 1,
@@ -194,4 +227,23 @@ const styles = StyleSheet.create({
   },
   statLabel: { fontSize: 11, color: "#6b7280", marginBottom: 2 },
   statValue: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
+    gap: 8,
+  },
+  itemName: { fontSize: 13, color: "#111827", fontWeight: "500" },
+  itemCategory: { fontSize: 11, color: "#9ca3af", marginTop: 1 },
+  itemMeta: { fontSize: 12, color: "#6b7280", marginTop: 2 },
+  itemDiscount: { fontSize: 12, color: "#dc2626", marginTop: 2 },
+  itemNotes: {
+    fontSize: 12,
+    color: "#6b7280",
+    fontStyle: "italic",
+    marginTop: 2,
+  },
+  itemTotal: { fontSize: 13, fontWeight: "600", color: "#111827" },
 });

@@ -1,10 +1,10 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
 import { ProductSearchSelect } from "@/components/atom/ProductSearchSelect/ProductSearchSelect";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
@@ -18,11 +18,24 @@ import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
 import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
+import { useFormDraft } from "@/src/store/useFormDraft/useFormDraft";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { useRouter } from "expo-router";
-import { ArrowLeftIcon } from "lucide-react-native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeftIcon,
+  FileClock,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react-native";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -71,6 +84,17 @@ const EMPTY_ITEM: ItemFormValues = {
   new_sale_price: "",
 };
 
+const formatDraftDate = (iso: string) => {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleString("es-GT", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 // ── Item Row ──────────────────────────────────────────────────────────────────
 function ItemRow({
   index,
@@ -80,7 +104,6 @@ function ItemRow({
   productData,
   unitData,
   isLarge,
-  units,
 }: {
   index: number;
   control: any;
@@ -348,6 +371,13 @@ export default function InventoryForm() {
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
 
+  // Borrador ligado al usuario y tenant actuales
+  const { draft, isLoaded, saveDraft, clearDraft } = useFormDraft<FormValues>(
+    "entry_stock",
+    claims?.sub,
+    claims?.tenant_id,
+  );
+
   // Refs y estado para el botón flotante
   const scrollRef = useRef<any>(null);
   const addButtonRef = useRef<View>(null);
@@ -382,13 +412,9 @@ export default function InventoryForm() {
   const hideBranchWarehouseInputs =
     branchOptions.length === 1 && totalWarehouses === 1;
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
-    defaultValues: {
+  // Valores iniciales (se reutilizan al borrar el borrador)
+  const initialValues = useMemo<FormValues>(
+    () => ({
       branch_id: hideBranchWarehouseInputs
         ? String(branchOptions[0]?.id ?? "")
         : "",
@@ -401,8 +427,18 @@ export default function InventoryForm() {
       entry_status: "confirmed",
       notes: "",
       items: [EMPTY_ITEM],
-    },
-  });
+    }),
+    [hideBranchWarehouseInputs, branchOptions],
+  );
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    getValues,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({ defaultValues: initialValues });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
@@ -420,17 +456,52 @@ export default function InventoryForm() {
   );
   const warehouseOptionsForBranch = selectedBranch?.warehouses ?? [];
 
+  // Evita que al restaurar el borrador se limpie la bodega guardada
+  const skipWarehouseReset = useRef(false);
+
   // Al cambiar de sucursal, se limpia la bodega seleccionada (pertenecía a la sucursal anterior).
-  const isFirstRender = React.useRef(true);
-  React.useEffect(() => {
+  const isFirstRender = useRef(true);
+  useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      return;
+    }
+    if (skipWarehouseReset.current) {
+      skipWarehouseReset.current = false;
       return;
     }
     if (!hideBranchWarehouseInputs) {
       setValue("warehouse_id", "");
     }
   }, [selectedBranchId, hideBranchWarehouseInputs, setValue]);
+
+  // Restaurar el borrador una sola vez al cargar
+  const draftRestored = useRef(false);
+  useEffect(() => {
+    if (!isLoaded || !draft || draftRestored.current) return;
+    draftRestored.current = true;
+
+    // Si la sucursal del borrador es distinta, el efecto de arriba se va a
+    // disparar: le indicamos que no borre la bodega del borrador.
+    if (draft.values.branch_id !== getValues("branch_id")) {
+      skipWarehouseReset.current = true;
+    }
+    reset(draft.values);
+  }, [isLoaded, draft, reset, getValues]);
+
+  const handleSaveDraft = async () => {
+    const ok = await saveDraft(getValues());
+    showToast({
+      message: ok ? "Borrador guardado" : "No se pudo guardar el borrador",
+      type: ok ? "success" : "error",
+    });
+  };
+
+  const handleClearDraft = async () => {
+    await clearDraft();
+    reset(initialValues);
+    showToast({ message: "Borrador eliminado", type: "success" });
+  };
 
   const allItems = useWatch({ control, name: "items" });
   const totalGeneral = allItems.reduce((acc, item) => {
@@ -477,6 +548,8 @@ export default function InventoryForm() {
 
     try {
       await post.mutateAsync(payload);
+      // El ingreso ya se registró: el borrador ya no hace falta
+      await clearDraft();
       showToast({ message: "Ingreso creado correctamente", type: "success" });
       router.back();
     } catch (error) {
@@ -533,6 +606,27 @@ export default function InventoryForm() {
                 <Text size="sm" className="text-typography-400 mb-6">
                   Llena los campos para registrar un ingreso de inventario
                 </Text>
+
+                {/* Aviso de borrador guardado */}
+                {draft && (
+                  <View style={styles.draftBanner}>
+                    <FileClock size={20} color="#0369a1" />
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={styles.draftTitle}>Borrador guardado</Text>
+                      <Text style={styles.draftDate}>
+                        Última vez: {formatDraftDate(draft.savedAt)}
+                      </Text>
+                    </View>
+                    <AppButton
+                      label="Borrar"
+                      icon={Trash2}
+                      variant="black"
+                      outline
+                      fullWidth={false}
+                      onPress={handleClearDraft}
+                    />
+                  </View>
+                )}
 
                 <VStack space="lg">
                   {/* ── DATOS DEL DOCUMENTO ── */}
@@ -651,10 +745,7 @@ export default function InventoryForm() {
                         }}
                         render={({ field: { onChange, onBlur, value } }) => {
                           const handleChange = (text: string) => {
-                            // Solo permitir números y guiones
                             const cleaned = text.replace(/[^0-9]/g, "");
-
-                            // Insertar guiones automáticamente
                             let formatted = cleaned;
                             if (cleaned.length > 4) {
                               formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
@@ -662,7 +753,6 @@ export default function InventoryForm() {
                             if (cleaned.length > 6) {
                               formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
                             }
-
                             onChange(formatted);
                           };
 
@@ -714,15 +804,13 @@ export default function InventoryForm() {
                       PRODUCTOS ({fields.length})
                     </Text>
                     <View ref={addButtonRef} collapsable={false}>
-                      <Button size="sm" onPress={() => append(EMPTY_ITEM)}>
-                        <Icon
-                          as={AddIcon}
-                          size="sm"
-                          color="#fff"
-                          style={{ color: "#fff", marginRight: 4 }}
-                        />
-                        <ButtonText>Agregar</ButtonText>
-                      </Button>
+                      <AppButton
+                        label="Agregar"
+                        icon={Plus}
+                        variant="black"
+                        fullWidth={false}
+                        onPress={() => append(EMPTY_ITEM)}
+                      />
                     </View>
                   </HStack>
 
@@ -765,25 +853,32 @@ export default function InventoryForm() {
                   )}
 
                   {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
+                  <HStack style={styles.actions}>
+                    <AppButton
+                      label="Cancelar"
+                      variant="black"
+                      outline
+                      fullWidth={false}
+                      isDisabled={isPending}
                       onPress={() => router.back()}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
+                    />
+                    <AppButton
+                      label="Guardar borrador"
+                      icon={Save}
+                      variant="info"
+                      outline
+                      fullWidth={false}
+                      isDisabled={isPending}
+                      onPress={handleSaveDraft}
+                    />
+                    <AppButton
+                      label="Guardar"
+                      variant="black"
+                      fullWidth={false}
+                      isLoading={isPending}
+                      isDisabled={fields.length === 0}
                       onPress={handleSubmit(onSubmit)}
-                      disabled={isPending || fields.length === 0}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
+                    />
                   </HStack>
                 </VStack>
               </Box>
@@ -815,8 +910,10 @@ export const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#ffffff",
     borderRadius: 20,
-    paddingVertical: 32,
-    paddingHorizontal: 28,
+    paddingTop: 32,
+    paddingBottom: 32,
+    paddingLeft: 28,
+    paddingRight: 28,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -827,6 +924,29 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#555",
     fontSize: 13,
+  },
+  draftBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f9ff",
+    borderWidth: 1,
+    borderColor: "#bae6fd",
+    borderRadius: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingLeft: 14,
+    paddingRight: 14,
+    marginBottom: 20,
+  },
+  draftTitle: {
+    color: "#0369a1",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  draftDate: {
+    color: "#0284c7",
+    fontSize: 12,
+    marginTop: 2,
   },
   itemCard: {
     borderWidth: 1,
@@ -846,8 +966,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f0f9ff",
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 12,
+    paddingRight: 12,
   },
   totalBox: {
     flexDirection: "row",
@@ -858,6 +980,12 @@ export const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: "#bbf7d0",
+  },
+  actions: {
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 16,
   },
   fab: {
     position: "absolute",

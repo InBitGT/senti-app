@@ -1,8 +1,8 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
@@ -18,6 +18,7 @@ import { useMerchandise } from "@/src/hooks/useMerchandise/useMerchandise";
 import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { useMerchandiseStore } from "@/src/store/useMerchandiseStore/useMerchandiseStore";
+import { Category } from "@/src/types";
 import type {
   MerchandiseConversion,
   MerchandiseDetail,
@@ -58,7 +59,8 @@ interface CustomerTypePriceRow {
 }
 
 interface FormValues {
-  category_id: string;
+  category_root_id: string;
+  subcategory_id: string;
   name: string;
   description: string;
   sku: string;
@@ -85,6 +87,17 @@ interface FormValues {
 const PRODUCT_TYPES = [{ label: "Producto", value: "finished_product" }];
 
 const CURRENCIES = [{ label: "GTQ", value: "GTQ" }];
+
+// Una categoría sin padre, o que se apunta a sí misma, se trata como raíz
+function isRootCategory(c: Category) {
+  return c.parent_id == null || c.parent_id === c.id;
+}
+
+function sortCategories(a: Category, b: Category) {
+  return (
+    (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name)
+  );
+}
 
 function findPricePerUomForConversion(
   conversion: MerchandiseConversion,
@@ -144,8 +157,18 @@ function findPricePerUomForConversion(
 function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
   const product = data?.product;
 
+  // Si el producto está en una subcategoría, el padre va al primer select
+  const isInSubcategory =
+    !!product?.parent_category_id &&
+    product.parent_category_id !== product.category_id;
+
   return {
-    category_id: product?.category_id ? String(product.category_id) : "",
+    category_root_id: isInSubcategory
+      ? String(product!.parent_category_id)
+      : product?.category_id
+        ? String(product.category_id)
+        : "",
+    subcategory_id: isInSubcategory ? String(product!.category_id) : "",
     name: product?.name || "",
     description: product?.description || "",
     sku: product?.sku || "",
@@ -163,8 +186,6 @@ function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
     price_currency: data?.price?.currency || "GTQ",
     conversions: data?.conversions?.length
       ? data.conversions.map((c) => {
-          // FIX: antes era `c.price_per_uom` directo. Ahora busca también
-          // en el array raíz `data.price_per_uom` si no está anidado.
           const pricePerUom = findPricePerUomForConversion(
             c,
             data?.price_per_uom,
@@ -226,14 +247,13 @@ export default function MerchandiseForm() {
 
   const product = data?.product;
 
-  console.log(units, "valores de units");
-
   const {
     control,
     handleSubmit,
     watch,
     reset,
-    formState: { errors },
+    setValue,
+    formState: { errors, isSubmitted },
   } = useForm<FormValues>({
     defaultValues: buildDefaultValues(data),
   });
@@ -258,14 +278,34 @@ export default function MerchandiseForm() {
   const hasWholesaleRule = watch("has_wholesale_rule");
   const conversionsValue = watch("conversions");
   const priceCurrency = watch("price_currency");
+  const selectedRootId = watch("category_root_id");
 
-  const categoryOptions = React.useMemo(
+  const categoryList = React.useMemo<Category[]>(
     () =>
-      (categorie ?? []).map((c) => ({
-        label: c.name,
-        value: String(c.id),
-      })),
+      Array.isArray(categorie)
+        ? categorie
+        : ((categorie as unknown as { data?: Category[] })?.data ?? []),
     [categorie],
+  );
+
+  const rootCategoryOptions = React.useMemo(
+    () =>
+      categoryList
+        .filter(isRootCategory)
+        .sort(sortCategories)
+        .map((c) => ({ label: c.name, value: String(c.id) })),
+    [categoryList],
+  );
+
+  const subcategoryOptions = React.useMemo(
+    () =>
+      categoryList
+        .filter(
+          (c) => !isRootCategory(c) && String(c.parent_id) === selectedRootId,
+        )
+        .sort(sortCategories)
+        .map((c) => ({ label: c.name, value: String(c.id) })),
+    [categoryList, selectedRootId],
   );
 
   const unitOptions = React.useMemo(
@@ -282,7 +322,7 @@ export default function MerchandiseForm() {
 
     const payload: MerchandiseDetail = {
       tenant_id: claims.tenant_id,
-      category_id: parseInt(values.category_id),
+      category_id: parseInt(values.subcategory_id || values.category_root_id),
       name: values.name.trim(),
       description: values.description.trim(),
       sku: values.sku.trim(),
@@ -372,6 +412,9 @@ export default function MerchandiseForm() {
 
   const isPending = post.isPending || put.isPending;
 
+  const hasErrors = Object.keys(errors).length > 0;
+  const isSaveDisabled = isPending || (isSubmitted && hasErrors);
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -418,43 +461,64 @@ export default function MerchandiseForm() {
                 <VStack space="lg">
                   <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
+                  <Controller
+                    control={control}
+                    name="name"
+                    rules={{ required: "El nombre es obligatorio." }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <AppInput
+                        label="Nombre"
+                        placeholder="Ej. Lápiz b1"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.name?.message}
+                      />
+                    )}
+                  />
+
                   <View style={row}>
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="name"
-                        rules={{ required: "El nombre es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Nombre"
-                            placeholder="Ej. Lápiz b1"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="category_id"
+                        name="category_root_id"
                         rules={{ required: "La categoría es obligatoria." }}
                         render={({ field: { onChange, value } }) => (
                           <AppSelect
                             label="Categoría"
                             placeholder="Selecciona categoría"
-                            searchable={categoryOptions.length > 6}
-                            options={categoryOptions}
+                            searchable={rootCategoryOptions.length > 6}
+                            options={rootCategoryOptions}
                             value={value}
-                            onChange={onChange}
-                            errorMessage={errors.category_id?.message}
+                            onChange={(v) => {
+                              onChange(v);
+                              // Al cambiar de categoría se limpia la subcategoría
+                              setValue("subcategory_id", "");
+                            }}
+                            errorMessage={errors.category_root_id?.message}
                           />
                         )}
                       />
                     </View>
+
+                    {subcategoryOptions.length > 0 && (
+                      <View style={half}>
+                        <Controller
+                          control={control}
+                          name="subcategory_id"
+                          render={({ field: { onChange, value } }) => (
+                            <AppSelect
+                              label="Subcategoría (opcional)"
+                              placeholder="Selecciona subcategoría"
+                              searchable={subcategoryOptions.length > 6}
+                              options={subcategoryOptions}
+                              value={value}
+                              onChange={onChange}
+                            />
+                          )}
+                        />
+                      </View>
+                    )}
                   </View>
 
                   <Controller
@@ -671,7 +735,6 @@ export default function MerchandiseForm() {
                       style={styles.addRowButton}
                     >
                       <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                      {/* <Text style={styles.addRowText}>Agregar conversión</Text> */}
                     </Pressable>
                   </HStack>
 
@@ -1021,30 +1084,32 @@ export default function MerchandiseForm() {
                     />
                   </View>
 
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
-                      }}
+                  <View
+                    style={[styles.actions, isLarge && styles.actionsLarge]}
+                  >
+                    <View
+                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
                     >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
+                      <AppButton
+                        label="Cancelar"
+                        outline
+                        onPress={() => {
+                          clearData();
+                          setIsEdit(false);
+                          router.back();
+                        }}
+                      />
+                    </View>
+                    <View
+                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
                     >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
+                      <AppButton
+                        label={isPending ? "Guardando..." : "Guardar"}
+                        onPress={handleSubmit(onSubmit)}
+                        isDisabled={isSaveDisabled}
+                      />
+                    </View>
+                  </View>
                 </VStack>
               </Box>
             </Center>
@@ -1126,5 +1191,19 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
     borderColor: "#d4d4d4",
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 16,
+  },
+  actionsLarge: {
+    justifyContent: "flex-end",
+  },
+  actionBtn: {
+    flex: 1,
+  },
+  actionBtnLarge: {
+    minWidth: 140,
   },
 });

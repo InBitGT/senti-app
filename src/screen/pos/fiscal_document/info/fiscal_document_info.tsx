@@ -12,10 +12,9 @@ import { router } from "expo-router";
 import {
   ArrowLeftIcon,
   BuildingIcon,
-  CalendarIcon,
   PackageIcon,
   ReceiptIcon,
-  UserIcon,
+  UserIcon
 } from "lucide-react-native";
 import React from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
@@ -231,21 +230,6 @@ export default function InvoicesInfoScreen() {
                 .filter(Boolean)
                 .join(" ")}
             />
-          </SectionCard>
-        )}
-
-        {/* Registro — solo se muestra si al menos un campo viene con fecha válida */}
-        {(formatDate(data.created_at) || formatDate(data.update_at)) && (
-          <SectionCard title="Registro" icon={CalendarIcon}>
-            {formatDate(data.created_at) && (
-              <InfoRow label="Creado" value={formatDate(data.created_at)!} />
-            )}
-            {formatDate(data.update_at) && (
-              <InfoRow
-                label="Actualizado"
-                value={formatDate(data.update_at)!}
-              />
-            )}
           </SectionCard>
         )}
       </ScrollView>
