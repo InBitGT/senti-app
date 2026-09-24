@@ -196,9 +196,7 @@ export function MerchandiseTable({
               key={btn.key ?? `btn-${index}`}
               label={btn.name}
               icon={btn.icon}
-              outline
-              outlineBorderColor="#949292"
-              outlineTextColor="#000000"
+              variant="black"
               fullWidth={false}
               shrinkOnMobile
               onPress={btn.onPress}

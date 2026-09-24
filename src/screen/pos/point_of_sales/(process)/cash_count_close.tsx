@@ -169,6 +169,7 @@ export default function CashCountScreen() {
             onChangeText={(v) => handleCountInput(d.value, v)}
             keyboardType="numeric"
             selectTextOnFocus
+            clearable={false}
             containerStyle={{ width: 56 }}
             inputStyle={{
               textAlign: "center",

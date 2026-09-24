@@ -84,26 +84,8 @@ interface FormValues {
 
 const PRODUCT_TYPES = [{ label: "Producto", value: "finished_product" }];
 
-const CURRENCIES = [
-  { label: "GTQ", value: "GTQ" },
-  { label: "USD", value: "USD" },
-];
+const CURRENCIES = [{ label: "GTQ", value: "GTQ" }];
 
-// -----------------------------------------------------------------------
-// FIX: el precio por conversión puede venir de DOS lugares distintos en
-// la respuesta del GET:
-//   1) Anidado: `conversion.price_per_uom` (lo único que se leía antes).
-//   2) Suelto: `MerchandiseListItem.price_per_uom` (un array aparte a
-//      nivel raíz, sin relación explícita con su conversión salvo por
-//      los campos que agregamos a `PricePerUom`).
-// Si el backend llena el (2) y no el (1), `buildDefaultValues` nunca
-// encontraba el precio — por eso el switch "Definir precio para esta
-// unidad" se veía siempre apagado al editar.
-//
-// Esta función intenta (1) primero, y si no hay nada ahí, busca en (2)
-// por `conversion_id` y, si tampoco está ese campo, por el par
-// from_uom_id/to_uom_id.
-// -----------------------------------------------------------------------
 function findPricePerUomForConversion(
   conversion: MerchandiseConversion,
   rootPricePerUom: PricePerUom[] | undefined,
@@ -121,9 +103,6 @@ function findPricePerUomForConversion(
 
   if (!rootPricePerUom?.length) return null;
 
-  // FIX: confirmado con datos reales — el campo de relación es `uom_id`,
-  // que coincide con `from_uom_id` de la conversión (la unidad que se
-  // está definiendo, ej. "Caja"). Esta es la vía principal de matcheo.
   const byUomId = rootPricePerUom.find(
     (p) => p.uom_id === conversion.from_uom_id,
   );
@@ -138,9 +117,6 @@ function findPricePerUomForConversion(
     return byUomId;
   }
 
-  // Respaldo: en los datos reales vistos hasta ahora, `id` coincide entre
-  // la conversión y su price_per_uom (probable relación 1:1 con mismo id
-  // en ambas tablas del lado del backend).
   if (conversion.id != null) {
     const byId = rootPricePerUom.find((p) => p.id === conversion.id);
     if (byId) {
@@ -165,8 +141,6 @@ function findPricePerUomForConversion(
   return null;
 }
 
-// Extraída como función aparte para poder llamarla también desde reset(),
-// no solo desde el defaultValues inicial de useForm.
 function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
   const product = data?.product;
 
@@ -238,10 +212,7 @@ export default function MerchandiseForm() {
   const { data: categorie } = useCategorie();
   const { data: units } = useUnit();
   const { data: customerTypes } = useCustomerType();
-  // "data" es la respuesta completa del GET al editar:
-  // { product, price, conversions, customer_type_prices, price_per_uom, wholesale_rule }
-  // El store ya está tipado como MerchandiseListItem, así que no hace falta
-  // ningún cast aquí.
+
   const data = useMerchandiseStore((state) => state.data);
   const isEdit = useMerchandiseStore((state) => state.isEdit);
   const clearData = useMerchandiseStore((state) => state.clearData);
@@ -267,15 +238,6 @@ export default function MerchandiseForm() {
     defaultValues: buildDefaultValues(data),
   });
 
-  // ⚠️ FIX CLAVE (edición): useForm's defaultValues solo se lee UNA VEZ, al
-  // montar el componente. Si esta pantalla ya estaba montada (ej. quedó en el
-  // stack de navegación de una visita anterior), cambiar de producto a editar
-  // NO repuebla el formulario solo — hay que forzarlo con reset().
-  //
-  // Blindado para modo creación: si "data" es undefined (estamos creando un
-  // producto nuevo, no editando), este efecto NO debe tocar el formulario en
-  // absoluto — así nunca corre el riesgo de resetear conversiones que el
-  // usuario ya agregó a mano con "Agregar conversión".
   React.useEffect(() => {
     if (!data) return;
     reset(buildDefaultValues(data));
@@ -382,8 +344,6 @@ export default function MerchandiseForm() {
           }
         : null,
     };
-
-    console.log(JSON.stringify(payload), "valores de payload ");
 
     try {
       if (!isEdit) {
@@ -923,7 +883,6 @@ export default function MerchandiseForm() {
                       style={styles.addRowButton}
                     >
                       <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                      <Text style={styles.addRowText}>Agregar precio</Text>
                     </Pressable>
                   </HStack>
 
@@ -1137,8 +1096,10 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    padding: 8,
+    borderColor: "#0EA5E9",
+    borderWidth: 1,
+    borderRadius: 7,
   },
   addRowText: {
     fontSize: 12,

@@ -1,17 +1,10 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  FormControl,
-  FormControlHelper,
-  FormControlHelperText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useProfile } from "@/src/hooks";
@@ -21,6 +14,7 @@ import { getInitials } from "@/src/utils";
 import { Mail, Phone, User } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { View } from "react-native";
 
 interface PersonalInfoFormData {
   firstName: string;
@@ -118,80 +112,44 @@ export function PersonalInfoSection() {
         <HStack className="gap-8 flex-wrap md:flex-nowrap">
           <VStack className="flex-1 gap-4">
             <HStack className="gap-4 flex-wrap sm:flex-nowrap">
-              <FormControl className="flex-1" isInvalid={!!errors.firstName}>
-                <FormControlLabel>
-                  <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                    Nombre
-                  </FormControlLabelText>
-                </FormControlLabel>
+              <View className="flex-1" style={{ minWidth: 160 }}>
                 <Controller
                   control={control}
                   name="firstName"
                   rules={{ required: "El nombre es obligatorio" }}
-                  render={({ field: { onChange, value } }) => (
-                    <Input
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Nombre"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
                       isDisabled={!isEditing}
-                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                    >
-                      <InputField
-                        value={value}
-                        onChangeText={onChange}
-                        className="text-gray-900 placeholder:text-gray-400"
-                      />
-                    </Input>
+                      errorMessage={errors.firstName?.message}
+                    />
                   )}
                 />
-                {errors.firstName && (
-                  <FormControlHelper>
-                    <FormControlHelperText className="text-red-500 text-xs">
-                      {errors.firstName.message}
-                    </FormControlHelperText>
-                  </FormControlHelper>
-                )}
-              </FormControl>
+              </View>
 
-              <FormControl className="flex-1" isInvalid={!!errors.lastName}>
-                <FormControlLabel>
-                  <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                    Apellido
-                  </FormControlLabelText>
-                </FormControlLabel>
+              <View className="flex-1" style={{ minWidth: 160 }}>
                 <Controller
                   control={control}
                   name="lastName"
                   rules={{ required: "El apellido es obligatorio" }}
-                  render={({ field: { onChange, value } }) => (
-                    <Input
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Apellido"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
                       isDisabled={!isEditing}
-                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                    >
-                      <InputField
-                        value={value}
-                        onChangeText={onChange}
-                        className="text-gray-900 placeholder:text-gray-400"
-                      />
-                    </Input>
+                      errorMessage={errors.lastName?.message}
+                    />
                   )}
                 />
-                {errors.lastName && (
-                  <FormControlHelper>
-                    <FormControlHelperText className="text-red-500 text-xs">
-                      {errors.lastName.message}
-                    </FormControlHelperText>
-                  </FormControlHelper>
-                )}
-              </FormControl>
+              </View>
             </HStack>
 
-            <FormControl isInvalid={!!errors.email}>
-              <FormControlLabel>
-                <HStack className="items-center gap-2">
-                  <Mail size={16} color="#9ca3af" />
-                  <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                    Correo electronico
-                  </FormControlLabelText>
-                </HStack>
-              </FormControlLabel>
+            <View>
               <Controller
                 control={control}
                 name="email"
@@ -202,81 +160,54 @@ export function PersonalInfoSection() {
                     message: "Correo no valido",
                   },
                 }}
-                render={({ field: { onChange, value } }) => (
-                  <Input
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Correo electronico"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
                     isDisabled={!isEditing}
-                    className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                  >
-                    <InputField
-                      value={value}
-                      onChangeText={onChange}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      keyboardType="email-address"
-                      className="text-gray-900 placeholder:text-gray-400"
-                    />
-                  </Input>
+                    leftIcon={<Mail size={16} color="#9ca3af" />}
+                    errorMessage={errors.email?.message}
+                  />
                 )}
               />
-              {errors.email ? (
-                <FormControlHelper>
-                  <FormControlHelperText className="text-red-500 text-xs">
-                    {errors.email.message}
-                  </FormControlHelperText>
-                </FormControlHelper>
-              ) : (
-                <FormControlHelper>
-                  <FormControlHelperText className="text-gray-400 text-xs">
-                    Este correo se usa para notificaciones y recuperacion de
-                    cuenta
-                  </FormControlHelperText>
-                </FormControlHelper>
+              {!errors.email && (
+                <Text
+                  className="text-gray-400 text-xs"
+                  style={{ marginTop: 4 }}
+                >
+                  Este correo se usa para notificaciones y recuperacion de
+                  cuenta
+                </Text>
               )}
-            </FormControl>
+            </View>
 
             <HStack className="gap-4 flex-wrap sm:flex-nowrap">
-              <FormControl className="flex-1" isInvalid={!!errors.phone}>
-                <FormControlLabel>
-                  <HStack className="items-center gap-2">
-                    <Phone size={16} color="#9ca3af" />
-                    <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                      Telefono
-                    </FormControlLabelText>
-                  </HStack>
-                </FormControlLabel>
+              <View className="flex-1" style={{ minWidth: 160 }}>
                 <Controller
                   control={control}
                   name="phone"
                   rules={{ required: "El telefono es obligatorio" }}
-                  render={({ field: { onChange, value } }) => (
-                    <Input
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Telefono"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="phone-pad"
                       isDisabled={!isEditing}
-                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                    >
-                      <InputField
-                        value={value}
-                        onChangeText={onChange}
-                        keyboardType="phone-pad"
-                        className="text-gray-900 placeholder:text-gray-400"
-                      />
-                    </Input>
+                      leftIcon={<Phone size={16} color="#9ca3af" />}
+                      errorMessage={errors.phone?.message}
+                    />
                   )}
                 />
-                {errors.phone && (
-                  <FormControlHelper>
-                    <FormControlHelperText className="text-red-500 text-xs">
-                      {errors.phone.message}
-                    </FormControlHelperText>
-                  </FormControlHelper>
-                )}
-              </FormControl>
+              </View>
 
-              <FormControl className="flex-1" isInvalid={!!errors.username}>
-                <FormControlLabel>
-                  <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                    Username
-                  </FormControlLabelText>
-                </FormControlLabel>
+              <View className="flex-1" style={{ minWidth: 160 }}>
                 <Controller
                   control={control}
                   name="username"
@@ -284,58 +215,44 @@ export function PersonalInfoSection() {
                     required: "El username es obligatorio",
                     minLength: { value: 3, message: "Minimo 3 caracteres" },
                   }}
-                  render={({ field: { onChange, value } }) => (
-                    <Input
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Username"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      autoCapitalize="none"
                       isDisabled={!isEditing}
-                      className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                    >
-                      <InputField
-                        value={value}
-                        onChangeText={onChange}
-                        className="text-gray-900 placeholder:text-gray-400"
-                      />
-                    </Input>
+                      errorMessage={errors.username?.message}
+                    />
                   )}
                 />
-                {errors.username && (
-                  <FormControlHelper>
-                    <FormControlHelperText className="text-red-500 text-xs">
-                      {errors.username.message}
-                    </FormControlHelperText>
-                  </FormControlHelper>
-                )}
-              </FormControl>
+              </View>
             </HStack>
           </VStack>
         </HStack>
+
         <HStack className="gap-2 mt-4 justify-end">
           {isEditing && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-gray-300 rounded-lg"
-              onPress={handleCancel}
+            <AppButton
+              label="Cancelar"
+              outline
+              outlineBorderColor="#d1d5db"
+              outlineTextColor="#374151"
+              fullWidth={false}
               isDisabled={updateUser.isPending}
-            >
-              <ButtonText className="text-gray-700">Cancelar</ButtonText>
-            </Button>
+              onPress={handleCancel}
+            />
           )}
-          <Button
-            size="sm"
-            className="bg-indigo-500 rounded-lg"
+          <AppButton
+            label={isEditing ? "Guardar" : "Editar"}
+            variant="primary"
+            fullWidth={false}
+            isLoading={updateUser.isPending}
             onPress={
               isEditing ? handleSubmit(onSubmit) : () => setIsEditing(true)
             }
-            isDisabled={updateUser.isPending}
-          >
-            <ButtonText className="text-white">
-              {updateUser.isPending
-                ? "Guardando..."
-                : isEditing
-                  ? "Guardar"
-                  : "Editar"}
-            </ButtonText>
-          </Button>
+          />
         </HStack>
       </Box>
     </Card>

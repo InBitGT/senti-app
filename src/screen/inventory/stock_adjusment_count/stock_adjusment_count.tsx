@@ -153,9 +153,6 @@ export const StockAdjustmentCountScreen: React.FC = () => {
         data={modalData}
         onApprove={handleApprove}
         onReject={handleReject}
-        // approve.isPending es compartido por las dos mutations (mismo endpoint,
-        // distinto status), así que lo cruzamos con pendingAction para saber
-        // cuál botón debe mostrarse "cargando".
         isApproving={approve.isPending && pendingAction === "approve"}
         isRejecting={approve.isPending && pendingAction === "reject"}
       />

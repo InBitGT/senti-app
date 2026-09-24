@@ -38,6 +38,12 @@ interface AppInputProps extends Omit<TextInputProps, "style"> {
    */
   leftIcon?: React.ReactNode;
   /**
+   * Elemento opcional del lado derecho (ej. botón de mostrar contraseña).
+   * Se manda ya renderizado; si necesita ser presionable, envuélvelo
+   * en un Pressable. Si no se manda, no se reserva espacio.
+   */
+  rightIcon?: React.ReactNode;
+  /**
    * Si es true, muestra una X del lado derecho cuando hay texto.
    * Al tocarla limpia el contenido (llama onChangeText("")).
    */
@@ -62,6 +68,7 @@ export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
     containerStyle,
     inputStyle,
     leftIcon,
+    rightIcon,
     clearable = true,
     onClear,
     value,
@@ -111,7 +118,7 @@ export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
           style={[
             styles.input,
             !!leftIcon && { paddingLeft: 8 },
-            showClear && { paddingRight: 4 },
+            (showClear || !!rightIcon) && { paddingRight: 4 },
             multiline && { height: textareaHeight, paddingTop: 12 },
             Platform.OS === "web" && ({ outlineStyle: "none" } as any),
             inputStyle,
@@ -129,6 +136,12 @@ export const AppInput = forwardRef<TextInput, AppInputProps>(function AppInput(
           >
             <X size={16} color="#6b7280" />
           </Pressable>
+        )}
+
+        {!!rightIcon && (
+          <View style={[styles.rightIcon, multiline && styles.iconMultiline]}>
+            {rightIcon}
+          </View>
         )}
       </View>
 
@@ -172,6 +185,12 @@ const styles = StyleSheet.create({
   },
   leftIcon: {
     paddingLeft: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rightIcon: {
+    paddingLeft: 4,
+    paddingRight: 12,
     justifyContent: "center",
     alignItems: "center",
   },
