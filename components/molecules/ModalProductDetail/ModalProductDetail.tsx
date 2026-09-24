@@ -1,4 +1,7 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -43,36 +46,6 @@ interface Props {
   onClose: () => void;
   data?: ProductDetail;
 }
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean | null;
-}) => {
-  const display =
-    value === null || value === undefined
-      ? "—"
-      : typeof value === "boolean"
-        ? value
-          ? "Sí"
-          : "No"
-        : value;
-
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const Divider = () => <View style={styles.divider} />;
 
 const StatusBadge = ({ status }: { status?: string }) => {
   const map: Record<string, { bg: string; text: string; label: string }> = {
@@ -224,7 +197,4 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     alignItems: "flex-start",
   },
-  label: { color: "#6b7280", fontSize: 13, flex: 1 },
-  value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
-  divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
 });

@@ -1,32 +1,13 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCategorie } from "@/src/hooks";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -79,6 +60,20 @@ export default function CategoryForm() {
     },
   });
 
+  // Opciones del select de categoría padre: "Sin categoría padre" +
+  // todas las categorías disponibles. AppSelect normaliza y filtra
+  // internamente por lo que el usuario escriba.
+  const parentOptions = React.useMemo(
+    () => [
+      { label: "Sin categoría padre", value: "" },
+      ...(categorie ?? []).map((cat) => ({
+        label: cat.name,
+        value: String(cat.id),
+      })),
+    ],
+    [categorie],
+  );
+
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
     const payload: CategoryDetail = {
@@ -124,12 +119,13 @@ export default function CategoryForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
+          style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
+          <DesktopScrollView useWindowHeight>
             <Pressable
               onPress={() => {
                 clearData();
@@ -172,28 +168,14 @@ export default function CategoryForm() {
                       minLength: { value: 2, message: "Mínimo 2 caracteres." },
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.name}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Nombre
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Electrónica"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.name?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Nombre"
+                        placeholder="Ej. Electrónica"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.name?.message}
+                      />
                     )}
                   />
 
@@ -206,87 +188,35 @@ export default function CategoryForm() {
                       minLength: { value: 5, message: "Mínimo 5 caracteres." },
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.description}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descripción
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Textarea>
-                          <TextareaInput
-                            style={{ color: "#171717" }}
-                            placeholder="Describe la categoría..."
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Textarea>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.description?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Descripción"
+                        placeholder="Describe la categoría..."
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        multiline
+                        textareaHeight={100}
+                        errorMessage={errors.description?.message}
+                      />
                     )}
                   />
 
-                  {/* Categoría Padre (Select) */}
+                  {/* Categoría Padre */}
                   <Controller
                     control={control}
                     name="parent_id"
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        categorie?.find((cat) => String(cat.id) === value)
-                          ?.name || "Sin categoría padre";
-
-                      return (
-                        <FormControl isInvalid={!!errors.parent_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Categoria Padre (opcional)
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          <Select
-                            selectedValue={value}
-                            onValueChange={onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectInput
-                                style={{ color: "#000" }}
-                                placeholder="Sin categoría padre"
-                                value={selectedLabel}
-                              />
-                            </SelectTrigger>
-                            <SelectPortal>
-                              <SelectBackdrop />
-                              <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                  <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                <SelectItem
-                                  label="Sin categoría padre"
-                                  value=""
-                                />
-                                {(categorie ?? []).map((cat) => (
-                                  <SelectItem
-                                    key={cat.id}
-                                    label={cat.name}
-                                    value={String(cat.id)}
-                                  />
-                                ))}
-                              </SelectContent>
-                            </SelectPortal>
-                          </Select>
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.parent_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      );
-                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Categoria Padre (opcional)"
+                        placeholder="Sin categoría padre"
+                        searchable={parentOptions.length > 6}
+                        searchPlaceholder="Buscar categoría..."
+                        options={parentOptions}
+                        value={value}
+                        onChange={onChange}
+                        errorMessage={errors.parent_id?.message}
+                      />
+                    )}
                   />
 
                   {/* Botones */}

@@ -1,28 +1,22 @@
-import { Badge, BadgeText } from "@/components/ui/badge"
-import { Box } from "@/components/ui/box"
-import { Button, ButtonText } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Center } from "@/components/ui/center"
-import { Divider } from "@/components/ui/divider"
-import {
-  FormControl,
-  FormControlHelper,
-  FormControlHelperText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control"
-import { Heading } from "@/components/ui/heading"
-import { HStack } from "@/components/ui/hstack"
-import { Input, InputField } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Text } from "@/components/ui/text"
-import { VStack } from "@/components/ui/vstack"
-import { Key, Shield, Smartphone } from "lucide-react-native"
-import { useState } from "react"
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { Badge, BadgeText } from "@/components/ui/badge";
+import { Box } from "@/components/ui/box";
+import { Card } from "@/components/ui/card";
+import { Center } from "@/components/ui/center";
+import { Divider } from "@/components/ui/divider";
+import { Heading } from "@/components/ui/heading";
+import { HStack } from "@/components/ui/hstack";
+import { Switch } from "@/components/ui/switch";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { Key, Shield, Smartphone } from "lucide-react-native";
+import { useState } from "react";
+import { View } from "react-native";
 
 export function SecuritySection() {
-  const [showPasswordForm, setShowPasswordForm] = useState(false)
-  const [twoFactor, setTwoFactor] = useState(false)
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [twoFactor, setTwoFactor] = useState(false);
 
   return (
     <Card className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -55,78 +49,57 @@ export function SecuritySection() {
                   </Text>
                 </VStack>
               </HStack>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-gray-300 rounded-lg"
+              <AppButton
+                label={showPasswordForm ? "Cancelar" : "Cambiar"}
+                outline
+                outlineBorderColor="#d1d5db"
+                outlineTextColor="#374151"
+                fullWidth={false}
                 onPress={() => setShowPasswordForm(!showPasswordForm)}
-              >
-                <ButtonText className="text-gray-700">
-                  {showPasswordForm ? "Cancelar" : "Cambiar"}
-                </ButtonText>
-              </Button>
+              />
             </HStack>
 
             {showPasswordForm && (
               <VStack className="ml-13 gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <FormControl>
-                  <FormControlLabel>
-                    <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                      Contrasena actual
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Input className="bg-white border-gray-200 rounded-lg h-11">
-                    <InputField
-                      type="password"
-                      placeholder="Ingresa tu contrasena actual"
-                      secureTextEntry
-                      className="text-gray-900 placeholder:text-gray-400"
-                    />
-                  </Input>
-                </FormControl>
+                <AppInput
+                  label="Contrasena actual"
+                  placeholder="Ingresa tu contrasena actual"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  clearable={false}
+                />
 
-                <FormControl>
-                  <FormControlLabel>
-                    <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                      Nueva contrasena
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Input className="bg-white border-gray-200 rounded-lg h-11">
-                    <InputField
-                      type="password"
-                      placeholder="Minimo 8 caracteres"
-                      secureTextEntry
-                      className="text-gray-900 placeholder:text-gray-400"
-                    />
-                  </Input>
-                  <FormControlHelper>
-                    <FormControlHelperText className="text-gray-400 text-xs">
-                      Usa al menos 8 caracteres con letras, numeros y simbolos
-                    </FormControlHelperText>
-                  </FormControlHelper>
-                </FormControl>
+                <View>
+                  <AppInput
+                    label="Nueva contrasena"
+                    placeholder="Minimo 8 caracteres"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    clearable={false}
+                  />
+                  <Text
+                    className="text-gray-400 text-xs"
+                    style={{ marginTop: 4 }}
+                  >
+                    Usa al menos 8 caracteres con letras, numeros y simbolos
+                  </Text>
+                </View>
 
-                <FormControl>
-                  <FormControlLabel>
-                    <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                      Confirmar contrasena
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Input className="bg-white border-gray-200 rounded-lg h-11">
-                    <InputField
-                      type="password"
-                      placeholder="Repite la nueva contrasena"
-                      secureTextEntry
-                      className="text-gray-900 placeholder:text-gray-400"
-                    />
-                  </Input>
-                </FormControl>
+                <AppInput
+                  label="Confirmar contrasena"
+                  placeholder="Repite la nueva contrasena"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  clearable={false}
+                />
 
-                <Button className="self-start bg-indigo-500 rounded-lg">
-                  <ButtonText className="text-white">
-                    Actualizar contrasena
-                  </ButtonText>
-                </Button>
+                <View style={{ alignSelf: "flex-start" }}>
+                  <AppButton
+                    label="Actualizar contrasena"
+                    variant="primary"
+                    fullWidth={false}
+                  />
+                </View>
               </VStack>
             )}
           </VStack>
@@ -144,8 +117,6 @@ export function SecuritySection() {
                     Autenticacion de dos factores
                   </Text>
                   <Badge
-                    action={twoFactor ? "success" : "muted"}
-                    variant="solid"
                     className={
                       twoFactor
                         ? "bg-green-100 rounded-full"
@@ -153,9 +124,7 @@ export function SecuritySection() {
                     }
                   >
                     <BadgeText
-                      className={
-                        twoFactor ? "text-green-700" : "text-gray-500"
-                      }
+                      className={twoFactor ? "text-green-700" : "text-gray-500"}
                     >
                       {twoFactor ? "Activo" : "Inactivo"}
                     </BadgeText>
@@ -174,9 +143,8 @@ export function SecuritySection() {
               thumbColor="#ffffff"
             />
           </HStack>
-          
         </VStack>
       </Box>
     </Card>
-  )
+  );
 }

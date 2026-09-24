@@ -57,6 +57,7 @@ export const ENDPOINT = {
   },
   stockEntry: {
     info: "inventory-service/api/stock-entry",
+    byID: (ID: number | string) => `inventory-service/api/stock-entry/${ID}`,
     adjustment: "inventory-service/api/inventory-adjustment",
     detail: (idTenant: string | number) =>
       `inventory-service/api/stock-entry?tenant_id=${idTenant}`,
@@ -125,6 +126,8 @@ export const ENDPOINT = {
     info: `customer-service/api/customer-credit`,
     detail: (idTenant: string | number) =>
       `customer-service/api/customer-credit?tenant_id=${idTenant}`,
+    noCredit: (idTenant: string | number) =>
+      `customer-service/api/customer/tenant/${idTenant}/without-credit`,
     previousCredit: (idCustomer: string | number) =>
       `customer-service/api/customer-credit/customer/${idCustomer}/reverse-payment`,
   },
@@ -140,6 +143,8 @@ export const ENDPOINT = {
   fiscalDocument: {
     detail: (idBranch: string | number) =>
       `payment-client-service/api/fiscal-document?branch_id=${idBranch}`,
+    byID: (idBranch: string | number) =>
+      `payment-client-service/api/fiscal-document/${idBranch}`,
   },
   wholesale: {
     info: `inventory-service/api/wholesale-rule`,

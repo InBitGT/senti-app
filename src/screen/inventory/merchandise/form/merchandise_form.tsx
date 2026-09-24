@@ -1,34 +1,15 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCategorie } from "@/src/hooks";
 import { useCustomerType } from "@/src/hooks/useCustomerType/useCustomerType";
@@ -37,6 +18,7 @@ import { useMerchandise } from "@/src/hooks/useMerchandise/useMerchandise";
 import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { useMerchandiseStore } from "@/src/store/useMerchandiseStore/useMerchandiseStore";
+import { Category } from "@/src/types";
 import type {
   MerchandiseConversion,
   MerchandiseDetail,
@@ -77,7 +59,8 @@ interface CustomerTypePriceRow {
 }
 
 interface FormValues {
-  category_id: string;
+  category_root_id: string;
+  subcategory_id: string;
   name: string;
   description: string;
   sku: string;
@@ -103,26 +86,19 @@ interface FormValues {
 
 const PRODUCT_TYPES = [{ label: "Producto", value: "finished_product" }];
 
-const CURRENCIES = [
-  { label: "GTQ", value: "GTQ" },
-  { label: "USD", value: "USD" },
-];
+const CURRENCIES = [{ label: "GTQ", value: "GTQ" }];
 
-// -----------------------------------------------------------------------
-// FIX: el precio por conversión puede venir de DOS lugares distintos en
-// la respuesta del GET:
-//   1) Anidado: `conversion.price_per_uom` (lo único que se leía antes).
-//   2) Suelto: `MerchandiseListItem.price_per_uom` (un array aparte a
-//      nivel raíz, sin relación explícita con su conversión salvo por
-//      los campos que agregamos a `PricePerUom`).
-// Si el backend llena el (2) y no el (1), `buildDefaultValues` nunca
-// encontraba el precio — por eso el switch "Definir precio para esta
-// unidad" se veía siempre apagado al editar.
-//
-// Esta función intenta (1) primero, y si no hay nada ahí, busca en (2)
-// por `conversion_id` y, si tampoco está ese campo, por el par
-// from_uom_id/to_uom_id.
-// -----------------------------------------------------------------------
+// Una categoría sin padre, o que se apunta a sí misma, se trata como raíz
+function isRootCategory(c: Category) {
+  return c.parent_id == null || c.parent_id === c.id;
+}
+
+function sortCategories(a: Category, b: Category) {
+  return (
+    (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name)
+  );
+}
+
 function findPricePerUomForConversion(
   conversion: MerchandiseConversion,
   rootPricePerUom: PricePerUom[] | undefined,
@@ -140,9 +116,6 @@ function findPricePerUomForConversion(
 
   if (!rootPricePerUom?.length) return null;
 
-  // FIX: confirmado con datos reales — el campo de relación es `uom_id`,
-  // que coincide con `from_uom_id` de la conversión (la unidad que se
-  // está definiendo, ej. "Caja"). Esta es la vía principal de matcheo.
   const byUomId = rootPricePerUom.find(
     (p) => p.uom_id === conversion.from_uom_id,
   );
@@ -157,9 +130,6 @@ function findPricePerUomForConversion(
     return byUomId;
   }
 
-  // Respaldo: en los datos reales vistos hasta ahora, `id` coincide entre
-  // la conversión y su price_per_uom (probable relación 1:1 con mismo id
-  // en ambas tablas del lado del backend).
   if (conversion.id != null) {
     const byId = rootPricePerUom.find((p) => p.id === conversion.id);
     if (byId) {
@@ -184,13 +154,21 @@ function findPricePerUomForConversion(
   return null;
 }
 
-// Extraída como función aparte para poder llamarla también desde reset(),
-// no solo desde el defaultValues inicial de useForm.
 function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
   const product = data?.product;
 
+  // Si el producto está en una subcategoría, el padre va al primer select
+  const isInSubcategory =
+    !!product?.parent_category_id &&
+    product.parent_category_id !== product.category_id;
+
   return {
-    category_id: product?.category_id ? String(product.category_id) : "",
+    category_root_id: isInSubcategory
+      ? String(product!.parent_category_id)
+      : product?.category_id
+        ? String(product.category_id)
+        : "",
+    subcategory_id: isInSubcategory ? String(product!.category_id) : "",
     name: product?.name || "",
     description: product?.description || "",
     sku: product?.sku || "",
@@ -208,8 +186,6 @@ function buildDefaultValues(data?: MerchandiseListItem | null): FormValues {
     price_currency: data?.price?.currency || "GTQ",
     conversions: data?.conversions?.length
       ? data.conversions.map((c) => {
-          // FIX: antes era `c.price_per_uom` directo. Ahora busca también
-          // en el array raíz `data.price_per_uom` si no está anidado.
           const pricePerUom = findPricePerUomForConversion(
             c,
             data?.price_per_uom,
@@ -257,10 +233,7 @@ export default function MerchandiseForm() {
   const { data: categorie } = useCategorie();
   const { data: units } = useUnit();
   const { data: customerTypes } = useCustomerType();
-  // "data" es la respuesta completa del GET al editar:
-  // { product, price, conversions, customer_type_prices, price_per_uom, wholesale_rule }
-  // El store ya está tipado como MerchandiseListItem, así que no hace falta
-  // ningún cast aquí.
+
   const data = useMerchandiseStore((state) => state.data);
   const isEdit = useMerchandiseStore((state) => state.isEdit);
   const clearData = useMerchandiseStore((state) => state.clearData);
@@ -274,27 +247,17 @@ export default function MerchandiseForm() {
 
   const product = data?.product;
 
-  console.log(units, "valores de units");
-
   const {
     control,
     handleSubmit,
     watch,
     reset,
-    formState: { errors },
+    setValue,
+    formState: { errors, isSubmitted },
   } = useForm<FormValues>({
     defaultValues: buildDefaultValues(data),
   });
 
-  // ⚠️ FIX CLAVE (edición): useForm's defaultValues solo se lee UNA VEZ, al
-  // montar el componente. Si esta pantalla ya estaba montada (ej. quedó en el
-  // stack de navegación de una visita anterior), cambiar de producto a editar
-  // NO repuebla el formulario solo — hay que forzarlo con reset().
-  //
-  // Blindado para modo creación: si "data" es undefined (estamos creando un
-  // producto nuevo, no editando), este efecto NO debe tocar el formulario en
-  // absoluto — así nunca corre el riesgo de resetear conversiones que el
-  // usuario ya agregó a mano con "Agregar conversión".
   React.useEffect(() => {
     if (!data) return;
     reset(buildDefaultValues(data));
@@ -315,13 +278,51 @@ export default function MerchandiseForm() {
   const hasWholesaleRule = watch("has_wholesale_rule");
   const conversionsValue = watch("conversions");
   const priceCurrency = watch("price_currency");
+  const selectedRootId = watch("category_root_id");
+
+  const categoryList = React.useMemo<Category[]>(
+    () =>
+      Array.isArray(categorie)
+        ? categorie
+        : ((categorie as unknown as { data?: Category[] })?.data ?? []),
+    [categorie],
+  );
+
+  const rootCategoryOptions = React.useMemo(
+    () =>
+      categoryList
+        .filter(isRootCategory)
+        .sort(sortCategories)
+        .map((c) => ({ label: c.name, value: String(c.id) })),
+    [categoryList],
+  );
+
+  const subcategoryOptions = React.useMemo(
+    () =>
+      categoryList
+        .filter(
+          (c) => !isRootCategory(c) && String(c.parent_id) === selectedRootId,
+        )
+        .sort(sortCategories)
+        .map((c) => ({ label: c.name, value: String(c.id) })),
+    [categoryList, selectedRootId],
+  );
+
+  const unitOptions = React.useMemo(
+    () =>
+      (units ?? []).map((u) => ({
+        label: `${u.name} (${u.code})`,
+        value: String(u.id),
+      })),
+    [units],
+  );
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
 
     const payload: MerchandiseDetail = {
       tenant_id: claims.tenant_id,
-      category_id: parseInt(values.category_id),
+      category_id: parseInt(values.subcategory_id || values.category_root_id),
       name: values.name.trim(),
       description: values.description.trim(),
       sku: values.sku.trim(),
@@ -384,8 +385,6 @@ export default function MerchandiseForm() {
         : null,
     };
 
-    console.log(JSON.stringify(payload), "valores de payload ");
-
     try {
       if (!isEdit) {
         await post.mutateAsync(payload);
@@ -413,12 +412,15 @@ export default function MerchandiseForm() {
 
   const isPending = post.isPending || put.isPending;
 
+  const hasErrors = Object.keys(errors).length > 0;
+  const isSaveDisabled = isPending || (isSubmitted && hasErrors);
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
@@ -459,93 +461,64 @@ export default function MerchandiseForm() {
                 <VStack space="lg">
                   <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
+                  <Controller
+                    control={control}
+                    name="name"
+                    rules={{ required: "El nombre es obligatorio." }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <AppInput
+                        label="Nombre"
+                        placeholder="Ej. Lápiz b1"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.name?.message}
+                      />
+                    )}
+                  />
+
                   <View style={row}>
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="name"
-                        rules={{ required: "El nombre es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.name}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Nombre
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. Lápiz b1"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.name?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                        name="category_root_id"
+                        rules={{ required: "La categoría es obligatoria." }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Categoría"
+                            placeholder="Selecciona categoría"
+                            searchable={rootCategoryOptions.length > 6}
+                            options={rootCategoryOptions}
+                            value={value}
+                            onChange={(v) => {
+                              onChange(v);
+                              // Al cambiar de categoría se limpia la subcategoría
+                              setValue("subcategory_id", "");
+                            }}
+                            errorMessage={errors.category_root_id?.message}
+                          />
                         )}
                       />
                     </View>
 
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="category_id"
-                        rules={{ required: "La categoría es obligatoria." }}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            categorie?.find((c) => String(c.id) === value)
-                              ?.name || "";
-                          return (
-                            <FormControl isInvalid={!!errors.category_id}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Categoría
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder="Selecciona categoría"
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    {(categorie ?? []).map((c) => (
-                                      <SelectItem
-                                        key={c.id}
-                                        label={c.name}
-                                        value={String(c.id)}
-                                      />
-                                    ))}
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.category_id?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          );
-                        }}
-                      />
-                    </View>
+                    {subcategoryOptions.length > 0 && (
+                      <View style={half}>
+                        <Controller
+                          control={control}
+                          name="subcategory_id"
+                          render={({ field: { onChange, value } }) => (
+                            <AppSelect
+                              label="Subcategoría (opcional)"
+                              placeholder="Selecciona subcategoría"
+                              searchable={subcategoryOptions.length > 6}
+                              options={subcategoryOptions}
+                              value={value}
+                              onChange={onChange}
+                            />
+                          )}
+                        />
+                      </View>
+                    )}
                   </View>
 
                   <Controller
@@ -556,28 +529,16 @@ export default function MerchandiseForm() {
                       minLength: { value: 3, message: "Mínimo 3 caracteres." },
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.description}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descripción
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Textarea>
-                          <TextareaInput
-                            style={{ color: "#171717" }}
-                            placeholder="Describe el producto..."
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Textarea>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.description?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Descripción"
+                        placeholder="Describe el producto..."
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        multiline
+                        textareaHeight={100}
+                        errorMessage={errors.description?.message}
+                      />
                     )}
                   />
 
@@ -588,31 +549,17 @@ export default function MerchandiseForm() {
                         name="sku"
                         rules={{ required: "El SKU es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.sku}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                SKU
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. LAP-001"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.toUpperCase())
-                                }
-                                onBlur={onBlur}
-                                autoCapitalize="characters"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.sku?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="SKU"
+                            placeholder="Ej. LAP-001"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.toUpperCase())
+                            }
+                            onBlur={onBlur}
+                            autoCapitalize="characters"
+                            errorMessage={errors.sku?.message}
+                          />
                         )}
                       />
                     </View>
@@ -622,28 +569,16 @@ export default function MerchandiseForm() {
                         control={control}
                         name="barcode"
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Código de barras{" "}
-                                <Text size="xs" style={{ color: "#999" }}>
-                                  (opcional)
-                                </Text>
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. 123"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.toUpperCase())
-                                }
-                                onBlur={onBlur}
-                                keyboardType="number-pad"
-                              />
-                            </Input>
-                          </FormControl>
+                          <AppInput
+                            label="Código de barras (opcional)"
+                            placeholder="Ej. 123"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.toUpperCase())
+                            }
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                          />
                         )}
                       />
                     </View>
@@ -655,25 +590,13 @@ export default function MerchandiseForm() {
                         control={control}
                         name="brand"
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Marca{" "}
-                                <Text size="xs" style={{ color: "#999" }}>
-                                  (opcional)
-                                </Text>
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. Del Monte"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                          </FormControl>
+                          <AppInput
+                            label="Marca (opcional)"
+                            placeholder="Ej. Del Monte"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
                         )}
                       />
                     </View>
@@ -684,31 +607,17 @@ export default function MerchandiseForm() {
                         name="average_cost"
                         rules={{ required: "El costo es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.average_cost}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Costo promedio
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="0.60"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.replace(/[^0-9.-]/g, ""))
-                                }
-                                onBlur={onBlur}
-                                keyboardType="decimal-pad"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.average_cost?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Costo promedio"
+                            placeholder="0.60"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.replace(/[^0-9.-]/g, ""))
+                            }
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                            errorMessage={errors.average_cost?.message}
+                          />
                         )}
                       />
                     </View>
@@ -720,53 +629,17 @@ export default function MerchandiseForm() {
                         control={control}
                         name="type"
                         rules={{ required: "El tipo es obligatorio." }}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            PRODUCT_TYPES.find((t) => t.value === value)
-                              ?.label || "";
-                          return (
-                            <FormControl isInvalid={!!errors.type}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Tipo
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder="Selecciona un tipo"
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    {PRODUCT_TYPES.map((t) => (
-                                      <SelectItem
-                                        key={t.value}
-                                        label={t.label}
-                                        value={t.value}
-                                      />
-                                    ))}
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.type?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          );
-                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Tipo"
+                            placeholder="Selecciona un tipo"
+                            searchable={false}
+                            options={PRODUCT_TYPES}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.type?.message}
+                          />
+                        )}
                       />
                     </View>
 
@@ -775,60 +648,17 @@ export default function MerchandiseForm() {
                         control={control}
                         name="unit_of_measure_id"
                         rules={{ required: "La unidad es obligatoria." }}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            units?.find((u) => String(u.id) === value)?.name ||
-                            "";
-                          return (
-                            <FormControl
-                              isInvalid={!!errors.unit_of_measure_id}
-                            >
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Unidad de medida
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder="Selecciona unidad"
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    {/* <ScrollView
-                                      style={{ maxHeight: 280, width: "100%" }}
-                                      nestedScrollEnabled
-                                    > */}
-                                    {(units ?? []).map((u) => (
-                                      <SelectItem
-                                        key={u.id}
-                                        label={`${u.name} (${u.code})`}
-                                        value={String(u.id)}
-                                      />
-                                    ))}
-                                    {/* </ScrollView> */}
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.unit_of_measure_id?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          );
-                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Unidad de medida"
+                            placeholder="Selecciona unidad"
+                            searchable={unitOptions.length > 6}
+                            options={unitOptions}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.unit_of_measure_id?.message}
+                          />
+                        )}
                       />
                     </View>
                   </View>
@@ -843,31 +673,17 @@ export default function MerchandiseForm() {
                         name="price_amount"
                         rules={{ required: "El precio es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.price_amount}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Precio de venta
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="1.00"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.replace(/[^0-9.-]/g, ""))
-                                }
-                                onBlur={onBlur}
-                                keyboardType="decimal-pad"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.price_amount?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Precio de venta"
+                            placeholder="1.00"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.replace(/[^0-9.-]/g, ""))
+                            }
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                            errorMessage={errors.price_amount?.message}
+                          />
                         )}
                       />
                     </View>
@@ -877,40 +693,14 @@ export default function MerchandiseForm() {
                         control={control}
                         name="price_currency"
                         render={({ field: { onChange, value } }) => (
-                          <FormControl>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Moneda
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona moneda"
-                                  value={value}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {CURRENCIES.map((c) => (
-                                    <SelectItem
-                                      key={c.value}
-                                      label={c.label}
-                                      value={c.value}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                          </FormControl>
+                          <AppSelect
+                            label="Moneda"
+                            placeholder="Selecciona moneda"
+                            searchable={false}
+                            options={CURRENCIES}
+                            value={value}
+                            onChange={onChange}
+                          />
                         )}
                       />
                     </View>
@@ -945,7 +735,6 @@ export default function MerchandiseForm() {
                       style={styles.addRowButton}
                     >
                       <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                      {/* <Text style={styles.addRowText}>Agregar conversión</Text> */}
                     </Pressable>
                   </HStack>
 
@@ -970,56 +759,19 @@ export default function MerchandiseForm() {
                             <Controller
                               control={control}
                               name={`conversions.${index}.to_uom_id`}
-                              render={({ field: { onChange, value } }) => {
-                                const label =
-                                  units?.find((u) => String(u.id) === value)
-                                    ?.name || "";
-                                return (
-                                  <FormControl>
-                                    <FormControlLabel>
-                                      <FormControlLabelText
-                                        style={{ color: "#000" }}
-                                      >
-                                        De la unidad (unidad estandar)
-                                      </FormControlLabelText>
-                                    </FormControlLabel>
-                                    <Select
-                                      selectedValue={value}
-                                      onValueChange={onChange}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectInput
-                                          style={{ color: "#000" }}
-                                          placeholder="Unidad Origen"
-                                          value={label}
-                                        />
-                                      </SelectTrigger>
-                                      <SelectPortal>
-                                        <SelectBackdrop />
-                                        <SelectContent
-                                          style={{ maxHeight: "50%" }}
-                                        >
-                                          <SelectDragIndicatorWrapper>
-                                            <SelectDragIndicator />
-                                          </SelectDragIndicatorWrapper>
-                                          {/* <ScrollView
-                                            style={{ width: "100%" }}
-                                            showsVerticalScrollIndicator={false} */}
-
-                                          {toOptions.map((u) => (
-                                            <SelectItem
-                                              key={u.id}
-                                              label={`${u.name} (${u.code})`}
-                                              value={String(u.id)}
-                                            />
-                                          ))}
-                                          {/* </ScrollView> */}
-                                        </SelectContent>
-                                      </SelectPortal>
-                                    </Select>
-                                  </FormControl>
-                                );
-                              }}
+                              render={({ field: { onChange, value } }) => (
+                                <AppSelect
+                                  label="De la unidad (unidad estandar)"
+                                  placeholder="Unidad Origen"
+                                  searchable={toOptions.length > 6}
+                                  options={toOptions.map((u) => ({
+                                    label: `${u.name} (${u.code})`,
+                                    value: String(u.id),
+                                  }))}
+                                  value={value}
+                                  onChange={onChange}
+                                />
+                              )}
                             />
                           </View>
 
@@ -1027,56 +779,16 @@ export default function MerchandiseForm() {
                             <Controller
                               control={control}
                               name={`conversions.${index}.from_uom_id`}
-                              render={({ field: { onChange, value } }) => {
-                                const label =
-                                  units?.find((u) => String(u.id) === value)
-                                    ?.name || "";
-                                return (
-                                  <FormControl>
-                                    <FormControlLabel>
-                                      <FormControlLabelText
-                                        style={{ color: "#000" }}
-                                      >
-                                        A la unidad (unidad de cambio)
-                                      </FormControlLabelText>
-                                    </FormControlLabel>
-                                    <Select
-                                      selectedValue={value}
-                                      onValueChange={onChange}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectInput
-                                          style={{ color: "#000" }}
-                                          placeholder="Unidad destino"
-                                          value={label}
-                                        />
-                                      </SelectTrigger>
-                                      <SelectPortal>
-                                        <SelectBackdrop />
-                                        <SelectContent
-                                          style={{ maxHeight: "50%" }}
-                                        >
-                                          <SelectDragIndicatorWrapper>
-                                            <SelectDragIndicator />
-                                          </SelectDragIndicatorWrapper>
-                                          {/* <ScrollView
-                                            style={{ width: "100%" }}
-                                            showsVerticalScrollIndicator={false}
-                                          > */}
-                                          {(units ?? []).map((u) => (
-                                            <SelectItem
-                                              key={u.id}
-                                              label={`${u.name} (${u.code})`}
-                                              value={String(u.id)}
-                                            />
-                                          ))}
-                                          {/* </ScrollView> */}
-                                        </SelectContent>
-                                      </SelectPortal>
-                                    </Select>
-                                  </FormControl>
-                                );
-                              }}
+                              render={({ field: { onChange, value } }) => (
+                                <AppSelect
+                                  label="A la unidad (unidad de cambio)"
+                                  placeholder="Unidad destino"
+                                  searchable={unitOptions.length > 6}
+                                  options={unitOptions}
+                                  value={value}
+                                  onChange={onChange}
+                                />
+                              )}
                             />
                           </View>
                         </View>
@@ -1085,25 +797,16 @@ export default function MerchandiseForm() {
                           control={control}
                           name={`conversions.${index}.factor`}
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Factor
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="10"
-                                  value={value}
-                                  onChangeText={(text) =>
-                                    onChange(text.replace(/[^0-9]/g, ""))
-                                  }
-                                  onBlur={onBlur}
-                                  keyboardType="decimal-pad"
-                                />
-                              </Input>
-                            </FormControl>
+                            <AppInput
+                              label="Factor"
+                              placeholder="10"
+                              value={value}
+                              onChangeText={(text) =>
+                                onChange(text.replace(/[^0-9]/g, ""))
+                              }
+                              onBlur={onBlur}
+                              keyboardType="decimal-pad"
+                            />
                           )}
                         />
 
@@ -1130,29 +833,16 @@ export default function MerchandiseForm() {
                                   render={({
                                     field: { onChange, onBlur, value },
                                   }) => (
-                                    <FormControl>
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Precio por unidad
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Input>
-                                        <InputField
-                                          style={{ color: "#171717" }}
-                                          placeholder="8.00"
-                                          value={value}
-                                          onChangeText={(text) =>
-                                            onChange(
-                                              text.replace(/[^0-9.-]/g, ""),
-                                            )
-                                          }
-                                          onBlur={onBlur}
-                                          keyboardType="decimal-pad"
-                                        />
-                                      </Input>
-                                    </FormControl>
+                                    <AppInput
+                                      label="Precio por unidad"
+                                      placeholder="8.00"
+                                      value={value}
+                                      onChangeText={(text) =>
+                                        onChange(text.replace(/[^0-9.-]/g, ""))
+                                      }
+                                      onBlur={onBlur}
+                                      keyboardType="decimal-pad"
+                                    />
                                   )}
                                 />
                               </View>
@@ -1161,48 +851,20 @@ export default function MerchandiseForm() {
                                   control={control}
                                   name={`conversions.${index}.price_per_uom_currency`}
                                   render={({ field: { onChange, value } }) => (
-                                    <FormControl>
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Moneda
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Select
-                                        selectedValue={value}
-                                        onValueChange={onChange}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectInput
-                                            style={{ color: "#000" }}
-                                            placeholder="Moneda"
-                                            value={value}
-                                          />
-                                        </SelectTrigger>
-                                        <SelectPortal>
-                                          <SelectBackdrop />
-                                          <SelectContent>
-                                            <SelectDragIndicatorWrapper>
-                                              <SelectDragIndicator />
-                                            </SelectDragIndicatorWrapper>
-                                            {CURRENCIES.map((c) => (
-                                              <SelectItem
-                                                key={c.value}
-                                                label={c.label}
-                                                value={c.value}
-                                              />
-                                            ))}
-                                          </SelectContent>
-                                        </SelectPortal>
-                                      </Select>
-                                    </FormControl>
+                                    <AppSelect
+                                      label="Moneda"
+                                      placeholder="Moneda"
+                                      searchable={false}
+                                      options={CURRENCIES}
+                                      value={value}
+                                      onChange={onChange}
+                                    />
                                   )}
                                 />
                               </View>
                             </View>
 
-                            {/* <View style={row}>
+                            <View style={row}>
                               <View style={half}>
                                 <Controller
                                   control={control}
@@ -1210,31 +872,14 @@ export default function MerchandiseForm() {
                                   render={({
                                     field: { onChange, onBlur, value },
                                   }) => (
-                                    <FormControl>
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Cant. mínima mayoreo{" "}
-                                          <Text
-                                            size="xs"
-                                            style={{ color: "#999" }}
-                                          >
-                                            (opcional)
-                                          </Text>
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Input>
-                                        <InputField
-                                          style={{ color: "#171717" }}
-                                          placeholder="Ej. 5"
-                                          value={value}
-                                          onChangeText={onChange}
-                                          onBlur={onBlur}
-                                          keyboardType="number-pad"
-                                        />
-                                      </Input>
-                                    </FormControl>
+                                    <AppInput
+                                      label="Cant. mínima mayoreo (opcional)"
+                                      placeholder="Ej. 5"
+                                      value={value}
+                                      onChangeText={onChange}
+                                      onBlur={onBlur}
+                                      keyboardType="number-pad"
+                                    />
                                   )}
                                 />
                               </View>
@@ -1245,35 +890,18 @@ export default function MerchandiseForm() {
                                   render={({
                                     field: { onChange, onBlur, value },
                                   }) => (
-                                    <FormControl>
-                                      <FormControlLabel>
-                                        <FormControlLabelText
-                                          style={{ color: "#000" }}
-                                        >
-                                          Precio mayoreo{" "}
-                                          <Text
-                                            size="xs"
-                                            style={{ color: "#999" }}
-                                          >
-                                            (opcional)
-                                          </Text>
-                                        </FormControlLabelText>
-                                      </FormControlLabel>
-                                      <Input>
-                                        <InputField
-                                          style={{ color: "#171717" }}
-                                          placeholder="Ej. 7.50"
-                                          value={value}
-                                          onChangeText={onChange}
-                                          onBlur={onBlur}
-                                          keyboardType="decimal-pad"
-                                        />
-                                      </Input>
-                                    </FormControl>
+                                    <AppInput
+                                      label="Precio mayoreo (opcional)"
+                                      placeholder="Ej. 7.50"
+                                      value={value}
+                                      onChangeText={onChange}
+                                      onBlur={onBlur}
+                                      keyboardType="decimal-pad"
+                                    />
                                   )}
                                 />
                               </View>
-                            </View> */}
+                            </View>
                           </>
                         )}
 
@@ -1294,7 +922,7 @@ export default function MerchandiseForm() {
                     );
                   })}
 
-                  {/* <Divider className="my-2" />
+                  <Divider className="my-2" />
                   <HStack
                     style={{
                       justifyContent: "space-between",
@@ -1318,61 +946,29 @@ export default function MerchandiseForm() {
                       style={styles.addRowButton}
                     >
                       <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                      <Text style={styles.addRowText}>Agregar precio</Text> 
                     </Pressable>
-                  </HStack> */}
+                  </HStack>
 
-                  {/* {customerPriceFields.map((field, index) => (
+                  {customerPriceFields.map((field, index) => (
                     <View key={field.id} style={styles.dynamicRow}>
-                      <HStack style={{ gap: 10 }}>
+                      <HStack style={{ gap: 10, alignItems: "flex-end" }}>
                         <View style={{ flex: 2 }}>
                           <Controller
                             control={control}
                             name={`customer_type_prices.${index}.customer_type_id`}
-                            render={({ field: { onChange, value } }) => {
-                              const label =
-                                customerTypes?.find(
-                                  (c) => String(c.id) === value,
-                                )?.name || "";
-                              return (
-                                <FormControl>
-                                  <FormControlLabel>
-                                    <FormControlLabelText
-                                      style={{ color: "#000" }}
-                                    >
-                                      Tipo de cliente
-                                    </FormControlLabelText>
-                                  </FormControlLabel>
-                                  <Select
-                                    selectedValue={value}
-                                    onValueChange={onChange}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectInput
-                                        style={{ color: "#000" }}
-                                        placeholder="Selecciona tipo"
-                                        value={label}
-                                      />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                      <SelectBackdrop />
-                                      <SelectContent>
-                                        <SelectDragIndicatorWrapper>
-                                          <SelectDragIndicator />
-                                        </SelectDragIndicatorWrapper>
-                                        {(customerTypes ?? []).map((c) => (
-                                          <SelectItem
-                                            key={c.id}
-                                            label={c.name}
-                                            value={String(c.id)}
-                                          />
-                                        ))}
-                                      </SelectContent>
-                                    </SelectPortal>
-                                  </Select>
-                                </FormControl>
-                              );
-                            }}
+                            render={({ field: { onChange, value } }) => (
+                              <AppSelect
+                                label="Tipo de cliente"
+                                placeholder="Selecciona tipo"
+                                searchable={(customerTypes ?? []).length > 6}
+                                options={(customerTypes ?? []).map((c) => ({
+                                  label: c.name,
+                                  value: String(c.id),
+                                }))}
+                                value={value}
+                                onChange={onChange}
+                              />
+                            )}
                           />
                         </View>
 
@@ -1383,25 +979,14 @@ export default function MerchandiseForm() {
                             render={({
                               field: { onChange, onBlur, value },
                             }) => (
-                              <FormControl>
-                                <FormControlLabel>
-                                  <FormControlLabelText
-                                    style={{ color: "#000" }}
-                                  >
-                                    Precio
-                                  </FormControlLabelText>
-                                </FormControlLabel>
-                                <Input>
-                                  <InputField
-                                    style={{ color: "#171717" }}
-                                    placeholder="Ej. 177.76"
-                                    value={value}
-                                    onChangeText={onChange}
-                                    onBlur={onBlur}
-                                    keyboardType="decimal-pad"
-                                  />
-                                </Input>
-                              </FormControl>
+                              <AppInput
+                                label="Precio"
+                                placeholder="Ej. 177.76"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                              />
                             )}
                           />
                         </View>
@@ -1418,7 +1003,7 @@ export default function MerchandiseForm() {
                         </Pressable>
                       </HStack>
                     </View>
-                  ))} */}
+                  ))}
 
                   <Divider className="my-2" />
                   <View style={styles.switchRow}>
@@ -1446,31 +1031,17 @@ export default function MerchandiseForm() {
                               : false,
                           }}
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl
-                              isInvalid={!!errors.wholesale_min_quantity}
-                            >
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Cantidad mínima
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. 10"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                  keyboardType="number-pad"
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.wholesale_min_quantity?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
+                            <AppInput
+                              label="Cantidad mínima"
+                              placeholder="Ej. 10"
+                              value={value}
+                              onChangeText={onChange}
+                              onBlur={onBlur}
+                              keyboardType="number-pad"
+                              errorMessage={
+                                errors.wholesale_min_quantity?.message
+                              }
+                            />
                           )}
                         />
                       </View>
@@ -1485,34 +1056,17 @@ export default function MerchandiseForm() {
                               : false,
                           }}
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormControl
-                              isInvalid={!!errors.wholesale_discount_percentage}
-                            >
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Descuento (%)
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="Ej. 10"
-                                  value={value}
-                                  onChangeText={onChange}
-                                  onBlur={onBlur}
-                                  keyboardType="decimal-pad"
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {
-                                    errors.wholesale_discount_percentage
-                                      ?.message
-                                  }
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
+                            <AppInput
+                              label="Descuento (%)"
+                              placeholder="Ej. 10"
+                              value={value}
+                              onChangeText={onChange}
+                              onBlur={onBlur}
+                              keyboardType="decimal-pad"
+                              errorMessage={
+                                errors.wholesale_discount_percentage?.message
+                              }
+                            />
                           )}
                         />
                       </View>
@@ -1530,30 +1084,32 @@ export default function MerchandiseForm() {
                     />
                   </View>
 
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
-                      }}
+                  <View
+                    style={[styles.actions, isLarge && styles.actionsLarge]}
+                  >
+                    <View
+                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
                     >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
+                      <AppButton
+                        label="Cancelar"
+                        outline
+                        onPress={() => {
+                          clearData();
+                          setIsEdit(false);
+                          router.back();
+                        }}
+                      />
+                    </View>
+                    <View
+                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
                     >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
+                      <AppButton
+                        label={isPending ? "Guardando..." : "Guardar"}
+                        onPress={handleSubmit(onSubmit)}
+                        isDisabled={isSaveDisabled}
+                      />
+                    </View>
+                  </View>
                 </VStack>
               </Box>
             </Center>
@@ -1605,8 +1161,10 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    padding: 8,
+    borderColor: "#0EA5E9",
+    borderWidth: 1,
+    borderRadius: 7,
   },
   addRowText: {
     fontSize: 12,
@@ -1633,5 +1191,19 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
     borderColor: "#d4d4d4",
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 16,
+  },
+  actionsLarge: {
+    justifyContent: "flex-end",
+  },
+  actionBtn: {
+    flex: 1,
+  },
+  actionBtnLarge: {
+    minWidth: 140,
   },
 });

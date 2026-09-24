@@ -1,4 +1,4 @@
-import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
+import { getFocusedRouteNameFromRoute } from "expo-router/react-navigation";
 
 const routeTitles: Record<string, Record<string, string>> = {
   "(inventory)": {
@@ -18,7 +18,7 @@ const routeTitles: Record<string, Record<string, string>> = {
     warehouse_zone: "Zonas de almacenes",
     wholesale: "Mayoreo",
     inventory: "Inventario",
-    cachier: "Cajero",
+    cashier: "Cajero",
   },
   "(portfolio)": {
     client: "Clientes",
@@ -27,19 +27,17 @@ const routeTitles: Record<string, Record<string, string>> = {
     loan_payments: "Pagos de créditos",
     loan_transactions: "Transacciones de créditos",
   },
-  "(pos_form)": {
+  "(pos)": {
     invoices: "Facturas",
     payment_methods: "Métodos de pago",
     point_of_sales: "Puntos de venta",
+    cachier: "Cajero",
   },
   "(config)": {
     tenant: "Empresa",
     users: "Usuarios",
   },
   "(menu)": {
-    recipe: "Productos del Menú",
-  },
-  "(pos)": {
     recipe: "Productos del Menú",
   },
 };

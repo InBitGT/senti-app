@@ -1,36 +1,13 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import {
-  AlertCircleIcon,
-  EyeIcon,
-  EyeOffIcon,
-  Icon,
-} from "@/components/ui/icon";
-import { Input, InputField, InputSlot } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -39,11 +16,10 @@ import { useAuthStore } from "@/src/store";
 import { useUserStore } from "@/src/store/useUserStore/useUserStore";
 import { Address, UserDetail } from "@/src/types/user/user.types";
 import { useRouter } from "expo-router";
-import { ArrowLeftIcon } from "lucide-react-native";
-import React, { useState } from "react";
+import { ArrowLeftIcon, Eye, EyeOff } from "lucide-react-native";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -70,6 +46,30 @@ interface FormValues {
   postal_code: string;
   role_id: string;
   branch_id: string;
+}
+
+// Botón de ojo para mostrar/ocultar contraseña (se pasa como rightIcon).
+function PasswordToggle({
+  visible,
+  onToggle,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onToggle}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+    >
+      {visible ? (
+        <EyeOff size={18} color="#888" />
+      ) : (
+        <Eye size={18} color="#888" />
+      )}
+    </Pressable>
+  );
 }
 
 export default function UserForm() {
@@ -101,6 +101,20 @@ export default function UserForm() {
   const hasMultipleBranches = (claims?.branches?.length ?? 0) > 1;
   const defaultBranchId = claims?.branches?.[0]?.branch_id;
 
+  const roleOptions = useMemo(
+    () => (roleData ?? []).map((r) => ({ label: r.name, value: String(r.id) })),
+    [roleData],
+  );
+
+  const branchOptions = useMemo(
+    () =>
+      (claims?.branches ?? []).map((b) => ({
+        label: b.branch_name,
+        value: String(b.branch_id),
+      })),
+    [claims],
+  );
+
   const {
     control,
     handleSubmit,
@@ -128,6 +142,12 @@ export default function UserForm() {
 
   // watch para validación cruzada
   const passwordValue = watch("password");
+
+  const goBack = () => {
+    clearData();
+    setIsEdit(false);
+    router.back();
+  };
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
@@ -224,18 +244,14 @@ export default function UserForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
           <DesktopScrollView>
             <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
+              onPress={goBack}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -263,11 +279,7 @@ export default function UserForm() {
                 </Text>
 
                 <VStack space="lg">
-                  <Text
-                    style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
-                  >
-                    DATOS DEL USUARIO
-                  </Text>
+                  <Text style={styles.sectionTitle}>DATOS DEL USUARIO</Text>
 
                   {/* Nombre + Apellido */}
                   <View style={row}>
@@ -277,28 +289,14 @@ export default function UserForm() {
                         name="first_name"
                         rules={{ required: "El nombre es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.first_name}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Nombre
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. Camilo"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.first_name?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Nombre"
+                            placeholder="Ej. Camilo"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.first_name?.message}
+                          />
                         )}
                       />
                     </View>
@@ -308,28 +306,14 @@ export default function UserForm() {
                         name="last_name"
                         rules={{ required: "El apellido es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.last_name}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Apellido
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. Suarez"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.last_name?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Apellido"
+                            placeholder="Ej. Suarez"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.last_name?.message}
+                          />
                         )}
                       />
                     </View>
@@ -343,29 +327,15 @@ export default function UserForm() {
                         name="username"
                         rules={{ required: "El username es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.username}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Username
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. smejia"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                autoCapitalize="none"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.username?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Username"
+                            placeholder="Ej. smejia"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            autoCapitalize="none"
+                            errorMessage={errors.username?.message}
+                          />
                         )}
                       />
                     </View>
@@ -375,29 +345,15 @@ export default function UserForm() {
                         name="phone"
                         rules={{ required: "El teléfono es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.phone}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Teléfono
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. +50211222211"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                keyboardType="phone-pad"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.phone?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Teléfono"
+                            placeholder="Ej. +50211222211"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="phone-pad"
+                            errorMessage={errors.phone?.message}
+                          />
                         )}
                       />
                     </View>
@@ -415,36 +371,21 @@ export default function UserForm() {
                       },
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.email}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Email
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. usuario@gmail.com"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.email?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Email"
+                        placeholder="Ej. usuario@gmail.com"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        errorMessage={errors.email?.message}
+                      />
                     )}
                   />
 
                   {/* Contraseña + Confirmar — en fila en pantallas grandes */}
                   <View style={row}>
-                    {/* Contraseña */}
                     <View style={half}>
                       <Controller
                         control={control}
@@ -466,49 +407,31 @@ export default function UserForm() {
                               }
                         }
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.password}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Contraseña{" "}
-                                {isEdit && (
-                                  <Text size="xs" style={{ color: "#999" }}>
-                                    (vacío = sin cambio)
-                                  </Text>
-                                )}
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder={isEdit ? "••••••" : "Contraseña"}
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                secureTextEntry={!showPassword}
+                          <AppInput
+                            label={
+                              isEdit
+                                ? "Contraseña (vacío = sin cambio)"
+                                : "Contraseña"
+                            }
+                            placeholder={isEdit ? "••••••" : "Contraseña"}
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            secureTextEntry={!showPassword}
+                            autoCapitalize="none"
+                            clearable={false}
+                            errorMessage={errors.password?.message}
+                            rightIcon={
+                              <PasswordToggle
+                                visible={showPassword}
+                                onToggle={() => setShowPassword((p) => !p)}
                               />
-                              <InputSlot
-                                onPress={() => setShowPassword((prev) => !prev)}
-                                style={{ paddingRight: 10 }}
-                              >
-                                <Icon
-                                  as={showPassword ? EyeOffIcon : EyeIcon}
-                                  size="md"
-                                  style={{ color: "#888" }}
-                                />
-                              </InputSlot>
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.password?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                            }
+                          />
                         )}
                       />
                     </View>
 
-                    {/* Confirmar contraseña */}
                     <View style={half}>
                       <Controller
                         control={control}
@@ -524,39 +447,23 @@ export default function UserForm() {
                           },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.confirm_password}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Confirmar contraseña
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Repite la contraseña"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                secureTextEntry={!showConfirm}
+                          <AppInput
+                            label="Confirmar contraseña"
+                            placeholder="Repite la contraseña"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            secureTextEntry={!showConfirm}
+                            autoCapitalize="none"
+                            clearable={false}
+                            errorMessage={errors.confirm_password?.message}
+                            rightIcon={
+                              <PasswordToggle
+                                visible={showConfirm}
+                                onToggle={() => setShowConfirm((p) => !p)}
                               />
-                              <InputSlot
-                                onPress={() => setShowConfirm((prev) => !prev)}
-                                style={{ paddingRight: 10 }}
-                              >
-                                <Icon
-                                  as={showConfirm ? EyeOffIcon : EyeIcon}
-                                  size="md"
-                                  style={{ color: "#888" }}
-                                />
-                              </InputSlot>
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.confirm_password?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                            }
+                          />
                         )}
                       />
                     </View>
@@ -567,60 +474,18 @@ export default function UserForm() {
                     control={control}
                     name="role_id"
                     rules={{ required: "El rol es obligatorio." }}
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        roleData?.find((r) => String(r.id) === value)?.name ||
-                        "";
-
-                      return (
-                        <FormControl isInvalid={!!errors.role_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Rol
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          {isLoadingData ? (
-                            <View style={{ paddingVertical: 10 }}>
-                              <ActivityIndicator size="small" />
-                            </View>
-                          ) : (
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un rol"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {(roleData ?? []).map((r) => (
-                                    <SelectItem
-                                      key={r.id}
-                                      label={r.name}
-                                      value={String(r.id)}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                          )}
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.role_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      );
-                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Rol"
+                        placeholder="Selecciona un rol"
+                        options={roleOptions}
+                        value={value}
+                        onChange={onChange}
+                        isLoading={isLoadingData}
+                        searchable={roleOptions.length > 6}
+                        errorMessage={errors.role_id?.message}
+                      />
+                    )}
                   />
 
                   {/* Sucursal (solo si el usuario que crea tiene más de una) */}
@@ -629,66 +494,24 @@ export default function UserForm() {
                       control={control}
                       name="branch_id"
                       rules={{ required: "La sucursal es obligatoria." }}
-                      render={({ field: { onChange, value } }) => {
-                        const selectedLabel =
-                          claims?.branches?.find(
-                            (b) => String(b.branch_id) === value,
-                          )?.branch_name || "";
-
-                        return (
-                          <FormControl isInvalid={!!errors.branch_id}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Sucursal
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona una sucursal"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {(claims?.branches ?? []).map((b) => (
-                                    <SelectItem
-                                      key={b.branch_id}
-                                      label={b.branch_name}
-                                      value={String(b.branch_id)}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.branch_id?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
-                        );
-                      }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Sucursal"
+                          placeholder="Selecciona una sucursal"
+                          options={branchOptions}
+                          value={value}
+                          onChange={onChange}
+                          searchable={branchOptions.length > 6}
+                          errorMessage={errors.branch_id?.message}
+                        />
+                      )}
                     />
                   )}
 
                   <Divider className="my-2" />
 
                   {/* ── Dirección ── */}
-                  <Text
-                    style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
-                  >
-                    DIRECCIÓN
-                  </Text>
+                  <Text style={styles.sectionTitle}>DIRECCIÓN</Text>
 
                   {/* Línea 1 */}
                   <Controller
@@ -696,27 +519,13 @@ export default function UserForm() {
                     name="line1"
                     rules={{ required: "La dirección es obligatoria." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.line1}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Dirección
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.line1?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Dirección"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        errorMessage={errors.line1?.message}
+                      />
                     )}
                   />
 
@@ -725,24 +534,12 @@ export default function UserForm() {
                     control={control}
                     name="line2"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Dirección{" "}
-                            <Text size="xs" style={{ color: "#999" }}>
-                              (opcional)
-                            </Text>
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                      </FormControl>
+                      <AppInput
+                        label="Dirección (opcional)"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
                     )}
                   />
 
@@ -754,27 +551,13 @@ export default function UserForm() {
                         name="city"
                         rules={{ required: "La ciudad es obligatoria." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.city}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Ciudad
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.city?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Ciudad"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.city?.message}
+                          />
                         )}
                       />
                     </View>
@@ -784,27 +567,13 @@ export default function UserForm() {
                         name="state"
                         rules={{ required: "El departamento es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.state}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Departamento
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.state?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Departamento"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.state?.message}
+                          />
                         )}
                       />
                     </View>
@@ -816,56 +585,35 @@ export default function UserForm() {
                     name="postal_code"
                     rules={{ required: "El código postal es obligatorio." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.postal_code}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Código Postal
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 01001"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.postal_code?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Código Postal"
+                        placeholder="Ej. 01001"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="number-pad"
+                        errorMessage={errors.postal_code?.message}
+                      />
                     )}
                   />
 
                   {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
-                      }}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
+                  <HStack style={styles.actions}>
+                    <AppButton
+                      label="Cancelar"
+                      variant="black"
+                      outline
+                      fullWidth={false}
+                      isDisabled={isPending}
+                      onPress={goBack}
+                    />
+                    <AppButton
+                      label="Guardar"
+                      variant="black"
+                      fullWidth={false}
+                      isLoading={isPending}
                       onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
+                    />
                   </HStack>
                 </VStack>
               </Box>
@@ -889,5 +637,11 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 6,
+  },
+  sectionTitle: { fontWeight: "bold", color: "#555", fontSize: 13 },
+  actions: {
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 16,
   },
 });

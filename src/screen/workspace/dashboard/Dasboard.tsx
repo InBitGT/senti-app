@@ -1,13 +1,12 @@
-import { Icon } from "@/components/ui/icon";
 import { useDashboard } from "@/src/hooks/useDashboard/useDashboard";
 import { router } from "expo-router";
 import {
   ArrowRight,
-  ClipboardList,
+  ClipboardListIcon,
   Store,
   TriangleAlert,
 } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -79,7 +78,7 @@ function NewSaleBanner({
         justifyContent: "space-between",
       }}
     >
-      <Icon as={Store} size="xl" style={{ color: colors.white }} />
+      <Store size={28} color={colors.white} />
 
       <View style={{ alignItems: "flex-start" }}>
         <Text
@@ -114,7 +113,7 @@ function NewSaleBanner({
             alignItems: "center",
           }}
         >
-          <Icon as={ArrowRight} size="md" style={{ color: colors.white }} />
+          <ArrowRight size={20} color={colors.white} />
         </View>
       </View>
     </TouchableOpacity>
@@ -153,7 +152,7 @@ function CountInventoryBanner({
           alignItems: "center",
         }}
       >
-        <Icon as={ClipboardList} size="md" style={{ color: colors.white }} />
+        <ClipboardListIcon size={20} color={colors.white} />
       </View>
       <Text
         style={{
@@ -161,10 +160,31 @@ function CountInventoryBanner({
           fontWeight: "600",
           color: colors.white,
           marginLeft: 16,
+          flex: 1,
         }}
       >
         Contar inventario
       </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: colors.circleBg,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ArrowRight size={20} color={colors.white} />
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -212,7 +232,7 @@ function InventoryAlertBanner({
       activeOpacity={0.8}
     >
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Icon as={TriangleAlert} size="md" style={{ color: colors.danger }} />
+        <TriangleAlert size={20} color={colors.danger} />
         <Text
           style={{
             fontSize: 15,
@@ -273,7 +293,8 @@ export const DasboardScreen = () => {
           style={{
             fontSize: isDesktop ? 34 : 28,
             fontWeight: "bold",
-            marginHorizontal: 20,
+            marginLeft: 20,
+            marginRight: 20,
             marginTop: 20,
           }}
         >
@@ -283,7 +304,8 @@ export const DasboardScreen = () => {
           style={{
             fontSize: 15,
             fontWeight: "400",
-            marginHorizontal: 20,
+            marginLeft: 20,
+            marginRight: 20,
             marginTop: 10,
           }}
         >
@@ -300,7 +322,8 @@ export const DasboardScreen = () => {
           <View
             style={{
               flexDirection: "row",
-              marginHorizontal: 20,
+              marginLeft: 20,
+              marginRight: 20,
               marginTop: 0,
               gap: 20,
             }}
@@ -323,7 +346,7 @@ export const DasboardScreen = () => {
         ) : (
           <>
             <CountInventoryBanner
-              style={{ marginHorizontal: 20, marginTop: 0 }}
+              style={{ marginLeft: 20, marginRight: 20, marginTop: 0 }}
               onPress={() => {
                 router.navigate("/(drawer)/(inventory)/stock_count");
               }}
@@ -347,7 +370,7 @@ export const DasboardScreen = () => {
                   isLoading={alertInventory.isPending}
                   isError={alertInventory.isError}
                   total={totalAlertas}
-                  style={{ marginHorizontal: 20, marginTop: 10 }}
+                  style={{ marginLeft: 20, marginRight: 20, marginTop: 10 }}
                 />
               </>
             )}

@@ -2,11 +2,13 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useAuthStore } from "@/src/store/useAuthStore";
 import { ToastProvider } from "@gluestack-ui/core/toast/creator";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SplashScreen, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { LogBox, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
@@ -53,34 +55,38 @@ export default function RootLayout() {
   console.log("se renderiza");
 
   return (
-    <SafeAreaProvider>
-      <KeyboardProvider>
-        <QueryClientProvider client={queryClient}>
-          <ToastProvider>
-            <GluestackUIProvider mode="light">
-              <PaperProvider theme={paperTheme}>
-                <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
-                  <Stack>
-                    <Stack.Screen
-                      name="index"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="(drawer)"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="(auth)/Login"
-                      options={{ headerShown: false }}
-                    />
-                  </Stack>
-                  <StatusBar style="dark" />
-                </View>
-              </PaperProvider>
-            </GluestackUIProvider>
-          </ToastProvider>
-        </QueryClientProvider>
-      </KeyboardProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <BottomSheetModalProvider>
+          <KeyboardProvider>
+            <QueryClientProvider client={queryClient}>
+              <ToastProvider>
+                <GluestackUIProvider mode="light">
+                  <PaperProvider theme={paperTheme}>
+                    <View style={{ flex: 1 }} onLayout={() => setIsReady(true)}>
+                      <Stack>
+                        <Stack.Screen
+                          name="index"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="(drawer)"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="(auth)/Login"
+                          options={{ headerShown: false }}
+                        />
+                      </Stack>
+                      <StatusBar style="dark" />
+                    </View>
+                  </PaperProvider>
+                </GluestackUIProvider>
+              </ToastProvider>
+            </QueryClientProvider>
+          </KeyboardProvider>
+        </BottomSheetModalProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

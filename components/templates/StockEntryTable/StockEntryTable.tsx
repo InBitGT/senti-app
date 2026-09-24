@@ -1,9 +1,9 @@
 // StockEntryTable.tsx
 import { Action, SummaryCard } from "@/components/atom";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { FilterPill } from "@/components/atom/FilterPill/FilterPill";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/src/types/entry_stock/entry_stock.types";
 import { SearchIcon } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { DataTable } from "react-native-paper";
 import { Buttons } from "../CustomTable";
 
@@ -43,8 +43,6 @@ export function StockEntryTable({
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState<EntryStatus | null>(null);
-  const { width } = useWindowDimensions();
-  const isMobile = width < 480;
 
   const validData = useMemo(() => data.filter((r) => r?.id != null), [data]);
 
@@ -91,46 +89,29 @@ export function StockEntryTable({
   return (
     <VStack style={styles.container}>
       <HStack className="justify-between items-center mb-4">
-        <Input
-          className="bg-white rounded-lg"
-          variant="outline"
-          size="md"
-          style={{ flex: 1, marginRight: button?.length ? 12 : 0 }}
-        >
-          <InputSlot style={{ marginLeft: 10 }}>
-            <InputIcon as={SearchIcon} size="sm" />
-          </InputSlot>
-          <InputField
-            style={{ color: "#000" }}
+        <View style={{ flex: 1, marginRight: button?.length ? 12 : 0 }}>
+          <AppInput
             placeholder="Buscar documento, proveedor, bodega…"
             value={search}
             onChangeText={setSearch}
+            leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+            inputStyle={{ color: "#000" }}
           />
-        </Input>
+        </View>
 
         <HStack className="gap-3">
-          {button?.map((btn) => {
-            return (
-              <Button
-                key={btn.key}
-                size="md"
-                variant={btn.variant}
-                style={{
-                  borderColor: "#949292",
-                  borderWidth: 1,
-                  ...(isMobile && styles.buttonIconOnly),
-                }}
-                onPress={btn.onPress}
-              >
-                {btn.icon && (
-                  <ButtonIcon as={btn.icon} style={{ color: "#000" }} />
-                )}
-                {!isMobile && (
-                  <ButtonText style={{ color: "#000" }}>{btn.name}</ButtonText>
-                )}
-              </Button>
-            );
-          })}
+          {button?.map((btn) => (
+            <AppButton
+              key={btn.key}
+              label={btn.name}
+              icon={btn.icon}
+              variant="black"
+              outline
+              fullWidth={false}
+              onPress={btn.onPress}
+              shrinkOnMobile
+            />
+          ))}
         </HStack>
       </HStack>
 
@@ -302,12 +283,4 @@ const styles = StyleSheet.create({
   total: { fontSize: 13, fontWeight: "600", color: "#1a1a1a" },
   muted: { fontSize: 13, color: "#aaa" },
   summaryRow: { gap: 8, flexWrap: "wrap" },
-
-  buttonIconOnly: {
-    width: 40,
-    height: 40,
-    paddingHorizontal: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
 });

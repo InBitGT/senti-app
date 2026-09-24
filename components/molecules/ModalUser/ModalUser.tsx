@@ -1,4 +1,9 @@
+import { Avatar } from "@/components/atom/Avatar/Avatar";
+import { Badge } from "@/components/atom/Badge/Badge";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -46,46 +51,6 @@ interface Props {
   onClose: () => void;
   data?: UserDetail;
 }
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean;
-}) => {
-  const display =
-    typeof value === "boolean" ? (value ? "Sí" : "No") : (value ?? "—");
-
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const Divider = () => <View style={styles.divider} />;
-
-const Avatar = ({ name }: { name: string }) => (
-  <View style={styles.avatar}>
-    <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
-  </View>
-);
-
-const Badge = ({ active }: { active: boolean }) => (
-  <View
-    style={[styles.badge, { backgroundColor: active ? "#dcfce7" : "#fee2e2" }]}
-  >
-    <Text style={[styles.badgeText, { color: active ? "#16a34a" : "#dc2626" }]}>
-      {active ? "Activo" : "Inactivo"}
-    </Text>
-  </View>
-);
 
 export const ModalUserDetail: React.FC<Props> = ({ isOpen, onClose, data }) => {
   const fullName = data ? `${data.first_name} ${data.last_name}` : "";
@@ -183,26 +148,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { fontSize: 20, fontWeight: "600", color: "#4338ca" },
   name: { color: "#111827", fontWeight: "600" },
   username: { color: "#6b7280", fontSize: 13, marginTop: 2 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  badgeText: { fontSize: 12, fontWeight: "500" },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    marginBottom: 8,
-    marginTop: 4,
-  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 6,
     alignItems: "flex-start",
   },
-  label: { color: "#6b7280", fontSize: 13, flex: 1 },
-  value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
-  divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
 });

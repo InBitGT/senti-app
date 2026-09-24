@@ -1,38 +1,16 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
+import { ProductSearchSelect } from "@/components/atom/ProductSearchSelect/ProductSearchSelect";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import {
-  AddIcon,
-  AlertCircleIcon,
-  Icon,
-  TrashIcon,
-} from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { AddIcon, Icon, TrashIcon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useEntryStock } from "@/src/hooks/useEntryStock/useEntryStock";
@@ -40,15 +18,24 @@ import { useProduct } from "@/src/hooks/useProduct/useProduct";
 import { useSupplier } from "@/src/hooks/useSupplier/useSupplier";
 import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
+import { useFormDraft } from "@/src/store/useFormDraft/useFormDraft";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { useRouter } from "expo-router";
 import {
   ArrowLeftIcon,
-  ChevronDownIcon,
-  SearchIcon,
+  FileClock,
+  Plus,
+  Save,
+  Trash2,
 } from "lucide-react-native";
-import React, { useMemo } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -59,7 +46,10 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 interface ItemFormValues {
   product_id: string;
@@ -94,149 +84,16 @@ const EMPTY_ITEM: ItemFormValues = {
   new_sale_price: "",
 };
 
-function ProductSearchSelect({
-  value,
-  onChange,
-  productData,
-  error,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  productData: any[];
-  error?: string;
-}) {
-  const [query, setQuery] = React.useState("");
-  const [isOpen, setIsOpen] = React.useState(false);
-  const blurTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const selectedProduct = useMemo(
-    () => productData?.find((p) => String(p.id) === value),
-    [productData, value],
-  );
-
-  // Cuando el campo tiene un valor seleccionado y el buscador está cerrado,
-  // se muestra el nombre del producto seleccionado en el input.
-  React.useEffect(() => {
-    if (!isOpen) {
-      setQuery(selectedProduct?.name ?? "");
-    }
-  }, [selectedProduct, isOpen]);
-
-  // Limpieza del timeout al desmontar el componente
-  React.useEffect(() => {
-    return () => {
-      if (blurTimeout.current) clearTimeout(blurTimeout.current);
-    };
-  }, []);
-
-  const filtered = useMemo(() => {
-    const list = productData ?? [];
-    const q = query.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((p) => p.name?.toLowerCase().includes(q));
-  }, [query, productData]);
-
-  const handleSelect = (p: any) => {
-    onChange(String(p.id));
-    setQuery(p.name);
-    setIsOpen(false);
-  };
-
-  const handleChangeText = (text: string) => {
-    setQuery(text);
-    if (!isOpen) setIsOpen(true);
-    // Si el texto ya no coincide con el producto seleccionado, se invalida
-    // la selección hasta que el usuario escoja uno de la lista de nuevo.
-    if (value && text !== selectedProduct?.name) {
-      onChange("");
-    }
-  };
-
-  return (
-    <FormControl isInvalid={!!error}>
-      <FormControlLabel>
-        <FormControlLabelText style={{ color: "#000" }}>
-          Producto
-        </FormControlLabelText>
-      </FormControlLabel>
-
-      <Input>
-        <Icon
-          as={SearchIcon}
-          size="sm"
-          style={{ color: "#999", marginLeft: 10 }}
-        />
-        <InputField
-          style={{ color: "#171717" }}
-          placeholder="Escribe para buscar un producto..."
-          value={query}
-          onChangeText={handleChangeText}
-          onFocus={() => {
-            if (blurTimeout.current) {
-              clearTimeout(blurTimeout.current);
-              blurTimeout.current = null;
-            }
-            setIsOpen(true);
-          }}
-          onBlur={() => {
-            // Espera un poco antes de cerrar, para darle tiempo al onPress
-            // del item a ejecutarse primero (evita la race condition)
-            blurTimeout.current = setTimeout(() => {
-              setIsOpen(false);
-            }, 150);
-          }}
-        />
-        <Icon
-          as={ChevronDownIcon}
-          size="sm"
-          style={{ color: "#999", marginRight: 10 }}
-        />
-      </Input>
-
-      {isOpen && (
-        <Box
-          style={styles.dropdown}
-          className="w-full bg-white rounded-[10px]"
-          // @ts-expect-error onMouseDown no está tipado en Box pero sí funciona en RN Web
-          onMouseDown={(e: any) => e.preventDefault?.()}
-        >
-          <DesktopScrollView>
-            {filtered.length === 0 ? (
-              <Text style={{ padding: 12, color: "#999" }}>
-                Sin resultados para “{query}”
-              </Text>
-            ) : (
-              filtered.map((p) => (
-                <Pressable
-                  key={p.id}
-                  onPress={() => {
-                    if (blurTimeout.current) {
-                      clearTimeout(blurTimeout.current);
-                      blurTimeout.current = null;
-                    }
-                    handleSelect(p);
-                  }}
-                  style={({ pressed }) => [
-                    styles.dropdownItem,
-                    pressed && { backgroundColor: "#f0f9ff" },
-                    String(p.id) === value && { backgroundColor: "#eff6ff" },
-                  ]}
-                >
-                  <Text style={{ color: "#171717" }}>{p.name}</Text>
-                </Pressable>
-              ))
-            )}
-          </DesktopScrollView>
-        </Box>
-      )}
-
-      <FormControlError>
-        <FormControlErrorIcon as={AlertCircleIcon} />
-        <FormControlErrorText>{error}</FormControlErrorText>
-      </FormControlError>
-    </FormControl>
-  );
-}
+const formatDraftDate = (iso: string) => {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleString("es-GT", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 // ── Item Row ──────────────────────────────────────────────────────────────────
 function ItemRow({
@@ -247,7 +104,6 @@ function ItemRow({
   productData,
   unitData,
   isLarge,
-  units,
 }: {
   index: number;
   control: any;
@@ -272,6 +128,15 @@ function ItemRow({
   const subtotal = isNaN(parseFloat(quantity) * parseFloat(unit_cost))
     ? "0.00"
     : (parseFloat(quantity) * parseFloat(unit_cost)).toFixed(2);
+
+  const unitOptions = useMemo(
+    () =>
+      (unitData ?? []).map((u) => ({
+        label: `${u.name} (${u.code})`,
+        value: u.code,
+      })),
+    [unitData],
+  );
 
   return (
     <Box
@@ -320,31 +185,15 @@ function ItemRow({
               name={`items.${index}.quantity`}
               rules={{ required: "Requerido." }}
               render={({ field: { onChange, onBlur, value } }) => (
-                <FormControl isInvalid={!!errors?.items?.[index]?.quantity}>
-                  <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>
-                      Cantidad
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Input>
-                    <InputField
-                      style={{ color: "#171717" }}
-                      placeholder="10"
-                      value={value}
-                      onChangeText={(text) =>
-                        onChange(text.replace(/[^0-9]/g, ""))
-                      }
-                      onBlur={onBlur}
-                      keyboardType="decimal-pad"
-                    />
-                  </Input>
-                  <FormControlError>
-                    <FormControlErrorIcon as={AlertCircleIcon} />
-                    <FormControlErrorText>
-                      {errors?.items?.[index]?.quantity?.message}
-                    </FormControlErrorText>
-                  </FormControlError>
-                </FormControl>
+                <AppInput
+                  label="Cantidad"
+                  placeholder="10"
+                  value={value}
+                  onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
+                  onBlur={onBlur}
+                  keyboardType="decimal-pad"
+                  errorMessage={errors?.items?.[index]?.quantity?.message}
+                />
               )}
             />
           </View>
@@ -354,49 +203,17 @@ function ItemRow({
               control={control}
               name={`items.${index}.unit`}
               rules={{ required: "Requerido." }}
-              render={({ field: { onChange, value } }) => {
-                const selectedLabel =
-                  unitData?.find((u) => u.code === value)?.name || "";
-                return (
-                  <FormControl isInvalid={!!errors?.items?.[index]?.unit}>
-                    <FormControlLabel>
-                      <FormControlLabelText style={{ color: "#000" }}>
-                        Unidad
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <Select selectedValue={value} onValueChange={onChange}>
-                      <SelectTrigger>
-                        <SelectInput
-                          style={{ color: "#000" }}
-                          placeholder="Selecciona unidad"
-                          value={selectedLabel}
-                        />
-                      </SelectTrigger>
-                      <SelectPortal>
-                        <SelectBackdrop />
-                        <SelectContent style={{ maxHeight: "50%" }}>
-                          <SelectDragIndicatorWrapper>
-                            <SelectDragIndicator />
-                          </SelectDragIndicatorWrapper>
-                          {(unitData ?? []).map((u) => (
-                            <SelectItem
-                              key={u.id}
-                              label={`${u.name} (${u.code})`}
-                              value={u.code}
-                            />
-                          ))}
-                        </SelectContent>
-                      </SelectPortal>
-                    </Select>
-                    <FormControlError>
-                      <FormControlErrorIcon as={AlertCircleIcon} />
-                      <FormControlErrorText>
-                        {errors?.items?.[index]?.unit?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
-                );
-              }}
+              render={({ field: { onChange, value } }) => (
+                <AppSelect
+                  label="Unidad"
+                  placeholder="Selecciona unidad"
+                  searchable={unitOptions.length > 6}
+                  options={unitOptions}
+                  value={value}
+                  onChange={onChange}
+                  errorMessage={errors?.items?.[index]?.unit?.message}
+                />
+              )}
             />
           </View>
 
@@ -406,31 +223,17 @@ function ItemRow({
               name={`items.${index}.unit_cost`}
               rules={{ required: "Requerido." }}
               render={({ field: { onChange, onBlur, value } }) => (
-                <FormControl isInvalid={!!errors?.items?.[index]?.unit_cost}>
-                  <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>
-                      Costo unitario
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Input>
-                    <InputField
-                      style={{ color: "#171717" }}
-                      placeholder="5.50"
-                      value={value}
-                      onChangeText={(text) =>
-                        onChange(text.replace(/[^0-9.-]/g, ""))
-                      }
-                      onBlur={onBlur}
-                      keyboardType="decimal-pad"
-                    />
-                  </Input>
-                  <FormControlError>
-                    <FormControlErrorIcon as={AlertCircleIcon} />
-                    <FormControlErrorText>
-                      {errors?.items?.[index]?.unit_cost?.message}
-                    </FormControlErrorText>
-                  </FormControlError>
-                </FormControl>
+                <AppInput
+                  label="Costo unitario"
+                  placeholder="5.50"
+                  value={value}
+                  onChangeText={(text) =>
+                    onChange(text.replace(/[^0-9.-]/g, ""))
+                  }
+                  onBlur={onBlur}
+                  keyboardType="decimal-pad"
+                  errorMessage={errors?.items?.[index]?.unit_cost?.message}
+                />
               )}
             />
           </View>
@@ -453,31 +256,15 @@ function ItemRow({
                 name={`items.${index}.batch_number`}
                 rules={{ required: "El lote es obligatorio." }}
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <FormControl
-                    isInvalid={!!errors?.items?.[index]?.batch_number}
-                  >
-                    <FormControlLabel>
-                      <FormControlLabelText style={{ color: "#000" }}>
-                        Número de lote
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <Input>
-                      <InputField
-                        style={{ color: "#171717" }}
-                        placeholder="Ej. LOTE-001"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        autoCapitalize="characters"
-                      />
-                    </Input>
-                    <FormControlError>
-                      <FormControlErrorIcon as={AlertCircleIcon} />
-                      <FormControlErrorText>
-                        {errors?.items?.[index]?.batch_number?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
+                  <AppInput
+                    label="Número de lote"
+                    placeholder="Ej. LOTE-001"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="characters"
+                    errorMessage={errors?.items?.[index]?.batch_number?.message}
+                  />
                 )}
               />
             </View>
@@ -507,32 +294,18 @@ function ItemRow({
                   };
 
                   return (
-                    <FormControl
-                      isInvalid={!!errors?.items?.[index]?.expiration_date}
-                    >
-                      <FormControlLabel>
-                        <FormControlLabelText style={{ color: "#000" }}>
-                          Fecha de vencimiento
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input>
-                        <InputField
-                          style={{ color: "#171717" }}
-                          placeholder="YYYY-MM-DD"
-                          value={value}
-                          onChangeText={handleChange}
-                          onBlur={onBlur}
-                          keyboardType="number-pad"
-                          maxLength={10}
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorIcon as={AlertCircleIcon} />
-                        <FormControlErrorText>
-                          {errors?.items?.[index]?.expiration_date?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
+                    <AppInput
+                      label="Fecha de vencimiento"
+                      placeholder="YYYY-MM-DD"
+                      value={value}
+                      onChangeText={handleChange}
+                      onBlur={onBlur}
+                      keyboardType="number-pad"
+                      maxLength={10}
+                      errorMessage={
+                        errors?.items?.[index]?.expiration_date?.message
+                      }
+                    />
                   );
                 }}
               />
@@ -540,43 +313,24 @@ function ItemRow({
           </View>
         )}
 
-        {/* Notas del item */}
+        {/* Nuevo precio + Notas del item */}
         <View style={row}>
           <View style={half}>
             <Controller
               control={control}
               name={`items.${index}.new_sale_price`}
               render={({ field: { onChange, onBlur, value } }) => (
-                <FormControl
-                  isInvalid={!!errors?.items?.[index]?.new_sale_price}
-                >
-                  <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>
-                      Nuevo precio de venta{" "}
-                      <Text size="xs" style={{ color: "#999" }}>
-                        (opcional)
-                      </Text>
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Input>
-                    <InputField
-                      style={{ color: "#171717" }}
-                      placeholder="8.00"
-                      value={value}
-                      onChangeText={(text) =>
-                        onChange(text.replace(/[^0-9.-]/g, ""))
-                      }
-                      onBlur={onBlur}
-                      keyboardType="decimal-pad"
-                    />
-                  </Input>
-                  <FormControlError>
-                    <FormControlErrorIcon as={AlertCircleIcon} />
-                    <FormControlErrorText>
-                      {errors?.items?.[index]?.new_sale_price?.message}
-                    </FormControlErrorText>
-                  </FormControlError>
-                </FormControl>
+                <AppInput
+                  label="Nuevo precio de venta (opcional)"
+                  placeholder="8.00"
+                  value={value}
+                  onChangeText={(text) =>
+                    onChange(text.replace(/[^0-9.-]/g, ""))
+                  }
+                  onBlur={onBlur}
+                  keyboardType="decimal-pad"
+                  errorMessage={errors?.items?.[index]?.new_sale_price?.message}
+                />
               )}
             />
           </View>
@@ -585,25 +339,13 @@ function ItemRow({
               control={control}
               name={`items.${index}.notes`}
               render={({ field: { onChange, onBlur, value } }) => (
-                <FormControl>
-                  <FormControlLabel>
-                    <FormControlLabelText style={{ color: "#000" }}>
-                      Notas{" "}
-                      <Text size="xs" style={{ color: "#999" }}>
-                        (opcional)
-                      </Text>
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <Input>
-                    <InputField
-                      style={{ color: "#171717" }}
-                      placeholder="Observaciones del item..."
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                    />
-                  </Input>
-                </FormControl>
+                <AppInput
+                  label="Notas (opcional)"
+                  placeholder="Observaciones del item..."
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
               )}
             />
           </View>
@@ -622,11 +364,32 @@ export default function InventoryForm() {
   const { data: supplierData } = useSupplier();
   const { data: unitData } = useUnit();
   const { showToast } = useCustomToast();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isLarge = width >= 768;
+  const insets = useSafeAreaInsets();
 
   const row = isLarge ? { flexDirection: "row" as const, gap: 16 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
+
+  // Borrador ligado al usuario y tenant actuales
+  const { draft, isLoaded, saveDraft, clearDraft } = useFormDraft<FormValues>(
+    "entry_stock",
+    claims?.sub,
+    claims?.tenant_id,
+  );
+
+  // Refs y estado para el botón flotante
+  const scrollRef = useRef<any>(null);
+  const addButtonRef = useRef<View>(null);
+  const [showFab, setShowFab] = useState(false);
+
+  // Revisa si el botón "Agregar" está dentro del área visible de la pantalla
+  const checkAddButtonVisibility = useCallback(() => {
+    addButtonRef.current?.measureInWindow((_x, y, _w, h) => {
+      const isVisible = y + h > 0 && y < height;
+      setShowFab(!isVisible);
+    });
+  }, [height]);
 
   // Sucursales + bodegas a las que el usuario tiene acceso, según sus claims.
   const branchOptions = useMemo(
@@ -649,13 +412,9 @@ export default function InventoryForm() {
   const hideBranchWarehouseInputs =
     branchOptions.length === 1 && totalWarehouses === 1;
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
-    defaultValues: {
+  // Valores iniciales (se reutilizan al borrar el borrador)
+  const initialValues = useMemo<FormValues>(
+    () => ({
       branch_id: hideBranchWarehouseInputs
         ? String(branchOptions[0]?.id ?? "")
         : "",
@@ -668,10 +427,28 @@ export default function InventoryForm() {
       entry_status: "confirmed",
       notes: "",
       items: [EMPTY_ITEM],
-    },
-  });
+    }),
+    [hideBranchWarehouseInputs, branchOptions],
+  );
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    getValues,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({ defaultValues: initialValues });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
+
+  // Agregar desde el botón flotante y bajar hasta el nuevo producto
+  const handleAddItemFromFab = () => {
+    append(EMPTY_ITEM);
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
 
   const selectedBranchId = useWatch({ control, name: "branch_id" });
   const selectedBranch = branchOptions.find(
@@ -679,11 +456,18 @@ export default function InventoryForm() {
   );
   const warehouseOptionsForBranch = selectedBranch?.warehouses ?? [];
 
+  // Evita que al restaurar el borrador se limpie la bodega guardada
+  const skipWarehouseReset = useRef(false);
+
   // Al cambiar de sucursal, se limpia la bodega seleccionada (pertenecía a la sucursal anterior).
-  const isFirstRender = React.useRef(true);
-  React.useEffect(() => {
+  const isFirstRender = useRef(true);
+  useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      return;
+    }
+    if (skipWarehouseReset.current) {
+      skipWarehouseReset.current = false;
       return;
     }
     if (!hideBranchWarehouseInputs) {
@@ -691,12 +475,49 @@ export default function InventoryForm() {
     }
   }, [selectedBranchId, hideBranchWarehouseInputs, setValue]);
 
+  // Restaurar el borrador una sola vez al cargar
+  const draftRestored = useRef(false);
+  useEffect(() => {
+    if (!isLoaded || !draft || draftRestored.current) return;
+    draftRestored.current = true;
+
+    // Si la sucursal del borrador es distinta, el efecto de arriba se va a
+    // disparar: le indicamos que no borre la bodega del borrador.
+    if (draft.values.branch_id !== getValues("branch_id")) {
+      skipWarehouseReset.current = true;
+    }
+    reset(draft.values);
+  }, [isLoaded, draft, reset, getValues]);
+
+  const handleSaveDraft = async () => {
+    const ok = await saveDraft(getValues());
+    showToast({
+      message: ok ? "Borrador guardado" : "No se pudo guardar el borrador",
+      type: ok ? "success" : "error",
+    });
+  };
+
+  const handleClearDraft = async () => {
+    await clearDraft();
+    reset(initialValues);
+    showToast({ message: "Borrador eliminado", type: "success" });
+  };
+
   const allItems = useWatch({ control, name: "items" });
   const totalGeneral = allItems.reduce((acc, item) => {
     const q = parseFloat(item.quantity) || 0;
     const c = parseFloat(item.unit_cost) || 0;
     return acc + q * c;
   }, 0);
+
+  const supplierOptions = useMemo(
+    () =>
+      (supplierData ?? []).map((s: any) => ({
+        label: s.name,
+        value: String(s.id),
+      })),
+    [supplierData],
+  );
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
@@ -727,6 +548,8 @@ export default function InventoryForm() {
 
     try {
       await post.mutateAsync(payload);
+      // El ingreso ya se registró: el borrador ya no hace falta
+      await clearDraft();
       showToast({ message: "Ingreso creado correctamente", type: "success" });
       router.back();
     } catch (error) {
@@ -742,10 +565,14 @@ export default function InventoryForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
+          onScroll={checkAddButtonVisibility}
+          scrollEventThrottle={16}
+          onContentSizeChange={checkAddButtonVisibility}
           contentContainerStyle={{
             flexGrow: 1,
             padding: 20,
@@ -780,6 +607,27 @@ export default function InventoryForm() {
                   Llena los campos para registrar un ingreso de inventario
                 </Text>
 
+                {/* Aviso de borrador guardado */}
+                {draft && (
+                  <View style={styles.draftBanner}>
+                    <FileClock size={20} color="#0369a1" />
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={styles.draftTitle}>Borrador guardado</Text>
+                      <Text style={styles.draftDate}>
+                        Última vez: {formatDraftDate(draft.savedAt)}
+                      </Text>
+                    </View>
+                    <AppButton
+                      label="Borrar"
+                      icon={Trash2}
+                      variant="black"
+                      outline
+                      fullWidth={false}
+                      onPress={handleClearDraft}
+                    />
+                  </View>
+                )}
+
                 <VStack space="lg">
                   {/* ── DATOS DEL DOCUMENTO ── */}
                   <Text style={styles.sectionLabel}>DATOS DEL DOCUMENTO</Text>
@@ -792,55 +640,20 @@ export default function InventoryForm() {
                           control={control}
                           name="branch_id"
                           rules={{ required: "La sucursal es obligatoria." }}
-                          render={({ field: { onChange, value } }) => {
-                            const selectedLabel =
-                              branchOptions.find((b) => String(b.id) === value)
-                                ?.name || "";
-                            return (
-                              <FormControl isInvalid={!!errors.branch_id}>
-                                <FormControlLabel>
-                                  <FormControlLabelText
-                                    style={{ color: "#000" }}
-                                  >
-                                    Sucursal
-                                  </FormControlLabelText>
-                                </FormControlLabel>
-                                <Select
-                                  selectedValue={value}
-                                  onValueChange={onChange}
-                                >
-                                  <SelectTrigger>
-                                    <SelectInput
-                                      style={{ color: "#000" }}
-                                      placeholder="Selecciona una sucursal"
-                                      value={selectedLabel}
-                                    />
-                                  </SelectTrigger>
-                                  <SelectPortal>
-                                    <SelectBackdrop />
-                                    <SelectContent style={{ maxHeight: "50%" }}>
-                                      <SelectDragIndicatorWrapper>
-                                        <SelectDragIndicator />
-                                      </SelectDragIndicatorWrapper>
-                                      {branchOptions.map((b) => (
-                                        <SelectItem
-                                          key={b.id}
-                                          label={b.name}
-                                          value={String(b.id)}
-                                        />
-                                      ))}
-                                    </SelectContent>
-                                  </SelectPortal>
-                                </Select>
-                                <FormControlError>
-                                  <FormControlErrorIcon as={AlertCircleIcon} />
-                                  <FormControlErrorText>
-                                    {errors.branch_id?.message}
-                                  </FormControlErrorText>
-                                </FormControlError>
-                              </FormControl>
-                            );
-                          }}
+                          render={({ field: { onChange, value } }) => (
+                            <AppSelect
+                              label="Sucursal"
+                              placeholder="Selecciona una sucursal"
+                              searchable={branchOptions.length > 6}
+                              options={branchOptions.map((b) => ({
+                                label: b.name,
+                                value: String(b.id),
+                              }))}
+                              value={value}
+                              onChange={onChange}
+                              errorMessage={errors.branch_id?.message}
+                            />
+                          )}
                         />
                       </View>
 
@@ -849,121 +662,48 @@ export default function InventoryForm() {
                           control={control}
                           name="warehouse_id"
                           rules={{ required: "La bodega es obligatoria." }}
-                          render={({ field: { onChange, value } }) => {
-                            const selectedLabel =
-                              warehouseOptionsForBranch.find(
-                                (w) => String(w.warehouse_id) === value,
-                              )?.warehouse_name || "";
-                            return (
-                              <FormControl isInvalid={!!errors.warehouse_id}>
-                                <FormControlLabel>
-                                  <FormControlLabelText
-                                    style={{ color: "#000" }}
-                                  >
-                                    Bodega
-                                  </FormControlLabelText>
-                                </FormControlLabel>
-                                <Select
-                                  selectedValue={value}
-                                  onValueChange={onChange}
-                                  isDisabled={!selectedBranchId}
-                                >
-                                  <SelectTrigger>
-                                    <SelectInput
-                                      style={{ color: "#000" }}
-                                      placeholder={
-                                        selectedBranchId
-                                          ? "Selecciona una bodega"
-                                          : "Primero selecciona una sucursal"
-                                      }
-                                      value={selectedLabel}
-                                    />
-                                  </SelectTrigger>
-                                  <SelectPortal>
-                                    <SelectBackdrop />
-                                    <SelectContent style={{ maxHeight: "50%" }}>
-                                      <SelectDragIndicatorWrapper>
-                                        <SelectDragIndicator />
-                                      </SelectDragIndicatorWrapper>
-                                      {warehouseOptionsForBranch.map((w) => (
-                                        <SelectItem
-                                          key={w.warehouse_id}
-                                          label={w.warehouse_name}
-                                          value={String(w.warehouse_id)}
-                                        />
-                                      ))}
-                                    </SelectContent>
-                                  </SelectPortal>
-                                </Select>
-                                <FormControlError>
-                                  <FormControlErrorIcon as={AlertCircleIcon} />
-                                  <FormControlErrorText>
-                                    {errors.warehouse_id?.message}
-                                  </FormControlErrorText>
-                                </FormControlError>
-                              </FormControl>
-                            );
-                          }}
+                          render={({ field: { onChange, value } }) => (
+                            <AppSelect
+                              label="Bodega"
+                              placeholder={
+                                selectedBranchId
+                                  ? "Selecciona una bodega"
+                                  : "Primero selecciona una sucursal"
+                              }
+                              searchable={warehouseOptionsForBranch.length > 6}
+                              options={warehouseOptionsForBranch.map((w) => ({
+                                label: w.warehouse_name,
+                                value: String(w.warehouse_id),
+                              }))}
+                              value={value}
+                              onChange={onChange}
+                              isDisabled={!selectedBranchId}
+                              errorMessage={errors.warehouse_id?.message}
+                            />
+                          )}
                         />
                       </View>
                     </View>
                   )}
 
-                  {/* Bodega + Proveedor */}
+                  {/* Proveedor + N° Documento */}
                   <View style={row}>
                     <View style={half}>
                       <Controller
                         control={control}
                         name="supplier_id"
                         rules={{ required: "El proveedor es obligatorio." }}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            supplierData?.find(
-                              (s: any) => String(s.id) === value,
-                            )?.name || "";
-                          return (
-                            <FormControl isInvalid={!!errors.supplier_id}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Proveedor
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder="Selecciona proveedor"
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent style={{ maxHeight: "50%" }}>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    {(supplierData ?? []).map((s: any) => (
-                                      <SelectItem
-                                        key={s.id}
-                                        label={s.name}
-                                        value={String(s.id)}
-                                      />
-                                    ))}
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.supplier_id?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          );
-                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Proveedor"
+                            placeholder="Selecciona proveedor"
+                            searchable={supplierOptions.length > 6}
+                            options={supplierOptions}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.supplier_id?.message}
+                          />
+                        )}
                       />
                     </View>
                     <View style={half}>
@@ -974,37 +714,23 @@ export default function InventoryForm() {
                           required: "El número de documento es obligatorio.",
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.document_number}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                N° Documento
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="FAC-003"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.toUpperCase())
-                                }
-                                onBlur={onBlur}
-                                autoCapitalize="characters"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.document_number?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="N° Documento"
+                            placeholder="FAC-003"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.toUpperCase())
+                            }
+                            onBlur={onBlur}
+                            autoCapitalize="characters"
+                            errorMessage={errors.document_number?.message}
+                          />
                         )}
                       />
                     </View>
                   </View>
 
-                  {/* N° Documento + Fecha */}
+                  {/* Fecha */}
                   <View style={row}>
                     <View style={half}>
                       <Controller
@@ -1019,10 +745,7 @@ export default function InventoryForm() {
                         }}
                         render={({ field: { onChange, onBlur, value } }) => {
                           const handleChange = (text: string) => {
-                            // Solo permitir números y guiones
                             const cleaned = text.replace(/[^0-9]/g, "");
-
-                            // Insertar guiones automáticamente
                             let formatted = cleaned;
                             if (cleaned.length > 4) {
                               formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
@@ -1030,35 +753,20 @@ export default function InventoryForm() {
                             if (cleaned.length > 6) {
                               formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
                             }
-
                             onChange(formatted);
                           };
 
                           return (
-                            <FormControl isInvalid={!!errors.document_date}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Fecha del documento
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Input>
-                                <InputField
-                                  style={{ color: "#171717" }}
-                                  placeholder="YYYY-MM-DD"
-                                  value={value}
-                                  onChangeText={handleChange}
-                                  onBlur={onBlur}
-                                  keyboardType="number-pad"
-                                  maxLength={10}
-                                />
-                              </Input>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.document_date?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
+                            <AppInput
+                              label="Fecha del documento"
+                              placeholder="YYYY-MM-DD"
+                              value={value}
+                              onChangeText={handleChange}
+                              onBlur={onBlur}
+                              keyboardType="number-pad"
+                              maxLength={10}
+                              errorMessage={errors.document_date?.message}
+                            />
                           );
                         }}
                       />
@@ -1071,25 +779,15 @@ export default function InventoryForm() {
                     control={control}
                     name="notes"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Notas{" "}
-                            <Text size="xs" style={{ color: "#999" }}>
-                              (opcional)
-                            </Text>
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Textarea>
-                          <TextareaInput
-                            style={{ color: "#171717" }}
-                            placeholder="Observaciones generales del ingreso..."
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Textarea>
-                      </FormControl>
+                      <AppInput
+                        label="Notas (opcional)"
+                        placeholder="Observaciones generales del ingreso..."
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        multiline
+                        textareaHeight={100}
+                      />
                     )}
                   />
 
@@ -1105,25 +803,19 @@ export default function InventoryForm() {
                     <Text style={styles.sectionLabel}>
                       PRODUCTOS ({fields.length})
                     </Text>
-                    <Button size="sm" onPress={() => append(EMPTY_ITEM)}>
-                      <Icon
-                        as={AddIcon}
-                        size="sm"
-                        style={{ color: "#fff", marginRight: 4 }}
+                    <View ref={addButtonRef} collapsable={false}>
+                      <AppButton
+                        label="Agregar"
+                        icon={Plus}
+                        variant="black"
+                        fullWidth={false}
+                        onPress={() => append(EMPTY_ITEM)}
                       />
-                      <ButtonText>Agregar</ButtonText>
-                    </Button>
+                    </View>
                   </HStack>
 
                   {fields.length === 0 && (
-                    <Box
-                      style={styles.emptyBox}
-                      className="w-full bg-white rounded-[20px] py-8 px-7"
-                    >
-                      <Text style={{ color: "#999", textAlign: "center" }}>
-                        No hay productos. Presiona Agregar para añadir uno.
-                      </Text>
-                    </Box>
+                    <EmptyHint label="No hay productos. Presiona Agregar para añadir uno." />
                   )}
 
                   {fields.map((field, index) => (
@@ -1161,31 +853,53 @@ export default function InventoryForm() {
                   )}
 
                   {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
+                  <HStack style={styles.actions}>
+                    <AppButton
+                      label="Cancelar"
+                      variant="black"
+                      outline
+                      fullWidth={false}
+                      isDisabled={isPending}
                       onPress={() => router.back()}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
+                    />
+                    <AppButton
+                      label="Guardar borrador"
+                      icon={Save}
+                      variant="info"
+                      outline
+                      fullWidth={false}
+                      isDisabled={isPending}
+                      onPress={handleSaveDraft}
+                    />
+                    <AppButton
+                      label="Guardar"
+                      variant="black"
+                      fullWidth={false}
+                      isLoading={isPending}
+                      isDisabled={fields.length === 0}
                       onPress={handleSubmit(onSubmit)}
-                      disabled={isPending || fields.length === 0}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
+                    />
                   </HStack>
                 </VStack>
               </Box>
             </Center>
           </DesktopScrollView>
         </ScrollView>
+
+        {/* Botón flotante: aparece cuando "Agregar" sale de la pantalla */}
+        {showFab && (
+          <Pressable
+            onPress={handleAddItemFromFab}
+            style={[styles.fab, { bottom: 24 + insets.bottom }]}
+          >
+            <Icon
+              as={AddIcon}
+              color="#fff"
+              size="xl"
+              style={{ color: "#fff" }}
+            />
+          </Pressable>
+        )}
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -1196,8 +910,10 @@ export const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#ffffff",
     borderRadius: 20,
-    paddingVertical: 32,
-    paddingHorizontal: 28,
+    paddingTop: 32,
+    paddingBottom: 32,
+    paddingLeft: 28,
+    paddingRight: 28,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -1208,6 +924,29 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#555",
     fontSize: 13,
+  },
+  draftBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f9ff",
+    borderWidth: 1,
+    borderColor: "#bae6fd",
+    borderRadius: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingLeft: 14,
+    paddingRight: 14,
+    marginBottom: 20,
+  },
+  draftTitle: {
+    color: "#0369a1",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  draftDate: {
+    color: "#0284c7",
+    fontSize: 12,
+    marginTop: 2,
   },
   itemCard: {
     borderWidth: 1,
@@ -1227,8 +966,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f0f9ff",
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 12,
+    paddingRight: 12,
   },
   totalBox: {
     flexDirection: "row",
@@ -1240,27 +981,25 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#bbf7d0",
   },
-  emptyBox: {
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-    borderStyle: "dashed",
-    borderRadius: 12,
-    padding: 24,
+  actions: {
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 16,
   },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-    marginTop: 4,
+  fab: {
+    position: "absolute",
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#000",
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  dropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

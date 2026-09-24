@@ -1,13 +1,21 @@
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { FlatProduct } from "@/src/types/stock_count/stock_count.types";
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetFlatList,
+  BottomSheetModal,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
 import { Package, Plus, SearchIcon, X } from "lucide-react-native";
-import { useMemo, useState } from "react";
-import { FlatList, Modal, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Checkbox } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function ProductPicker({
   products,
@@ -18,14 +26,21 @@ export function ProductPicker({
   selectedIds: Set<number>;
   onConfirm: (ids: number[]) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const sheetRef = useRef<BottomSheetModal>(null);
+  const insets = useSafeAreaInsets();
+  const snapPoints = useMemo(() => ["90%"], []);
+
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState<Set<number>>(new Set());
 
   // Al abrir, precargamos la selección actual.
   const handleOpen = () => {
     setDraft(new Set(selectedIds));
-    setOpen(true);
+    sheetRef.current?.present();
+  };
+
+  const handleClose = () => {
+    sheetRef.current?.dismiss();
   };
 
   const filtered = useMemo(() => {
@@ -50,28 +65,46 @@ export function ProductPicker({
 
   const confirm = () => {
     onConfirm(Array.from(draft));
-    setOpen(false);
+    handleClose();
   };
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  );
 
   return (
     <>
-      <Button
-        size="md"
-        variant="outline"
-        style={styles.outlineButton}
+      <AppButton
+        label="Elegir artículos"
+        icon={Plus}
+        outline
+        outlineBorderColor="#949292"
+        outlineTextColor="#000000"
+        fullWidth={false}
         onPress={handleOpen}
-      >
-        <ButtonIcon as={Plus} style={{ color: "#000" }} />
-        <ButtonText style={{ color: "#000" }}>Elegir artículos</ButtonText>
-      </Button>
+      />
 
-      <Modal
-        visible={open}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setOpen(false)}
+      <BottomSheetModal
+        ref={sheetRef}
+        snapPoints={snapPoints}
+        enableDynamicSizing={false}
+        backdropComponent={renderBackdrop}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        onDismiss={() => setQuery("")}
       >
-        <VStack style={styles.modalContainer}>
+        {/* View normal (no BottomSheetView): BottomSheetView envuelve el
+            contenido para medirlo y eso rompe el scroll del FlatList interno. */}
+        <View style={styles.sheetContainer}>
           <HStack className="items-start justify-between mb-4">
             <VStack style={{ flex: 1 }}>
               <Text style={styles.title}>Elegir artículos a contar</Text>
@@ -80,39 +113,33 @@ export function ProductPicker({
                 cargan.
               </Text>
             </VStack>
-            <Pressable
-              onPress={() => setOpen(false)}
-              hitSlop={8}
-              style={{ padding: 4 }}
-            >
+            <Pressable onPress={handleClose} hitSlop={8} style={{ padding: 4 }}>
               <X size={20} color="#888" />
             </Pressable>
           </HStack>
 
-          <Input
-            className="bg-white rounded-lg mb-4"
-            variant="outline"
-            size="md"
-          >
-            <InputSlot style={{ marginLeft: 10 }}>
-              <InputIcon as={SearchIcon} size="sm" />
-            </InputSlot>
-            <InputField
-              style={{ color: "#000" }}
+          <View style={{ marginBottom: 16 }}>
+            <AppInput
               placeholder="Buscar por nombre, SKU o categoría…"
               value={query}
               onChangeText={setQuery}
+              leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+              inputStyle={{ color: "#000" }}
+              TextInputComponent={BottomSheetTextInput}
             />
-          </Input>
+          </View>
 
           <View style={styles.listBox}>
             {filtered.length === 0 ? (
               <Text style={styles.muted}>Sin resultados.</Text>
             ) : (
-              <FlatList
+              <BottomSheetFlatList
                 data={filtered}
-                keyExtractor={(item) => String(item.product_id)}
-                renderItem={({ item }) => {
+                keyExtractor={(item: FlatProduct) => String(item.product_id)}
+                keyboardShouldPersistTaps="handled"
+                style={{ flex: 1 }}
+                showsVerticalScrollIndicator
+                renderItem={({ item }: { item: FlatProduct }) => {
                   const checked = draft.has(item.product_id);
                   return (
                     <Pressable
@@ -148,30 +175,31 @@ export function ProductPicker({
             )}
           </View>
 
-          <HStack style={styles.footer}>
+          <HStack
+            style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}
+          >
             <Text style={styles.footerText}>
               <Text style={styles.footerCount}>{draft.size}</Text> seleccionados
             </Text>
-            <Button size="md" style={styles.primaryButton} onPress={confirm}>
-              <ButtonText style={{ color: "#fff" }}>
-                Confirmar selección
-              </ButtonText>
-            </Button>
+            <AppButton
+              label="Confirmar selección"
+              variant="info"
+              fullWidth={false}
+              onPress={confirm}
+            />
           </HStack>
-        </VStack>
-      </Modal>
+        </View>
+      </BottomSheetModal>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  outlineButton: { borderColor: "#949292", borderWidth: 1 },
-  primaryButton: { backgroundColor: "#0C447C" },
-  modalContainer: {
+  sheetContainer: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
   title: { fontSize: 17, fontWeight: "600", color: "#1a1a1a" },
   subtitle: { fontSize: 13, color: "#888", marginTop: 4 },
@@ -213,7 +241,7 @@ const styles = StyleSheet.create({
   footer: {
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 16,
+    paddingTop: 16,
     borderTopWidth: 0.5,
     borderTopColor: "#d4d4d4",
   },

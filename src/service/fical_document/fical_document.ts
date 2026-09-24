@@ -12,3 +12,12 @@ export async function fiscalDocumentFn(branchId: string | number) {
 
   return response.data;
 }
+
+export async function fiscalDocumentByIDFn(ID: string | number) {
+  const response = await get<FiscalDocument>(ENDPOINT.fiscalDocument.byID(ID));
+  if (response.code !== "200") {
+    throw new Error(response.message);
+  }
+
+  return response.data;
+}

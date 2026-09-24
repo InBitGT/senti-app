@@ -1,17 +1,7 @@
-import { Button, ButtonText } from "@/components/ui/button";
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useFiscalDocument } from "@/src/hooks/useFicalDocument/useFicalDocument";
@@ -78,6 +68,11 @@ const COLUMN_FLEX = {
   issuedAt: 1,
 };
 
+const STATUS_SELECT_OPTIONS = [
+  { label: "Todos los estados", value: "" },
+  ...DOCUMENT_STATUS_OPTIONS.map((s) => ({ label: s.label, value: s.value })),
+];
+
 export function FiscalDocumentsTable({
   itemsPerPage = 5,
   onRowPress,
@@ -92,6 +87,11 @@ export function FiscalDocumentsTable({
     }));
   }, [claims]);
 
+  const branchSelectOptions = useMemo(
+    () => branchOptions.map((b) => ({ label: b.label, value: String(b.id) })),
+    [branchOptions],
+  );
+
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
 
   // Si el usuario solo tiene una sucursal, se usa automáticamente sin mostrar el select.
@@ -100,9 +100,6 @@ export function FiscalDocumentsTable({
       setSelectedBranchId(String(branchOptions[0].id));
     }
   }, [branchOptions, selectedBranchId]);
-
-  const selectedBranchLabel =
-    branchOptions.find((b) => String(b.id) === selectedBranchId)?.label || "";
 
   const { data, isLoading } = useFiscalDocument(selectedBranchId);
 
@@ -168,9 +165,6 @@ export function FiscalDocumentsTable({
     borderBottomColor: "#d4d4d4",
   };
 
-  const selectedStatusLabel =
-    DOCUMENT_STATUS_OPTIONS.find((s) => s.value === statusFilter)?.label || "";
-
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
       <VStack className="mb-4 gap-2">
@@ -178,104 +172,53 @@ export function FiscalDocumentsTable({
         {branchOptions.length > 1 && (
           <HStack className="items-center gap-2">
             <View style={{ width: 240 }}>
-              <Select
-                selectedValue={selectedBranchId}
-                onValueChange={setSelectedBranchId}
-              >
-                <SelectTrigger>
-                  <SelectInput
-                    style={{ color: "#000" }}
-                    placeholder="Selecciona una sucursal"
-                    value={selectedBranchLabel}
-                  />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    {branchOptions.map((b) => (
-                      <SelectItem
-                        key={b.id}
-                        label={b.label}
-                        value={String(b.id)}
-                      />
-                    ))}
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
+              <AppSelect
+                placeholder="Selecciona una sucursal"
+                searchable={branchSelectOptions.length > 6}
+                options={branchSelectOptions}
+                value={selectedBranchId}
+                onChange={setSelectedBranchId}
+              />
             </View>
           </HStack>
         )}
 
         <HStack className="justify-between items-center gap-2">
-          <Input
-            className="flex-1 sm:w-64 sm:flex-none bg-white rounded-lg"
-            variant="outline"
-            size="md"
-          >
-            <InputSlot style={{ marginLeft: 10 }}>
-              <InputIcon as={SearchIcon} size="sm" />
-            </InputSlot>
-            <InputField
-              style={{ color: "#000" }}
+          <View className="flex-1 sm:w-64 sm:flex-none">
+            <AppInput
               placeholder="Buscar documento, cliente o NIT..."
               value={search}
               onChangeText={setSearch}
+              leftIcon={<SearchIcon size={16} color="#9ca3af" />}
+              inputStyle={{ color: "#000" }}
             />
-          </Input>
+          </View>
 
           <HStack className="gap-2 items-center">
             <View style={{ width: 180 }}>
-              <Select
-                selectedValue={statusFilter}
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger>
-                  <SelectInput
-                    style={{ color: "#000" }}
-                    placeholder="Todos los estados"
-                    value={selectedStatusLabel}
-                  />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    <SelectItem label="Todos los estados" value="" />
-                    {DOCUMENT_STATUS_OPTIONS.map((s) => (
-                      <SelectItem
-                        key={s.value}
-                        label={s.label}
-                        value={s.value}
-                      />
-                    ))}
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
+              <AppSelect
+                placeholder="Todos los estados"
+                searchable={false}
+                options={STATUS_SELECT_OPTIONS}
+                value={statusFilter}
+                onChange={setStatusFilter}
+              />
             </View>
 
             <Menu
               visible={menuVisible}
               onDismiss={() => setMenuVisible(false)}
               anchor={
-                <Button
-                  size="md"
-                  variant="outline"
-                  style={{ borderColor: "#949292", borderWidth: 1 }}
+                <AppButton
+                  label="Columnas"
+                  icon={SlidersHorizontal}
+                  outline
+                  outlineBorderColor="#949292"
+                  outlineTextColor="#000000"
+                  fullWidth={false}
+                  shrinkOnMobile
                   onPress={() => setMenuVisible(true)}
-                >
-                  <SlidersHorizontal size={16} color="#374151" />
-                  <ButtonText
-                    className="hidden sm:flex sm:ml-1.5"
-                    style={{ color: "#000" }}
-                  >
-                    Columnas
-                  </ButtonText>
-                </Button>
+                />
               }
               contentStyle={{ backgroundColor: "#ffffff" }}
             >

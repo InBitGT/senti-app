@@ -1,32 +1,13 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-    FormControl,
-    FormControlError,
-    FormControlErrorIcon,
-    FormControlErrorText,
-    FormControlLabel,
-    FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useCredit } from "@/src/hooks/useCredit/useCredit";
 import { useCustomer } from "@/src/hooks/useCustomer/useCustomer";
@@ -34,16 +15,16 @@ import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useAuthStore } from "@/src/store";
 import { CreatePreviousCredit } from "@/src/types/credit/credit";
 import { useRouter } from "expo-router";
-import { AlertCircleIcon, ArrowLeftIcon } from "lucide-react-native";
-import React from "react";
+import { ArrowLeftIcon } from "lucide-react-native";
+import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -56,9 +37,18 @@ interface FormValues {
 export default function PreviousCreditForm() {
   const router = useRouter();
   const { previousCredit } = useCredit();
-  const { data: users, isLoading: isLoadingUsers } = useCustomer();
+  const { data: allCustomers, isLoading: isLoadingUsers } = useCustomer();
   const { showToast } = useCustomToast();
   const { claims } = useAuthStore();
+
+  // Solo clientes que SI tienen credito asignado (credit existe y
+  // has_credit es true). Un cliente sin credit, o con
+  // has_credit: false, no debe aparecer aqui. AppSelect se encarga
+  // de normalizar y filtrar por lo que el usuario escriba.
+  const users = useMemo(
+    () => (allCustomers ?? []).filter((c) => c.credit?.has_credit),
+    [allCustomers],
+  );
 
   const {
     control,
@@ -106,7 +96,7 @@ export default function PreviousCreditForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
@@ -145,60 +135,21 @@ export default function PreviousCreditForm() {
                     control={control}
                     name="user_id"
                     rules={{ required: "Selecciona el usuario." }}
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        users?.find((u) => String(u.id) === value)?.name || "";
-
-                      return (
-                        <FormControl isInvalid={!!errors.user_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Usuario
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          {isLoadingUsers ? (
-                            <ActivityIndicator
-                              size="small"
-                              style={{ marginVertical: 10 }}
-                            />
-                          ) : (
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un usuario"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {(users ?? []).map((u) => (
-                                    <SelectItem
-                                      key={u.id}
-                                      label={u.name}
-                                      value={String(u.id)}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                          )}
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.user_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      );
-                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Usuario"
+                        placeholder="Selecciona un usuario"
+                        searchPlaceholder="Buscar por nombre..."
+                        options={users.map((u) => ({
+                          label: u.name,
+                          value: String(u.id),
+                        }))}
+                        value={value}
+                        onChange={onChange}
+                        isLoading={isLoadingUsers}
+                        errorMessage={errors.user_id?.message}
+                      />
+                    )}
                   />
 
                   {/* Monto */}
@@ -212,31 +163,17 @@ export default function PreviousCreditForm() {
                         "Ingresa un monto válido mayor a 0.",
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.amount}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Monto
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 100.00"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9.]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.amount?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Monto"
+                        placeholder="Ej. 100.00"
+                        value={value}
+                        onChangeText={(text) =>
+                          onChange(text.replace(/[^0-9.]/g, ""))
+                        }
+                        onBlur={onBlur}
+                        keyboardType="decimal-pad"
+                        errorMessage={errors.amount?.message}
+                      />
                     )}
                   />
 
@@ -246,28 +183,16 @@ export default function PreviousCreditForm() {
                     name="description"
                     rules={{ required: "La descripción es obligatoria." }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.description}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descripción
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Textarea>
-                          <TextareaInput
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Corrección de abono ingresado por error"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Textarea>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.description?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Descripción"
+                        placeholder="Ej. Corrección de abono ingresado por error"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        multiline
+                        textareaHeight={100}
+                        errorMessage={errors.description?.message}
+                      />
                     )}
                   />
 

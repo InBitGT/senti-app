@@ -1,31 +1,13 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { BotonBack } from "@/components/atom/BotonBack/BotonBack";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon, TrashIcon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon, TrashIcon } from "@/components/ui/icon";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -187,7 +169,7 @@ export default function WarehouseForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
@@ -230,31 +212,17 @@ export default function WarehouseForm() {
                         name="code"
                         rules={{ required: "El código es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.code}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Código
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. BOD-02"
-                                value={value}
-                                onChangeText={(text) =>
-                                  onChange(text.toUpperCase())
-                                }
-                                onBlur={onBlur}
-                                autoCapitalize="characters"
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.code?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Código"
+                            placeholder="Ej. BOD-02"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.toUpperCase())
+                            }
+                            onBlur={onBlur}
+                            autoCapitalize="characters"
+                            errorMessage={errors.code?.message}
+                          />
                         )}
                       />
                     </View>
@@ -264,28 +232,14 @@ export default function WarehouseForm() {
                         name="name"
                         rules={{ required: "El nombre es obligatorio." }}
                         render={({ field: { onChange, onBlur, value } }) => (
-                          <FormControl isInvalid={!!errors.name}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Nombre
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Input>
-                              <InputField
-                                style={{ color: "#171717" }}
-                                placeholder="Ej. Bodega Central"
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                              />
-                            </Input>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.name?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppInput
+                            label="Nombre"
+                            placeholder="Ej. Bodega Central"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.name?.message}
+                          />
                         )}
                       />
                     </View>
@@ -299,50 +253,15 @@ export default function WarehouseForm() {
                         name="type"
                         rules={{ required: "El tipo es obligatorio." }}
                         render={({ field: { onChange, value } }) => (
-                          <FormControl isInvalid={!!errors.type}>
-                            <FormControlLabel>
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Tipo
-                              </FormControlLabelText>
-                            </FormControlLabel>
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un tipo"
-                                  value={
-                                    WAREHOUSE_TYPE_OPTIONS.find(
-                                      (t) => t.value === value,
-                                    )?.label || ""
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  {WAREHOUSE_TYPE_OPTIONS.map((t) => (
-                                    <SelectItem
-                                      key={t.value}
-                                      label={t.label}
-                                      value={t.value}
-                                    />
-                                  ))}
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                            <FormControlError>
-                              <FormControlErrorIcon as={AlertCircleIcon} />
-                              <FormControlErrorText>
-                                {errors.type?.message}
-                              </FormControlErrorText>
-                            </FormControlError>
-                          </FormControl>
+                          <AppSelect
+                            label="Tipo"
+                            placeholder="Selecciona un tipo"
+                            searchable={WAREHOUSE_TYPE_OPTIONS.length > 6}
+                            options={WAREHOUSE_TYPE_OPTIONS}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.type?.message}
+                          />
                         )}
                       />
                     </View>
@@ -351,54 +270,20 @@ export default function WarehouseForm() {
                         control={control}
                         name="branch_id"
                         rules={{ required: "La sucursal es obligatoria." }}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedLabel =
-                            branchOptions.find((b) => String(b.id) === value)
-                              ?.name || "";
-
-                          return (
-                            <FormControl isInvalid={!!errors.branch_id}>
-                              <FormControlLabel>
-                                <FormControlLabelText style={{ color: "#000" }}>
-                                  Sucursal
-                                </FormControlLabelText>
-                              </FormControlLabel>
-                              <Select
-                                selectedValue={value}
-                                onValueChange={onChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectInput
-                                    style={{ color: "#000" }}
-                                    placeholder="Selecciona una sucursal"
-                                    value={selectedLabel}
-                                  />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                  <SelectBackdrop />
-                                  <SelectContent>
-                                    <SelectDragIndicatorWrapper>
-                                      <SelectDragIndicator />
-                                    </SelectDragIndicatorWrapper>
-                                    {branchOptions.map((b) => (
-                                      <SelectItem
-                                        key={b.id}
-                                        label={b.name}
-                                        value={String(b.id)}
-                                      />
-                                    ))}
-                                  </SelectContent>
-                                </SelectPortal>
-                              </Select>
-                              <FormControlError>
-                                <FormControlErrorIcon as={AlertCircleIcon} />
-                                <FormControlErrorText>
-                                  {errors.branch_id?.message}
-                                </FormControlErrorText>
-                              </FormControlError>
-                            </FormControl>
-                          );
-                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Sucursal"
+                            placeholder="Selecciona una sucursal"
+                            searchable={branchOptions.length > 6}
+                            options={branchOptions.map((b) => ({
+                              label: b.name,
+                              value: String(b.id),
+                            }))}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.branch_id?.message}
+                          />
+                        )}
                       />
                     </View>
                   </View>
@@ -408,25 +293,13 @@ export default function WarehouseForm() {
                     control={control}
                     name="description"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descripción{" "}
-                            <Text size="xs" style={{ color: "#999" }}>
-                              (opcional)
-                            </Text>
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. Bodega principal de inventario"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        </Input>
-                      </FormControl>
+                      <AppInput
+                        label="Descripción (opcional)"
+                        placeholder="Ej. Bodega principal de inventario"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
                     )}
                   />
 
@@ -437,19 +310,17 @@ export default function WarehouseForm() {
                         control={control}
                         name="is_default"
                         render={({ field: { onChange, value } }) => (
-                          <FormControl>
-                            <HStack
-                              style={{
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Bodega por defecto
-                              </FormControlLabelText>
-                              <Switch value={value} onValueChange={onChange} />
-                            </HStack>
-                          </FormControl>
+                          <HStack
+                            style={{
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Text style={{ color: "#000" }}>
+                              Bodega por defecto
+                            </Text>
+                            <Switch value={value} onValueChange={onChange} />
+                          </HStack>
                         )}
                       />
                     </View>
@@ -458,19 +329,15 @@ export default function WarehouseForm() {
                         control={control}
                         name="uses_zones"
                         render={({ field: { onChange, value } }) => (
-                          <FormControl>
-                            <HStack
-                              style={{
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <FormControlLabelText style={{ color: "#000" }}>
-                                Usa zonas
-                              </FormControlLabelText>
-                              <Switch value={value} onValueChange={onChange} />
-                            </HStack>
-                          </FormControl>
+                          <HStack
+                            style={{
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Text style={{ color: "#000" }}>Usa zonas</Text>
+                            <Switch value={value} onValueChange={onChange} />
+                          </HStack>
                         )}
                       />
                     </View>
@@ -569,39 +436,16 @@ export default function WarehouseForm() {
                                     render={({
                                       field: { onChange, onBlur, value },
                                     }) => (
-                                      <FormControl
-                                        isInvalid={
-                                          !!errors.zones?.[index]?.name
+                                      <AppInput
+                                        label="Nombre"
+                                        placeholder="Ej. Zona A"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        errorMessage={
+                                          errors.zones?.[index]?.name?.message
                                         }
-                                      >
-                                        <FormControlLabel>
-                                          <FormControlLabelText
-                                            style={{ color: "#000" }}
-                                          >
-                                            Nombre
-                                          </FormControlLabelText>
-                                        </FormControlLabel>
-                                        <Input>
-                                          <InputField
-                                            style={{ color: "#171717" }}
-                                            placeholder="Ej. Zona A"
-                                            value={value}
-                                            onChangeText={onChange}
-                                            onBlur={onBlur}
-                                          />
-                                        </Input>
-                                        <FormControlError>
-                                          <FormControlErrorIcon
-                                            as={AlertCircleIcon}
-                                          />
-                                          <FormControlErrorText>
-                                            {
-                                              errors.zones?.[index]?.name
-                                                ?.message
-                                            }
-                                          </FormControlErrorText>
-                                        </FormControlError>
-                                      </FormControl>
+                                      />
                                     )}
                                   />
                                 </View>
@@ -615,40 +459,17 @@ export default function WarehouseForm() {
                                     render={({
                                       field: { onChange, onBlur, value },
                                     }) => (
-                                      <FormControl
-                                        isInvalid={
-                                          !!errors.zones?.[index]?.code
+                                      <AppInput
+                                        label="Código"
+                                        placeholder="Ej. ZA"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        autoCapitalize="characters"
+                                        errorMessage={
+                                          errors.zones?.[index]?.code?.message
                                         }
-                                      >
-                                        <FormControlLabel>
-                                          <FormControlLabelText
-                                            style={{ color: "#000" }}
-                                          >
-                                            Código
-                                          </FormControlLabelText>
-                                        </FormControlLabel>
-                                        <Input>
-                                          <InputField
-                                            style={{ color: "#171717" }}
-                                            placeholder="Ej. ZA"
-                                            value={value}
-                                            onChangeText={onChange}
-                                            onBlur={onBlur}
-                                            autoCapitalize="characters"
-                                          />
-                                        </Input>
-                                        <FormControlError>
-                                          <FormControlErrorIcon
-                                            as={AlertCircleIcon}
-                                          />
-                                          <FormControlErrorText>
-                                            {
-                                              errors.zones?.[index]?.code
-                                                ?.message
-                                            }
-                                          </FormControlErrorText>
-                                        </FormControlError>
-                                      </FormControl>
+                                      />
                                     )}
                                   />
                                 </View>
@@ -665,61 +486,20 @@ export default function WarehouseForm() {
                                     render={({
                                       field: { onChange, value },
                                     }) => (
-                                      <FormControl
-                                        isInvalid={
-                                          !!errors.zones?.[index]?.zone_type
+                                      <AppSelect
+                                        label="Tipo"
+                                        placeholder="Selecciona un tipo"
+                                        searchable={
+                                          ZONE_TYPE_OPTIONS.length > 6
                                         }
-                                      >
-                                        <FormControlLabel>
-                                          <FormControlLabelText
-                                            style={{ color: "#000" }}
-                                          >
-                                            Tipo
-                                          </FormControlLabelText>
-                                        </FormControlLabel>
-                                        <Select
-                                          selectedValue={value}
-                                          onValueChange={onChange}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectInput
-                                              style={{ color: "#000" }}
-                                              placeholder="Selecciona un tipo"
-                                              value={
-                                                ZONE_TYPE_OPTIONS.find(
-                                                  (t) => t.value === value,
-                                                )?.label || ""
-                                              }
-                                            />
-                                          </SelectTrigger>
-                                          <SelectPortal>
-                                            <SelectBackdrop />
-                                            <SelectContent>
-                                              <SelectDragIndicatorWrapper>
-                                                <SelectDragIndicator />
-                                              </SelectDragIndicatorWrapper>
-                                              {ZONE_TYPE_OPTIONS.map((t) => (
-                                                <SelectItem
-                                                  key={t.value}
-                                                  label={t.label}
-                                                  value={t.value}
-                                                />
-                                              ))}
-                                            </SelectContent>
-                                          </SelectPortal>
-                                        </Select>
-                                        <FormControlError>
-                                          <FormControlErrorIcon
-                                            as={AlertCircleIcon}
-                                          />
-                                          <FormControlErrorText>
-                                            {
-                                              errors.zones?.[index]?.zone_type
-                                                ?.message
-                                            }
-                                          </FormControlErrorText>
-                                        </FormControlError>
-                                      </FormControl>
+                                        options={ZONE_TYPE_OPTIONS}
+                                        value={value}
+                                        onChange={onChange}
+                                        errorMessage={
+                                          errors.zones?.[index]?.zone_type
+                                            ?.message
+                                        }
+                                      />
                                     )}
                                   />
                                 </View>
@@ -730,56 +510,20 @@ export default function WarehouseForm() {
                                     render={({
                                       field: { onChange, value },
                                     }) => (
-                                      <FormControl>
-                                        <FormControlLabel>
-                                          <FormControlLabelText
-                                            style={{ color: "#000" }}
-                                          >
-                                            Zona padre{" "}
-                                            <Text
-                                              size="xs"
-                                              style={{ color: "#999" }}
-                                            >
-                                              (opcional)
-                                            </Text>
-                                          </FormControlLabelText>
-                                        </FormControlLabel>
-                                        <Select
-                                          selectedValue={value}
-                                          onValueChange={onChange}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectInput
-                                              style={{ color: "#000" }}
-                                              placeholder="Ninguna (zona raíz)"
-                                              value={
-                                                parentOptions.find(
-                                                  (p) => p.value === value,
-                                                )?.label || ""
-                                              }
-                                            />
-                                          </SelectTrigger>
-                                          <SelectPortal>
-                                            <SelectBackdrop />
-                                            <SelectContent>
-                                              <SelectDragIndicatorWrapper>
-                                                <SelectDragIndicator />
-                                              </SelectDragIndicatorWrapper>
-                                              <SelectItem
-                                                label="Ninguna (zona raíz)"
-                                                value=""
-                                              />
-                                              {parentOptions.map((p) => (
-                                                <SelectItem
-                                                  key={p.value}
-                                                  label={p.label}
-                                                  value={p.value}
-                                                />
-                                              ))}
-                                            </SelectContent>
-                                          </SelectPortal>
-                                        </Select>
-                                      </FormControl>
+                                      <AppSelect
+                                        label="Zona padre (opcional)"
+                                        placeholder="Ninguna (zona raíz)"
+                                        searchable={parentOptions.length > 6}
+                                        options={[
+                                          {
+                                            label: "Ninguna (zona raíz)",
+                                            value: "",
+                                          },
+                                          ...parentOptions,
+                                        ]}
+                                        value={value}
+                                        onChange={onChange}
+                                      />
                                     )}
                                   />
                                 </View>

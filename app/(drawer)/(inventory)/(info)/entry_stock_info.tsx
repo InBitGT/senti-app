@@ -1,10 +1,6 @@
+import EntryStockInfoScreen from "@/src/screen/inventory/entry_stock/info/Entry_Stock_info";
 import React from "react";
-import { Text, View } from "react-native";
 
 export default function entry_stock_info() {
-  return (
-    <View>
-      <Text>scrap</Text>
-    </View>
-  );
+  return <EntryStockInfoScreen />;
 }

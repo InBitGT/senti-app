@@ -12,6 +12,15 @@ export interface ApiConversion {
   price_per_uom_currency?: string | null;
 }
 
+// Precio especial de un producto para un tipo de cliente.
+export interface ApiCustomerTypePrice {
+  id: number;
+  customer_type_id: number;
+  customer_type_name: string;
+  amount: number;
+  currency: string;
+}
+
 export interface ApiCatalogProduct {
   product_id: number;
   name: string;
@@ -20,7 +29,8 @@ export interface ApiCatalogProduct {
   brand?: string;
   category_id: number;
   category_name: string;
-  parent_category_id: number;
+  // El backend manda null cuando no hay categoría padre.
+  parent_category_id: number | null;
   parent_category_name: string;
   unit_of_measure_id: number;
   unit_of_measure_code: string;
@@ -30,6 +40,7 @@ export interface ApiCatalogProduct {
   currency: string;
   has_customer_type_price: boolean;
   customer_type_price: number;
+  customer_type_prices?: ApiCustomerTypePrice[];
   has_promotion: boolean;
   promotion_pct?: number;
   has_wholesale: boolean;

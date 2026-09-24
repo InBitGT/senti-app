@@ -1,7 +1,3 @@
-// merchandise.types.ts
-
-// ── Sub-tipos compartidos ──
-
 export interface Price {
   id?: number;
   amount: number;
@@ -15,13 +11,6 @@ export interface PricePerUom {
   currency: string;
   wholesale_min_qty?: number | null;
   wholesale_amount?: number | null;
-  // FIX: el campo real que manda el backend para relacionar esta entrada
-  // con su conversión es `uom_id`, y coincide con el `from_uom_id` de la
-  // conversión (la unidad que se está definiendo, ej. "Caja"). Ejemplo
-  // real: conversion { id: 16, from_uom_id: 2 } <-> price_per_uom
-  // { id: 16, uom_id: 2 }. `id` también coincide entre ambos en la
-  // práctica (probable relación 1:1 con mismo id en ambas tablas), así
-  // que se deja como respaldo adicional para matchear.
   uom_id?: number | null;
 }
 
@@ -32,9 +21,6 @@ export interface MerchandiseConversion {
   to_uom_id: number;
   to_uom_code?: string;
   factor: number;
-  // Precio específico para esta conversión de unidad (opcional). Puede
-  // venir anidado acá, o suelto en `MerchandiseListItem.price_per_uom` —
-  // ver `findPricePerUomForConversion` en MerchandiseForm.tsx.
   price_per_uom?: PricePerUom | null;
 }
 
@@ -50,8 +36,6 @@ export interface WholesaleRule {
   min_quantity: number;
   discount_percentage: number;
 }
-
-// ── Producto base, tal como viene dentro de "product" en el GET ──
 
 export interface MerchandiseProduct {
   id: number;
@@ -82,23 +66,14 @@ export interface MerchandiseProduct {
   modifier_is_default: boolean | null;
 }
 
-// ── Shape completo que devuelve el GET (detalle y, asumimos, cada item del listado) ──
-
 export interface MerchandiseListItem {
   product: MerchandiseProduct;
   price: Price | null;
   conversions: MerchandiseConversion[];
   customer_type_prices: CustomerTypePrice[];
-  // NOTA: este array es una fuente ALTERNATIVA de precios por conversión,
-  // separada de `conversions[].price_per_uom`. Si el backend llena este
-  // array en vez del campo anidado, hay que relacionar cada entrada con
-  // su conversión — ver `findPricePerUomForConversion` en
-  // MerchandiseForm.tsx.
   price_per_uom: PricePerUom[];
   wholesale_rule: WholesaleRule | null;
 }
-
-// ── Payload para crear/editar (POST/PUT) ──
 
 export interface MerchandiseDetail {
   tenant_id: number;
@@ -120,8 +95,6 @@ export interface MerchandiseDetail {
   customer_type_prices: CustomerTypePrice[];
   wholesale_rule: WholesaleRule | null;
 }
-
-// ── Fila plana para MerchandiseTable ──
 
 export interface Merchandise {
   id: number;
@@ -148,8 +121,6 @@ export interface Merchandise {
   modifier_max_selection: number | null;
   modifier_price_adjustment: number | null;
   modifier_is_default: boolean | null;
-  // Derivados del resto del payload, útiles para columnas/badges en la tabla
-  // y para el modal de detalle.
   sale_price: number | null;
   sale_price_currency: string | null;
   has_wholesale_rule: boolean;
@@ -159,7 +130,6 @@ export interface Merchandise {
   customer_type_prices_count: number;
 }
 
-// Aplana un item del GET (product + price + conversions + ...) a una fila de tabla.
 export function flattenMerchandiseListItem(
   item: MerchandiseListItem,
 ): Merchandise {

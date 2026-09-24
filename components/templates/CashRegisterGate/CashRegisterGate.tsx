@@ -1,52 +1,76 @@
-import { OpenCashRegisterModal } from "@/components/molecules/OpenCashRegisterModal/OpenCashRegisterModal";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useAuthStore } from "@/src/store";
+import { useOpenCashModalStore } from "@/src/store/useOpenCashModalStore/useOpenCashModalStore";
 import { CashRegisterSession } from "@/src/types/cash_register_session/cash_register_session";
+import { UseQueryResult } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
 import { Lock } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 const ROLES_THAT_CAN_OPEN_REGISTER = [1, 2];
 
 interface CashRegisterGateProps {
   children: React.ReactNode;
-  session: {
-    data: CashRegisterSession | null | undefined;
-    isLoading: boolean;
-    refetch: () => void;
-  };
+  session: UseQueryResult<CashRegisterSession | null, Error>;
+  refetchProduct?: () => void;
 }
 
 export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
   children,
   session,
+  refetchProduct,
 }) => {
   const claims = useAuthStore((s) => s.claims);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const openModal = useOpenCashModalStore((s) => s.open);
+  const closeModal = useOpenCashModalStore((s) => s.close);
+  const resetDismissed = useOpenCashModalStore((s) => s.resetDismissed);
 
   const canOpenRegister =
     !!claims && ROLES_THAT_CAN_OPEN_REGISTER.includes(claims.role_id);
 
-  const hasAutoOpened = useRef(false);
+  const hasSession = !!session.data;
+
+  const refresh = useCallback(async () => {
+    await session.refetch();
+    await refetchProduct?.();
+  }, [session, refetchProduct]);
+
+  // Marca si esta pantalla es la visible. Al perder el foco (o
+  // desmontarse) cierra el modal para que no quede encima de otra.
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+        closeModal();
+      };
+    }, [closeModal]),
+  );
 
   useEffect(() => {
-    if (
-      !session.isLoading &&
-      !session.data &&
-      canOpenRegister &&
-      !hasAutoOpened.current
-    ) {
-      hasAutoOpened.current = true;
-      setModalOpen(true);
+    // Solo la pantalla visible controla el modal. Las que quedaron
+    // atrás en el stack siguen montadas pero no hacen nada.
+    if (!isFocused) return;
+
+    if (hasSession) {
+      // Si la caja se abrió, se resetea el dismissed para que si en el
+      // futuro se vuelve a cerrar, el modal pueda auto-abrirse de nuevo.
+      resetDismissed();
+      closeModal();
+      return;
     }
-    if (session.data) {
-      hasAutoOpened.current = false;
+
+    if (!session.isLoading && canOpenRegister) {
+      openModal(refresh);
     }
-  }, [session.isLoading, session.data, canOpenRegister]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused, hasSession, session.isLoading, canOpenRegister]);
 
   if (session.isLoading) {
     return (
@@ -57,7 +81,7 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
     );
   }
 
-  if (session.data) {
+  if (hasSession) {
     return <>{children}</>;
   }
 
@@ -72,7 +96,7 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
           No tenés una caja abierta y no tenés permiso para abrir una. Pedile a
           un encargado que la abra para poder vender.
         </Text>
-        <Button onPress={() => session.refetch}>
+        <Button onPress={refresh}>
           <Text className="text-center text-base font-medium text-white">
             Recargar información
           </Text>
@@ -82,34 +106,24 @@ export const CashRegisterGate: React.FC<CashRegisterGateProps> = ({
   }
 
   return (
-    <>
-      <VStack className="flex-1 items-center justify-center gap-3 bg-gray-50 px-6">
-        <Icon as={Lock} size="xl" className="text-gray-300" />
-        <Text className="text-center text-base font-medium text-gray-700">
-          Caja cerrada
+    <VStack className="flex-1 items-center justify-center gap-3 bg-gray-50 px-6">
+      <Icon as={Lock} size="xl" className="text-gray-300" />
+      <Text className="text-center text-base font-medium text-gray-700">
+        Caja cerrada
+      </Text>
+      <Text className="text-center text-sm text-gray-500">
+        Abrí la caja para empezar a vender.
+      </Text>
+      <Button onPress={() => openModal(refresh, true)}>
+        <Text className="text-center text-base font-medium text-white">
+          Abrir caja
         </Text>
-        <Text className="text-center text-sm text-gray-500">
-          Abrí la caja para empezar a vender.
+      </Button>
+      <Button onPress={refresh}>
+        <Text className="text-center text-base font-medium text-white">
+          Recargar información
         </Text>
-        <Button onPress={() => setModalOpen(true)}>
-          <Text className="text-center text-base font-medium text-white">
-            Abrir caja
-          </Text>
-        </Button>
-        <Button onPress={() => session.refetch}>
-          <Text className="text-center text-base font-medium text-white">
-            Recargar información
-          </Text>
-        </Button>
-      </VStack>
-
-      <OpenCashRegisterModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onOpened={() => {
-          session.refetch();
-        }}
-      />
-    </>
+      </Button>
+    </VStack>
   );
 };

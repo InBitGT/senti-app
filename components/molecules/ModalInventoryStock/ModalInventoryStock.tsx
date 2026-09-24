@@ -1,4 +1,5 @@
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -19,26 +20,6 @@ interface Props {
   onClose: () => void;
   data?: InventoryStockDetail;
 }
-
-interface InfoRowProps {
-  label: string;
-  value: string | number | boolean | undefined | null;
-}
-
-const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
-  <View style={styles.row}>
-    <Text style={styles.label}>{label}:</Text>
-    <Text style={styles.value}>
-      {value === null || value === undefined || value === ""
-        ? "—"
-        : typeof value === "boolean"
-          ? value
-            ? "Sí"
-            : "No"
-          : value}
-    </Text>
-  </View>
-);
 
 export const ModalInventoryStockDetail: React.FC<Props> = ({
   isOpen,

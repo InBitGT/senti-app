@@ -8,6 +8,7 @@ export const useOpenCashRegister = () => {
     mutationFn: OpenCashRegisterFn,
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["pos-catalog"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-register-session"] });
     },
   });
 

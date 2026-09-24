@@ -9,6 +9,8 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
 
+const MAX_CUSTOMER_TYPES = 5;
+
 export const CustomerType: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showModalData, setShowModalData] = useState<boolean>(false);
@@ -18,6 +20,9 @@ export const CustomerType: React.FC = () => {
   const [modal, setmodal] = useState<CustomerTypeModel | undefined>(undefined);
   const { data: customerTypes, isLoading, remove } = useCustomerType();
   const { setData, setIsEdit } = useCustomerTypeStore.getState();
+
+  const totalCustomerTypes = customerTypes?.length ?? 0;
+  const canCreate = totalCustomerTypes < MAX_CUSTOMER_TYPES;
 
   const hadleModalData = (data: CustomerTypeModel) => {
     setShowModalData(true);
@@ -55,6 +60,8 @@ export const CustomerType: React.FC = () => {
   ];
 
   const handleCreate = () => {
+    if (!canCreate) return;
+    setIsEdit(false);
     router.navigate("/(drawer)/(portfolio)/(form)/client_type_form");
   };
 
@@ -67,7 +74,7 @@ export const CustomerType: React.FC = () => {
       <CustomerTypesTable
         data={customerTypes || []}
         itemsPerPage={5}
-        onNewCustomerType={handleCreate}
+        onNewCustomerType={canCreate ? handleCreate : undefined}
         onRowPress={hadleModalData}
         actions={actions}
       />

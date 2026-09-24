@@ -1,4 +1,7 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { Divider } from "@/components/atom/Divider/Divider";
+import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
+import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
+import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -12,7 +15,12 @@ import {
 import { Text } from "@/components/ui/text";
 import { MerchandiseListItem } from "@/src/types/merchandise/merchandise.types";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
 interface Props {
   isOpen: boolean;
@@ -26,40 +34,6 @@ const TYPE_LABELS: Record<string, string> = {
   finished_product: "Producto terminado",
   menu_item: "Ítem de menú",
 };
-
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | boolean | null;
-}) => {
-  const display =
-    value === null || value === undefined
-      ? "—"
-      : typeof value === "boolean"
-        ? value
-          ? "Sí"
-          : "No"
-        : value;
-
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{String(display)}</Text>
-    </View>
-  );
-};
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const Divider = () => <View style={styles.divider} />;
-
-const EmptySection = ({ text }: { text: string }) => (
-  <Text style={styles.emptyText}>{text}</Text>
-);
 
 const StatusBadge = ({ status }: { status?: string }) => {
   const map: Record<string, { bg: string; text: string; label: string }> = {
@@ -93,6 +67,10 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
   data,
 }) => {
   const product = data?.product;
+  const { height } = useWindowDimensions();
+
+  // Alto disponible para el contenido: deja espacio para header y footer
+  const bodyMaxHeight = height * 0.55;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -116,126 +94,118 @@ export const ModalMerchandiseDetail: React.FC<Props> = ({
           </View>
         </ModalHeader>
 
-        <ModalBody style={{ flex: 1 }}>
+        <ModalBody>
           <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ flexGrow: 1 }}
+            style={{ maxHeight: bodyMaxHeight }}
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
           >
-            <DesktopScrollView>
-              {/* ── GENERAL ── */}
-              <SectionTitle title="General" />
-              <InfoRow label="Descripción" value={product?.description} />
-              <InfoRow label="Categoría" value={product?.category_name} />
-              {product?.parent_category_name && (
+            <SectionTitle title="General" />
+            <InfoRow label="Descripción" value={product?.description} />
+            <InfoRow label="Categoría" value={product?.category_name} />
+            {product?.parent_category_name && (
+              <InfoRow
+                label="Categoría padre"
+                value={product.parent_category_name}
+              />
+            )}
+            <InfoRow label="Marca" value={product?.brand} />
+            <InfoRow label="Código de barras" value={product?.barcode} />
+            <InfoRow
+              label="Unidad de medida"
+              value={product?.unit_of_measure_id}
+            />
+            <InfoRow
+              label="Costo promedio"
+              value={
+                product?.average_cost != null
+                  ? `Q ${product.average_cost.toFixed(2)}`
+                  : undefined
+              }
+            />
+            <InfoRow label="Requiere lote" value={product?.requires_batch} />
+
+            {/* ── PRECIO ── */}
+            <Divider />
+            <SectionTitle title="Precio" />
+            {data?.price != null ? (
+              <InfoRow
+                label="Precio de venta"
+                value={`${data.price.currency ?? ""} ${data.price.amount.toFixed(2)}`}
+              />
+            ) : (
+              <EmptyHint label="Este producto no tiene precio de venta definido." />
+            )}
+
+            {/* ── CONVERSIONES Y PRECIOS POR CLIENTE (resumen) ── */}
+            <Divider />
+            <SectionTitle title="Conversiones y precios especiales" />
+            <InfoRow
+              label="Conversiones de unidad"
+              value={
+                data?.conversions?.length
+                  ? `${data.conversions.length} configurada(s)`
+                  : "Sin conversiones"
+              }
+            />
+            <InfoRow
+              label="Precios por tipo de cliente"
+              value={
+                data?.customer_type_prices?.length
+                  ? `${data.customer_type_prices.length} configurado(s)`
+                  : "Sin precios especiales"
+              }
+            />
+
+            {/* ── REGLA DE MAYOREO ── */}
+            <Divider />
+            <SectionTitle title="Regla de mayoreo" />
+            {data?.wholesale_rule ? (
+              <>
                 <InfoRow
-                  label="Categoría padre"
-                  value={product.parent_category_name}
+                  label="Cantidad mínima"
+                  value={data.wholesale_rule.min_quantity}
                 />
-              )}
-              <InfoRow label="Marca" value={product?.brand} />
-              <InfoRow label="Código de barras" value={product?.barcode} />
-              <InfoRow
-                label="Unidad de medida"
-                value={product?.unit_of_measure_id}
-              />
-              <InfoRow
-                label="Costo promedio"
-                value={
-                  product?.average_cost != null
-                    ? `Q ${product.average_cost.toFixed(2)}`
-                    : undefined
-                }
-              />
-              <InfoRow label="Requiere lote" value={product?.requires_batch} />
-
-              {/* ── PRECIO ── */}
-              <Divider />
-              <SectionTitle title="Precio" />
-              {data?.price != null ? (
                 <InfoRow
-                  label="Precio de venta"
-                  value={`${data.price.currency ?? ""} ${data.price.amount.toFixed(2)}`}
+                  label="Descuento"
+                  value={`${data.wholesale_rule.discount_percentage}%`}
                 />
-              ) : (
-                <EmptySection text="Este producto no tiene precio de venta definido." />
-              )}
+              </>
+            ) : (
+              <EmptyHint label="No aplica regla de mayoreo general." />
+            )}
 
-              {/* ── CONVERSIONES Y PRECIOS POR CLIENTE (resumen) ── */}
-              <Divider />
-              <SectionTitle title="Conversiones y precios especiales" />
-              <InfoRow
-                label="Conversiones de unidad"
-                value={
-                  data?.conversions?.length
-                    ? `${data.conversions.length} configurada(s)`
-                    : "Sin conversiones"
-                }
-              />
-              <InfoRow
-                label="Precios por tipo de cliente"
-                value={
-                  data?.customer_type_prices?.length
-                    ? `${data.customer_type_prices.length} configurado(s)`
-                    : "Sin precios especiales"
-                }
-              />
-
-              {/* ── REGLA DE MAYOREO ── */}
-              <Divider />
-              <SectionTitle title="Regla de mayoreo" />
-              {data?.wholesale_rule ? (
-                <>
-                  <InfoRow
-                    label="Cantidad mínima"
-                    value={data.wholesale_rule.min_quantity}
-                  />
-                  <InfoRow
-                    label="Descuento"
-                    value={`${data.wholesale_rule.discount_percentage}%`}
-                  />
-                </>
-              ) : (
-                <EmptySection text="No aplica regla de mayoreo general." />
-              )}
-
-              {/* ── MODIFICADOR ── */}
-              {product?.is_modifier && (
-                <>
-                  <Divider />
-                  <SectionTitle title="Modificador" />
-                  <InfoRow
-                    label="Es modificador"
-                    value={product?.is_modifier}
-                  />
-                  <InfoRow label="Grupo" value={product?.modifier_group} />
-                  <InfoRow label="Nombre" value={product?.modifier_name} />
-                  <InfoRow
-                    label="Cantidad"
-                    value={product?.modifier_quantity}
-                  />
-                  <InfoRow
-                    label="Selec. mínima"
-                    value={product?.modifier_min_selection}
-                  />
-                  <InfoRow
-                    label="Selec. máxima"
-                    value={product?.modifier_max_selection}
-                  />
-                  <InfoRow
-                    label="Ajuste de precio"
-                    value={
-                      product?.modifier_price_adjustment != null
-                        ? `Q ${product.modifier_price_adjustment.toFixed(2)}`
-                        : undefined
-                    }
-                  />
-                  <InfoRow
-                    label="Por defecto"
-                    value={product?.modifier_is_default}
-                  />
-                </>
-              )}
-            </DesktopScrollView>
+            {/* ── MODIFICADOR ── */}
+            {product?.is_modifier && (
+              <>
+                <Divider />
+                <SectionTitle title="Modificador" />
+                <InfoRow label="Es modificador" value={product?.is_modifier} />
+                <InfoRow label="Grupo" value={product?.modifier_group} />
+                <InfoRow label="Nombre" value={product?.modifier_name} />
+                <InfoRow label="Cantidad" value={product?.modifier_quantity} />
+                <InfoRow
+                  label="Selec. mínima"
+                  value={product?.modifier_min_selection}
+                />
+                <InfoRow
+                  label="Selec. máxima"
+                  value={product?.modifier_max_selection}
+                />
+                <InfoRow
+                  label="Ajuste de precio"
+                  value={
+                    product?.modifier_price_adjustment != null
+                      ? `Q ${product.modifier_price_adjustment.toFixed(2)}`
+                      : undefined
+                  }
+                />
+                <InfoRow
+                  label="Por defecto"
+                  value={product?.modifier_is_default}
+                />
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 
@@ -276,27 +246,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#e0e7ff",
   },
   typeBadgeText: { fontSize: 11, fontWeight: "500", color: "#4338ca" },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    marginBottom: 8,
-    marginTop: 4,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 6,
-    alignItems: "flex-start",
-  },
-  label: { color: "#6b7280", fontSize: 13, flex: 1 },
-  value: { color: "#111827", fontSize: 13, flex: 1.5, textAlign: "right" },
-  divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 12 },
-  emptyText: {
-    fontSize: 12,
-    color: "#9ca3af",
-    fontStyle: "italic",
-    marginBottom: 8,
-  },
 });

@@ -1,33 +1,18 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  FormControl,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectIcon,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useProfile } from "@/src/hooks";
 import { useProfileStore } from "@/src/store";
-import { Building, ChevronDown, Globe, MapPin } from "lucide-react-native";
+import { Building, Globe, MapPin } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { View } from "react-native";
 
 interface AddressFormData {
   line1: string;
@@ -37,6 +22,8 @@ interface AddressFormData {
   country: string;
   postal_code: string;
 }
+
+const COUNTRY_OPTIONS = [{ label: "Guatemala", value: "GT" }];
 
 export function AddressSection() {
   const user = useProfileStore((state) => state.user);
@@ -104,208 +91,145 @@ export function AddressSection() {
       <Box className="mt-5">
         <VStack className="gap-4">
           {/* Calle y numero */}
-          <FormControl>
-            <FormControlLabel>
-              <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                Calle y numero
-              </FormControlLabelText>
-            </FormControlLabel>
-            <Controller
-              control={control}
-              name="line1"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  isDisabled={!isEditing}
-                  className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                >
-                  <InputField
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="Ej: 6a Avenida 10-25 Zona 1"
-                    className="text-gray-900 placeholder:text-gray-400"
-                  />
-                </Input>
-              )}
-            />
-          </FormControl>
+          <Controller
+            control={control}
+            name="line1"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AppInput
+                label="Calle y numero"
+                placeholder="Ej: 6a Avenida 10-25 Zona 1"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                isDisabled={!isEditing}
+              />
+            )}
+          />
 
           {/* Interior */}
-          <FormControl>
-            <FormControlLabel>
-              <HStack className="items-center gap-2">
-                <Building size={16} color="#9ca3af" />
-                <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                  Interior / Oficina
-                </FormControlLabelText>
-              </HStack>
-            </FormControlLabel>
-            <Controller
-              control={control}
-              name="line2"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  isDisabled={!isEditing}
-                  className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                >
-                  <InputField
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="Opcional"
-                    className="text-gray-900 placeholder:text-gray-400"
-                  />
-                </Input>
-              )}
-            />
-          </FormControl>
+          <Controller
+            control={control}
+            name="line2"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AppInput
+                label="Interior / Oficina"
+                placeholder="Opcional"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                isDisabled={!isEditing}
+                leftIcon={<Building size={16} color="#9ca3af" />}
+              />
+            )}
+          />
 
-          {/* Ciudad / Estado / CP */}
+          {/* Ciudad / Estado */}
           <HStack className="gap-4 flex-wrap sm:flex-nowrap">
-            <FormControl className="flex-1">
-              <FormControlLabel>
-                <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                  Ciudad
-                </FormControlLabelText>
-              </FormControlLabel>
+            <View className="flex-1" style={{ minWidth: 160 }}>
               <Controller
                 control={control}
                 name="city"
-                render={({ field: { onChange, value } }) => (
-                  <Input
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Ciudad"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
                     isDisabled={!isEditing}
-                    className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                  >
-                    <InputField
-                      value={value}
-                      onChangeText={onChange}
-                      className="text-gray-900 placeholder:text-gray-400"
-                    />
-                  </Input>
+                  />
                 )}
               />
-            </FormControl>
+            </View>
 
-            <FormControl className="flex-1">
-              <FormControlLabel>
-                <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                  Estado / Departamento
-                </FormControlLabelText>
-              </FormControlLabel>
+            <View className="flex-1" style={{ minWidth: 160 }}>
               <Controller
                 control={control}
                 name="state"
-                render={({ field: { onChange, value } }) => (
-                  <Input
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Estado / Departamento"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
                     isDisabled={!isEditing}
-                    className="bg-gray-50 border-gray-200 rounded-lg h-11"
-                  >
-                    <InputField
-                      value={value}
-                      onChangeText={onChange}
-                      className="text-gray-900 placeholder:text-gray-400"
-                    />
-                  </Input>
+                  />
                 )}
               />
-            </FormControl>
+            </View>
           </HStack>
 
+          {/* CP / Pais */}
           <HStack className="gap-4 flex-wrap sm:flex-nowrap">
-            <FormControl className="flex-1 min-w-0">
-              <FormControlLabel>
-                <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                  Codigo Postal
-                </FormControlLabelText>
-              </FormControlLabel>
+            <View className="flex-1" style={{ minWidth: 160 }}>
               <Controller
                 control={control}
                 name="postal_code"
-                render={({ field: { onChange, value } }) => (
-                  <Input
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Codigo Postal"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="numeric"
                     isDisabled={!isEditing}
-                    className="bg-gray-50 border-gray-200 rounded-lg h-11 w-full"
-                  >
-                    <InputField
-                      value={value}
-                      onChangeText={onChange}
-                      keyboardType="numeric"
-                      className="text-gray-900 placeholder:text-gray-400"
-                    />
-                  </Input>
+                  />
                 )}
               />
-            </FormControl>
+            </View>
 
-            <FormControl className="flex-1 min-w-0">
-              <FormControlLabel>
-                <HStack className="items-center gap-2">
-                  <Globe size={16} color="#9ca3af" />
-                  <FormControlLabelText className="text-gray-700 text-sm font-medium">
-                    Pais
-                  </FormControlLabelText>
-                </HStack>
-              </FormControlLabel>
+            <View className="flex-1" style={{ minWidth: 160 }}>
+              {/* Label con icono: se arma afuera porque el label de AppSelect es solo texto */}
+              <HStack
+                className="items-center gap-2"
+                style={{ marginBottom: 6 }}
+              >
+                <Globe size={16} color="#9ca3af" />
+                <Text
+                  style={{ fontSize: 14, fontWeight: "600", color: "#000" }}
+                >
+                  Pais
+                </Text>
+              </HStack>
               <Controller
                 control={control}
                 name="country"
                 render={({ field: { onChange, value } }) => (
-                  <Select
-                    selectedValue={value}
-                    onValueChange={onChange}
+                  <AppSelect
+                    placeholder="Selecciona un pais"
+                    searchable={false}
+                    options={COUNTRY_OPTIONS}
+                    value={value}
+                    onChange={onChange}
                     isDisabled={!isEditing}
-                    className="w-full"
-                  >
-                    <SelectTrigger className="bg-gray-50 border-gray-200 rounded-lg h-11 w-full">
-                      <SelectInput
-                        placeholder="Selecciona un pais"
-                        className="text-gray-900 placeholder:text-gray-400 flex-1"
-                      />
-                      <SelectIcon
-                        as={ChevronDown}
-                        className="mr-3 text-gray-400"
-                      />
-                    </SelectTrigger>
-                    <SelectPortal>
-                      <SelectBackdrop />
-                      <SelectContent className="bg-white">
-                        <SelectDragIndicatorWrapper>
-                          <SelectDragIndicator />
-                        </SelectDragIndicatorWrapper>
-                        <SelectItem label="Guatemala" value="GT" />
-                      </SelectContent>
-                    </SelectPortal>
-                  </Select>
+                  />
                 )}
               />
-            </FormControl>
+            </View>
           </HStack>
+
           <HStack className="gap-2 justify-end">
             {isEditing && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-gray-300 rounded-lg"
+              <AppButton
+                label="Cancelar"
+                outline
+                outlineBorderColor="#d1d5db"
+                outlineTextColor="#374151"
+                fullWidth={false}
                 onPress={handleCancel}
-              >
-                <ButtonText className="text-gray-700">Cancelar</ButtonText>
-              </Button>
+              />
             )}
-            <Button
-              size="sm"
-              className={
-                isEditing
-                  ? "bg-indigo-500 rounded-lg"
-                  : "bg-white border border-gray-300 rounded-lg"
-              }
+            <AppButton
+              label={isEditing ? "Guardar" : "Editar"}
+              variant="primary"
+              outline={!isEditing}
+              outlineBorderColor="#d1d5db"
+              outlineTextColor="#374151"
+              fullWidth={false}
+              isLoading={updateAddress.isPending}
               onPress={
                 isEditing ? handleSubmit(onSubmit) : () => setIsEditing(true)
               }
-            >
-              <ButtonText
-                className={isEditing ? "text-white" : "text-gray-700"}
-              >
-                {isEditing ? "Guardar" : "Editar"}
-              </ButtonText>
-            </Button>
+            />
           </HStack>
         </VStack>
       </Box>

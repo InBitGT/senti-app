@@ -1,30 +1,12 @@
+import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, Icon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Select,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicator,
-  SelectDragIndicatorWrapper,
-  SelectInput,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -38,16 +20,14 @@ import {
 } from "@/src/types/wholesale/wholesale";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
-import React from "react";
+import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -81,6 +61,15 @@ export default function ProductWholesaleForm() {
         : "",
     },
   });
+
+  const productOptions = useMemo(
+    () =>
+      (productData ?? []).map((p) => ({
+        label: `${p.name} (${p.sku})`,
+        value: String(p.id),
+      })),
+    [productData],
+  );
 
   const onSubmit = async (values: FormValues) => {
     if (!claims) return;
@@ -128,7 +117,7 @@ export default function ProductWholesaleForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
@@ -172,65 +161,19 @@ export default function ProductWholesaleForm() {
                     control={control}
                     name="product_id"
                     rules={{ required: "El producto es obligatorio." }}
-                    render={({ field: { onChange, value } }) => {
-                      const selectedLabel =
-                        productData?.find((p) => String(p.id) === value)
-                          ?.name || "";
-
-                      return (
-                        <FormControl isInvalid={!!errors.product_id}>
-                          <FormControlLabel>
-                            <FormControlLabelText style={{ color: "#000" }}>
-                              Producto
-                            </FormControlLabelText>
-                          </FormControlLabel>
-                          {isLoadingProduct ? (
-                            <View style={{ paddingVertical: 10 }}>
-                              <ActivityIndicator size="small" />
-                            </View>
-                          ) : (
-                            <Select
-                              selectedValue={value}
-                              onValueChange={onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectInput
-                                  style={{ color: "#000" }}
-                                  placeholder="Selecciona un producto"
-                                  value={selectedLabel}
-                                />
-                              </SelectTrigger>
-                              <SelectPortal>
-                                <SelectBackdrop />
-                                <SelectContent style={{ maxHeight: 320 }}>
-                                  <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                  </SelectDragIndicatorWrapper>
-                                  <ScrollView
-                                    style={{ maxHeight: 280 }}
-                                    nestedScrollEnabled
-                                  >
-                                    {(productData ?? []).map((p) => (
-                                      <SelectItem
-                                        key={p.id}
-                                        label={`${p.name} (${p.sku})`}
-                                        value={String(p.id)}
-                                      />
-                                    ))}
-                                  </ScrollView>
-                                </SelectContent>
-                              </SelectPortal>
-                            </Select>
-                          )}
-                          <FormControlError>
-                            <FormControlErrorIcon as={AlertCircleIcon} />
-                            <FormControlErrorText>
-                              {errors.product_id?.message}
-                            </FormControlErrorText>
-                          </FormControlError>
-                        </FormControl>
-                      );
-                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Producto"
+                        placeholder="Selecciona un producto"
+                        searchable
+                        searchPlaceholder="Buscar producto..."
+                        options={productOptions}
+                        value={value}
+                        onChange={onChange}
+                        isLoading={isLoadingProduct}
+                        errorMessage={errors.product_id?.message}
+                      />
+                    )}
                   />
 
                   {/* Cantidad mínima */}
@@ -242,29 +185,15 @@ export default function ProductWholesaleForm() {
                       validate: (v) => parseInt(v) > 0 || "Debe ser mayor a 0.",
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.min_quantity}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Cantidad mínima
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 10"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.min_quantity?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Cantidad mínima"
+                        placeholder="Ej. 10"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="number-pad"
+                        errorMessage={errors.min_quantity?.message}
+                      />
                     )}
                   />
 
@@ -282,29 +211,15 @@ export default function ProductWholesaleForm() {
                       },
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <FormControl isInvalid={!!errors.discount_percentage}>
-                        <FormControlLabel>
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Descuento (%)
-                          </FormControlLabelText>
-                        </FormControlLabel>
-                        <Input>
-                          <InputField
-                            style={{ color: "#171717" }}
-                            placeholder="Ej. 10"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                          />
-                        </Input>
-                        <FormControlError>
-                          <FormControlErrorIcon as={AlertCircleIcon} />
-                          <FormControlErrorText>
-                            {errors.discount_percentage?.message}
-                          </FormControlErrorText>
-                        </FormControlError>
-                      </FormControl>
+                      <AppInput
+                        label="Descuento (%)"
+                        placeholder="Ej. 10"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="decimal-pad"
+                        errorMessage={errors.discount_percentage?.message}
+                      />
                     )}
                   />
 
