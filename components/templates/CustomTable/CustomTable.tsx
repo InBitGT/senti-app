@@ -83,12 +83,17 @@ export function CustomTable<T extends Record<string, any>>({
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleSearchChange = (text: string) => {
+    setSearch(text);
+    setPage(0);
+  };
+
   const displayedColumns = useMemo(
     () => columns.filter((col) => !col.optional || visibleColumns[col.key]),
     [columns, visibleColumns],
   );
 
-  const filteredData = React.useMemo(() => {
+  const filteredData = useMemo(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
 
@@ -109,17 +114,10 @@ export function CustomTable<T extends Record<string, any>>({
   }, [data, search, searchKeys, columns, getSearchableText]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  const currentPage = Math.min(page, totalPages - 1);
+  const from = currentPage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
 
   const defaultStyle: ViewStyle = {
     backgroundColor: "#ffffff",
@@ -141,7 +139,7 @@ export function CustomTable<T extends Record<string, any>>({
           <AppInput
             placeholder="Buscar..."
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -190,7 +188,7 @@ export function CustomTable<T extends Record<string, any>>({
             const isSolid = btn.variant === "solid";
             return (
               <AppButton
-                key={btn.key}
+                key={btn.key ?? btn.name}
                 label={btn.name}
                 icon={btn.icon ?? Plus}
                 variant="black"
@@ -248,7 +246,7 @@ export function CustomTable<T extends Record<string, any>>({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={currentPage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

@@ -1,4 +1,3 @@
-// app/invoices_info.tsx
 import { Button, ButtonIcon } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -14,7 +13,7 @@ import {
   BuildingIcon,
   PackageIcon,
   ReceiptIcon,
-  UserIcon
+  UserIcon,
 } from "lucide-react-native";
 import React from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
@@ -258,18 +257,12 @@ const styles = StyleSheet.create({
   backButton: { paddingHorizontal: 0, width: 32 },
   topBarTitle: { fontSize: 15, fontWeight: "600", color: "#111827" },
   content: { padding: 16, paddingBottom: 32, gap: 12 },
-
   hero: {
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
     borderColor: "#eef0f3",
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
   },
   heroTop: {
     flexDirection: "row",

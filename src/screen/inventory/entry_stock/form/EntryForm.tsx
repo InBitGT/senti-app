@@ -1,7 +1,6 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
 import { ProductSearchSelect } from "@/components/atom/ProductSearchSelect/ProductSearchSelect";
 import { Box } from "@/components/ui/box";
@@ -29,13 +28,7 @@ import {
   Save,
   Trash2,
 } from "lucide-react-native";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -565,7 +558,7 @@ export default function InventoryForm() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView className="flex-1" edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={["top"]} style={{ flex: 1 }}>
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
@@ -580,310 +573,306 @@ export default function InventoryForm() {
           }}
           showsVerticalScrollIndicator={true}
         >
-          <DesktopScrollView useWindowHeight>
-            <Pressable
-              onPress={() => router.back()}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => router.back()}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                Nuevo Ingreso
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                Llena los campos para registrar un ingreso de inventario
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  Nuevo Ingreso
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  Llena los campos para registrar un ingreso de inventario
-                </Text>
+              {/* Aviso de borrador guardado */}
+              {draft && (
+                <View style={styles.draftBanner}>
+                  <FileClock size={20} color="#0369a1" />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={styles.draftTitle}>Borrador guardado</Text>
+                    <Text style={styles.draftDate}>
+                      Última vez: {formatDraftDate(draft.savedAt)}
+                    </Text>
+                  </View>
+                  <AppButton
+                    label="Borrar"
+                    icon={Trash2}
+                    variant="black"
+                    outline
+                    fullWidth={false}
+                    onPress={handleClearDraft}
+                  />
+                </View>
+              )}
 
-                {/* Aviso de borrador guardado */}
-                {draft && (
-                  <View style={styles.draftBanner}>
-                    <FileClock size={20} color="#0369a1" />
-                    <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={styles.draftTitle}>Borrador guardado</Text>
-                      <Text style={styles.draftDate}>
-                        Última vez: {formatDraftDate(draft.savedAt)}
-                      </Text>
+              <VStack space="lg">
+                {/* ── DATOS DEL DOCUMENTO ── */}
+                <Text style={styles.sectionLabel}>DATOS DEL DOCUMENTO</Text>
+
+                {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
+                {!hideBranchWarehouseInputs && (
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="branch_id"
+                        rules={{ required: "La sucursal es obligatoria." }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Sucursal"
+                            placeholder="Selecciona una sucursal"
+                            searchable={branchOptions.length > 6}
+                            options={branchOptions.map((b) => ({
+                              label: b.name,
+                              value: String(b.id),
+                            }))}
+                            value={value}
+                            onChange={onChange}
+                            errorMessage={errors.branch_id?.message}
+                          />
+                        )}
+                      />
                     </View>
-                    <AppButton
-                      label="Borrar"
-                      icon={Trash2}
-                      variant="black"
-                      outline
-                      fullWidth={false}
-                      onPress={handleClearDraft}
-                    />
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="warehouse_id"
+                        rules={{ required: "La bodega es obligatoria." }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Bodega"
+                            placeholder={
+                              selectedBranchId
+                                ? "Selecciona una bodega"
+                                : "Primero selecciona una sucursal"
+                            }
+                            searchable={warehouseOptionsForBranch.length > 6}
+                            options={warehouseOptionsForBranch.map((w) => ({
+                              label: w.warehouse_name,
+                              value: String(w.warehouse_id),
+                            }))}
+                            value={value}
+                            onChange={onChange}
+                            isDisabled={!selectedBranchId}
+                            errorMessage={errors.warehouse_id?.message}
+                          />
+                        )}
+                      />
+                    </View>
                   </View>
                 )}
 
-                <VStack space="lg">
-                  {/* ── DATOS DEL DOCUMENTO ── */}
-                  <Text style={styles.sectionLabel}>DATOS DEL DOCUMENTO</Text>
-
-                  {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
-                  {!hideBranchWarehouseInputs && (
-                    <View style={row}>
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="branch_id"
-                          rules={{ required: "La sucursal es obligatoria." }}
-                          render={({ field: { onChange, value } }) => (
-                            <AppSelect
-                              label="Sucursal"
-                              placeholder="Selecciona una sucursal"
-                              searchable={branchOptions.length > 6}
-                              options={branchOptions.map((b) => ({
-                                label: b.name,
-                                value: String(b.id),
-                              }))}
-                              value={value}
-                              onChange={onChange}
-                              errorMessage={errors.branch_id?.message}
-                            />
-                          )}
-                        />
-                      </View>
-
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="warehouse_id"
-                          rules={{ required: "La bodega es obligatoria." }}
-                          render={({ field: { onChange, value } }) => (
-                            <AppSelect
-                              label="Bodega"
-                              placeholder={
-                                selectedBranchId
-                                  ? "Selecciona una bodega"
-                                  : "Primero selecciona una sucursal"
-                              }
-                              searchable={warehouseOptionsForBranch.length > 6}
-                              options={warehouseOptionsForBranch.map((w) => ({
-                                label: w.warehouse_name,
-                                value: String(w.warehouse_id),
-                              }))}
-                              value={value}
-                              onChange={onChange}
-                              isDisabled={!selectedBranchId}
-                              errorMessage={errors.warehouse_id?.message}
-                            />
-                          )}
-                        />
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Proveedor + N° Documento */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="supplier_id"
-                        rules={{ required: "El proveedor es obligatorio." }}
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Proveedor"
-                            placeholder="Selecciona proveedor"
-                            searchable={supplierOptions.length > 6}
-                            options={supplierOptions}
-                            value={value}
-                            onChange={onChange}
-                            errorMessage={errors.supplier_id?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="document_number"
-                        rules={{
-                          required: "El número de documento es obligatorio.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="N° Documento"
-                            placeholder="FAC-003"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.toUpperCase())
-                            }
-                            onBlur={onBlur}
-                            autoCapitalize="characters"
-                            errorMessage={errors.document_number?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Fecha */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="document_date"
-                        rules={{
-                          required: "La fecha es obligatoria.",
-                          pattern: {
-                            value: /^\d{4}-\d{2}-\d{2}$/,
-                            message: "Formato inválido. Usa YYYY-MM-DD.",
-                          },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => {
-                          const handleChange = (text: string) => {
-                            const cleaned = text.replace(/[^0-9]/g, "");
-                            let formatted = cleaned;
-                            if (cleaned.length > 4) {
-                              formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
-                            }
-                            if (cleaned.length > 6) {
-                              formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
-                            }
-                            onChange(formatted);
-                          };
-
-                          return (
-                            <AppInput
-                              label="Fecha del documento"
-                              placeholder="YYYY-MM-DD"
-                              value={value}
-                              onChangeText={handleChange}
-                              onBlur={onBlur}
-                              keyboardType="number-pad"
-                              maxLength={10}
-                              errorMessage={errors.document_date?.message}
-                            />
-                          );
-                        }}
-                      />
-                    </View>
-                    <View style={half}></View>
-                  </View>
-
-                  {/* Notas generales */}
-                  <Controller
-                    control={control}
-                    name="notes"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Notas (opcional)"
-                        placeholder="Observaciones generales del ingreso..."
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        multiline
-                        textareaHeight={100}
-                      />
-                    )}
-                  />
-
-                  <Divider className="my-2" />
-
-                  {/* ── PRODUCTOS ── */}
-                  <HStack
-                    style={{
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={styles.sectionLabel}>
-                      PRODUCTOS ({fields.length})
-                    </Text>
-                    <View ref={addButtonRef} collapsable={false}>
-                      <AppButton
-                        label="Agregar"
-                        icon={Plus}
-                        variant="black"
-                        fullWidth={false}
-                        onPress={() => append(EMPTY_ITEM)}
-                      />
-                    </View>
-                  </HStack>
-
-                  {fields.length === 0 && (
-                    <EmptyHint label="No hay productos. Presiona Agregar para añadir uno." />
-                  )}
-
-                  {fields.map((field, index) => (
-                    <ItemRow
-                      key={field.id}
-                      index={index}
+                {/* Proveedor + N° Documento */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
                       control={control}
-                      errors={errors}
-                      remove={remove}
-                      productData={productData ?? []}
-                      unitData={unitData ?? []}
-                      isLarge={isLarge}
+                      name="supplier_id"
+                      rules={{ required: "El proveedor es obligatorio." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Proveedor"
+                          placeholder="Selecciona proveedor"
+                          searchable={supplierOptions.length > 6}
+                          options={supplierOptions}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.supplier_id?.message}
+                        />
+                      )}
                     />
-                  ))}
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="document_number"
+                      rules={{
+                        required: "El número de documento es obligatorio.",
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="N° Documento"
+                          placeholder="FAC-003"
+                          value={value}
+                          onChangeText={(text) => onChange(text.toUpperCase())}
+                          onBlur={onBlur}
+                          autoCapitalize="characters"
+                          errorMessage={errors.document_number?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
 
-                  {/* Total general */}
-                  {fields.length > 0 && (
-                    <Box
-                      style={styles.totalBox}
-                      className="w-full bg-white rounded-[20px] py-8 px-7"
-                    >
-                      <Text style={{ color: "#555", fontSize: 14 }}>
-                        Total general
-                      </Text>
-                      <Text
-                        style={{
-                          color: "#000",
-                          fontWeight: "bold",
-                          fontSize: 20,
-                        }}
-                      >
-                        Q {totalGeneral.toFixed(2)}
-                      </Text>
-                    </Box>
+                {/* Fecha */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="document_date"
+                      rules={{
+                        required: "La fecha es obligatoria.",
+                        pattern: {
+                          value: /^\d{4}-\d{2}-\d{2}$/,
+                          message: "Formato inválido. Usa YYYY-MM-DD.",
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => {
+                        const handleChange = (text: string) => {
+                          const cleaned = text.replace(/[^0-9]/g, "");
+                          let formatted = cleaned;
+                          if (cleaned.length > 4) {
+                            formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+                          }
+                          if (cleaned.length > 6) {
+                            formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
+                          }
+                          onChange(formatted);
+                        };
+
+                        return (
+                          <AppInput
+                            label="Fecha del documento"
+                            placeholder="YYYY-MM-DD"
+                            value={value}
+                            onChangeText={handleChange}
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                            maxLength={10}
+                            errorMessage={errors.document_date?.message}
+                          />
+                        );
+                      }}
+                    />
+                  </View>
+                  <View style={half}></View>
+                </View>
+
+                {/* Notas generales */}
+                <Controller
+                  control={control}
+                  name="notes"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Notas (opcional)"
+                      placeholder="Observaciones generales del ingreso..."
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      multiline
+                      textareaHeight={100}
+                    />
                   )}
+                />
 
-                  {/* Botones */}
-                  <HStack style={styles.actions}>
+                <Divider className="my-2" />
+
+                {/* ── PRODUCTOS ── */}
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    PRODUCTOS ({fields.length})
+                  </Text>
+                  <View ref={addButtonRef} collapsable={false}>
                     <AppButton
-                      label="Cancelar"
-                      variant="black"
-                      outline
-                      fullWidth={false}
-                      isDisabled={isPending}
-                      onPress={() => router.back()}
-                    />
-                    <AppButton
-                      label="Guardar borrador"
-                      icon={Save}
-                      variant="info"
-                      outline
-                      fullWidth={false}
-                      isDisabled={isPending}
-                      onPress={handleSaveDraft}
-                    />
-                    <AppButton
-                      label="Guardar"
+                      label="Agregar"
+                      icon={Plus}
                       variant="black"
                       fullWidth={false}
-                      isLoading={isPending}
-                      isDisabled={fields.length === 0}
-                      onPress={handleSubmit(onSubmit)}
+                      onPress={() => append(EMPTY_ITEM)}
                     />
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                  </View>
+                </HStack>
+
+                {fields.length === 0 && (
+                  <EmptyHint label="No hay productos. Presiona Agregar para añadir uno." />
+                )}
+
+                {fields.map((field, index) => (
+                  <ItemRow
+                    key={field.id}
+                    index={index}
+                    control={control}
+                    errors={errors}
+                    remove={remove}
+                    productData={productData ?? []}
+                    unitData={unitData ?? []}
+                    isLarge={isLarge}
+                  />
+                ))}
+
+                {/* Total general */}
+                {fields.length > 0 && (
+                  <Box
+                    style={styles.totalBox}
+                    className="w-full bg-white rounded-[20px] py-8 px-7"
+                  >
+                    <Text style={{ color: "#555", fontSize: 14 }}>
+                      Total general
+                    </Text>
+                    <Text
+                      style={{
+                        color: "#000",
+                        fontWeight: "bold",
+                        fontSize: 20,
+                      }}
+                    >
+                      Q {totalGeneral.toFixed(2)}
+                    </Text>
+                  </Box>
+                )}
+
+                {/* Botones */}
+                <HStack style={styles.actions}>
+                  <AppButton
+                    label="Cancelar"
+                    variant="black"
+                    outline
+                    fullWidth={false}
+                    isDisabled={isPending}
+                    onPress={() => router.back()}
+                  />
+                  <AppButton
+                    label="Guardar borrador"
+                    icon={Save}
+                    variant="info"
+                    outline
+                    fullWidth={false}
+                    isDisabled={isPending}
+                    onPress={handleSaveDraft}
+                  />
+                  <AppButton
+                    label="Guardar"
+                    variant="black"
+                    fullWidth={false}
+                    isLoading={isPending}
+                    isDisabled={fields.length === 0}
+                    onPress={handleSubmit(onSubmit)}
+                  />
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
 
         {/* Botón flotante: aparece cuando "Agregar" sale de la pantalla */}
@@ -914,11 +903,6 @@ export const styles = StyleSheet.create({
     paddingBottom: 32,
     paddingLeft: 28,
     paddingRight: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
   },
   sectionLabel: {
     fontWeight: "bold",
@@ -996,10 +980,5 @@ export const styles = StyleSheet.create({
     backgroundColor: "#000",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });

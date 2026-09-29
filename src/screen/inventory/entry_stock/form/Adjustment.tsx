@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { ProductSearchSelect } from "@/components/atom/ProductSearchSelect/ProductSearchSelect";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -181,149 +180,55 @@ export default function AdjustmentForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView useWindowHeight>
-            <Pressable
-              onPress={() => router.back()}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => router.back()}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                Ajuste de inventario
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                Registra un movimiento de inventario
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  Ajuste de inventario
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  Registra un movimiento de inventario
-                </Text>
+              <VStack space="lg">
+                <Text style={styles.sectionLabel}>DATOS DEL MOVIMIENTO</Text>
 
-                <VStack space="lg">
-                  <Text style={styles.sectionLabel}>DATOS DEL MOVIMIENTO</Text>
-
-                  {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
-                  {!hideBranchWarehouseInputs && (
-                    <View style={row}>
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="branch_id"
-                          rules={{ required: "La sucursal es obligatoria." }}
-                          render={({ field: { onChange, value } }) => (
-                            <AppSelect
-                              label="Sucursal"
-                              placeholder="Selecciona una sucursal"
-                              searchable={branchOptions.length > 6}
-                              options={branchOptions.map((b) => ({
-                                label: b.name,
-                                value: String(b.id),
-                              }))}
-                              value={value}
-                              onChange={onChange}
-                              errorMessage={errors.branch_id?.message}
-                            />
-                          )}
-                        />
-                      </View>
-
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="warehouse_id"
-                          rules={{ required: "La bodega es obligatoria." }}
-                          render={({ field: { onChange, value } }) => (
-                            <AppSelect
-                              label="Bodega"
-                              placeholder={
-                                selectedBranchId
-                                  ? "Selecciona una bodega"
-                                  : "Primero selecciona una sucursal"
-                              }
-                              searchable={warehouseOptionsForBranch.length > 6}
-                              options={warehouseOptionsForBranch.map((w) => ({
-                                label: w.warehouse_name,
-                                value: String(w.warehouse_id),
-                              }))}
-                              value={value}
-                              onChange={onChange}
-                              isDisabled={!selectedBranchId}
-                              errorMessage={errors.warehouse_id?.message}
-                            />
-                          )}
-                        />
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Producto + N° Referencia */}
+                {/* Sucursal + Bodega — solo si el usuario tiene más de una combinación posible */}
+                {!hideBranchWarehouseInputs && (
                   <View style={row}>
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="product_id"
-                        rules={{ required: "El producto es obligatorio." }}
-                        render={({ field: { onChange, value } }) => (
-                          <ProductSearchSelect
-                            value={value}
-                            onChange={onChange}
-                            productData={productData ?? []}
-                            error={errors.product_id?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      {/* N° Referencia */}
-                      <Controller
-                        control={control}
-                        name="reference_number"
-                        rules={{
-                          required: "El número de referencia es obligatorio.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="N° Referencia"
-                            placeholder="Ej. ADJ-BATCH-002"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.toUpperCase())
-                            }
-                            onBlur={onBlur}
-                            autoCapitalize="characters"
-                            errorMessage={errors.reference_number?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Tipo de movimiento + Razón */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="movement_type"
-                        rules={{ required: "El tipo es obligatorio." }}
+                        name="branch_id"
+                        rules={{ required: "La sucursal es obligatoria." }}
                         render={({ field: { onChange, value } }) => (
                           <AppSelect
-                            label="Tipo de movimiento"
-                            placeholder="Selecciona tipo"
-                            searchable={false}
-                            options={MOVEMENT_TYPE_OPTIONS}
+                            label="Sucursal"
+                            placeholder="Selecciona una sucursal"
+                            searchable={branchOptions.length > 6}
+                            options={branchOptions.map((b) => ({
+                              label: b.name,
+                              value: String(b.id),
+                            }))}
                             value={value}
                             onChange={onChange}
-                            errorMessage={errors.movement_type?.message}
+                            errorMessage={errors.branch_id?.message}
                           />
                         )}
                       />
@@ -332,128 +237,218 @@ export default function AdjustmentForm() {
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="reason"
-                        rules={{ required: "La razón es obligatoria." }}
+                        name="warehouse_id"
+                        rules={{ required: "La bodega es obligatoria." }}
                         render={({ field: { onChange, value } }) => (
                           <AppSelect
-                            label="Razón"
-                            placeholder="Selecciona razón"
-                            searchable={false}
-                            options={REASON_OPTIONS}
+                            label="Bodega"
+                            placeholder={
+                              selectedBranchId
+                                ? "Selecciona una bodega"
+                                : "Primero selecciona una sucursal"
+                            }
+                            searchable={warehouseOptionsForBranch.length > 6}
+                            options={warehouseOptionsForBranch.map((w) => ({
+                              label: w.warehouse_name,
+                              value: String(w.warehouse_id),
+                            }))}
                             value={value}
                             onChange={onChange}
-                            errorMessage={errors.reason?.message}
+                            isDisabled={!selectedBranchId}
+                            errorMessage={errors.warehouse_id?.message}
                           />
                         )}
                       />
                     </View>
                   </View>
+                )}
 
-                  {/* Cantidad + Costo unitario */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="qty"
-                        rules={{ required: "La cantidad es obligatoria." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Cantidad"
-                            placeholder="4"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                            errorMessage={errors.qty?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="unit_cost"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Costo unitario (opcional)"
-                            placeholder="5.50"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9.-]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Lote — solo si el producto requiere batch */}
-                  {requiresBatch && (
+                {/* Producto + N° Referencia */}
+                <View style={row}>
+                  <View style={half}>
                     <Controller
                       control={control}
-                      name="batch_id"
-                      rules={{ required: "El lote es obligatorio." }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <AppInput
-                          label="ID de lote"
-                          placeholder="Ej. 1"
+                      name="product_id"
+                      rules={{ required: "El producto es obligatorio." }}
+                      render={({ field: { onChange, value } }) => (
+                        <ProductSearchSelect
                           value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          keyboardType="number-pad"
-                          errorMessage={errors.batch_id?.message}
+                          onChange={onChange}
+                          productData={productData ?? []}
+                          error={errors.product_id?.message}
                         />
                       )}
                     />
-                  )}
+                  </View>
 
-                  {/* Notas */}
+                  <View style={half}>
+                    {/* N° Referencia */}
+                    <Controller
+                      control={control}
+                      name="reference_number"
+                      rules={{
+                        required: "El número de referencia es obligatorio.",
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="N° Referencia"
+                          placeholder="Ej. ADJ-BATCH-002"
+                          value={value}
+                          onChangeText={(text) => onChange(text.toUpperCase())}
+                          onBlur={onBlur}
+                          autoCapitalize="characters"
+                          errorMessage={errors.reference_number?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Tipo de movimiento + Razón */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="movement_type"
+                      rules={{ required: "El tipo es obligatorio." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Tipo de movimiento"
+                          placeholder="Selecciona tipo"
+                          searchable={false}
+                          options={MOVEMENT_TYPE_OPTIONS}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.movement_type?.message}
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="reason"
+                      rules={{ required: "La razón es obligatoria." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Razón"
+                          placeholder="Selecciona razón"
+                          searchable={false}
+                          options={REASON_OPTIONS}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.reason?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Cantidad + Costo unitario */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="qty"
+                      rules={{ required: "La cantidad es obligatoria." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Cantidad"
+                          placeholder="4"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.replace(/[^0-9]/g, ""))
+                          }
+                          onBlur={onBlur}
+                          keyboardType="decimal-pad"
+                          errorMessage={errors.qty?.message}
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="unit_cost"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Costo unitario (opcional)"
+                          placeholder="5.50"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.replace(/[^0-9.-]/g, ""))
+                          }
+                          onBlur={onBlur}
+                          keyboardType="decimal-pad"
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Lote — solo si el producto requiere batch */}
+                {requiresBatch && (
                   <Controller
                     control={control}
-                    name="notes"
+                    name="batch_id"
+                    rules={{ required: "El lote es obligatorio." }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <AppInput
-                        label="Notas (opcional)"
-                        placeholder="Observaciones del movimiento..."
+                        label="ID de lote"
+                        placeholder="Ej. 1"
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
-                        multiline
-                        textareaHeight={100}
+                        keyboardType="number-pad"
+                        errorMessage={errors.batch_id?.message}
                       />
                     )}
                   />
+                )}
 
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => router.back()}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                {/* Notas */}
+                <Controller
+                  control={control}
+                  name="notes"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Notas (opcional)"
+                      placeholder="Observaciones del movimiento..."
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      multiline
+                      textareaHeight={100}
+                    />
+                  )}
+                />
+
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => router.back()}
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isPending}
+                  >
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>
@@ -467,11 +462,6 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 32,
     paddingHorizontal: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
   },
   sectionLabel: {
     fontWeight: "bold",
@@ -482,11 +472,6 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e5e5e5",
     marginTop: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 4,
   },
   dropdownItem: {
     paddingVertical: 10,
