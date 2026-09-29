@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { ProductCountList } from "@/components/molecules/ProductCountList/ProductCountList";
 import { ProductPicker } from "@/components/molecules/ProductPicker/ProductPicker";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
@@ -17,8 +16,15 @@ import {
 } from "@/src/types/stock_count/stock_count.types";
 import { router } from "expo-router";
 import { ClipboardList, Send } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Genera un id único por línea/artículo en el cliente.
@@ -36,10 +42,14 @@ export function CountScreen() {
   const branches = claims?.branches ?? [];
   const hasMultipleBranches = branches.length > 1;
 
-  // Si hay una sola sucursal, se usa automáticamente; si hay varias, el usuario elige.
-  const [selectedBranchId, setSelectedBranchId] = useState<string>(
-    !hasMultipleBranches ? String(branches[0]?.branch_id ?? "") : "",
-  );
+  // Solo guardamos lo que el usuario elige manualmente.
+  const [pickedBranchId, setPickedBranchId] = useState("");
+  const [pickedWarehouseId, setPickedWarehouseId] = useState("");
+
+  // Si hay una sola sucursal, se usa automáticamente.
+  const selectedBranchId = hasMultipleBranches
+    ? pickedBranchId
+    : String(branches[0]?.branch_id ?? "");
 
   const selectedBranch = branches.find(
     (b) => String(b.branch_id) === selectedBranchId,
@@ -48,21 +58,21 @@ export function CountScreen() {
   const warehouses = selectedBranch?.warehouses ?? [];
   const hasMultipleWarehouses = warehouses.length > 1;
 
-  // Si la sucursal elegida tiene una sola bodega, se usa automáticamente.
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
+  // Si hay una sola bodega, se usa automáticamente; si hay varias,
+  // solo vale la elegida si pertenece a la sucursal actual.
+  const selectedWarehouse =
+    warehouses.length === 1
+      ? warehouses[0]
+      : warehouses.find((w) => String(w.warehouse_id) === pickedWarehouseId);
 
-  // Cuando cambia la sucursal (o se resuelve la única disponible), recalcular la bodega.
-  useEffect(() => {
-    if (warehouses.length === 1) {
-      setSelectedWarehouseId(String(warehouses[0].warehouse_id));
-    } else {
-      setSelectedWarehouseId("");
-    }
-  }, [selectedBranchId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const selectedWarehouseId = selectedWarehouse
+    ? String(selectedWarehouse.warehouse_id)
+    : "";
 
-  const selectedWarehouse = warehouses.find(
-    (w) => String(w.warehouse_id) === selectedWarehouseId,
-  );
+  const handleBranchChange = (id: string) => {
+    setPickedBranchId(id);
+    setPickedWarehouseId("");
+  };
 
   const { isLoading, post, dataProduct } = useStockCount(
     selectedWarehouseId || undefined,
@@ -150,37 +160,30 @@ export function CountScreen() {
     });
   }, []);
 
-  const payload: StockCount = useMemo(
-    () => ({
-      tenant_id: claims?.tenant_id ?? 0,
-      warehouse_id: selectedWarehouse?.warehouse_id ?? 0,
-      user_id: claims?.sub ?? 0,
-      scope_notes: scopeNotes,
-      items: selectedIds
-        .map((id) => lines.get(id))
-        .filter((l): l is CountLine => Boolean(l))
-        .map((l) => ({
-          product_id: l.product_id,
-          counted_qty: l.counted_qty,
-          counted_by: l.counted_by,
-        })),
-    }),
-    [scopeNotes, selectedIds, lines, claims, selectedWarehouse],
-  );
+  // Sin useMemo: el React Compiler memoiza esto automáticamente.
+  const payload: StockCount = {
+    tenant_id: claims?.tenant_id ?? 0,
+    warehouse_id: selectedWarehouse?.warehouse_id ?? 0,
+    user_id: claims?.sub ?? 0,
+    scope_notes: scopeNotes,
+    items: selectedIds
+      .map((id) => lines.get(id))
+      .filter((l): l is CountLine => Boolean(l))
+      .map((l) => ({
+        product_id: l.product_id,
+        counted_qty: l.counted_qty,
+        counted_by: l.counted_by,
+      })),
+  };
 
-  const totalUnits = useMemo(
-    () => payload.items.reduce((sum, it) => sum + it.counted_qty, 0),
-    [payload.items],
-  );
+  const totalUnits = payload.items.reduce((sum, it) => sum + it.counted_qty, 0);
 
   const resetForm = () => {
     setScopeNotes("");
     setSelectedIds([]);
     setLines(new Map());
-    setSelectedBranchId(
-      !hasMultipleBranches ? String(branches[0]?.branch_id ?? "") : "",
-    );
-    setSelectedWarehouseId("");
+    setPickedBranchId("");
+    setPickedWarehouseId("");
   };
 
   const handleSubmit = () => {
@@ -199,7 +202,7 @@ export function CountScreen() {
       return;
     }
     post.mutate(payload, {
-      onSuccess: (data) => {
+      onSuccess: () => {
         router.navigate("/(drawer)/(inventory)/(form)/stock_count_form");
         showToast({
           type: "success",
@@ -219,11 +222,16 @@ export function CountScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={["bottom", "left", "right"]}>
-      <ScrollView
-        style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 20 }}
-        contentContainerStyle={{ gap: 20, paddingBottom: 100 }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardContainer}
+        pointerEvents="box-none"
       >
-        <DesktopScrollView>
+        <ScrollView
+          style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 20 }}
+          contentContainerStyle={{ gap: 20, paddingBottom: 100 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <HStack className="items-center gap-3">
             <View style={styles.headerIcon}>
               <ClipboardList size={18} color="#fff" />
@@ -248,7 +256,7 @@ export function CountScreen() {
                     value: String(b.branch_id),
                   }))}
                   value={selectedBranchId}
-                  onChange={setSelectedBranchId}
+                  onChange={handleBranchChange}
                 />
               </VStack>
             )}
@@ -264,7 +272,7 @@ export function CountScreen() {
                     value: String(w.warehouse_id),
                   }))}
                   value={selectedWarehouseId}
-                  onChange={setSelectedWarehouseId}
+                  onChange={setPickedWarehouseId}
                 />
               </VStack>
             )}
@@ -311,40 +319,41 @@ export function CountScreen() {
               />
             )}
           </VStack>
-        </DesktopScrollView>
-      </ScrollView>
+        </ScrollView>
 
-      <HStack style={styles.footerBar}>
-        <Text style={styles.footerText}>
-          <Text style={styles.footerCount}>{payload.items.length}</Text>
-          <Text style={styles.footerMuted}> artículos · </Text>
-          <Text style={styles.footerCount}>{totalUnits}</Text>
-          <Text style={styles.footerMuted}> unidades</Text>
-        </Text>
-        <Button
-          size="md"
-          style={
-            post.isPending || !payload.items.length
-              ? styles.submitButtonDisabled
-              : styles.submitButton
-          }
-          disabled={post.isPending || !payload.items.length}
-          onPress={handleSubmit}
-        >
-          {post.isPending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <ButtonIcon as={Send} style={{ color: "#fff" }} />
-          )}
-          <ButtonText style={{ color: "#fff" }}>Enviar conteo</ButtonText>
-        </Button>
-      </HStack>
+        <HStack style={styles.footerBar}>
+          <Text style={styles.footerText}>
+            <Text style={styles.footerCount}>{payload.items.length}</Text>
+            <Text style={styles.footerMuted}> artículos · </Text>
+            <Text style={styles.footerCount}>{totalUnits}</Text>
+            <Text style={styles.footerMuted}> unidades</Text>
+          </Text>
+          <Button
+            size="md"
+            style={
+              post.isPending || !payload.items.length
+                ? styles.submitButtonDisabled
+                : styles.submitButton
+            }
+            disabled={post.isPending || !payload.items.length}
+            onPress={handleSubmit}
+          >
+            {post.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <ButtonIcon as={Send} style={{ color: "#fff" }} />
+            )}
+            <ButtonText style={{ color: "#fff" }}>Enviar conteo</ButtonText>
+          </Button>
+        </HStack>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#f7f7f7" },
+  keyboardContainer: { flex: 1 },
   headerIcon: {
     width: 40,
     height: 40,
@@ -382,8 +391,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: "#d4d4d4",
     backgroundColor: "#ffffffF2",
-    // paddingHorizontal: 16,
-    // paddingVertical: 14,
     margin: 10,
     padding: 15,
   },
