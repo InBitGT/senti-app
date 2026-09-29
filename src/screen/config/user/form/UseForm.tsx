@@ -632,11 +632,6 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 32,
     paddingHorizontal: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
   },
   sectionTitle: { fontWeight: "bold", color: "#555", fontSize: 13 },
   actions: {

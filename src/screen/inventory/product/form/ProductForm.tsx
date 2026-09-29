@@ -37,7 +37,6 @@ import { useAuthStore } from "@/src/store";
 import { useProductStore } from "@/src/store/useProductStore/useProductStore";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
-import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -900,11 +899,6 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 32,
     paddingHorizontal: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
   },
   sectionLabel: {
     fontWeight: "bold",

@@ -36,7 +36,6 @@ import { useUnitStore } from "@/src/store/useUnitMeasure/useUnitMeasureStore";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon, ChevronDown } from "lucide-react-native";
-import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -335,10 +334,5 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 32,
     paddingHorizontal: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
   },
 });
