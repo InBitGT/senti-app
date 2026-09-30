@@ -2,6 +2,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetFlatList,
+  BottomSheetFlatListMethods,
   BottomSheetModal,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
@@ -26,42 +27,27 @@ export interface AppSelectOption {
 interface AppSelectProps {
   label?: string;
   placeholder?: string;
-  /**
-   * Opciones a mostrar. Si NO pasas `onSearchChange`, AppSelect filtra
-   * internamente por `label` (ignorando mayúsculas y acentos).
-   * Si pasas `onSearchChange`, el padre controla la búsqueda y debe
-   * mandar la lista ya filtrada.
-   */
   options: AppSelectOption[];
   value?: string;
   onChange: (value: string) => void;
   isDisabled?: boolean;
   isLoading?: boolean;
   errorMessage?: string;
-  /** Muestra el buscador dentro del sheet. Default: true. */
   searchable?: boolean;
-  /** Placeholder del input de busqueda. */
   searchPlaceholder?: string;
-  /** Valor controlado del buscador (opcional). */
   searchValue?: string;
-  /** Si se pasa, el filtrado lo hace el padre. */
   onSearchChange?: (text: string) => void;
 }
 
 const MAX_HEIGHT_RATIO = 0.8;
+const MIN_HEIGHT_RATIO = 0.2;
 const isWeb = Platform.OS === "web";
 
-// En web BottomSheetTextInput truena (currentlyFocusedInput no existe)
 const SheetInput = isWeb ? TextInput : BottomSheetTextInput;
 
 const normalize = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
-// Compara valores de forma laxa: si a alguien se le escapa pasar un
-// number (o el uom_id, product_id, etc. no viene ya convertido a
-// string) la comparación estricta `o.value === value` nunca matchea y
-// el trigger se queda mostrando el placeholder en vez de la opción
-// seleccionada. Coercionar ambos lados a String evita ese caso.
 function sameValue(a: string | undefined, b: string | undefined) {
   if (a == null || b == null) return false;
   return String(a) === String(b);
@@ -82,6 +68,7 @@ export function AppSelect({
   onSearchChange,
 }: AppSelectProps) {
   const sheetRef = useRef<BottomSheetModal>(null);
+  const listRef = useRef<BottomSheetFlatListMethods>(null);
   const { height: windowHeight } = useWindowDimensions();
 
   const [internalQuery, setInternalQuery] = useState("");
@@ -93,6 +80,10 @@ export function AppSelect({
   const disabled = isDisabled || isLoading;
 
   const maxDynamicContentSize = windowHeight * MAX_HEIGHT_RATIO;
+  const minListHeight = Math.min(
+    windowHeight * MIN_HEIGHT_RATIO,
+    maxDynamicContentSize,
+  );
 
   const filteredOptions = useMemo(() => {
     if (isControlledSearch) return options;
@@ -112,6 +103,14 @@ export function AppSelect({
   const handleDismiss = useCallback(() => {
     setQuery("");
   }, [setQuery]);
+
+  // Al abrir el sheet, muestra la barra de scroll para que se note que se puede bajar
+  // (en iOS no existe una barra permanente, así que se hace parpadear).
+  const handleSheetChange = useCallback((index: number) => {
+    if (index >= 0) {
+      setTimeout(() => listRef.current?.flashScrollIndicators(), 300);
+    }
+  }, []);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -166,6 +165,7 @@ export function AppSelect({
         handleIndicatorStyle={styles.dragIndicator}
         backgroundStyle={styles.sheetBackground}
         onDismiss={handleDismiss}
+        onChange={handleSheetChange}
         keyboardBehavior={isWeb ? undefined : "extend"}
         keyboardBlurBehavior={isWeb ? "none" : "restore"}
         android_keyboardInputMode="adjustResize"
@@ -195,8 +195,15 @@ export function AppSelect({
         <BottomSheetFlatList
           data={filteredOptions}
           keyExtractor={(item) => item.value}
+          ref={listRef}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 16 }}
+          showsVerticalScrollIndicator
+          persistentScrollbar
+          indicatorStyle="black"
+          contentContainerStyle={[
+            styles.listContent,
+            { minHeight: minListHeight },
+          ]}
           ListEmptyComponent={
             <View style={styles.emptyBox}>
               <Text style={styles.emptyText}>
@@ -325,6 +332,10 @@ const styles = StyleSheet.create({
     color: "#111827",
     paddingVertical: 4,
   },
+  listContent: {
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+  },
   emptyBox: {
     paddingVertical: 24,
     alignItems: "center",
@@ -345,7 +356,8 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 15,
     color: "#000",
-    padding: 15,
+    paddingVertical: 18,
+    paddingHorizontal: 15,
   },
   itemTextSelected: {
     color: "#111827",
