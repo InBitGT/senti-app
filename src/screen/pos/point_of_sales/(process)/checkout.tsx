@@ -42,7 +42,7 @@ import {
   UserCheck,
   X,
 } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -154,6 +154,13 @@ function newEntry(paymentMethodId: number | null = null): PaymentEntryState {
   };
 }
 
+interface TypePriceOffState {
+  // Tipo de cliente al que pertenecen estas exclusiones. Si el tipo actual
+  // es otro, las exclusiones se ignoran (equivale a "resetear").
+  typeId: number | null;
+  ids: Set<number>;
+}
+
 export const Checkout: React.FC = () => {
   const claims = useAuthStore((s) => s.claims);
   const cart = useCartStore((s) => s.cart);
@@ -217,20 +224,28 @@ export const Checkout: React.FC = () => {
   }, [catalog, customerTypeId]);
 
   // Productos a los que el usuario decidió NO aplicarles el precio del tipo.
-  const [typePriceOff, setTypePriceOff] = useState<Set<number>>(new Set());
+  // Se guardan junto al tipo de cliente: al cambiar de tipo, las exclusiones
+  // anteriores dejan de aplicar y todo vuelve al precio del tipo.
+  const [typePriceOffState, setTypePriceOffState] = useState<TypePriceOffState>(
+    () => ({ typeId: null, ids: new Set() }),
+  );
 
-  // Al cambiar de cliente/tipo, todos los productos vuelven a tomar el
-  // precio del tipo por defecto.
-  useEffect(() => {
-    setTypePriceOff(new Set());
-  }, [customerTypeId]);
+  const typePriceOff = useMemo(
+    () =>
+      typePriceOffState.typeId === customerTypeId
+        ? typePriceOffState.ids
+        : new Set<number>(),
+    [typePriceOffState, customerTypeId],
+  );
 
   function toggleTypePrice(productId: number) {
-    setTypePriceOff((prev) => {
-      const next = new Set(prev);
+    setTypePriceOffState((prev) => {
+      const base =
+        prev.typeId === customerTypeId ? prev.ids : new Set<number>();
+      const next = new Set(base);
       if (next.has(productId)) next.delete(productId);
       else next.add(productId);
-      return next;
+      return { typeId: customerTypeId, ids: next };
     });
   }
 
@@ -265,45 +280,65 @@ export const Checkout: React.FC = () => {
   const [fiscalNit] = useState("");
   const [fiscalName] = useState("");
 
-  const [entries, setEntries] = useState<PaymentEntryState[]>([newEntry()]);
+  const [entries, setEntries] = useState<PaymentEntryState[]>(() => [
+    newEntry(),
+  ]);
+
+  const resolvedEntries: PaymentEntryState[] = entries.map((e, i) => {
+    if (e.isCredit && !creditAvailable) {
+      return {
+        ...e,
+        isCredit: false,
+        paymentMethodId: methods[0]?.id ?? null,
+        amountReceived: "",
+        reference: "",
+      };
+    }
+    if (
+      i === 0 &&
+      !e.isCredit &&
+      e.paymentMethodId == null &&
+      methods.length > 0
+    ) {
+      return { ...e, paymentMethodId: methods[0].id };
+    }
+    return e;
+  });
 
   const [stockErrorOpen, setStockErrorOpen] = useState(false);
   const [checkingStock, setCheckingStock] = useState(false);
-  const [blockedProductIds, setBlockedProductIds] = useState<Set<number>>(
-    new Set(),
+  const [rawBlockedProductIds, setRawBlockedProductIds] = useState<Set<number>>(
+    () => new Set(),
   );
   const [returnAfterStockAck, setReturnAfterStockAck] = useState(false);
 
-  useEffect(() => {
-    if (methods.length === 0) return;
-    setEntries((prev) =>
-      prev.map((e, i) =>
-        i === 0 && e.paymentMethodId == null && !e.isCredit
-          ? { ...e, paymentMethodId: methods[0].id }
-          : e,
-      ),
+  // Solo cuentan como bloqueados los productos que siguen en el carrito.
+  const blockedProductIds = useMemo(() => {
+    if (rawBlockedProductIds.size === 0) return rawBlockedProductIds;
+    const stillInCart = new Set(cart.map((l) => l.product.product_id));
+    return new Set(
+      [...rawBlockedProductIds].filter((id) => stillInCart.has(id)),
     );
-  }, [methods]);
+  }, [rawBlockedProductIds, cart]);
 
-  // Si el cliente cambia a uno sin crédito (o se quita), las líneas en
-  // "Crédito" pasan al primer método disponible. La venta sigue normal.
-  useEffect(() => {
-    if (creditAvailable) return;
-    setEntries((prev) =>
-      prev.some((e) => e.isCredit)
-        ? prev.map((e) => (e.isCredit ? newEntry(methods[0]?.id ?? null) : e))
-        : prev,
-    );
-  }, [creditAvailable, methods]);
+  function handleCustomerChange(v: string) {
+    const nextId = v && v !== GENERAL_CUSTOMER_VALUE ? Number(v) : null;
+    setCustomerId(nextId);
 
-  useEffect(() => {
-    setBlockedProductIds((prev) => {
-      if (prev.size === 0) return prev;
-      const stillInCart = new Set(cart.map((l) => l.product.product_id));
-      const next = new Set([...prev].filter((id) => stillInCart.has(id)));
-      return next.size === prev.size ? prev : next;
-    });
-  }, [cart]);
+    // Si el nuevo cliente no tiene crédito, las líneas en "Crédito" pasan
+    // al primer método disponible. La venta sigue normal.
+    const nextCustomer =
+      nextId != null
+        ? (activeCustomers.find((c) => c.id === nextId) ?? null)
+        : null;
+    if (!hasActiveCredit(nextCustomer)) {
+      setEntries((prev) =>
+        prev.some((e) => e.isCredit)
+          ? prev.map((e) => (e.isCredit ? newEntry(methods[0]?.id ?? null) : e))
+          : prev,
+      );
+    }
+  }
 
   const purchasableCart = useMemo(
     () =>
@@ -329,22 +364,22 @@ export const Checkout: React.FC = () => {
     0,
   );
 
-  const singleMethod = entries.length === 1;
+  const singleMethod = resolvedEntries.length === 1;
 
   function amountFor(entry: PaymentEntryState) {
     if (singleMethod) return total;
     return Number.parseFloat(entry.amount) || 0;
   }
 
-  const paid = entries.reduce((sum, e) => sum + amountFor(e), 0);
+  const paid = resolvedEntries.reduce((sum, e) => sum + amountFor(e), 0);
   const remaining = Math.round((total - paid) * 100) / 100;
 
-  const creditUsed = entries
+  const creditUsed = resolvedEntries
     .filter((e) => e.isCredit)
     .reduce((sum, e) => sum + amountFor(e), 0);
   const creditOverLimit = creditAvailable && creditUsed > creditLimit + 0.005;
 
-  const cashChange = entries
+  const cashChange = resolvedEntries
     .filter((e) => !e.isCredit && isCashMethod(methodById(e.paymentMethodId)))
     .reduce((sum, e) => {
       const amount = amountFor(e);
@@ -378,7 +413,7 @@ export const Checkout: React.FC = () => {
   }
 
   function addEntry() {
-    const usedIds = new Set(entries.map((e) => e.paymentMethodId));
+    const usedIds = new Set(resolvedEntries.map((e) => e.paymentMethodId));
     const next = methods.find((m) => !usedIds.has(m.id)) ?? methods[0];
     setEntries((prev) => [...prev, newEntry(next?.id ?? null)]);
   }
@@ -396,7 +431,7 @@ export const Checkout: React.FC = () => {
       .sort((a, b) => b - a)
       .forEach((i) => removeLine(i));
 
-    setBlockedProductIds((prev) => {
+    setRawBlockedProductIds((prev) => {
       const next = new Set(prev);
       next.delete(productId);
       return next;
@@ -405,7 +440,7 @@ export const Checkout: React.FC = () => {
 
   const missingFiscal =
     generateFiscal && (!fiscalNit.trim() || !fiscalName.trim());
-  const missingMethod = entries.some(
+  const missingMethod = resolvedEntries.some(
     (e) => !e.isCredit && e.paymentMethodId == null,
   );
   const blocked =
@@ -444,7 +479,7 @@ export const Checkout: React.FC = () => {
       const thatProductIsBlocked =
         onlyProductInCart && nowBlocked.has([...cartProductIds][0]);
 
-      setBlockedProductIds(nowBlocked);
+      setRawBlockedProductIds(nowBlocked);
       setReturnAfterStockAck(thatProductIsBlocked);
     } finally {
       setCheckingStock(false);
@@ -460,7 +495,7 @@ export const Checkout: React.FC = () => {
         setStockAlert({ productId, productName });
       }
       clearCart();
-      setBlockedProductIds(new Set());
+      setRawBlockedProductIds(new Set());
       setReturnAfterStockAck(false);
       router.back();
     }
@@ -469,7 +504,7 @@ export const Checkout: React.FC = () => {
   async function handleSubmit() {
     if (!claims) return;
 
-    const payments = entries.map((e) => {
+    const payments = resolvedEntries.map((e) => {
       const amount = amountFor(e);
       if (e.isCredit) {
         return { is_credit: true as const, amount };
@@ -537,7 +572,7 @@ export const Checkout: React.FC = () => {
       });
 
       clearCart();
-      setBlockedProductIds(new Set());
+      setRawBlockedProductIds(new Set());
       router.navigate("/(drawer)/(pos)/(process)/payment");
     } catch (err) {
       if (isInsufficientStockError(err)) {
@@ -777,11 +812,7 @@ export const Checkout: React.FC = () => {
                         ? String(customerId)
                         : GENERAL_CUSTOMER_VALUE
                     }
-                    onChange={(v) =>
-                      setCustomerId(
-                        v && v !== GENERAL_CUSTOMER_VALUE ? Number(v) : null,
-                      )
-                    }
+                    onChange={handleCustomerChange}
                   />
                 </VStack>
               )}
@@ -816,7 +847,7 @@ export const Checkout: React.FC = () => {
                 </HStack>
               )}
 
-              {entries.map((entry) => {
+              {resolvedEntries.map((entry) => {
                 const cash = isCashMethod(methodById(entry.paymentMethodId));
                 const amountEditable = !singleMethod;
                 const displayedAmount = singleMethod
@@ -885,7 +916,7 @@ export const Checkout: React.FC = () => {
                         inputStyle={{ textAlign: "right" }}
                       />
 
-                      {entries.length > 1 && (
+                      {resolvedEntries.length > 1 && (
                         <TouchableOpacity
                           onPress={() => removeEntry(entry.key)}
                         >

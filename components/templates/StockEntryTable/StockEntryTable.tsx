@@ -1,5 +1,5 @@
 // StockEntryTable.tsx
-import { Action, SummaryCard } from "@/components/atom";
+import { Action, ActionsMenu, SummaryCard } from "@/components/atom";
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { FilterPill } from "@/components/atom/FilterPill/FilterPill";
@@ -11,19 +11,25 @@ import {
   StockEntry,
 } from "@/src/types/entry_stock/entry_stock.types";
 import { SearchIcon } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { DataTable } from "react-native-paper";
 import { Buttons } from "../CustomTable";
 
-const STATUS_CONFIG: Record<
-  EntryStatus,
-  { label: string; color: string; bg: string }
-> = {
+interface StatusConfig {
+  label: string;
+  color: string;
+  bg: string;
+}
+
+const STATUS_CONFIG: Record<EntryStatus, StatusConfig> = {
   confirmed: { label: "Confirmado", color: "#27500A", bg: "#EAF3DE" },
   pending: { label: "Pendiente", color: "#633806", bg: "#FAEEDA" },
   cancelled: { label: "Cancelado", color: "#791F1F", bg: "#FCEBEB" },
 };
+
+// Orden de los filtros; tipado sin necesidad de casts sobre Object.entries.
+const STATUS_ORDER: EntryStatus[] = ["confirmed", "pending", "cancelled"];
 
 interface StockEntryTableProps {
   data: StockEntry[];
@@ -40,13 +46,30 @@ export function StockEntryTable({
   button,
   actions,
 }: StockEntryTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
   const [activeStatus, setActiveStatus] = useState<EntryStatus | null>(null);
 
-  const validData = useMemo(() => data.filter((r) => r?.id != null), [data]);
+  const hasActions = actions !== undefined && actions.length > 0;
 
-  const countByStatus = useMemo(() => {
+  // Los filtros reinician la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const handleStatusChange = (status: EntryStatus | null): void => {
+    setActiveStatus(status);
+    setPage(0);
+  };
+
+  const validData = useMemo<StockEntry[]>(
+    () => data.filter((r) => r?.id != null),
+    [data],
+  );
+
+  const countByStatus = useMemo<Partial<Record<EntryStatus, number>>>(() => {
     const map: Partial<Record<EntryStatus, number>> = {};
     validData.forEach((r) => {
       map[r.entry_status] = (map[r.entry_status] ?? 0) + 1;
@@ -54,7 +77,7 @@ export function StockEntryTable({
     return map;
   }, [validData]);
 
-  const filtered = useMemo(() => {
+  const filtered = useMemo<StockEntry[]>(() => {
     let rows = validData;
 
     if (activeStatus) {
@@ -75,16 +98,25 @@ export function StockEntryTable({
     return rows;
   }, [validData, activeStatus, search]);
 
-  React.useEffect(() => {
-    setPage(0);
-  }, [filtered.length]);
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian desde el padre y la página queda
+  // fuera de rango, se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filtered.length);
   const paginated = filtered.slice(from, to);
 
-  const totalAmount = filtered.reduce((a, r) => a + r.total, 0);
+  const summary = useMemo(() => {
+    let confirmed = 0;
+    let pending = 0;
+    let totalAmount = 0;
+    filtered.forEach((r) => {
+      if (r.entry_status === "confirmed") confirmed += 1;
+      if (r.entry_status === "pending") pending += 1;
+      totalAmount += r.total;
+    });
+    return { confirmed, pending, totalAmount };
+  }, [filtered]);
 
   return (
     <VStack style={styles.container}>
@@ -93,16 +125,16 @@ export function StockEntryTable({
           <AppInput
             placeholder="Buscar documento, proveedor, bodega…"
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
         </View>
 
         <HStack className="gap-3">
-          {button?.map((btn) => (
+          {button?.map((btn, index) => (
             <AppButton
-              key={btn.key}
+              key={btn.key ?? `btn-${index}`}
               label={btn.name}
               icon={btn.icon}
               variant="black"
@@ -119,27 +151,25 @@ export function StockEntryTable({
         <FilterPill
           label={`Todos (${validData.length})`}
           active={activeStatus === null}
-          onPress={() => setActiveStatus(null)}
+          onPress={() => handleStatusChange(null)}
         />
-        {(
-          Object.entries(STATUS_CONFIG) as [
-            EntryStatus,
-            (typeof STATUS_CONFIG)[EntryStatus],
-          ][]
-        ).map(([status, cfg]) =>
-          countByStatus[status] ? (
+        {STATUS_ORDER.map((status) => {
+          const count = countByStatus[status];
+          if (!count) return null;
+          const cfg = STATUS_CONFIG[status];
+          return (
             <FilterPill
               key={status}
-              label={`${cfg.label} (${countByStatus[status]})`}
+              label={`${cfg.label} (${count})`}
               active={activeStatus === status}
               color={cfg.color}
               bg={cfg.bg}
               onPress={() =>
-                setActiveStatus(activeStatus === status ? null : status)
+                handleStatusChange(activeStatus === status ? null : status)
               }
             />
-          ) : null,
-        )}
+          );
+        })}
       </HStack>
 
       <DataTable style={styles.table}>
@@ -153,7 +183,7 @@ export function StockEntryTable({
           <DataTable.Title style={{ flex: 1.5, justifyContent: "center" }}>
             Fecha
           </DataTable.Title>
-          {actions && actions.length > 0 && (
+          {hasActions && (
             <DataTable.Title style={{ marginLeft: 10 }}>
               Acciones
             </DataTable.Title>
@@ -219,12 +249,18 @@ export function StockEntryTable({
                   {new Date(row.document_date).toLocaleDateString("es-GT")}
                 </Text>
               </DataTable.Cell>
+
+              {hasActions && (
+                <DataTable.Cell>
+                  <ActionsMenu row={row} actions={actions ?? []} />
+                </DataTable.Cell>
+              )}
             </DataTable.Row>
           ))
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={
@@ -237,21 +273,14 @@ export function StockEntryTable({
         />
       </DataTable>
 
-      <HStack style={{ ...styles.summaryRow, marginBottom: 12 }}>
+      <HStack style={[styles.summaryRow, { marginBottom: 12 }]}>
         <SummaryCard label="Ingresos" value={String(filtered.length)} />
+        <SummaryCard label="Confirmados" value={String(summary.confirmed)} />
+        <SummaryCard label="Pendientes" value={String(summary.pending)} />
         <SummaryCard
-          label="Confirmados"
-          value={String(
-            filtered.filter((r) => r.entry_status === "confirmed").length,
-          )}
+          label="Total"
+          value={`Q${summary.totalAmount.toFixed(2)}`}
         />
-        <SummaryCard
-          label="Pendientes"
-          value={String(
-            filtered.filter((r) => r.entry_status === "pending").length,
-          )}
-        />
-        <SummaryCard label="Total" value={`Q${totalAmount.toFixed(2)}`} />
       </HStack>
     </VStack>
   );

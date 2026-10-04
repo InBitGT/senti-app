@@ -19,6 +19,7 @@ export default function InventoryFormLayout() {
       <Stack.Screen name="wholesale_form" />
       <Stack.Screen name="inventory_form" />
       <Stack.Screen name="cashier_form" />
+      <Stack.Screen name="packaging_form" />
     </Stack>
   );
 }

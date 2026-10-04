@@ -46,7 +46,45 @@ export interface CustomTableProps<T> {
   onRowPress?: (row: T) => void;
 }
 
-export function CustomTable<T extends Record<string, any>>({
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  borderBottomColor: "#d4d4d4",
+};
+
+// Lee una propiedad de la fila por su nombre sin recurrir a `any`.
+function getFieldValue<T extends object>(row: T, key: string): unknown {
+  return (row as Record<string, unknown>)[key];
+}
+
+// Convierte un valor desconocido en algo que se puede renderizar de forma segura.
+function toCellContent(value: unknown): React.ReactNode {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "string" || typeof value === "number") return value;
+  if (typeof value === "boolean") return value ? "Sí" : "No";
+  return "—";
+}
+
+function toSearchText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+  return "";
+}
+
+export function CustomTable<T extends object>({
   columns,
   data,
   keyExtractor,
@@ -59,36 +97,50 @@ export function CustomTable<T extends Record<string, any>>({
   getSearchableText,
   onRowPress,
 }: CustomTableProps<T>) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
+  // Solo guarda las columnas que el usuario cambió manualmente;
+  // las demás usan su `defaultVisible`.
+  const [columnOverrides, setColumnOverrides] = useState<
+    Record<string, boolean>
+  >({});
 
-  const optionalColumns = useMemo(
+  const hasActions = actions !== undefined && actions.length > 0;
+
+  const optionalColumns = useMemo<ColumnDef<T>[]>(
     () => columns.filter((c) => c.optional),
     [columns],
   );
 
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
-    () =>
-      optionalColumns.reduce(
-        (acc, col) => {
-          acc[col.key] = col.defaultVisible ?? true;
-          return acc;
-        },
-        {} as Record<string, boolean>,
-      ),
-  );
+  const isColumnVisible = (col: ColumnDef<T>): boolean =>
+    columnOverrides[col.key] ?? col.defaultVisible ?? true;
 
-  const toggleColumn = (key: string) => {
-    setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleColumn = (col: ColumnDef<T>): void => {
+    setColumnOverrides((prev) => ({
+      ...prev,
+      [col.key]: !(prev[col.key] ?? col.defaultVisible ?? true),
+    }));
   };
 
-  const displayedColumns = useMemo(
-    () => columns.filter((col) => !col.optional || visibleColumns[col.key]),
-    [columns, visibleColumns],
+  const displayedColumns = useMemo<ColumnDef<T>[]>(
+    () =>
+      columns.filter(
+        (col) =>
+          !col.optional ||
+          (columnOverrides[col.key] ?? col.defaultVisible ?? true),
+      ),
+    [columns, columnOverrides],
   );
 
-  const filteredData = React.useMemo(() => {
+  // La búsqueda reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const filteredData = useMemo<T[]>(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
 
@@ -101,38 +153,18 @@ export function CustomTable<T extends Record<string, any>>({
     const keys = searchKeys ?? columns.map((c) => c.key);
     return data.filter((row) =>
       keys.some((key) =>
-        String(row[key] ?? "")
-          .toLowerCase()
-          .includes(term),
+        toSearchText(getFieldValue(row, key)).toLowerCase().includes(term),
       ),
     );
   }, [data, search, searchKeys, columns, getSearchableText]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian y la página queda fuera de rango,
+  // se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#d4d4d4",
-  };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
@@ -141,7 +173,7 @@ export function CustomTable<T extends Record<string, any>>({
           <AppInput
             placeholder="Buscar..."
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -169,15 +201,13 @@ export function CustomTable<T extends Record<string, any>>({
               {optionalColumns.map((col) => (
                 <Menu.Item
                   key={col.key}
-                  onPress={() => toggleColumn(col.key)}
+                  onPress={() => toggleColumn(col)}
                   title={col.title}
                   leadingIcon={() => (
                     <View style={{ transform: [{ scale: 0.8 }] }}>
                       <Checkbox
-                        status={
-                          visibleColumns[col.key] ? "checked" : "unchecked"
-                        }
-                        onPress={() => toggleColumn(col.key)}
+                        status={isColumnVisible(col) ? "checked" : "unchecked"}
+                        onPress={() => toggleColumn(col)}
                       />
                     </View>
                   )}
@@ -186,11 +216,11 @@ export function CustomTable<T extends Record<string, any>>({
             </Menu>
           )}
 
-          {button?.map((btn) => {
+          {button?.map((btn, index) => {
             const isSolid = btn.variant === "solid";
             return (
               <AppButton
-                key={btn.key}
+                key={btn.key ?? `btn-${index}`}
                 label={btn.name}
                 icon={btn.icon ?? Plus}
                 variant="black"
@@ -206,14 +236,14 @@ export function CustomTable<T extends Record<string, any>>({
         </HStack>
       </HStack>
 
-      <DataTable style={[defaultStyle, style]}>
+      <DataTable style={[tableStyle, style]}>
         <DataTable.Header style={rowBorder}>
           {displayedColumns.map((col) => (
             <DataTable.Title key={col.key} numeric={col.numeric}>
               {col.title}
             </DataTable.Title>
           ))}
-          {actions && actions.length > 0 && (
+          {hasActions && (
             <DataTable.Title style={{ marginLeft: 10 }}>
               Acciones
             </DataTable.Title>
@@ -235,12 +265,14 @@ export function CustomTable<T extends Record<string, any>>({
             >
               {displayedColumns.map((col) => (
                 <DataTable.Cell key={col.key} numeric={col.numeric}>
-                  {col.render ? col.render(row) : (row[col.key] ?? "—")}
+                  {col.render
+                    ? col.render(row)
+                    : toCellContent(getFieldValue(row, col.key))}
                 </DataTable.Cell>
               ))}
-              {actions && actions.length > 0 && (
+              {hasActions && (
                 <DataTable.Cell>
-                  <ActionsMenu row={row} actions={actions} />
+                  <ActionsMenu row={row} actions={actions ?? []} />
                 </DataTable.Cell>
               )}
             </DataTable.Row>
@@ -248,7 +280,7 @@ export function CustomTable<T extends Record<string, any>>({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

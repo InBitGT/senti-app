@@ -6,7 +6,7 @@ import { VStack } from "@/components/ui/vstack";
 import { InventoryStockItem } from "@/src/types/inventory/inventory";
 import { formatCurrency } from "@/src/utils/formatCurrency/formatCurrency";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { Checkbox, DataTable, Menu } from "react-native-paper";
 
@@ -18,12 +18,34 @@ export interface InventoryStockTableProps {
 
 type OptionalColumnKey = "reserved" | "cost";
 
-const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
+interface OptionalColumn {
+  key: OptionalColumnKey;
+  label: string;
+}
+
+const OPTIONAL_COLUMNS: OptionalColumn[] = [
   { key: "reserved", label: "Reservado" },
   { key: "cost", label: "Costo promedio" },
 ];
 
-const StockBadge = ({ item }: { item: InventoryStockItem }) => {
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  borderBottomColor: "#d4d4d4",
+};
+
+interface StockBadgeProps {
+  item: InventoryStockItem;
+}
+
+const StockBadge = ({ item }: StockBadgeProps) => {
   const isEmpty = item.available_qty <= 0;
   const bg = isEmpty ? "#fee2e2" : "#dcfce7";
   const color = isEmpty ? "#dc2626" : "#16a34a";
@@ -54,9 +76,9 @@ export function InventoryStockTable({
   onRowPress,
   itemsPerPage = 8,
 }: InventoryStockTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
@@ -64,11 +86,18 @@ export function InventoryStockTable({
     cost: false,
   });
 
-  const toggleColumn = (key: OptionalColumnKey) => {
+  const toggleColumn = (key: OptionalColumnKey): void => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const filtered = useMemo(() => {
+  // La búsqueda reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const filtered = useMemo<InventoryStockItem[]>(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
     return data.filter(
@@ -78,27 +107,13 @@ export function InventoryStockTable({
     );
   }, [data, search]);
 
-  React.useEffect(() => {
-    setPage(0);
-  }, [filtered.length]);
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian desde el padre y la página queda
+  // fuera de rango, se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filtered.length);
   const paginated = filtered.slice(from, to);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#d4d4d4",
-  };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
@@ -107,7 +122,7 @@ export function InventoryStockTable({
           <AppInput
             placeholder="Buscar producto o SKU…"
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -148,7 +163,7 @@ export function InventoryStockTable({
         </Menu>
       </HStack>
 
-      <DataTable style={defaultStyle}>
+      <DataTable style={tableStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title style={{ flex: 2 }}>Producto</DataTable.Title>
           <DataTable.Title numeric>En existencia</DataTable.Title>
@@ -232,7 +247,7 @@ export function InventoryStockTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

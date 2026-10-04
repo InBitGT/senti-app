@@ -8,14 +8,17 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { MerchandiseListItem } from "@/src/types/merchandise/merchandise.types";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Checkbox, DataTable, Menu } from "react-native-paper";
 
-const TYPE_CONFIG: Record<
-  string,
-  { label: string; color: string; bg: string }
-> = {
+interface TypeConfig {
+  label: string;
+  color: string;
+  bg: string;
+}
+
+const TYPE_CONFIG: Record<string, TypeConfig> = {
   storable: { label: "Almacenable", color: "#0C447C", bg: "#E6F1FB" },
   ingredient: { label: "Ingrediente", color: "#633806", bg: "#FAEEDA" },
   finished_product: {
@@ -26,6 +29,8 @@ const TYPE_CONFIG: Record<
   menu_item: { label: "Ítem de menú", color: "#3C3489", bg: "#EEEDFE" },
 };
 
+const TYPE_ENTRIES: [string, TypeConfig][] = Object.entries(TYPE_CONFIG);
+
 type OptionalColumnKey =
   | "category"
   | "brand"
@@ -33,7 +38,12 @@ type OptionalColumnKey =
   | "price"
   | "modifier";
 
-const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
+interface OptionalColumn {
+  key: OptionalColumnKey;
+  label: string;
+}
+
+const OPTIONAL_COLUMNS: OptionalColumn[] = [
   { key: "category", label: "Categoría" },
   { key: "brand", label: "Marca" },
   { key: "barcode", label: "Código de barras" },
@@ -41,8 +51,16 @@ const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
   { key: "modifier", label: "Modificador" },
 ];
 
-function TypeBadge({ type }: { type: string }) {
-  const cfg = TYPE_CONFIG[type] ?? { label: type, color: "#444", bg: "#eee" };
+interface TypeBadgeProps {
+  type: string;
+}
+
+function TypeBadge({ type }: TypeBadgeProps) {
+  const cfg: TypeConfig = TYPE_CONFIG[type] ?? {
+    label: type,
+    color: "#444",
+    bg: "#eee",
+  };
   return (
     <View style={[styles.badge, { backgroundColor: cfg.bg }]}>
       <Text style={[styles.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
@@ -50,14 +68,18 @@ function TypeBadge({ type }: { type: string }) {
   );
 }
 
-function AvailabilityDot({ status }: { status: string }) {
+interface AvailabilityDotProps {
+  status: string;
+}
+
+function AvailabilityDot({ status }: AvailabilityDotProps) {
   const isAvailable = status === "available";
   return (
     <View
-      style={{
-        backgroundColor: isAvailable ? "#1D9E75" : "#d4d4d4",
-        ...styles.availDot,
-      }}
+      style={[
+        styles.availDot,
+        { backgroundColor: isAvailable ? "#1D9E75" : "#d4d4d4" },
+      ]}
     />
   );
 }
@@ -77,10 +99,10 @@ export function MerchandiseTable({
   button,
   actions,
 }: MerchandiseTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
   const [activeType, setActiveType] = useState<string | null>(null);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
@@ -91,17 +113,31 @@ export function MerchandiseTable({
     modifier: false,
   });
 
-  const toggleColumn = (key: OptionalColumnKey) => {
+  const hasActions = actions !== undefined && actions.length > 0;
+
+  const toggleColumn = (key: OptionalColumnKey): void => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Los filtros reinician la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const handleTypeChange = (type: string | null): void => {
+    setActiveType(type);
+    setPage(0);
+  };
+
   // Se lee directo de item.product.* — sin mapear el array a otra forma antes.
-  const validData = useMemo(
+  const validData = useMemo<MerchandiseListItem[]>(
     () => data.filter((r) => r?.product?.name != null),
     [data],
   );
 
-  const countByType = useMemo(() => {
+  const countByType = useMemo<Record<string, number>>(() => {
     const map: Record<string, number> = {};
     validData.forEach((r) => {
       map[r.product.type] = (map[r.product.type] ?? 0) + 1;
@@ -109,7 +145,7 @@ export function MerchandiseTable({
     return map;
   }, [validData]);
 
-  const filtered = useMemo(() => {
+  const filtered = useMemo<MerchandiseListItem[]>(() => {
     let rows = validData;
 
     if (activeType) {
@@ -134,12 +170,11 @@ export function MerchandiseTable({
     return rows;
   }, [validData, activeType, search]);
 
-  React.useEffect(() => {
-    setPage(0);
-  }, [filtered.length]);
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian desde el padre y la página queda
+  // fuera de rango, se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filtered.length);
   const paginated = filtered.slice(from, to);
 
@@ -150,7 +185,7 @@ export function MerchandiseTable({
           <AppInput
             placeholder="Buscar producto, SKU, marca, categoría…"
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -209,9 +244,9 @@ export function MerchandiseTable({
         <FilterPill
           label={`Todos (${validData.length})`}
           active={activeType === null}
-          onPress={() => setActiveType(null)}
+          onPress={() => handleTypeChange(null)}
         />
-        {Object.entries(TYPE_CONFIG).map(([type, cfg]) =>
+        {TYPE_ENTRIES.map(([type, cfg]) =>
           countByType[type] ? (
             <FilterPill
               key={type}
@@ -219,7 +254,9 @@ export function MerchandiseTable({
               active={activeType === type}
               color={cfg.color}
               bg={cfg.bg}
-              onPress={() => setActiveType(activeType === type ? null : type)}
+              onPress={() =>
+                handleTypeChange(activeType === type ? null : type)
+              }
             />
           ) : null,
         )}
@@ -263,7 +300,7 @@ export function MerchandiseTable({
           <DataTable.Title style={{ justifyContent: "center" }}>
             Disp.
           </DataTable.Title>
-          {actions && actions.length > 0 && (
+          {hasActions && (
             <DataTable.Title style={{ marginLeft: 10 }}>
               Acciones
             </DataTable.Title>
@@ -370,9 +407,9 @@ export function MerchandiseTable({
                   <AvailabilityDot status={p.availability_status} />
                 </DataTable.Cell>
 
-                {actions && actions.length > 0 && (
+                {hasActions && (
                   <DataTable.Cell>
-                    <ActionsMenu row={row} actions={actions} />
+                    <ActionsMenu row={row} actions={actions ?? []} />
                   </DataTable.Cell>
                 )}
               </DataTable.Row>
@@ -381,7 +418,7 @@ export function MerchandiseTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

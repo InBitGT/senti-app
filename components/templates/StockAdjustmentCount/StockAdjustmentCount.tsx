@@ -8,7 +8,7 @@ import {
   StockAdjustmentCount,
 } from "@/src/types/stock_adjustment/stock_adjustment.types";
 import { SearchIcon } from "lucide-react-native";
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { DataTable } from "react-native-paper";
 
@@ -20,20 +20,27 @@ export interface StockAdjustmentsTableProps {
   onStatusFilterChange: (status: StatusAdjustmentStockSelect) => void;
 }
 
-const STATUS_OPTIONS: { value: StatusAdjustmentStockSelect; label: string }[] =
-  [
-    {
-      value: StatusAdjustmentStockSelect.PENDING,
-      label: "Pendiente de aprobación",
-    },
-    { value: StatusAdjustmentStockSelect.APPROVED, label: "Aprobado" },
-    { value: StatusAdjustmentStockSelect.REJECTED, label: "Rechazado" },
-  ];
+interface StatusOption {
+  value: StatusAdjustmentStockSelect;
+  label: string;
+}
 
-const STATUS_STYLES: Record<
-  string,
-  { bg: string; color: string; label: string }
-> = {
+interface StatusStyle {
+  bg: string;
+  color: string;
+  label: string;
+}
+
+const STATUS_OPTIONS: StatusOption[] = [
+  {
+    value: StatusAdjustmentStockSelect.PENDING,
+    label: "Pendiente de aprobación",
+  },
+  { value: StatusAdjustmentStockSelect.APPROVED, label: "Aprobado" },
+  { value: StatusAdjustmentStockSelect.REJECTED, label: "Rechazado" },
+];
+
+const STATUS_STYLES: Record<StatusAdjustmentStockSelect, StatusStyle> = {
   [StatusAdjustmentStockSelect.PENDING]: {
     bg: "#fef9c3",
     color: "#a16207",
@@ -51,12 +58,39 @@ const STATUS_STYLES: Record<
   },
 };
 
-const StatusBadge = ({ status }: { status: string }) => {
-  const style = STATUS_STYLES[status] ?? {
-    bg: "#f3f4f6",
-    color: "#374151",
-    label: status,
-  };
+const STATUS_VALUES: string[] = Object.values(StatusAdjustmentStockSelect);
+
+// Type guard: valida que un string sea un estado válido sin usar casts.
+const isAdjustmentStatus = (
+  value: string,
+): value is StatusAdjustmentStockSelect => STATUS_VALUES.includes(value);
+
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+  overflow: "hidden",
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  borderBottomColor: "#d4d4d4",
+  paddingVertical: 10,
+  paddingHorizontal: 8,
+  minHeight: 48,
+};
+
+interface StatusBadgeProps {
+  status: string;
+}
+
+const StatusBadge = ({ status }: StatusBadgeProps) => {
+  const style: StatusStyle = isAdjustmentStatus(status)
+    ? STATUS_STYLES[status]
+    : { bg: "#f3f4f6", color: "#374151", label: status };
+
   return (
     <View
       style={{
@@ -81,10 +115,23 @@ export function StockAdjustmentsTable({
   statusFilter,
   onStatusFilterChange,
 }: StockAdjustmentsTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
 
-  const filteredData = React.useMemo(() => {
+  // Los filtros reinician la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const handleStatusChange = (value: string): void => {
+    if (!isAdjustmentStatus(value)) return;
+    onStatusFilterChange(value);
+    setPage(0);
+  };
+
+  const filteredData = useMemo<StockAdjustmentCount[]>(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
     return data.filter((item) =>
@@ -98,34 +145,13 @@ export function StockAdjustmentsTable({
   }, [data, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian (por ejemplo, cuando el padre
+  // recarga con otro estado) y la página queda fuera de rango, se ajusta
+  // sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search, statusFilter]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-    overflow: "hidden",
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#d4d4d4",
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    minHeight: 48,
-  };
 
   return (
     <VStack
@@ -145,7 +171,7 @@ export function StockAdjustmentsTable({
           <AppInput
             placeholder="Buscar ajuste..."
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -157,14 +183,12 @@ export function StockAdjustmentsTable({
             searchable={false}
             options={STATUS_OPTIONS}
             value={statusFilter}
-            onChange={(value) =>
-              onStatusFilterChange(value as StatusAdjustmentStockSelect)
-            }
+            onChange={handleStatusChange}
           />
         </View>
       </HStack>
 
-      <DataTable style={defaultStyle}>
+      <DataTable style={tableStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title>ID</DataTable.Title>
           <DataTable.Title>Bodega</DataTable.Title>
@@ -204,7 +228,7 @@ export function StockAdjustmentsTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

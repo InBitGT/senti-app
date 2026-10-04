@@ -6,7 +6,7 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { ProductWholesaleRule } from "@/src/types/wholesale/wholesale";
 import { Plus, SearchIcon } from "lucide-react-native";
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { DataTable } from "react-native-paper";
 
@@ -18,6 +18,19 @@ export interface ProductWholesaleTableProps {
   onRowPress?: (row: ProductWholesaleRule) => void;
 }
 
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  borderBottomColor: "#d4d4d4",
+};
+
 export function ProductWholesaleTable({
   data,
   actions,
@@ -25,10 +38,19 @@ export function ProductWholesaleTable({
   onNewRule,
   onRowPress,
 }: ProductWholesaleTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
 
-  const filteredData = React.useMemo(() => {
+  const hasActions = actions !== undefined && actions.length > 0;
+
+  // La búsqueda reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const filteredData = useMemo<ProductWholesaleRule[]>(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
     return data.filter((item) =>
@@ -41,30 +63,12 @@ export function ProductWholesaleTable({
   }, [data, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian y la página queda fuera de rango,
+  // se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#d4d4d4",
-  };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
@@ -73,7 +77,7 @@ export function ProductWholesaleTable({
           <AppInput
             placeholder="Buscar producto..."
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -81,7 +85,7 @@ export function ProductWholesaleTable({
 
         {onNewRule && (
           <AppButton
-            label={"Crear descuento"}
+            label="Crear descuento"
             icon={Plus}
             variant="black"
             fullWidth={false}
@@ -91,15 +95,13 @@ export function ProductWholesaleTable({
         )}
       </HStack>
 
-      <DataTable style={defaultStyle}>
+      <DataTable style={tableStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title>Producto</DataTable.Title>
           <DataTable.Title>SKU</DataTable.Title>
           <DataTable.Title numeric>Cant. mínima</DataTable.Title>
           <DataTable.Title numeric>Descuento</DataTable.Title>
-          {actions && actions.length > 0 && (
-            <DataTable.Title>Acciones</DataTable.Title>
-          )}
+          {hasActions && <DataTable.Title>Acciones</DataTable.Title>}
         </DataTable.Header>
 
         {paginatedData.length === 0 ? (
@@ -116,11 +118,15 @@ export function ProductWholesaleTable({
               onPress={onRowPress ? () => onRowPress(item) : undefined}
             >
               <DataTable.Cell>
-                <Text style={{ color: "#000000" }}>{item.product?.name}</Text>
+                <Text style={{ color: "#000000" }}>
+                  {item.product?.name ?? "—"}
+                </Text>
               </DataTable.Cell>
 
               <DataTable.Cell>
-                <Text style={{ color: "#000000" }}>{item.product?.sku}</Text>
+                <Text style={{ color: "#000000" }}>
+                  {item.product?.sku ?? "—"}
+                </Text>
               </DataTable.Cell>
 
               <DataTable.Cell numeric>
@@ -133,9 +139,9 @@ export function ProductWholesaleTable({
                 </Text>
               </DataTable.Cell>
 
-              {actions && actions.length > 0 && (
+              {hasActions && (
                 <DataTable.Cell>
-                  <ActionsMenu row={item} actions={actions} />
+                  <ActionsMenu row={item} actions={actions ?? []} />
                 </DataTable.Cell>
               )}
             </DataTable.Row>
@@ -143,7 +149,7 @@ export function ProductWholesaleTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

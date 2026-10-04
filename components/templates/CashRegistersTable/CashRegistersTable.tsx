@@ -7,7 +7,7 @@ import { VStack } from "@/components/ui/vstack";
 import { useAuthStore } from "@/src/store";
 import { CashRegister } from "@/src/types/cash_register/cash_register";
 import { Plus, SearchIcon } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { DataTable } from "react-native-paper";
 
@@ -19,6 +19,19 @@ export interface CashRegistersTableProps {
   onRowPress?: (row: CashRegister) => void;
 }
 
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  borderBottomColor: "#d4d4d4",
+};
+
 export function CashRegistersTable({
   data,
   actions,
@@ -27,10 +40,12 @@ export function CashRegistersTable({
   onRowPress,
 }: CashRegistersTableProps) {
   const { claims } = useAuthStore();
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
 
-  const warehouseNameById = useMemo(() => {
+  const hasActions = actions !== undefined && actions.length > 0;
+
+  const warehouseNameById = useMemo<Map<number, string>>(() => {
     const map = new Map<number, string>();
     claims?.branches?.forEach((branch) => {
       branch.warehouses.forEach((w) => {
@@ -40,7 +55,14 @@ export function CashRegistersTable({
     return map;
   }, [claims]);
 
-  const filteredData = React.useMemo(() => {
+  // La búsqueda reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const filteredData = useMemo<CashRegister[]>(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
     return data.filter((item) =>
@@ -54,30 +76,12 @@ export function CashRegistersTable({
   }, [data, search, warehouseNameById]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian y la página queda fuera de rango,
+  // se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#d4d4d4",
-  };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
@@ -86,7 +90,7 @@ export function CashRegistersTable({
           <AppInput
             placeholder="Buscar caja..."
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -104,14 +108,12 @@ export function CashRegistersTable({
         )}
       </HStack>
 
-      <DataTable style={defaultStyle}>
+      <DataTable style={tableStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title>Código</DataTable.Title>
           <DataTable.Title>Nombre</DataTable.Title>
           <DataTable.Title>Bodega</DataTable.Title>
-          {actions && actions.length > 0 && (
-            <DataTable.Title>Acciones</DataTable.Title>
-          )}
+          {hasActions && <DataTable.Title>Acciones</DataTable.Title>}
         </DataTable.Header>
 
         {paginatedData.length === 0 ? (
@@ -142,9 +144,9 @@ export function CashRegistersTable({
                 </Text>
               </DataTable.Cell>
 
-              {actions && actions.length > 0 && (
+              {hasActions && (
                 <DataTable.Cell>
-                  <ActionsMenu row={item} actions={actions} />
+                  <ActionsMenu row={item} actions={actions ?? []} />
                 </DataTable.Cell>
               )}
             </DataTable.Row>
@@ -152,7 +154,7 @@ export function CashRegistersTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={
