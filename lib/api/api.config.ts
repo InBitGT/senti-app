@@ -188,4 +188,19 @@ export const ENDPOINT = {
     detail: (idTenant: number | string) =>
       `inventory-service/api/inventory-stock/low-stock?tenant_id=${idTenant}`,
   },
+  packaging: {
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+    info: `inventory-service/api/product`,
+  },
+  ingredient: {
+    info: "inventory-service/api/product",
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+  },
+  serviceProduct: {
+    info: "inventory-service/api/product/full",
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+  },
 };

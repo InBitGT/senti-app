@@ -9,6 +9,7 @@ import {
   InventoryMovement,
   MovementType,
 } from "@/src/types/movement/movement.types";
+import type { LucideIcon } from "lucide-react-native";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -19,14 +20,18 @@ import {
   SearchIcon,
   SlidersHorizontal,
 } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { Checkbox, DataTable, Menu } from "react-native-paper";
 
-const MOVEMENT_CONFIG: Record<
-  MovementType,
-  { label: string; color: string; bg: string; icon: any }
-> = {
+interface MovementConfig {
+  label: string;
+  color: string;
+  bg: string;
+  icon: LucideIcon;
+}
+
+const MOVEMENT_CONFIG: Record<MovementType, MovementConfig> = {
   entry: {
     label: "Entrada",
     color: "#0C447C",
@@ -66,14 +71,13 @@ const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
   { key: "reference", label: "Referencia" },
 ];
 
-function MovementBadge({
-  type,
-  iconOnly,
-}: {
+interface MovementBadgeProps {
   type: MovementType;
   iconOnly?: boolean;
-}) {
-  const cfg = MOVEMENT_CONFIG[type] ?? {
+}
+
+function MovementBadge({ type, iconOnly }: MovementBadgeProps) {
+  const cfg: MovementConfig = MOVEMENT_CONFIG[type] ?? {
     label: type,
     color: "#444",
     bg: "#eee",
@@ -107,10 +111,10 @@ export function MovementsTable({
   onRowPress,
   itemsPerPage = 8,
 }: MovementsTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
   const [activeType, setActiveType] = useState<MovementType | null>(null);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
@@ -121,16 +125,26 @@ export function MovementsTable({
   const { width } = useWindowDimensions();
   const isMobile = width < 640;
 
-  const toggleColumn = (key: OptionalColumnKey) => {
+  const toggleColumn = (key: OptionalColumnKey): void => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const validData = useMemo(
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const handleTypeChange = (type: MovementType | null): void => {
+    setActiveType(type);
+    setPage(0);
+  };
+
+  const validData = useMemo<InventoryMovement[]>(
     () => data.filter((r) => r?.product != null),
     [data],
   );
 
-  const filtered = useMemo(() => {
+  const filtered = useMemo<InventoryMovement[]>(() => {
     let rows = validData;
 
     if (activeType) {
@@ -151,22 +165,24 @@ export function MovementsTable({
     return rows;
   }, [validData, activeType, search]);
 
-  React.useEffect(() => {
-    setPage(0);
-  }, [filtered.length]);
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filtered.length);
   const paginated = filtered.slice(from, to);
 
-  const countByType = useMemo(() => {
+  const countByType = useMemo<Partial<Record<MovementType, number>>>(() => {
     const map: Partial<Record<MovementType, number>> = {};
     validData.forEach((r) => {
       map[r.movement_type] = (map[r.movement_type] ?? 0) + 1;
     });
     return map;
   }, [validData]);
+
+  const configEntries = Object.entries(MOVEMENT_CONFIG) as [
+    MovementType,
+    MovementConfig,
+  ][];
 
   return (
     <VStack style={styles.container}>
@@ -175,7 +191,7 @@ export function MovementsTable({
           <AppInput
             placeholder="Buscar producto, SKU, referencia, lote…"
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000000" }}
           />
@@ -220,14 +236,9 @@ export function MovementsTable({
         <FilterPill
           label={`Todos (${validData.length})`}
           active={activeType === null}
-          onPress={() => setActiveType(null)}
+          onPress={() => handleTypeChange(null)}
         />
-        {(
-          Object.entries(MOVEMENT_CONFIG) as [
-            MovementType,
-            (typeof MOVEMENT_CONFIG)[MovementType],
-          ][]
-        ).map(([type, cfg]) =>
+        {configEntries.map(([type, cfg]) =>
           countByType[type] ? (
             <FilterPill
               key={type}
@@ -235,7 +246,9 @@ export function MovementsTable({
               active={activeType === type}
               color={cfg.color}
               bg={cfg.bg}
-              onPress={() => setActiveType(activeType === type ? null : type)}
+              onPress={() =>
+                handleTypeChange(activeType === type ? null : type)
+              }
             />
           ) : null,
         )}
@@ -337,7 +350,7 @@ export function MovementsTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={
