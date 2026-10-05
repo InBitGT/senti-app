@@ -1,8 +1,9 @@
-import { Order } from '@/src/screen/workspace/order/Order'
-import React from 'react'
+// import { Order } from '@/src/screen/workspace/order/Order'
 
 export default function order() {
-  return (
-    <Order/>
-  )
+  // TODO: Order/comandas se eliminó en c166002, ruta pendiente de quitar
+  // return (
+  //   <Order/>
+  // )
+  return null
 }
