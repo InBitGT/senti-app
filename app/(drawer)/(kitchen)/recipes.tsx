@@ -1,5 +1,5 @@
-import { View } from "react-native";
+import { RecipeScreen } from "@/src/screen/kitchen/Recipe/Recipe";
 
 export default function recipes() {
-  return <View />;
+  return <RecipeScreen />;
 }

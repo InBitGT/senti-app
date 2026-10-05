@@ -203,4 +203,9 @@ export const ENDPOINT = {
     detail: (idTenant: number | string, type: string) =>
       `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
   },
+  recipe: {
+    info: "inventory-service/api/product/full",
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+  },
 };
