@@ -51,6 +51,13 @@ export default function DrawerLayout() {
           })}
         />
         <Drawer.Screen
+          name="(kitchen)"
+          options={({ route }) => ({
+            headerShown: !isForm,
+            title: getGroupTitle("(kitchen)", route, "Cocina"),
+          })}
+        />
+        <Drawer.Screen
           name="(config)"
           options={({ route }) => ({
             headerShown: !isForm,

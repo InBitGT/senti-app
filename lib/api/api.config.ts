@@ -196,7 +196,7 @@ export const ENDPOINT = {
   ingredient: {
     info: "inventory-service/api/product",
     detail: (idTenant: number | string, type: string) =>
-      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+      `inventory-service/api/product?tenant_id=${idTenant}&type=${type}`,
   },
   serviceProduct: {
     info: "inventory-service/api/product/full",

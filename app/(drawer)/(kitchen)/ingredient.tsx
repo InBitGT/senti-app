@@ -1,5 +1,5 @@
-import { View } from "react-native";
+import { IngredientScreen } from "@/src/screen/kitchen/Ingredient/Ingredient";
 
 export default function ingredient() {
-  return <View />;
+  return <IngredientScreen />;
 }
