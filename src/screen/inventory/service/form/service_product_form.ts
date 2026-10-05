@@ -12,7 +12,6 @@ export interface ServiceVariantFormValue {
 export interface ServiceRecipeIngredientFormValue {
   ingredient_id: string;
   quantity: string;
-  unit: string;
   waste_factor: string;
   variant_name: string;
 }
@@ -23,7 +22,8 @@ export interface ServiceProductFormValues {
   sku: string;
   barcode: string;
   brand: string;
-  category_id: string;
+  category_root_id: string;
+  subcategory_id: string;
   unit_of_measure_id: string;
   average_cost: string;
   availability_status: ServiceAvailabilityStatus;
@@ -46,7 +46,6 @@ export const EMPTY_SERVICE_RECIPE_INGREDIENT: ServiceRecipeIngredientFormValue =
   {
     ingredient_id: "",
     quantity: "1",
-    unit: "unidad",
-    waste_factor: "0",
+    waste_factor: "",
     variant_name: "",
   };

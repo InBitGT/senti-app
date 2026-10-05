@@ -11,13 +11,20 @@ export function toServiceProductFormValues(
 ): ServiceProductFormValues {
   const product = data?.product;
 
+  const isInSubcategory =
+    !!product?.parent_category_id &&
+    product.parent_category_id !== product.category_id;
+
   return {
     name: product?.name ?? "",
     description: product?.description ?? "",
     sku: product?.sku ?? "",
     barcode: product?.barcode ?? "",
     brand: product?.brand ?? "",
-    category_id: toText(product?.category_id),
+    category_root_id: isInSubcategory
+      ? toText(product?.parent_category_id)
+      : toText(product?.category_id),
+    subcategory_id: isInSubcategory ? toText(product?.category_id) : "",
     unit_of_measure_id: toText(product?.unit_of_measure_id),
     average_cost: toText(product?.average_cost ?? 0),
     availability_status: product?.availability_status ?? "available",
@@ -32,12 +39,11 @@ export function toServiceProductFormValues(
     ),
     has_recipe: data?.recipe !== null && data?.recipe !== undefined,
     recipe_name: data?.recipe?.name ?? "",
-    recipe_version: toText(data?.recipe?.version ?? 1),
+    recipe_version: toText(data?.recipe?.version),
     recipe_ingredients: (data?.recipe?.ingredients ?? []).map((item) => ({
       ingredient_id: String(item.ingredient_id),
       quantity: String(item.quantity),
-      unit: item.unit,
-      waste_factor: String(item.waste_factor),
+      waste_factor: toText(item.waste_factor),
       variant_name: item.variant_name ?? "",
     })),
   };
@@ -49,7 +55,7 @@ export function toServiceProductPayload(
 ): CreateServiceProduct {
   const payload: CreateServiceProduct = {
     tenant_id: tenantId,
-    category_id: Number(values.category_id),
+    category_id: Number(values.subcategory_id || values.category_root_id),
     name: values.name.trim(),
     description: toNullable(values.description),
     sku: values.sku.trim(),
@@ -64,32 +70,25 @@ export function toServiceProductPayload(
       amount: toNumber(values.price_amount),
       currency: "GTQ",
     },
-  };
-
-  if (values.variants.length > 0) {
-    payload.variants = values.variants.map((variant) => ({
+    variants: values.variants.map((variant) => ({
       name: variant.name.trim(),
       price_adjustment: toNumber(variant.price_adjustment),
       adjustment_type: variant.adjustment_type,
-    }));
-  }
-
-  if (values.product_modifier_ids.length > 0) {
-    payload.product_modifier_ids = values.product_modifier_ids;
-  }
+    })),
+    product_modifier_ids: values.product_modifier_ids,
+  };
 
   if (values.has_recipe && values.recipe_ingredients.length > 0) {
     payload.recipe = {
-      name: values.recipe_name.trim(),
-      version: Number(values.recipe_version),
       ingredients: values.recipe_ingredients.map(
         (item): CreateServiceRecipeIngredient => {
           const ingredient: CreateServiceRecipeIngredient = {
             ingredient_id: Number(item.ingredient_id),
             quantity: toNumber(item.quantity),
-            unit: item.unit.trim(),
-            waste_factor: toNumber(item.waste_factor),
           };
+          if (item.waste_factor.trim().length > 0) {
+            ingredient.waste_factor = toNumber(item.waste_factor);
+          }
           const variantName = item.variant_name.trim();
           if (variantName.length > 0) {
             ingredient.variant_name = variantName;
@@ -98,6 +97,13 @@ export function toServiceProductPayload(
         },
       ),
     };
+    const recipeName = values.recipe_name.trim();
+    if (recipeName.length > 0) {
+      payload.recipe.name = recipeName;
+    }
+    if (values.recipe_version.trim().length > 0) {
+      payload.recipe.version = Number(values.recipe_version);
+    }
   }
 
   return payload;
