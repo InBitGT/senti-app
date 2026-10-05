@@ -14,7 +14,7 @@ export async function ingredientFn(): Promise<Ingredient[] | undefined> {
   }
 
   const response = await get<Ingredient[]>(
-    ENDPOINT.ingredient.detail(claims.tenant_id, "ingredients"),
+    ENDPOINT.ingredient.detail(claims.tenant_id, "ingredient"),
   );
 
   if (response.code !== "200") {

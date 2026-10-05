@@ -21,6 +21,10 @@ const routeTitles: Record<string, Record<string, string>> = {
     cashier: "Cajero",
     packaging: "Material de empaque",
   },
+  "(kitchen)": {
+    ingredient: "Ingredientes",
+    recipes: "Recetas",
+  },
   "(portfolio)": {
     client: "Clientes",
     client_type: "Tipos de Clientes",
