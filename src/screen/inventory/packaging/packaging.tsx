@@ -6,6 +6,7 @@ import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { usePackaging } from "@/src/hooks/usePackaging/usePackaging";
 import { usePackagingStore } from "@/src/store/usePackagingStore/usePackagingStore";
 import { Packaging as PackagingModel } from "@/src/types/packaging/packaging";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
 
@@ -30,7 +31,7 @@ export const PackagingScreen: React.FC = () => {
   const handleEdit = (row: PackagingModel): void => {
     setIsEdit(true);
     setData(row);
-    // router.navigate(FORM_ROUTE);
+    router.navigate("/(drawer)/(inventory)/(form)/packaging_form");
   };
 
   const handleAskDelete = (row: PackagingModel): void => {
@@ -56,7 +57,7 @@ export const PackagingScreen: React.FC = () => {
   const handleCreate = (): void => {
     setIsEdit(false);
     setData(undefined);
-    // router.navigate();
+    router.navigate("/(drawer)/(inventory)/(form)/packaging_form");
   };
 
   const actions: Action<PackagingModel>[] = [

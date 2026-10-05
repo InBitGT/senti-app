@@ -190,7 +190,7 @@ export const ENDPOINT = {
   },
   packaging: {
     detail: (idTenant: number | string, type: string) =>
-      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+      `inventory-service/api/product?tenant_id=${idTenant}&is_modifier=true&type=${type}`,
     info: `inventory-service/api/product`,
   },
   ingredient: {

@@ -1,39 +1,31 @@
+import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
+import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { ChevronDownIcon, Icon } from "@/components/ui/icon";
-import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectIcon,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
-} from "@/components/ui/select";
+import { Icon } from "@/components/ui/icon";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { useCategorie } from "@/src/hooks";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { usePackaging } from "@/src/hooks/usePackaging/usePackaging";
+import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { usePackagingStore } from "@/src/store/usePackagingStore/usePackagingStore";
+import { Category } from "@/src/types";
 import {
     AVAILABILITY_OPTIONS,
     AvailabilityStatus,
     CreatePackaging,
-    getAvailabilityLabel,
     isAvailabilityStatus,
 } from "@/src/types/packaging/packaging";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
+import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
     KeyboardAvoidingView,
@@ -41,6 +33,7 @@ import {
     Pressable,
     ScrollView,
     StyleSheet,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -50,7 +43,8 @@ interface FormValues {
   sku: string;
   barcode: string;
   brand: string;
-  category_id: string;
+  category_root_id: string;
+  subcategory_id: string;
   unit_of_measure_id: string;
   average_cost: string;
   availability_status: AvailabilityStatus;
@@ -81,18 +75,36 @@ const validateInteger = (value: string): true | string =>
 const validateDecimal = (value: string): true | string =>
   DECIMAL_REGEX.test(value.trim()) || "Ingresa un número válido.";
 
+function isRootCategory(c: Category) {
+  return c.parent_id == null || c.parent_id === c.id;
+}
+
+function sortCategories(a: Category, b: Category) {
+  return (
+    (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name)
+  );
+}
+
 export default function PackagingForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
   const { post, put } = usePackaging();
+  const { data: categorie } = useCategorie();
+  const { data: units } = useUnit();
   const data = usePackagingStore((state) => state.data);
   const isEdit = usePackagingStore((state) => state.isEdit);
   const clearData = usePackagingStore((state) => state.clearData);
   const { showToast } = useCustomToast();
 
+  const isInSubcategory =
+    !!data?.parent_category_id &&
+    data.parent_category_id !== data.category_id;
+
   const {
     control,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -101,7 +113,10 @@ export default function PackagingForm() {
       sku: data?.sku ?? "",
       barcode: data?.barcode ?? "",
       brand: data?.brand ?? "",
-      category_id: toText(data?.category_id),
+      category_root_id: isInSubcategory
+        ? toText(data?.parent_category_id)
+        : toText(data?.category_id),
+      subcategory_id: isInSubcategory ? toText(data?.category_id) : "",
       unit_of_measure_id: toText(data?.unit_of_measure_id),
       average_cost: toText(data?.average_cost ?? 0),
       availability_status: data?.availability_status ?? "available",
@@ -114,6 +129,45 @@ export default function PackagingForm() {
     },
   });
 
+  const selectedRootId = watch("category_root_id");
+
+  const categoryList = React.useMemo<Category[]>(
+    () =>
+      Array.isArray(categorie)
+        ? categorie
+        : ((categorie as unknown as { data?: Category[] })?.data ?? []),
+    [categorie],
+  );
+
+  const rootCategoryOptions = React.useMemo(
+    () =>
+      categoryList
+        .filter(isRootCategory)
+        .sort(sortCategories)
+        .map((c) => ({ label: c.name, value: String(c.id) })),
+    [categoryList],
+  );
+
+  const subcategoryOptions = React.useMemo(
+    () =>
+      categoryList
+        .filter(
+          (c) => !isRootCategory(c) && String(c.parent_id) === selectedRootId,
+        )
+        .sort(sortCategories)
+        .map((c) => ({ label: c.name, value: String(c.id) })),
+    [categoryList, selectedRootId],
+  );
+
+  const unitOptions = React.useMemo(
+    () =>
+      (units ?? []).map((u) => ({
+        label: `${u.name} (${u.code})`,
+        value: String(u.id),
+      })),
+    [units],
+  );
+
   const handleBack = (): void => {
     clearData();
     router.back();
@@ -124,7 +178,7 @@ export default function PackagingForm() {
 
     const payload: CreatePackaging = {
       tenant_id: claims.tenant_id,
-      category_id: Number(values.category_id),
+      category_id: Number(values.subcategory_id || values.category_root_id),
       name: values.name.trim(),
       description: toNullable(values.description),
       sku: values.sku.trim(),
@@ -277,39 +331,53 @@ export default function PackagingForm() {
 
                   <Controller
                     control={control}
-                    name="category_id"
-                    rules={{
-                      required: "La categoría es obligatoria.",
-                      validate: validateInteger,
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="ID de categoría"
-                        placeholder="Ej. 56"
+                    name="category_root_id"
+                    rules={{ required: "La categoría es obligatoria." }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Categoría"
+                        placeholder="Selecciona categoría"
+                        searchable={rootCategoryOptions.length > 6}
+                        options={rootCategoryOptions}
                         value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="number-pad"
-                        errorMessage={errors.category_id?.message}
+                        onChange={(v) => {
+                          onChange(v);
+                          setValue("subcategory_id", "");
+                        }}
+                        errorMessage={errors.category_root_id?.message}
                       />
                     )}
                   />
 
+                  {subcategoryOptions.length > 0 && (
+                    <Controller
+                      control={control}
+                      name="subcategory_id"
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Subcategoría (opcional)"
+                          placeholder="Selecciona subcategoría"
+                          searchable={subcategoryOptions.length > 6}
+                          options={subcategoryOptions}
+                          value={value}
+                          onChange={onChange}
+                        />
+                      )}
+                    />
+                  )}
+
                   <Controller
                     control={control}
                     name="unit_of_measure_id"
-                    rules={{
-                      required: "La unidad de medida es obligatoria.",
-                      validate: validateInteger,
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="ID de unidad de medida"
-                        placeholder="Ej. 21"
+                    rules={{ required: "La unidad de medida es obligatoria." }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Unidad de medida"
+                        placeholder="Selecciona unidad"
+                        searchable={unitOptions.length > 6}
+                        options={unitOptions}
                         value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="number-pad"
+                        onChange={onChange}
                         errorMessage={errors.unit_of_measure_id?.message}
                       />
                     )}
@@ -339,40 +407,18 @@ export default function PackagingForm() {
                     control={control}
                     name="availability_status"
                     render={({ field: { onChange, value } }) => (
-                      <VStack space="xs">
-                        <Text size="sm" style={{ color: "#000" }}>
-                          Disponibilidad
-                        </Text>
-                        <Select
-                          selectedValue={value}
-                          initialLabel={getAvailabilityLabel(value)}
-                          onValueChange={(selected: string) => {
-                            if (isAvailabilityStatus(selected)) {
-                              onChange(selected);
-                            }
-                          }}
-                        >
-                          <SelectTrigger variant="outline" size="md">
-                            <SelectInput placeholder="Selecciona una opción" />
-                            <SelectIcon className="mr-3" as={ChevronDownIcon} />
-                          </SelectTrigger>
-                          <SelectPortal>
-                            <SelectBackdrop />
-                            <SelectContent>
-                              <SelectDragIndicatorWrapper>
-                                <SelectDragIndicator />
-                              </SelectDragIndicatorWrapper>
-                              {AVAILABILITY_OPTIONS.map((option) => (
-                                <SelectItem
-                                  key={option.value}
-                                  label={option.label}
-                                  value={option.value}
-                                />
-                              ))}
-                            </SelectContent>
-                          </SelectPortal>
-                        </Select>
-                      </VStack>
+                      <AppSelect
+                        label="Disponibilidad"
+                        placeholder="Selecciona una opción"
+                        searchable={false}
+                        options={AVAILABILITY_OPTIONS}
+                        value={value}
+                        onChange={(selected: string) => {
+                          if (isAvailabilityStatus(selected)) {
+                            onChange(selected);
+                          }
+                        }}
+                      />
                     )}
                   />
 
@@ -499,21 +545,23 @@ export default function PackagingForm() {
                     )}
                   />
 
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button size="lg" className="mt-4" onPress={handleBack}>
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
+                  <HStack className="mt-4" style={{ justifyContent: "flex-end" }}>
+                    <AppButton
+                      label="Cancelar"
+                      variant="black"
+                      outline
+                      fullWidth={false}
+                      onPress={handleBack}
+                    />
+                    <View style={{ marginLeft: 10 }}>
+                      <AppButton
+                        label="Guardar"
+                        variant="black"
+                        fullWidth={false}
+                        isLoading={isPending}
+                        onPress={handleSubmit(onSubmit)}
+                      />
+                    </View>
                   </HStack>
                 </VStack>
               </Box>

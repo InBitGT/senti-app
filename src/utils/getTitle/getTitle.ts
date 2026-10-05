@@ -19,6 +19,7 @@ const routeTitles: Record<string, Record<string, string>> = {
     wholesale: "Mayoreo",
     inventory: "Inventario",
     cashier: "Cajero",
+    packaging: "Material de empaque",
   },
   "(portfolio)": {
     client: "Clientes",
