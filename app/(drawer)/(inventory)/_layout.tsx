@@ -54,6 +54,7 @@ export default function InventoryLayout() {
         name="packaging"
         options={{ title: "Material de empaque" }}
       />
+      <Stack.Screen name="service" options={{ title: "Servicios" }} />
       <Stack.Screen name="cachier" options={{ title: "Zonas de almacenes" }} />
     </Stack>
   );

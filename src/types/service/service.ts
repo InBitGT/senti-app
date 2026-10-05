@@ -65,7 +65,7 @@ export interface ServiceRecipeIngredient {
   ingredient_id: number;
   ingredient_name: string;
   quantity: number;
-  unit: string;
+  unit?: string;
   waste_factor: number;
   variant_id: number | null;
   variant_name: string | null;
@@ -107,14 +107,13 @@ export interface CreateServiceVariant {
 export interface CreateServiceRecipeIngredient {
   ingredient_id: number;
   quantity: number;
-  unit: string;
-  waste_factor: number;
+  waste_factor?: number;
   variant_name?: string;
 }
 
 export interface CreateServiceRecipe {
-  name: string;
-  version: number;
+  name?: string;
+  version?: number;
   ingredients: CreateServiceRecipeIngredient[];
 }
 
