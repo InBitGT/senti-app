@@ -130,6 +130,27 @@ export function RecipeAddModal({
     }));
   }
 
+  function canIncrease(modifier: RecipeCatalogModifier): boolean {
+    const next = (modifierCounts[modifier.product_modifier_id] ?? 0) + 1;
+    return (
+      next <= Math.max(1, modifier.max_selection) &&
+      next * modifier.quantity * Math.max(parsedQty, 1) <=
+        getModifierRemaining(modifier)
+    );
+  }
+
+  function stockHint(modifier: RecipeCatalogModifier): string {
+    const modifierRemaining = getModifierRemaining(modifier);
+    if (modifierRemaining < modifier.quantity) return " · Agotado";
+    if (
+      (modifierCounts[modifier.product_modifier_id] ?? 0) === 0 &&
+      !canIncrease(modifier)
+    ) {
+      return ` · Solo alcanza para ${Math.floor(modifierRemaining / modifier.quantity)}`;
+    }
+    return "";
+  }
+
   function stepQty(direction: 1 | -1) {
     const next = parsedQty + direction;
     if (next < 1) return;
@@ -234,9 +255,7 @@ export function RecipeAddModal({
                             {modifier.max_selection > 1
                               ? ` · máx. ${modifier.max_selection}`
                               : ""}
-                            {getModifierRemaining(modifier) < modifier.quantity
-                              ? " · Agotado"
-                              : ""}
+                            {stockHint(modifier)}
                           </Text>
                         </VStack>
                         {modifier.max_selection > 1 ? (
@@ -264,6 +283,7 @@ export function RecipeAddModal({
                                 0}
                             </Text>
                             <TouchableOpacity
+                              disabled={!canIncrease(modifier)}
                               onPress={() =>
                                 setModifierCount(
                                   modifier,
@@ -277,7 +297,11 @@ export function RecipeAddModal({
                                 <Icon
                                   as={Plus}
                                   size="xs"
-                                  className="text-gray-600"
+                                  className={
+                                    canIncrease(modifier)
+                                      ? "text-gray-600"
+                                      : "text-gray-300"
+                                  }
                                 />
                               </Box>
                             </TouchableOpacity>
@@ -287,6 +311,10 @@ export function RecipeAddModal({
                             value={
                               (modifierCounts[modifier.product_modifier_id] ??
                                 0) > 0
+                            }
+                            isDisabled={
+                              (modifierCounts[modifier.product_modifier_id] ??
+                                0) === 0 && !canIncrease(modifier)
                             }
                             onValueChange={(isOn: boolean) =>
                               setModifierCount(modifier, isOn ? 1 : 0)
