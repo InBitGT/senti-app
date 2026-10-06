@@ -27,6 +27,15 @@ export function toRecipeFormValues(data?: Recipe): RecipeFormValues {
     average_cost: toText(product?.average_cost ?? 0),
     availability_status: product?.availability_status ?? "available",
     price_amount: toText(data?.price?.amount ?? 0),
+    customer_type_prices: (data?.customer_type_prices ?? []).map((item) => ({
+      customer_type_id: String(item.customer_type_id),
+      amount: String(item.amount),
+    })),
+    has_wholesale_rule: !!data?.wholesale_rule,
+    wholesale_min_quantity: toText(data?.wholesale_rule?.min_quantity),
+    wholesale_discount_percentage: toText(
+      data?.wholesale_rule?.discount_percentage,
+    ),
     variants: (data?.variants ?? []).map((variant) => ({
       name: variant.name,
       price_adjustment: String(variant.price_adjustment),
@@ -58,7 +67,7 @@ export function toRecipePayload(
     sku: values.sku.trim(),
     barcode: toNullable(values.barcode),
     brand: toNullable(values.brand),
-    type: "finished_product",
+    type: "recipe",
     unit_of_measure_id: Number(values.unit_of_measure_id),
     average_cost: toNumber(values.average_cost),
     requires_batch: false,
@@ -67,6 +76,17 @@ export function toRecipePayload(
       amount: toNumber(values.price_amount),
       currency: "GTQ",
     },
+    customer_type_prices: values.customer_type_prices.map((item) => ({
+      customer_type_id: Number(item.customer_type_id),
+      amount: toNumber(item.amount),
+      currency: "GTQ",
+    })),
+    wholesale_rule: values.has_wholesale_rule
+      ? {
+          min_quantity: Number(values.wholesale_min_quantity),
+          discount_percentage: toNumber(values.wholesale_discount_percentage),
+        }
+      : null,
     variants: values.variants.map((variant) => ({
       name: variant.name.trim(),
       price_adjustment: toNumber(variant.price_adjustment),

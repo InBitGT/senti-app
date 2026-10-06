@@ -16,6 +16,11 @@ export interface ServiceRecipeIngredientFormValue {
   variant_name: string;
 }
 
+export interface ServiceCustomerTypePriceFormValue {
+  customer_type_id: string;
+  amount: string;
+}
+
 export interface ServiceProductFormValues {
   name: string;
   description: string;
@@ -28,6 +33,10 @@ export interface ServiceProductFormValues {
   average_cost: string;
   availability_status: ServiceAvailabilityStatus;
   price_amount: string;
+  customer_type_prices: ServiceCustomerTypePriceFormValue[];
+  has_wholesale_rule: boolean;
+  wholesale_min_quantity: string;
+  wholesale_discount_percentage: string;
   variants: ServiceVariantFormValue[];
   product_modifier_ids: number[];
   has_recipe: boolean;
@@ -48,4 +57,10 @@ export const EMPTY_SERVICE_RECIPE_INGREDIENT: ServiceRecipeIngredientFormValue =
     quantity: "1",
     waste_factor: "",
     variant_name: "",
+  };
+
+export const EMPTY_SERVICE_CUSTOMER_TYPE_PRICE: ServiceCustomerTypePriceFormValue =
+  {
+    customer_type_id: "",
+    amount: "",
   };

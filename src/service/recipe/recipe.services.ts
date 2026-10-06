@@ -14,14 +14,14 @@ export async function recipeFn(): Promise<Recipe[] | undefined> {
   }
 
   const response = await get<Recipe[]>(
-    ENDPOINT.recipe.detail(claims.tenant_id, "finished_product"),
+    ENDPOINT.recipe.detail(claims.tenant_id, "recipe"),
   );
 
   if (response.code !== "200") {
     throw new Error(response.message);
   }
 
-  return (response.data ?? []).filter((item) => item.recipe !== null);
+  return response.data;
 }
 
 export async function PostRecipe(

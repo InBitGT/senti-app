@@ -16,6 +16,11 @@ export interface RecipeIngredientFormValue {
   variant_name: string;
 }
 
+export interface RecipeCustomerTypePriceFormValue {
+  customer_type_id: string;
+  amount: string;
+}
+
 export interface RecipeFormValues {
   name: string;
   description: string;
@@ -28,6 +33,10 @@ export interface RecipeFormValues {
   average_cost: string;
   availability_status: RecipeAvailabilityStatus;
   price_amount: string;
+  customer_type_prices: RecipeCustomerTypePriceFormValue[];
+  has_wholesale_rule: boolean;
+  wholesale_min_quantity: string;
+  wholesale_discount_percentage: string;
   variants: RecipeVariantFormValue[];
   product_modifier_ids: number[];
   recipe_name: string;
@@ -47,3 +56,9 @@ export const EMPTY_RECIPE_INGREDIENT: RecipeIngredientFormValue = {
   waste_factor: "",
   variant_name: "",
 };
+
+export const EMPTY_RECIPE_CUSTOMER_TYPE_PRICE: RecipeCustomerTypePriceFormValue =
+  {
+    customer_type_id: "",
+    amount: "",
+  };
