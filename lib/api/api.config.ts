@@ -208,4 +208,10 @@ export const ENDPOINT = {
     detail: (idTenant: number | string, type: string) =>
       `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
   },
+  kitchenTicket: {
+    board: (idBranch: string | number) =>
+      `payment-client-service/api/kitchen-ticket/board?branch_id=${idBranch}`,
+    status: (idTicket: string | number) =>
+      `payment-client-service/api/kitchen-ticket/${idTicket}/status`,
+  },
 };

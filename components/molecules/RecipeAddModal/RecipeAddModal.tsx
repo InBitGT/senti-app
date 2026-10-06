@@ -606,6 +606,11 @@ export function RecipeAddModal({
             {!!error && <Text style={styles.error}>{error}</Text>}
 
             <HStack style={styles.footerRow}>
+              {quantity > 1 && !needsVariant && (
+                <Text style={styles.footerHint}>
+                  {formatCurrency(unitPrice)} c/u
+                </Text>
+              )}
               <VStack style={{ gap: 2 }}>
                 <Stepper
                   size="lg"
@@ -637,12 +642,6 @@ export function RecipeAddModal({
                 />
               </View>
             </HStack>
-
-            {quantity > 1 && !needsVariant && (
-              <Text style={styles.footerHint}>
-                {formatCurrency(unitPrice)} c/u
-              </Text>
-            )}
           </ModalFooter>
         </ModalContent>
       </KeyboardAvoidingView>
