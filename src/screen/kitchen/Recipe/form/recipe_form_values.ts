@@ -16,30 +16,23 @@ export interface RecipeIngredientFormValue {
   variant_name: string;
 }
 
-export interface RecipeCustomerTypePriceFormValue {
-  customer_type_id: string;
-  amount: string;
-}
-
 export interface RecipeFormValues {
   name: string;
   description: string;
   sku: string;
   barcode: string;
-  brand: string;
   category_root_id: string;
   subcategory_id: string;
+  /** No se muestra: siempre es la unidad de medida tipo "Unidad". */
   unit_of_measure_id: string;
   average_cost: string;
   availability_status: RecipeAvailabilityStatus;
   price_amount: string;
-  customer_type_prices: RecipeCustomerTypePriceFormValue[];
   has_wholesale_rule: boolean;
   wholesale_min_quantity: string;
   wholesale_discount_percentage: string;
   variants: RecipeVariantFormValue[];
   product_modifier_ids: number[];
-  recipe_name: string;
   recipe_version: string;
   recipe_ingredients: RecipeIngredientFormValue[];
 }
@@ -56,9 +49,3 @@ export const EMPTY_RECIPE_INGREDIENT: RecipeIngredientFormValue = {
   waste_factor: "",
   variant_name: "",
 };
-
-export const EMPTY_RECIPE_CUSTOMER_TYPE_PRICE: RecipeCustomerTypePriceFormValue =
-  {
-    customer_type_id: "",
-    amount: "",
-  };

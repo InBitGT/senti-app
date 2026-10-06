@@ -1,18 +1,21 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
-import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
+import {
+  AppSelect,
+  AppSelectOption,
+} from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { RecipeIngredientsFieldArray } from "@/components/molecules/RecipeIngredientsFieldArray/RecipeIngredientsFieldArray";
 import { RecipeModifiersSelector } from "@/components/molecules/RecipeModifiersSelector/RecipeModifiersSelector";
-import { RecipePricingFields } from "@/components/molecules/RecipePricingFields/RecipePricingFields";
 import { RecipeVariantsFieldArray } from "@/components/molecules/RecipeVariantsFieldArray/RecipeVariantsFieldArray";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
+import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
-import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { DESKTOP_BREAKPOINT } from "@/const/Dimensions";
 import { useCategorie } from "@/src/hooks";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useIngredient } from "@/src/hooks/useIngredient/useIngredient";
@@ -27,10 +30,7 @@ import {
   RECIPE_AVAILABILITY_OPTIONS,
   RecipeModifierOption,
 } from "@/src/types/recipe/recipe";
-import {
-  validateDecimal,
-  validateInteger,
-} from "@/src/utils/form/formHelpers";
+import { validateDecimal, validateInteger } from "@/src/utils/form/formHelpers";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
 import React from "react";
@@ -41,17 +41,27 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
+  ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toRecipeFormValues, toRecipePayload } from "./recipe.mapper";
 import { RecipeFormValues } from "./recipe_form_values";
 
-function isRootCategory(c: Category) {
+function isRootCategory(c: Category): boolean {
   return c.parent_id == null || c.parent_id === c.id;
 }
 
-function sortCategories(a: Category, b: Category) {
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function sortCategories(a: Category, b: Category): number {
   return (
     (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name)
   );
@@ -70,17 +80,21 @@ export default function RecipeForm() {
   const clearData = useRecipeStore((state) => state.clearData);
   const { showToast } = useCustomToast();
 
+  const { width } = useWindowDimensions();
+  const isLarge = width >= DESKTOP_BREAKPOINT;
+  const row: ViewStyle = isLarge ? { flexDirection: "row", gap: 16 } : {};
+  const half: ViewStyle = isLarge ? { flex: 1, minWidth: 0 } : {};
+
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<RecipeFormValues>({
     defaultValues: toRecipeFormValues(data),
   });
 
-  const selectedRootId = watch("category_root_id");
+  const selectedRootId = useWatch({ control, name: "category_root_id" });
   const watchedVariants = useWatch({ control, name: "variants" });
 
   const categoryList = React.useMemo<Category[]>(
@@ -91,7 +105,7 @@ export default function RecipeForm() {
     [categorie],
   );
 
-  const rootCategoryOptions = React.useMemo(
+  const rootCategoryOptions = React.useMemo<AppSelectOption[]>(
     () =>
       categoryList
         .filter(isRootCategory)
@@ -100,7 +114,7 @@ export default function RecipeForm() {
     [categoryList],
   );
 
-  const subcategoryOptions = React.useMemo(
+  const subcategoryOptions = React.useMemo<AppSelectOption[]>(
     () =>
       categoryList
         .filter(
@@ -111,16 +125,24 @@ export default function RecipeForm() {
     [categoryList, selectedRootId],
   );
 
-  const unitOptions = React.useMemo(
-    () =>
-      (units ?? []).map((u) => ({
-        label: `${u.name} (${u.code})`,
-        value: String(u.id),
-      })),
-    [units],
-  );
+  // Las recetas siempre se venden por unidad: se toma la unidad de medida tipo "unit".
+  const defaultUnitId = React.useMemo<string>(() => {
+    const unitTypeUnits = (units ?? []).filter(
+      (u) => u.uom_type === "unit" && u.status,
+    );
+    const preferred =
+      unitTypeUnits.find((u) => normalize(u.name) === "unidad") ??
+      unitTypeUnits[0];
+    return preferred ? String(preferred.id) : "";
+  }, [units]);
 
-  const ingredientOptions = React.useMemo(
+  React.useEffect(() => {
+    if (!isEdit && defaultUnitId) {
+      setValue("unit_of_measure_id", defaultUnitId);
+    }
+  }, [isEdit, defaultUnitId, setValue]);
+
+  const ingredientOptions = React.useMemo<AppSelectOption[]>(
     () =>
       (ingredients ?? []).map((item) => ({
         label: item.name,
@@ -129,7 +151,7 @@ export default function RecipeForm() {
     [ingredients],
   );
 
-  const ingredientUnits = React.useMemo(() => {
+  const ingredientUnits = React.useMemo<Record<string, string>>(() => {
     const result: Record<string, string> = {};
     (ingredients ?? []).forEach((item) => {
       const unit = (units ?? []).find((u) => u.id === item.unit_of_measure_id);
@@ -138,7 +160,7 @@ export default function RecipeForm() {
     return result;
   }, [ingredients, units]);
 
-  const variantOptions = React.useMemo(
+  const variantOptions = React.useMemo<AppSelectOption[]>(
     () =>
       (watchedVariants ?? [])
         .map((variant) => variant.name.trim())
@@ -148,7 +170,7 @@ export default function RecipeForm() {
   );
 
   const modifierOptions = React.useMemo<RecipeModifierOption[]>(() => {
-    const ingredientModifiers = (ingredients ?? [])
+    const ingredientModifiers: RecipeModifierOption[] = (ingredients ?? [])
       .filter((item) => item.is_modifier && item.product_modifier_id !== null)
       .map((item) => ({
         product_modifier_id: Number(item.product_modifier_id),
@@ -156,7 +178,7 @@ export default function RecipeForm() {
         price_adjustment: item.modifier_price_adjustment ?? 0,
         type_label: "Ingrediente",
       }));
-    const packagingModifiers = (packagings ?? [])
+    const packagingModifiers: RecipeModifierOption[] = (packagings ?? [])
       .filter((item) => item.product_modifier_id !== null)
       .map((item) => ({
         product_modifier_id: item.product_modifier_id,
@@ -175,6 +197,14 @@ export default function RecipeForm() {
   const onSubmit = async (values: RecipeFormValues): Promise<void> => {
     if (!claims) return;
 
+    if (!values.unit_of_measure_id) {
+      showToast({
+        message: 'Crea una unidad de medida de tipo "Unidad" antes de guardar',
+        type: "error",
+      });
+      return;
+    }
+
     const payload = toRecipePayload(values, claims.tenant_id);
 
     try {
@@ -192,7 +222,7 @@ export default function RecipeForm() {
         });
       }
       handleBack();
-    } catch (error) {
+    } catch (error: unknown) {
       console.log(error);
       showToast({ message: "Error al guardar la receta", type: "error" });
     }
@@ -210,7 +240,7 @@ export default function RecipeForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
+          <DesktopScrollView useWindowHeight>
             <Pressable onPress={handleBack} style={styles.backButton}>
               <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
               <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
@@ -233,25 +263,48 @@ export default function RecipeForm() {
                 </Text>
 
                 <VStack space="lg">
-                  <Heading size="sm" style={{ color: "#000" }}>
-                    Producto
-                  </Heading>
+                  {/* ---------- Información general ---------- */}
+                  <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
-                  <Controller
-                    control={control}
-                    name="name"
-                    rules={{ required: "El nombre es obligatorio." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Nombre"
-                        placeholder="Ej. Hamburguesa clásica"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.name?.message}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="name"
+                        rules={{ required: "El nombre es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Nombre"
+                            placeholder="Ej. Hamburguesa clásica"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            errorMessage={errors.name?.message}
+                          />
+                        )}
                       />
-                    )}
-                  />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="sku"
+                        rules={{ required: "El SKU es obligatorio." }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="SKU"
+                            placeholder="Ej. REC-001"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.toUpperCase())
+                            }
+                            onBlur={onBlur}
+                            autoCapitalize="characters"
+                            errorMessage={errors.sku?.message}
+                          />
+                        )}
+                      />
+                    </View>
+                  </View>
 
                   <Controller
                     control={control}
@@ -263,187 +316,189 @@ export default function RecipeForm() {
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
+                        multiline
+                        textareaHeight={80}
                       />
                     )}
                   />
 
-                  <Controller
-                    control={control}
-                    name="sku"
-                    rules={{ required: "El SKU es obligatorio." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="SKU"
-                        placeholder="Ej. REC-001"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.sku?.message}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="category_root_id"
+                        rules={{ required: "La categoría es obligatoria." }}
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Categoría"
+                            placeholder="Selecciona categoría"
+                            searchable={rootCategoryOptions.length > 6}
+                            options={rootCategoryOptions}
+                            value={value}
+                            onChange={(selected: string) => {
+                              onChange(selected);
+                              setValue("subcategory_id", "");
+                            }}
+                            errorMessage={errors.category_root_id?.message}
+                          />
+                        )}
                       />
-                    )}
-                  />
+                    </View>
 
-                  <Controller
-                    control={control}
-                    name="barcode"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Código de barras (opcional)"
-                        placeholder="Ej. 7401234567890"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="brand"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Marca (opcional)"
-                        placeholder="Ej. Casa"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="category_root_id"
-                    rules={{ required: "La categoría es obligatoria." }}
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Categoría"
-                        placeholder="Selecciona categoría"
-                        searchable={rootCategoryOptions.length > 6}
-                        options={rootCategoryOptions}
-                        value={value}
-                        onChange={(v) => {
-                          onChange(v);
-                          setValue("subcategory_id", "");
-                        }}
-                        errorMessage={errors.category_root_id?.message}
-                      />
-                    )}
-                  />
-
-                  {subcategoryOptions.length > 0 && (
-                    <Controller
-                      control={control}
-                      name="subcategory_id"
-                      render={({ field: { onChange, value } }) => (
-                        <AppSelect
-                          label="Subcategoría (opcional)"
-                          placeholder="Selecciona subcategoría"
-                          searchable={subcategoryOptions.length > 6}
-                          options={subcategoryOptions}
-                          value={value}
-                          onChange={onChange}
+                    {subcategoryOptions.length > 0 && (
+                      <View style={half}>
+                        <Controller
+                          control={control}
+                          name="subcategory_id"
+                          render={({ field: { onChange, value } }) => (
+                            <AppSelect
+                              label="Subcategoría (opcional)"
+                              placeholder="Selecciona subcategoría"
+                              searchable={subcategoryOptions.length > 6}
+                              options={subcategoryOptions}
+                              value={value}
+                              onChange={onChange}
+                            />
+                          )}
                         />
-                      )}
-                    />
-                  )}
-
-                  <Controller
-                    control={control}
-                    name="unit_of_measure_id"
-                    rules={{ required: "La unidad de medida es obligatoria." }}
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Unidad de medida"
-                        placeholder="Selecciona unidad"
-                        searchable={unitOptions.length > 6}
-                        options={unitOptions}
-                        value={value}
-                        onChange={onChange}
-                        errorMessage={errors.unit_of_measure_id?.message}
-                      />
+                      </View>
                     )}
-                  />
+                  </View>
 
-                  <Controller
-                    control={control}
-                    name="average_cost"
-                    rules={{
-                      required: "El costo es obligatorio.",
-                      validate: validateDecimal,
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Costo promedio"
-                        placeholder="Ej. 15.00"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="decimal-pad"
-                        errorMessage={errors.average_cost?.message}
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="availability_status"
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Disponibilidad"
+                            placeholder="Selecciona una opción"
+                            searchable={false}
+                            options={RECIPE_AVAILABILITY_OPTIONS}
+                            value={value}
+                            onChange={(selected: string) => {
+                              if (isRecipeAvailabilityStatus(selected)) {
+                                onChange(selected);
+                              }
+                            }}
+                          />
+                        )}
                       />
-                    )}
-                  />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="barcode"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Código de barras (opcional)"
+                            placeholder="Ej. 7401234567890"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                          />
+                        )}
+                      />
+                    </View>
+                  </View>
 
-                  <Controller
-                    control={control}
-                    name="availability_status"
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Disponibilidad"
-                        placeholder="Selecciona una opción"
-                        searchable={false}
-                        options={RECIPE_AVAILABILITY_OPTIONS}
-                        value={value}
-                        onChange={(selected: string) => {
-                          if (isRecipeAvailabilityStatus(selected)) {
-                            onChange(selected);
-                          }
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="recipe_version"
+                        rules={{
+                          validate: (value: string) =>
+                            value.trim().length === 0 || validateInteger(value),
                         }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Versión de la receta (opcional)"
+                            placeholder="Ej. 1"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                            errorMessage={errors.recipe_version?.message}
+                          />
+                        )}
                       />
-                    )}
-                  />
+                    </View>
+                    {isLarge && <View style={half} />}
+                  </View>
 
-                  <Heading size="sm" style={{ color: "#000" }} className="mt-2">
-                    Precio
-                  </Heading>
-
-                  <Controller
+                  {/* ---------- Ingredientes ---------- */}
+                  <Divider className="my-2" />
+                  <RecipeIngredientsFieldArray
+                    title="INGREDIENTES"
                     control={control}
-                    name="price_amount"
-                    rules={{
-                      required: "El precio es obligatorio.",
-                      validate: validateDecimal,
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Precio base"
-                        placeholder="Ej. 45.00"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="decimal-pad"
-                        errorMessage={errors.price_amount?.message}
-                      />
-                    )}
+                    errors={errors}
+                    ingredientOptions={ingredientOptions}
+                    ingredientUnits={ingredientUnits}
+                    variantOptions={variantOptions}
                   />
 
-                  <Heading size="sm" style={{ color: "#000" }} className="mt-2">
-                    Precios por tipo de cliente y mayoreo
-                  </Heading>
+                  {/* ---------- Costo y precio ---------- */}
+                  <Divider className="my-2" />
+                  <Text style={styles.sectionLabel}>COSTO Y PRECIO</Text>
 
-                  <RecipePricingFields control={control} errors={errors} />
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="average_cost"
+                        rules={{
+                          required: "El costo es obligatorio.",
+                          validate: validateDecimal,
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Costo promedio"
+                            placeholder="Ej. 15.00"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                            errorMessage={errors.average_cost?.message}
+                          />
+                        )}
+                      />
+                    </View>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="price_amount"
+                        rules={{
+                          required: "El precio es obligatorio.",
+                          validate: validateDecimal,
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Precio de venta"
+                            placeholder="Ej. 45.00"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                            errorMessage={errors.price_amount?.message}
+                          />
+                        )}
+                      />
+                    </View>
+                  </View>
 
-                  <Heading size="sm" style={{ color: "#000" }} className="mt-2">
-                    Variantes
-                  </Heading>
+                  {/* ---------- Variantes ---------- */}
+                  <Divider className="my-2" />
+                  <RecipeVariantsFieldArray
+                    title="VARIANTES"
+                    control={control}
+                    errors={errors}
+                  />
 
-                  <RecipeVariantsFieldArray control={control} errors={errors} />
-
-                  <Heading size="sm" style={{ color: "#000" }} className="mt-2">
-                    Modificadores
-                  </Heading>
-
+                  {/* ---------- Modificadores ---------- */}
+                  <Divider className="my-2" />
+                  <Text style={styles.sectionLabel}>MODIFICADORES</Text>
                   <Controller
                     control={control}
                     name="product_modifier_ids"
@@ -456,70 +511,30 @@ export default function RecipeForm() {
                     )}
                   />
 
-                  <Heading size="sm" style={{ color: "#000" }} className="mt-2">
-                    Receta
-                  </Heading>
-
-                  <Controller
-                    control={control}
-                    name="recipe_name"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Nombre de la receta (opcional)"
-                        placeholder="Ej. Receta base"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
+                  <View
+                    style={[styles.actions, isLarge && styles.actionsLarge]}
+                  >
+                    <View
+                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
+                    >
+                      <AppButton
+                        label="Cancelar"
+                        variant="black"
+                        outline
+                        onPress={handleBack}
                       />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="recipe_version"
-                    rules={{
-                      validate: (value: string) =>
-                        value.trim().length === 0 || validateInteger(value),
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Versión (opcional)"
-                        placeholder="Ej. 1"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="number-pad"
-                        errorMessage={errors.recipe_version?.message}
-                      />
-                    )}
-                  />
-
-                  <RecipeIngredientsFieldArray
-                    control={control}
-                    errors={errors}
-                    ingredientOptions={ingredientOptions}
-                    ingredientUnits={ingredientUnits}
-                    variantOptions={variantOptions}
-                  />
-
-                  <HStack className="mt-4" style={{ justifyContent: "flex-end" }}>
-                    <AppButton
-                      label="Cancelar"
-                      variant="black"
-                      outline
-                      fullWidth={false}
-                      onPress={handleBack}
-                    />
-                    <View style={{ marginLeft: 10 }}>
+                    </View>
+                    <View
+                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
+                    >
                       <AppButton
                         label="Guardar"
                         variant="black"
-                        fullWidth={false}
                         isLoading={isPending}
                         onPress={handleSubmit(onSubmit)}
                       />
                     </View>
-                  </HStack>
+                  </View>
                 </VStack>
               </Box>
             </Center>
@@ -547,5 +562,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 6,
+  },
+  sectionLabel: {
+    fontWeight: "bold",
+    color: "#555",
+    fontSize: 13,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 16,
+  },
+  actionsLarge: {
+    justifyContent: "flex-end",
+  },
+  actionBtn: {
+    flex: 1,
+  },
+  actionBtnLarge: {
+    minWidth: 140,
   },
 });
