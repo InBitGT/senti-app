@@ -116,6 +116,31 @@ export function ModalServiceDetail({
             ) : (
               <EmptyHint label="Este servicio no tiene precio de venta definido." />
             )}
+            <InfoRow
+              label="Precios por tipo de cliente"
+              value={
+                data?.customer_type_prices?.length
+                  ? `${data.customer_type_prices.length} configurado(s)`
+                  : "Sin precios especiales"
+              }
+            />
+
+            <Divider />
+            <SectionTitle title="Regla de mayoreo" />
+            {data?.wholesale_rule ? (
+              <>
+                <InfoRow
+                  label="Cantidad mínima"
+                  value={data.wholesale_rule.min_quantity}
+                />
+                <InfoRow
+                  label="Descuento"
+                  value={`${data.wholesale_rule.discount_percentage}%`}
+                />
+              </>
+            ) : (
+              <EmptyHint label="No aplica regla de mayoreo." />
+            )}
 
             <Divider />
             <SectionTitle title="Variantes" />

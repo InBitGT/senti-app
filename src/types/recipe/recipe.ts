@@ -1,4 +1,4 @@
-export type RecipeProductType = "finished_product";
+export type RecipeProductType = "recipe";
 export type RecipeAvailabilityStatus = "available" | "unavailable";
 export type RecipeAdjustmentType = "fixed" | "percentage";
 export type RecipeCurrencyCode = "GTQ";
@@ -30,6 +30,19 @@ export interface RecipePrice {
   amount: number;
   currency: RecipeCurrencyCode;
   is_base: boolean;
+}
+
+export interface RecipeCustomerTypePrice {
+  id: number;
+  customer_type_id: number;
+  amount: number;
+  currency: RecipeCurrencyCode;
+}
+
+export interface RecipeWholesaleRule {
+  id: number;
+  min_quantity: number;
+  discount_percentage: number;
 }
 
 export interface RecipeVariant {
@@ -72,6 +85,8 @@ export interface RecipeDetail {
 export interface Recipe {
   product: RecipeProductInfo;
   price: RecipePrice | null;
+  customer_type_prices: RecipeCustomerTypePrice[];
+  wholesale_rule: RecipeWholesaleRule | null;
   variants: RecipeVariant[];
   modifiers: RecipeModifierLink[];
   recipe: RecipeDetail | null;
@@ -80,6 +95,17 @@ export interface Recipe {
 export interface CreateRecipePrice {
   amount: number;
   currency: RecipeCurrencyCode;
+}
+
+export interface CreateRecipeCustomerTypePrice {
+  customer_type_id: number;
+  amount: number;
+  currency: RecipeCurrencyCode;
+}
+
+export interface CreateRecipeWholesaleRule {
+  min_quantity: number;
+  discount_percentage: number;
 }
 
 export interface CreateRecipeVariant {
@@ -115,6 +141,8 @@ export interface CreateRecipe {
   requires_batch: boolean;
   availability_status: RecipeAvailabilityStatus;
   price: CreateRecipePrice;
+  customer_type_prices: CreateRecipeCustomerTypePrice[];
+  wholesale_rule: CreateRecipeWholesaleRule | null;
   variants?: CreateRecipeVariant[];
   product_modifier_ids?: number[];
   recipe: CreateRecipeDetail;
@@ -145,7 +173,6 @@ export const RECIPE_AVAILABILITY_OPTIONS: RecipeOption<RecipeAvailabilityStatus>
 
 export const RECIPE_ADJUSTMENT_OPTIONS: RecipeOption<RecipeAdjustmentType>[] = [
   { value: "fixed", label: "Monto fijo" },
-  { value: "percentage", label: "Porcentaje" },
 ];
 
 export function isRecipeAvailabilityStatus(

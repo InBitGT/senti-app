@@ -4,6 +4,7 @@ import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { RecipeIngredientsFieldArray } from "@/components/molecules/RecipeIngredientsFieldArray/RecipeIngredientsFieldArray";
 import { RecipeModifiersSelector } from "@/components/molecules/RecipeModifiersSelector/RecipeModifiersSelector";
+import { RecipePricingFields } from "@/components/molecules/RecipePricingFields/RecipePricingFields";
 import { RecipeVariantsFieldArray } from "@/components/molecules/RecipeVariantsFieldArray/RecipeVariantsFieldArray";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
@@ -426,6 +427,12 @@ export default function RecipeForm() {
                       />
                     )}
                   />
+
+                  <Heading size="sm" style={{ color: "#000" }} className="mt-2">
+                    Precios por tipo de cliente y mayoreo
+                  </Heading>
+
+                  <RecipePricingFields control={control} errors={errors} />
 
                   <Heading size="sm" style={{ color: "#000" }} className="mt-2">
                     Variantes

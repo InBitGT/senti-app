@@ -41,6 +41,19 @@ export interface ServicePrice {
   is_base: boolean;
 }
 
+export interface ServiceCustomerTypePrice {
+  id: number;
+  customer_type_id: number;
+  amount: number;
+  currency: ServiceCurrencyCode;
+}
+
+export interface ServiceWholesaleRule {
+  id: number;
+  min_quantity: number;
+  discount_percentage: number;
+}
+
 export interface ServiceVariant {
   id: number;
   name: string;
@@ -83,9 +96,9 @@ export interface ServiceProduct {
   price: ServicePrice | null;
   // Forma aún desconocida: llegan vacíos o en null
   conversions: unknown[];
-  customer_type_prices: unknown[];
+  customer_type_prices: ServiceCustomerTypePrice[];
   price_per_uom: unknown[];
-  wholesale_rule: unknown;
+  wholesale_rule: ServiceWholesaleRule | null;
   variants: ServiceVariant[];
   modifiers: ServiceModifierLink[];
   recipe: ServiceRecipe | null;
@@ -96,6 +109,17 @@ export interface ServiceProduct {
 export interface CreateServicePrice {
   amount: number;
   currency: ServiceCurrencyCode;
+}
+
+export interface CreateServiceCustomerTypePrice {
+  customer_type_id: number;
+  amount: number;
+  currency: ServiceCurrencyCode;
+}
+
+export interface CreateServiceWholesaleRule {
+  min_quantity: number;
+  discount_percentage: number;
 }
 
 export interface CreateServiceVariant {
@@ -131,6 +155,8 @@ export interface CreateServiceProduct {
   requires_batch: boolean;
   availability_status: ServiceAvailabilityStatus;
   price: CreateServicePrice;
+  customer_type_prices: CreateServiceCustomerTypePrice[];
+  wholesale_rule: CreateServiceWholesaleRule | null;
   variants?: CreateServiceVariant[];
   product_modifier_ids?: number[];
   recipe?: CreateServiceRecipe;
@@ -163,7 +189,6 @@ export const SERVICE_AVAILABILITY_OPTIONS: ServiceOption<ServiceAvailabilityStat
 export const SERVICE_ADJUSTMENT_OPTIONS: ServiceOption<ServiceAdjustmentType>[] =
   [
     { value: "fixed", label: "Monto fijo" },
-    { value: "percentage", label: "Porcentaje" },
   ];
 
 export function isServiceAvailabilityStatus(

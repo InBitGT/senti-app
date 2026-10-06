@@ -4,6 +4,7 @@ import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { ServiceIngredientsFieldArray } from "@/components/molecules/ServiceIngredientsFieldArray/ServiceIngredientsFieldArray";
 import { ServiceModifiersSelector } from "@/components/molecules/ServiceModifiersSelector/ServiceModifiersSelector";
+import { ServicePricingFields } from "@/components/molecules/ServicePricingFields/ServicePricingFields";
 import { ServiceVariantsFieldArray } from "@/components/molecules/ServiceRecipeFieldArray/ServiceRecipeFieldArray";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
@@ -447,6 +448,12 @@ export default function ServiceForm() {
                       />
                     )}
                   />
+
+                  <Heading size="sm" style={{ color: "#000" }} className="mt-2">
+                    Precios por tipo de cliente y mayoreo
+                  </Heading>
+
+                  <ServicePricingFields control={control} errors={errors} />
 
                   <Heading size="sm" style={{ color: "#000" }} className="mt-2">
                     Variantes
