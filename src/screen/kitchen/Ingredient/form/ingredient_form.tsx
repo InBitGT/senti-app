@@ -10,6 +10,7 @@ import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
+import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { DESKTOP_BREAKPOINT } from "@/const/Dimensions";
@@ -31,6 +32,7 @@ import {
   toNumber,
   toText,
   validateDecimal,
+  validateInteger,
 } from "@/src/utils/form/formHelpers";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-react-native";
@@ -59,7 +61,46 @@ interface FormValues {
   unit_of_measure_id: string;
   average_cost: string;
   availability_status: AvailabilityStatus;
+  is_modifier: boolean;
+  modifier_name: string;
+  modifier_quantity: string;
+  modifier_min_selection: string;
+  modifier_max_selection: string;
+  modifier_price_adjustment: string;
+  modifier_is_default: boolean;
 }
+
+// Validadores que solo aplican cuando el ingrediente es modificador
+const validateModifierName = (
+  value: string,
+  formValues: FormValues,
+): true | string =>
+  !formValues.is_modifier ||
+  value.trim().length > 0 ||
+  "El nombre del extra es obligatorio.";
+
+const validateModifierInteger = (
+  value: string,
+  formValues: FormValues,
+): true | string => !formValues.is_modifier || validateInteger(value);
+
+const validateModifierDecimal = (
+  value: string,
+  formValues: FormValues,
+): true | string => !formValues.is_modifier || validateDecimal(value);
+
+const validateModifierMax = (
+  value: string,
+  formValues: FormValues,
+): true | string => {
+  if (!formValues.is_modifier) return true;
+  const integerResult = validateInteger(value);
+  if (integerResult !== true) return integerResult;
+  return (
+    Number(value) >= Number(formValues.modifier_min_selection) ||
+    "Debe ser mayor o igual al mínimo."
+  );
+};
 
 function isRootCategory(c: Category): boolean {
   return c.parent_id == null || c.parent_id === c.id;
@@ -72,7 +113,7 @@ function sortCategories(a: Category, b: Category): number {
 }
 
 function buildPayload(values: FormValues, tenantId: number): CreateIngredient {
-  return {
+  const base: CreateIngredient = {
     tenant_id: tenantId,
     category_id: Number(values.subcategory_id || values.category_root_id),
     name: values.name.trim(),
@@ -84,8 +125,19 @@ function buildPayload(values: FormValues, tenantId: number): CreateIngredient {
     unit_of_measure_id: Number(values.unit_of_measure_id),
     average_cost: toNumber(values.average_cost),
     availability_status: values.availability_status,
-    // Los ingredientes ya no se configuran como modificadores desde este formulario.
-    is_modifier: false,
+    is_modifier: values.is_modifier,
+  };
+
+  if (!values.is_modifier) return base;
+
+  return {
+    ...base,
+    modifier_name: values.modifier_name.trim(),
+    modifier_quantity: Number(values.modifier_quantity),
+    modifier_min_selection: Number(values.modifier_min_selection),
+    modifier_max_selection: Number(values.modifier_max_selection),
+    modifier_price_adjustment: toNumber(values.modifier_price_adjustment),
+    modifier_is_default: values.modifier_is_default,
   };
 }
 
@@ -111,6 +163,7 @@ export default function IngredientForm() {
   const {
     control,
     handleSubmit,
+    getValues,
     setValue,
     formState: { errors },
   } = useForm<FormValues>({
@@ -127,10 +180,19 @@ export default function IngredientForm() {
       unit_of_measure_id: toText(data?.unit_of_measure_id),
       average_cost: toText(data?.average_cost ?? 0),
       availability_status: data?.availability_status ?? "available",
+      is_modifier: data?.is_modifier ?? false,
+      modifier_name: data?.modifier_name ?? "",
+      modifier_quantity: toText(data?.modifier_quantity ?? 1),
+      modifier_min_selection: toText(data?.modifier_min_selection ?? 0),
+      modifier_max_selection: toText(data?.modifier_max_selection ?? 1),
+      modifier_price_adjustment: toText(data?.modifier_price_adjustment ?? 0),
+      modifier_is_default: data?.modifier_is_default ?? false,
     },
   });
 
   const selectedRootId = useWatch({ control, name: "category_root_id" });
+  const isModifier = useWatch({ control, name: "is_modifier" });
+  const ingredientName = useWatch({ control, name: "name" });
 
   const categoryList = React.useMemo<Category[]>(
     () =>
@@ -440,6 +502,184 @@ export default function IngredientForm() {
                     {isLarge && <View style={half} />}
                   </View>
 
+                  {/* ---------- Modificador ---------- */}
+                  <Divider className="my-2" />
+                  <Text style={styles.sectionLabel}>VENTA COMO EXTRA</Text>
+
+                  <Controller
+                    control={control}
+                    name="is_modifier"
+                    render={({ field: { onChange, value } }) => (
+                      <View style={styles.switchRow}>
+                        <VStack style={{ flex: 1, paddingRight: 12 }}>
+                          <Text style={{ color: "#000" }}>
+                            También se vende como extra (modificador)
+                          </Text>
+                          <Text size="xs" className="text-typography-400">
+                            Ej. &quot;Extra queso&quot;: el cliente lo puede
+                            agregar a una receta y se descuenta del inventario
+                          </Text>
+                        </VStack>
+                        <Switch
+                          value={value}
+                          onValueChange={(next: boolean) => {
+                            onChange(next);
+                            if (next && !getValues("modifier_name").trim()) {
+                              setValue(
+                                "modifier_name",
+                                ingredientName.trim()
+                                  ? `Extra ${ingredientName.trim()}`
+                                  : "",
+                              );
+                            }
+                          }}
+                        />
+                      </View>
+                    )}
+                  />
+
+                  {isModifier && (
+                    <View style={styles.modifierBox}>
+                      <View style={row}>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_name"
+                            rules={{ validate: validateModifierName }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <AppInput
+                                label="Nombre del extra"
+                                placeholder="Ej. Extra queso"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                errorMessage={errors.modifier_name?.message}
+                              />
+                            )}
+                          />
+                        </View>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_price_adjustment"
+                            rules={{ validate: validateModifierDecimal }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <AppInput
+                                label="Precio extra"
+                                placeholder="Ej. 5.00"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="decimal-pad"
+                                errorMessage={
+                                  errors.modifier_price_adjustment?.message
+                                }
+                              />
+                            )}
+                          />
+                        </View>
+                      </View>
+
+                      <View style={row}>
+                        <View style={half}>
+                          <Controller
+                            control={control}
+                            name="modifier_quantity"
+                            rules={{ validate: validateModifierInteger }}
+                            render={({
+                              field: { onChange, onBlur, value },
+                            }) => (
+                              <AppInput
+                                label="Cantidad que se descuenta"
+                                placeholder="Ej. 1"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="number-pad"
+                                errorMessage={errors.modifier_quantity?.message}
+                              />
+                            )}
+                          />
+                        </View>
+                        <View style={half}>
+                          <View style={styles.pairRow}>
+                            <View style={styles.pairItem}>
+                              <Controller
+                                control={control}
+                                name="modifier_min_selection"
+                                rules={{ validate: validateModifierInteger }}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <AppInput
+                                    label="Mínimo"
+                                    placeholder="Ej. 0"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="number-pad"
+                                    errorMessage={
+                                      errors.modifier_min_selection?.message
+                                    }
+                                  />
+                                )}
+                              />
+                            </View>
+                            <View style={styles.pairItem}>
+                              <Controller
+                                control={control}
+                                name="modifier_max_selection"
+                                rules={{ validate: validateModifierMax }}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <AppInput
+                                    label="Máximo"
+                                    placeholder="Ej. 3"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="number-pad"
+                                    errorMessage={
+                                      errors.modifier_max_selection?.message
+                                    }
+                                  />
+                                )}
+                              />
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+
+                      <Text size="xs" className="text-typography-400">
+                        Mínimo y máximo: cuántas veces puede elegirlo el cliente
+                        por pedido. Con mínimo 1 el extra es obligatorio.
+                      </Text>
+
+                      <Controller
+                        control={control}
+                        name="modifier_is_default"
+                        render={({ field: { onChange, value } }) => (
+                          <View style={styles.switchRow}>
+                            <VStack style={{ flex: 1, paddingRight: 12 }}>
+                              <Text style={{ color: "#000" }}>
+                                Seleccionado por defecto
+                              </Text>
+                              <Text size="xs" className="text-typography-400">
+                                Aparece marcado al agregar la receta al carrito
+                              </Text>
+                            </VStack>
+                            <Switch value={value} onValueChange={onChange} />
+                          </View>
+                        )}
+                      />
+                    </View>
+                  )}
+
                   <View
                     style={[styles.actions, isLarge && styles.actionsLarge]}
                   >
@@ -496,6 +736,33 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#555",
     fontSize: 13,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    borderRadius: 8,
+  },
+  // Mínimo y máximo son cortos: siempre van lado a lado, también en teléfono.
+  pairRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  pairItem: {
+    flex: 1,
+    minWidth: 0,
+  },
+  modifierBox: {
+    gap: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    borderRadius: 12,
+    backgroundColor: "#F0F9FF",
   },
   actions: {
     flexDirection: "row",
