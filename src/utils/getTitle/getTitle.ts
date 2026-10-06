@@ -38,6 +38,7 @@ const routeTitles: Record<string, Record<string, string>> = {
     payment_methods: "Métodos de pago",
     point_of_sales: "Puntos de venta",
     cachier: "Cajero",
+    recipe_pos: "POS de recetas",
   },
   "(config)": {
     tenant: "Empresa",

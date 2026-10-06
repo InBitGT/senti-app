@@ -15,6 +15,7 @@ export default function PosFormLayout() {
         name="point_of_sales"
         options={{ title: "Unidades de medida" }}
       />
+      <Stack.Screen name="recipe_pos" options={{ title: "POS de recetas" }} />
     </Stack>
   );
 }
