@@ -92,6 +92,13 @@ export default function DrawerLayout() {
             title: getGroupTitle("(portfolio)", route, "Cartera"),
           })}
         />
+        <Drawer.Screen
+          name="(foodprep)"
+          options={({ route }) => ({
+            headerShown: !isForm,
+            title: getGroupTitle("(portfolio)", route, "Cartera"),
+          })}
+        />
       </Drawer>
     </GestureHandlerRootView>
   );
