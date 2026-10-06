@@ -18,7 +18,6 @@ export function toRecipeFormValues(data?: Recipe): RecipeFormValues {
     description: product?.description ?? "",
     sku: product?.sku ?? "",
     barcode: product?.barcode ?? "",
-    brand: product?.brand ?? "",
     category_root_id: isInSubcategory
       ? toText(product?.parent_category_id)
       : toText(product?.category_id),
@@ -27,10 +26,6 @@ export function toRecipeFormValues(data?: Recipe): RecipeFormValues {
     average_cost: toText(product?.average_cost ?? 0),
     availability_status: product?.availability_status ?? "available",
     price_amount: toText(data?.price?.amount ?? 0),
-    customer_type_prices: (data?.customer_type_prices ?? []).map((item) => ({
-      customer_type_id: String(item.customer_type_id),
-      amount: String(item.amount),
-    })),
     has_wholesale_rule: !!data?.wholesale_rule,
     wholesale_min_quantity: toText(data?.wholesale_rule?.min_quantity),
     wholesale_discount_percentage: toText(
@@ -44,7 +39,6 @@ export function toRecipeFormValues(data?: Recipe): RecipeFormValues {
     product_modifier_ids: (data?.modifiers ?? []).map(
       (modifier) => modifier.product_modifier_id,
     ),
-    recipe_name: data?.recipe?.name ?? "",
     recipe_version: toText(data?.recipe?.version),
     recipe_ingredients: (data?.recipe?.ingredients ?? []).map((item) => ({
       ingredient_id: String(item.ingredient_id),
@@ -66,7 +60,8 @@ export function toRecipePayload(
     description: toNullable(values.description),
     sku: values.sku.trim(),
     barcode: toNullable(values.barcode),
-    brand: toNullable(values.brand),
+    // Una receta no tiene marca.
+    brand: null,
     type: "recipe",
     unit_of_measure_id: Number(values.unit_of_measure_id),
     average_cost: toNumber(values.average_cost),
@@ -76,11 +71,8 @@ export function toRecipePayload(
       amount: toNumber(values.price_amount),
       currency: "GTQ",
     },
-    customer_type_prices: values.customer_type_prices.map((item) => ({
-      customer_type_id: Number(item.customer_type_id),
-      amount: toNumber(item.amount),
-      currency: "GTQ",
-    })),
+    // Las recetas no manejan precios por tipo de cliente.
+    customer_type_prices: [],
     wholesale_rule: values.has_wholesale_rule
       ? {
           min_quantity: Number(values.wholesale_min_quantity),
@@ -94,6 +86,8 @@ export function toRecipePayload(
     })),
     product_modifier_ids: values.product_modifier_ids,
     recipe: {
+      // El nombre de la receta es el mismo que el del producto.
+      name: values.name.trim(),
       ingredients: values.recipe_ingredients.map(
         (item): CreateRecipeIngredient => {
           const ingredient: CreateRecipeIngredient = {
@@ -112,11 +106,6 @@ export function toRecipePayload(
       ),
     },
   };
-
-  const recipeName = values.recipe_name.trim();
-  if (recipeName.length > 0) {
-    payload.recipe.name = recipeName;
-  }
 
   if (values.recipe_version.trim().length > 0) {
     payload.recipe.version = Number(values.recipe_version);
