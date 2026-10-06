@@ -61,8 +61,6 @@ export default function RootLayout() {
     }
   }, [claims]);
 
-  console.log("se renderiza");
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
