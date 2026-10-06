@@ -1,37 +1,47 @@
-import { DeleteIngredient, PostIngredient, productIngredientFn, PutIngredient } from "@/src/service/product/product.services";
+import {
+  DeleteIngredient,
+  PostIngredient,
+  productByTypeFn,
+  PutIngredient,
+} from "@/src/service/product/product.services";
+import { StockProductType } from "@/src/types/product/product.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const useProduct = () => {
+const PRODUCT_KEY = "ingredient";
+
+/**
+ * Productos por tipo. Por defecto "finished_product" (producto final),
+ * como antes; con "ingredient" trae los ingredientes.
+ */
+export const useProduct = (type: StockProductType = "finished_product") => {
   const queryClient = useQueryClient();
 
-  const {data, isLoading} = useQuery({
-    queryKey: ["ingredient"],
-    queryFn: productIngredientFn,
+  // Invalida todas las listas (producto final e ingrediente).
+  const invalidate = (): Promise<void> =>
+    queryClient.invalidateQueries({ queryKey: [PRODUCT_KEY] });
+
+  const { data, isLoading } = useQuery({
+    queryKey: [PRODUCT_KEY, type],
+    queryFn: () => productByTypeFn(type),
     retry: 3,
     refetchOnMount: true,
-    staleTime: 0,        
-    gcTime: 0
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const post = useMutation({
     mutationFn: PostIngredient,
-    onSuccess: async() => {
-      queryClient.invalidateQueries({ queryKey: ["ingredient"] });
-    },
+    onSuccess: invalidate,
   });
 
   const put = useMutation({
     mutationFn: PutIngredient,
-    onSuccess: async() => {
-      queryClient.invalidateQueries({ queryKey: ["ingredient"] });
-    },
+    onSuccess: invalidate,
   });
 
   const remove = useMutation({
     mutationFn: DeleteIngredient,
-    onSuccess: async() => {
-      queryClient.invalidateQueries({ queryKey: ["ingredient"] });
-    },
+    onSuccess: invalidate,
   });
 
   return { data, isLoading, post, put, remove };

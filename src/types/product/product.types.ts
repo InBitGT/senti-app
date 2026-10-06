@@ -26,7 +26,25 @@ export interface CreateIngredient {
   is_modifier: boolean;
 }
 
-export type ProductType = "finished_product" | "ingredient" | "raw_material";
+export type ProductType = "finished_product" | "ingredient";
+
+/** Tipos de producto que se pueden elegir al ingresar inventario. */
+export type StockProductType = Extract<
+  ProductType,
+  "finished_product" | "ingredient"
+>;
+
+export const STOCK_PRODUCT_TYPE_OPTIONS: {
+  value: StockProductType;
+  label: string;
+}[] = [
+  { value: "finished_product", label: "Producto final" },
+  { value: "ingredient", label: "Ingrediente" },
+];
+
+export function isStockProductType(value: string): value is StockProductType {
+  return value === "finished_product" || value === "ingredient";
+}
 
 export type UnitOfMeasure = "unit" | "kg" | "g" | "l" | "ml";
 
