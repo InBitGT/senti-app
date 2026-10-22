@@ -1,6 +1,5 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
-import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
 import { ResponsiveCardGrid } from "@/components/atom/ResponsiveCardGrid/ResponsiveCardGrid";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -139,6 +138,7 @@ export function StationsScreen() {
   }
 
   const activeStations = (stations ?? []).filter((station) => station.status);
+  const hasStations = activeStations.length > 0;
 
   return (
     <ScrollView style={{ flex: 1 }}>
@@ -147,19 +147,15 @@ export function StationsScreen() {
           <View>
             <Text style={styles.title}>Estaciones de trabajo</Text>
             <Text style={styles.subtitle}>
-              Elige una estación para ver sus comandas en vivo, o marca varias
-              para verlas juntas.
+              {hasStations
+                ? "Elige una estación para ver sus comandas en vivo, o marca varias para verlas juntas."
+                : "Elige qué comandas quieres ver en vivo."}
             </Text>
           </View>
 
-          <Text style={styles.sectionLabel}>ESTACIONES</Text>
-          {activeStations.length === 0 ? (
-            <EmptyHint
-              icon={ChefHat}
-              label="No hay estaciones configuradas"
-              description="Créalas en Configuraciones → Estaciones de preparación."
-            />
-          ) : (
+          {/* Sin estaciones configuradas solo se muestran General y Todas */}
+          {hasStations && <Text style={styles.sectionLabel}>ESTACIONES</Text>}
+          {hasStations && (
             <ResponsiveCardGrid>
               {activeStations.map((station) => (
                 <StationCard
@@ -176,14 +172,16 @@ export function StationsScreen() {
             </ResponsiveCardGrid>
           )}
 
-          <Text style={styles.sectionLabel}>OTRAS VISTAS</Text>
+          {hasStations && <Text style={styles.sectionLabel}>OTRAS VISTAS</Text>}
           <ResponsiveCardGrid>
             <StationCard
               title="General"
               subtitle="Productos sin estación asignada"
               icon={UtensilsCrossed}
               isSelected={selected.includes(GENERAL_STATION_ID)}
-              onToggle={() => toggle(GENERAL_STATION_ID)}
+              onToggle={
+                hasStations ? () => toggle(GENERAL_STATION_ID) : undefined
+              }
               onOpen={() => openBoard([GENERAL_STATION_ID])}
             />
             <StationCard
