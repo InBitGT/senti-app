@@ -49,6 +49,24 @@ export interface KitchenTicket {
   completed_at: string | null;
   cancelled_at: string | null;
   items: KitchenTicketItem[];
+  /** Estación a la que pertenece el ticket (null = General). */
+  prep_station_id?: number | null;
+  prep_station_name?: string | null;
+  prep_station_code?: string | null;
+  /** Lo que lleva la misma orden en otras estaciones (solo informativo). */
+  other_stations?: KitchenTicketOtherStation[];
+}
+
+export interface KitchenTicketOtherStationItem {
+  product_name: string;
+  variant_name: string | null;
+  quantity: number;
+}
+
+export interface KitchenTicketOtherStation {
+  prep_station_id: number | null;
+  prep_station_name: string;
+  items: KitchenTicketOtherStationItem[];
 }
 
 export interface UpdateKitchenTicketStatusParams {

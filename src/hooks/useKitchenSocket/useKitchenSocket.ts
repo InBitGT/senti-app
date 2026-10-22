@@ -1,20 +1,26 @@
 import { sockets } from "@/apis/socket";
 import {
-    kitchenBoardKey,
-    upsertKitchenTicket,
+  belongsToStations,
+  kitchenBoardKey,
+  upsertKitchenTicket,
 } from "@/src/hooks/useKitchenTicket/useKitchenTicket";
 import {
-    isKitchenTicket,
-    KitchenTicket,
-    KitchenTicketSocketEvent,
+  isKitchenTicket,
+  KitchenTicket,
+  KitchenTicketSocketEvent,
 } from "@/src/types/kitchen_ticket/kitchen_ticket";
-import { SocketStatus } from "@/src/types/socket/socket.types";
+import { SocketParams, SocketStatus } from "@/src/types/socket/socket.types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { AppState, AppStateStatus } from "react-native";
 
 interface UseKitchenSocketOptions {
   branchId: number | null;
+  /**
+   * Estaciones a escuchar ("3", "0" = General, "0,3").
+   * Sin valor se escucha toda la sucursal (comportamiento original).
+   */
+  stationIds?: string;
   /** Se llama cuando llega un ticket nuevo (sonido / vibración / resaltado). */
   onTicketCreated?: (ticket: KitchenTicket) => void;
 }
@@ -33,6 +39,7 @@ interface UseKitchenSocketOptions {
  */
 export function useKitchenSocket({
   branchId,
+  stationIds,
   onTicketCreated,
 }: UseKitchenSocketOptions): SocketStatus {
   const queryClient = useQueryClient();
@@ -50,10 +57,13 @@ export function useKitchenSocket({
 
     const client = sockets.kitchen;
     let wasDisconnected = false;
+    const params: SocketParams = stationIds
+      ? { branch_id: branchId, prep_station_ids: stationIds }
+      : { branch_id: branchId };
 
     const resync = (): void => {
       void queryClient.invalidateQueries({
-        queryKey: kitchenBoardKey(branchId),
+        queryKey: kitchenBoardKey(branchId, stationIds),
       });
     };
 
@@ -62,8 +72,12 @@ export function useKitchenSocket({
       isNew: boolean,
     ): void => {
       if (!isKitchenTicket(event.ticket)) return;
-      upsertKitchenTicket(queryClient, branchId, event.ticket);
-      if (isNew && event.ticket.branch_id === branchId) {
+      upsertKitchenTicket(queryClient, branchId, event.ticket, stationIds);
+      if (
+        isNew &&
+        event.ticket.branch_id === branchId &&
+        belongsToStations(event.ticket, stationIds)
+      ) {
         onCreatedRef.current?.(event.ticket);
       }
     };
@@ -89,12 +103,12 @@ export function useKitchenSocket({
       (state: AppStateStatus) => {
         if (state !== "active") return;
         resync();
-        void client.connect({ branch_id: branchId });
+        void client.connect(params);
       },
     );
 
     // El socket de cocina se abre por sucursal: ?branch_id=<sucursal elegida>.
-    void client.connect({ branch_id: branchId });
+    void client.connect(params);
 
     return () => {
       offCreated();
@@ -103,7 +117,7 @@ export function useKitchenSocket({
       appStateSub.remove();
       client.disconnect();
     };
-  }, [branchId, queryClient]);
+  }, [branchId, stationIds, queryClient]);
 
   return status;
 }

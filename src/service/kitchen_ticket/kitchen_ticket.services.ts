@@ -1,15 +1,22 @@
 import { get, put } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import {
-    KitchenTicket,
-    UpdateKitchenTicketStatusParams,
+  KitchenTicket,
+  UpdateKitchenTicketStatusParams,
 } from "@/src/types/kitchen_ticket/kitchen_ticket";
 
+/**
+ * Tablero de cocina. Sin `stationIds` trae todo (comportamiento original);
+ * con `stationIds` ("3", "0" = General, "0,3") filtra por estación.
+ */
 export async function kitchenBoardFn(
   branchId: number,
+  stationIds?: string,
 ): Promise<KitchenTicket[]> {
   const response = await get<KitchenTicket[]>(
-    ENDPOINT.kitchenTicket.board(branchId),
+    stationIds
+      ? ENDPOINT.prepStation.board(branchId, stationIds)
+      : ENDPOINT.kitchenTicket.board(branchId),
   );
 
   if (response.code !== "200") {

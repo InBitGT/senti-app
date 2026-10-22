@@ -6,33 +6,33 @@ import { useKitchenSocket } from "@/src/hooks/useKitchenSocket/useKitchenSocket"
 import { useKitchenTicket } from "@/src/hooks/useKitchenTicket/useKitchenTicket";
 import { useAuthStore } from "@/src/store";
 import {
-    getModifierLabel,
-    KitchenTicket,
-    KitchenTicketStatus,
-    KitchenTicketStatusUpdate,
-    NEXT_KITCHEN_STATUS,
+  getModifierLabel,
+  KitchenTicket,
+  KitchenTicketStatus,
+  KitchenTicketStatusUpdate,
+  NEXT_KITCHEN_STATUS,
 } from "@/src/types/kitchen_ticket/kitchen_ticket";
 import { SocketStatus } from "@/src/types/socket/socket.types";
 import * as Haptics from "expo-haptics";
-import { ChefHat, Printer, RefreshCw } from "lucide-react-native";
+import { ArrowLeft, ChefHat, Printer, RefreshCw } from "lucide-react-native";
 import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import {
-    ActivityIndicator,
-    Animated,
-    Easing,
-    LayoutChangeEvent,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Animated,
+  Easing,
+  LayoutChangeEvent,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -274,6 +274,27 @@ function KitchenTicketReceipt({
             ))}
           </View>
 
+          {/* Lo que lleva la orden en otras estaciones (solo informativo) */}
+          {!!ticket.other_stations?.length && (
+            <View style={styles.otherStations}>
+              {ticket.other_stations.map((station) => (
+                <Text
+                  key={station.prep_station_id ?? 0}
+                  style={styles.otherStationText}
+                  numberOfLines={2}
+                >
+                  {station.prep_station_name}:{" "}
+                  {station.items
+                    .map(
+                      (item) =>
+                        `${item.quantity}× ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ""}`,
+                    )
+                    .join(", ")}
+                </Text>
+              ))}
+            </View>
+          )}
+
           <View style={styles.dashed} />
 
           {/* Pie */}
@@ -374,7 +395,23 @@ function ConnectionStatus({ status }: { status: SocketStatus }) {
 // Pantalla
 // ---------------------------------------------------------------------------
 
-export function KitchenBoardScreen() {
+export interface KitchenBoardScreenProps {
+  /**
+   * Estaciones a mostrar: "3", "0" (General) o "0,3".
+   * Sin valor se muestra toda la sucursal (tablero de cocina general).
+   */
+  stationIds?: string;
+  /** Título de la barra superior. Default: "Tablero de cocina". */
+  title?: string;
+  /** Si se manda, muestra la flecha para regresar. */
+  onBack?: () => void;
+}
+
+export function KitchenBoardScreen({
+  stationIds,
+  title = "Tablero de cocina",
+  onBack,
+}: KitchenBoardScreenProps = {}) {
   const { claims } = useAuthStore();
   const { showToast } = useCustomToast();
   const now = useNow(CLOCK_TICK_MS);
@@ -413,7 +450,7 @@ export function KitchenBoardScreen() {
   const [newIds, setNewIds] = useState<Set<number>>(() => new Set());
 
   const { tickets, isLoading, isError, refetch, changeStatus } =
-    useKitchenTicket(branchId);
+    useKitchenTicket(branchId, stationIds);
 
   const highlightTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(
@@ -437,6 +474,7 @@ export function KitchenBoardScreen() {
 
   const socketStatus = useKitchenSocket({
     branchId,
+    stationIds,
     onTicketCreated: handleTicketCreated,
   });
 
@@ -513,7 +551,7 @@ export function KitchenBoardScreen() {
       <SafeAreaView style={styles.screen} edges={["bottom"]}>
         <View style={styles.centered}>
           <Icon as={ChefHat} size="xl" style={{ color: "#D6D3D1" }} />
-          <Text style={styles.centerTitle}>Tablero de cocina</Text>
+          <Text style={styles.centerTitle}>{title}</Text>
           <Text style={styles.centerText}>
             Tu usuario no tiene sucursales asignadas.
           </Text>
@@ -529,8 +567,17 @@ export function KitchenBoardScreen() {
     <SafeAreaView style={styles.screen} edges={["bottom"]}>
       {/* Barra superior */}
       <View style={styles.topBar}>
+        {onBack && (
+          <Pressable
+            onPress={onBack}
+            accessibilityLabel="Regresar a estaciones"
+            hitSlop={10}
+          >
+            <Icon as={ArrowLeft} size="xl" style={{ color: INK }} />
+          </Pressable>
+        )}
         <View style={{ flex: 1, minWidth: 160 }}>
-          <Text style={styles.topTitle}>Tablero de cocina</Text>
+          <Text style={styles.topTitle}>{title}</Text>
           <Text style={styles.topSubtitle}>
             {branchName} · {tickets.length} activos
           </Text>
@@ -659,6 +706,15 @@ export function KitchenBoardScreen() {
 }
 
 const styles = StyleSheet.create({
+  otherStations: {
+    marginTop: 8,
+    gap: 2,
+  },
+  otherStationText: {
+    fontSize: 11,
+    color: MUTED,
+    fontStyle: "italic",
+  },
   screen: {
     flex: 1,
     backgroundColor: "#F5F5F4",
