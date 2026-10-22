@@ -1,22 +1,41 @@
 import {
-    kitchenBoardFn,
-    updateKitchenTicketStatus,
+  kitchenBoardFn,
+  updateKitchenTicketStatus,
 } from "@/src/service/kitchen_ticket/kitchen_ticket.services";
 import {
-    isBoardStatus,
-    KitchenTicket,
-    KitchenTicketStatus,
-    UpdateKitchenTicketStatusParams,
+  isBoardStatus,
+  KitchenTicket,
+  KitchenTicketStatus,
+  UpdateKitchenTicketStatusParams,
 } from "@/src/types/kitchen_ticket/kitchen_ticket";
 import {
-    QueryClient,
-    useMutation,
-    useQuery,
-    useQueryClient,
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 
-export const kitchenBoardKey = (branchId: number | null) =>
-  ["kitchen-board", branchId] as const;
+/**
+ * Sin estaciones: ["kitchen-board", branchId] (igual que antes).
+ * Con estaciones: ["kitchen-board", branchId, "0,3"] para no mezclar caches.
+ */
+export const kitchenBoardKey = (
+  branchId: number | null,
+  stationIds?: string,
+) =>
+  stationIds
+    ? (["kitchen-board", branchId, stationIds] as const)
+    : (["kitchen-board", branchId] as const);
+
+/** true si el ticket pertenece a las estaciones del tablero (0 = General). */
+export function belongsToStations(
+  ticket: KitchenTicket,
+  stationIds?: string,
+): boolean {
+  if (!stationIds || ticket.prep_station_id === undefined) return true;
+  const ids = stationIds.split(",").map((id) => Number(id));
+  return ids.includes(ticket.prep_station_id ?? 0);
+}
 
 /**
  * Inserta o reemplaza un ticket en la cache del tablero.
@@ -26,15 +45,17 @@ export function upsertKitchenTicket(
   queryClient: QueryClient,
   branchId: number,
   ticket: KitchenTicket,
+  stationIds?: string,
 ): void {
   queryClient.setQueryData<KitchenTicket[]>(
-    kitchenBoardKey(branchId),
+    kitchenBoardKey(branchId, stationIds),
     (current) => {
       const list = current ?? [];
       const others = list.filter((item) => item.id !== ticket.id);
       if (
         ticket.branch_id !== branchId ||
-        !isBoardStatus(ticket.ticket_status)
+        !isBoardStatus(ticket.ticket_status) ||
+        !belongsToStations(ticket, stationIds)
       ) {
         return others;
       }
@@ -60,13 +81,13 @@ function withStatus(
   };
 }
 
-export function useKitchenTicket(branchId: number | null) {
+export function useKitchenTicket(branchId: number | null, stationIds?: string) {
   const queryClient = useQueryClient();
-  const key = kitchenBoardKey(branchId);
+  const key = kitchenBoardKey(branchId, stationIds);
 
   const board = useQuery({
     queryKey: key,
-    queryFn: () => kitchenBoardFn(branchId ?? 0),
+    queryFn: () => kitchenBoardFn(branchId ?? 0, stationIds),
     enabled: branchId !== null,
   });
 
@@ -85,6 +106,7 @@ export function useKitchenTicket(branchId: number | null) {
           queryClient,
           branchId,
           withStatus(ticket, params.ticket_status),
+          stationIds,
         );
       }
       return { previous };
@@ -96,7 +118,7 @@ export function useKitchenTicket(branchId: number | null) {
     },
     onSuccess: (ticket) => {
       if (ticket && branchId !== null && isKitchenTicketPayload(ticket)) {
-        upsertKitchenTicket(queryClient, branchId, ticket);
+        upsertKitchenTicket(queryClient, branchId, ticket, stationIds);
       }
     },
   });
