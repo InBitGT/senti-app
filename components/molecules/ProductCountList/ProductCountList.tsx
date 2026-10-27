@@ -24,21 +24,31 @@ function DiffBadge({ diff }: { diff: number }) {
   );
 }
 
+/**
+ * "count": muestra la diferencia contra el sistema.
+ * "transfer": sin diferencia y la cantidad no puede superar el stock.
+ */
+type ListMode = "count" | "transfer";
+
 function CountRow({
   product,
   line,
   onStep,
   onSet,
   onRemove,
+  mode,
 }: {
   product: FlatProduct;
   line: CountLine;
   onStep: (product: FlatProduct, delta: number) => void;
   onSet: (product: FlatProduct, qty: number) => void;
   onRemove: (product: FlatProduct) => void;
+  mode: ListMode;
 }) {
   const counted = line.counted_qty;
   const diff = counted - product.system_qty;
+  const isTransfer = mode === "transfer";
+  const atMax = isTransfer && counted >= product.system_qty;
 
   return (
     <View style={styles.row}>
@@ -51,11 +61,12 @@ function CountRow({
           {product.product_name}
         </Text>
         <Text numberOfLines={1} style={styles.sku}>
-          {product.sku} · sistema: {product.system_qty}
+          {product.sku} · {isTransfer ? "disponible" : "sistema"}:{" "}
+          {product.system_qty}
         </Text>
       </View>
 
-      <DiffBadge diff={diff} />
+      {!isTransfer && <DiffBadge diff={diff} />}
 
       {/* Conteo por unidad: cada toque suma o resta 1 unidad. */}
       <View style={styles.stepper}>
@@ -70,7 +81,11 @@ function CountRow({
           value={String(counted)}
           onChangeText={(text) => {
             const parsed = Number(text.replace(/[^0-9]/g, ""));
-            onSet(product, Number.isFinite(parsed) ? parsed : 0);
+            const safe = Number.isFinite(parsed) ? parsed : 0;
+            onSet(
+              product,
+              isTransfer ? Math.min(safe, product.system_qty) : safe,
+            );
           }}
           keyboardType="number-pad"
           selectTextOnFocus
@@ -78,7 +93,11 @@ function CountRow({
           containerStyle={{ width: 52 }}
           inputStyle={styles.input}
         />
-        <Pressable onPress={() => onStep(product, 1)} style={styles.stepButton}>
+        <Pressable
+          onPress={() => onStep(product, 1)}
+          disabled={atMax}
+          style={[styles.stepButton, atMax && styles.stepButtonDisabled]}
+        >
           <Plus size={16} color="#374151" />
         </Pressable>
       </View>
@@ -100,12 +119,14 @@ export function ProductCountList({
   onStep,
   onSet,
   onRemove,
+  mode = "count",
 }: {
   selected: FlatProduct[];
   lines: Map<number, CountLine>;
   onStep: (product: FlatProduct, delta: number) => void;
   onSet: (product: FlatProduct, qty: number) => void;
   onRemove: (product: FlatProduct) => void;
+  mode?: ListMode;
 }) {
   if (selected.length === 0) {
     return (
@@ -113,7 +134,8 @@ export function ProductCountList({
         <Package size={28} color="#aaa" />
         <Text style={styles.emptyTitle}>Aún no eliges artículos</Text>
         <Text style={styles.emptyText}>
-          Usa &quot;Elegir artículos&quot; para seleccionar qué contar. Solo
+          Usa &quot;Elegir artículos&quot; para seleccionar qué{" "}
+          {mode === "transfer" ? "trasladar" : "contar"}. Solo
           aparecerán aquí los que elijas.
         </Text>
       </View>
@@ -135,6 +157,7 @@ export function ProductCountList({
               onStep={onStep}
               onSet={onSet}
               onRemove={onRemove}
+              mode={mode}
             />
           );
         }}

@@ -21,6 +21,8 @@ const routeTitles: Record<string, Record<string, string>> = {
     cashier: "Cajero",
     packaging: "Material de empaque",
     service: "Servicios",
+    stock_transfer: "Traslados entre bodegas",
+    new_stock_transfer: "Nuevo traslado",
   },
   "(kitchen)": {
     ingredient: "Ingredientes",
