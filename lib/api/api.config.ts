@@ -64,6 +64,21 @@ export const ENDPOINT = {
     detail: (idTenant: string | number) =>
       `inventory-service/api/stock-entry?tenant_id=${idTenant}`,
   },
+  stockTransfer: {
+    info: "inventory-service/api/stock-transfer",
+    list: (query: string) => `inventory-service/api/stock-transfer?${query}`,
+    incoming: (idTenant: string | number, idBranch: string | number) =>
+      `inventory-service/api/stock-transfer/incoming?tenant_id=${idTenant}&branch_id=${idBranch}`,
+    byID: (ID: number | string) => `inventory-service/api/stock-transfer/${ID}`,
+    reception: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/reception`,
+    dispatch: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/dispatch`,
+    receive: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/receive`,
+    cancel: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/cancel`,
+  },
   menuItem: {
     info: "menu-service/api/menu-item/full",
     detail: (idTenant: string | number) =>
