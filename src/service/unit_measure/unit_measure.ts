@@ -18,7 +18,6 @@ export async function UnitMeasureFn() {
 
 export async function PostUnitMeasure(data: UnitOfMeasure) {
   const response = await post<UnitOfMeasure>(ENDPOINT.unitMeasure.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -37,7 +36,6 @@ export async function PutUnitMeasure({
     ENDPOINT.unitMeasure.info + "/" + id,
     data,
   );
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -50,7 +48,6 @@ export async function DeleteUnitMeasure(IdData: string | number) {
   const response = await remove<UnitOfMeasure>(
     ENDPOINT.unitMeasure.info + "/" + IdData,
   );
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);

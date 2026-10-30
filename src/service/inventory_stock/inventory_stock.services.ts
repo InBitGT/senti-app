@@ -9,7 +9,6 @@ export async function StockFn() {
   if (!claims){
     throw new Error();
   }
-  console.log(ENDPOINT.stock.detail(claims.tenant_id))
   const response = await get<InventoryStockDetail[]>(ENDPOINT.stock.detail(claims.tenant_id));
   if (response.code !== "200") {
     throw new Error(response.message);

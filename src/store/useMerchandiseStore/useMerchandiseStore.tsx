@@ -12,7 +12,6 @@ interface States {
 export const useMerchandiseStore = create<States>()((set, get) => ({
   data: null,
   setData: (data: MerchandiseListItem) => {
-    console.log(data, "data");
     set({ data: data });
   },
   getData: () => get().data,

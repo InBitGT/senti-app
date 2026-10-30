@@ -26,7 +26,6 @@ export async function PostProductWholesale(data: CreateProductWholesaleRule) {
     ENDPOINT.wholesale.info,
     data,
   );
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -45,7 +44,6 @@ export async function PutProductWholesale({
     ENDPOINT.wholesale.info + "/" + id,
     data,
   );
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -58,7 +56,6 @@ export async function DeleteProductWholesale(IdData: string | number) {
   const response = await remove<ProductWholesaleRule>(
     ENDPOINT.wholesale.info + "/" + IdData,
   );
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);

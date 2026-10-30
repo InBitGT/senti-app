@@ -104,13 +104,6 @@ function findPricePerUomForConversion(
   rootPricePerUom: PricePerUom[] | undefined,
 ): PricePerUom | null {
   if (conversion.price_per_uom) {
-    if (__DEV__) {
-      console.warn(
-        `[Merchandise] price_per_uom de la conversión ${conversion.from_uom_id}->${conversion.to_uom_id} ` +
-          `vino ANIDADO en conversion.price_per_uom.`,
-        conversion.price_per_uom,
-      );
-    }
     return conversion.price_per_uom;
   }
 
@@ -120,37 +113,16 @@ function findPricePerUomForConversion(
     (p) => p.uom_id === conversion.from_uom_id,
   );
   if (byUomId) {
-    if (__DEV__) {
-      console.warn(
-        `[Merchandise] price_per_uom de la conversión ${conversion.from_uom_id}->${conversion.to_uom_id} ` +
-          `encontrado en el array RAÍZ por uom_id.`,
-        byUomId,
-      );
-    }
     return byUomId;
   }
 
   if (conversion.id != null) {
     const byId = rootPricePerUom.find((p) => p.id === conversion.id);
     if (byId) {
-      if (__DEV__) {
-        console.warn(
-          `[Merchandise] price_per_uom de la conversión id=${conversion.id} encontrado en el array RAÍZ ` +
-            `por id compartido (respaldo, uom_id no matcheó).`,
-          byId,
-        );
-      }
       return byId;
     }
   }
 
-  if (__DEV__) {
-    console.warn(
-      `[Merchandise] NO se encontró price_per_uom para la conversión ${conversion.from_uom_id}->${conversion.to_uom_id} ` +
-        `ni anidado ni en el array raíz (probado por uom_id e id). rootPricePerUom crudo:`,
-      rootPricePerUom,
-    );
-  }
   return null;
 }
 

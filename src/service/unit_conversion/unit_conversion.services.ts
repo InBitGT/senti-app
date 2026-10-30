@@ -7,7 +7,6 @@ export async function PostUnitConversion(data: UnitConversion) {
     ENDPOINT.unitConversion.info,
     data,
   );
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }

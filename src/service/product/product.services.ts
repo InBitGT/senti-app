@@ -32,7 +32,6 @@ export function productIngredientFn(): Promise<MenuIngredient[] | undefined> {
 
 export async function PostIngredient(data: CreateIngredient) {
   const response = await post<CreateIngredient>(ENDPOINT.product.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -51,7 +50,6 @@ export async function PutIngredient({
     ENDPOINT.product.info + "/" + id,
     data,
   );
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -64,7 +62,6 @@ export async function DeleteIngredient(IdCategorie: string | number) {
   const response = await remove<CreateIngredient>(
     ENDPOINT.product.info + "/" + IdCategorie,
   );
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);
