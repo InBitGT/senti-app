@@ -60,6 +60,14 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+// Ingrediente todavía no se ofrece en el ingreso de inventario.
+// Cambiar a true para volver a mostrarlo.
+const SHOW_INGREDIENT_OPTION = false;
+
+const PRODUCT_TYPE_OPTIONS = STOCK_PRODUCT_TYPE_OPTIONS.filter(
+  (option) => SHOW_INGREDIENT_OPTION || option.value !== "ingredient",
+);
+
 interface ItemFormValues {
   /** Solo para la pantalla: decide qué lista de productos se busca. No se envía. */
   product_type: StockProductType;
@@ -186,7 +194,7 @@ function ItemRow({
           name={`items.${index}.product_type`}
           render={({ field: { onChange, value } }) => (
             <View style={styles.typeToggle}>
-              {STOCK_PRODUCT_TYPE_OPTIONS.map((option) => {
+              {PRODUCT_TYPE_OPTIONS.map((option) => {
                 const isActive = option.value === value;
                 return (
                   <Pressable
@@ -556,9 +564,13 @@ export default function InventoryForm() {
       ...draft.values,
       items: draft.values.items.map((item) => ({
         ...item,
-        product_type: isStockProductType(String(item.product_type))
-          ? item.product_type
-          : "finished_product",
+        // Mientras ingrediente esté oculto, un borrador con ingrediente
+        // vuelve a producto final.
+        product_type:
+          isStockProductType(String(item.product_type)) &&
+          (SHOW_INGREDIENT_OPTION || item.product_type !== "ingredient")
+            ? item.product_type
+            : "finished_product",
       })),
     });
   }, [isLoaded, draft, reset, getValues]);

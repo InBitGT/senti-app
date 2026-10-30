@@ -18,6 +18,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface AppSelectOption {
   label: string;
@@ -40,8 +41,16 @@ interface AppSelectProps {
 }
 
 const MAX_HEIGHT_RATIO = 0.8;
-const MIN_HEIGHT_RATIO = 0.2;
 const isWeb = Platform.OS === "web";
+
+// Alto aproximado de cada parte del sheet, para calcularlo con TODAS las
+// opciones y no con las filtradas: así no se encoge mientras se busca.
+const ITEM_HEIGHT = 56;
+const HANDLE_HEIGHT = 24;
+const SEARCH_HEIGHT = 60;
+const LIST_PADDING = 24;
+// Aunque haya pocas opciones, el sheet deja espacio para al menos estas filas.
+const MIN_VISIBLE_ROWS = 4;
 
 const SheetInput = isWeb ? TextInput : BottomSheetTextInput;
 
@@ -70,6 +79,7 @@ export function AppSelect({
   const sheetRef = useRef<BottomSheetModal>(null);
   const listRef = useRef<BottomSheetFlatListMethods>(null);
   const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const [internalQuery, setInternalQuery] = useState("");
   const query = searchValue ?? internalQuery;
@@ -79,11 +89,16 @@ export function AppSelect({
   const selected = options.find((o) => sameValue(o.value, value));
   const disabled = isDisabled || isLoading;
 
-  const maxDynamicContentSize = windowHeight * MAX_HEIGHT_RATIO;
-  const minListHeight = Math.min(
-    windowHeight * MIN_HEIGHT_RATIO,
-    maxDynamicContentSize,
-  );
+  const snapPoints = useMemo(() => {
+    const rows = Math.max(options.length, MIN_VISIBLE_ROWS);
+    const content =
+      HANDLE_HEIGHT +
+      (searchable ? SEARCH_HEIGHT : 0) +
+      rows * ITEM_HEIGHT +
+      LIST_PADDING +
+      insets.bottom;
+    return [Math.min(content, windowHeight * MAX_HEIGHT_RATIO)];
+  }, [options.length, searchable, insets.bottom, windowHeight]);
 
   const filteredOptions = useMemo(() => {
     if (isControlledSearch) return options;
@@ -96,21 +111,49 @@ export function AppSelect({
     if (!disabled) sheetRef.current?.present();
   }, [disabled]);
 
-  const handleClose = useCallback(() => {
-    sheetRef.current?.dismiss();
-  }, []);
-
   const handleDismiss = useCallback(() => {
     setQuery("");
   }, [setQuery]);
 
-  // Al abrir el sheet, muestra la barra de scroll para que se note que se puede bajar
-  // (en iOS no existe una barra permanente, así que se hace parpadear).
-  const handleSheetChange = useCallback((index: number) => {
-    if (index >= 0) {
-      setTimeout(() => listRef.current?.flashScrollIndicators(), 300);
-    }
-  }, []);
+  // Al buscar se vuelve arriba para que los resultados se vean de inmediato.
+  const handleQueryChange = useCallback(
+    (text: string) => {
+      setQuery(text);
+      listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    },
+    [setQuery],
+  );
+
+  const handleSelect = useCallback(
+    (optionValue: string) => {
+      onChange(optionValue);
+      sheetRef.current?.dismiss();
+    },
+    [onChange],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: AppSelectOption }) => {
+      const isSelected = sameValue(item.value, value);
+      return (
+        <Pressable
+          onPress={() => handleSelect(item.value)}
+          style={({ pressed }) => [
+            styles.item,
+            isSelected && styles.itemSelected,
+            pressed && styles.itemPressed,
+          ]}
+        >
+          <Text
+            style={[styles.itemText, isSelected && styles.itemTextSelected]}
+          >
+            {item.label}
+          </Text>
+        </Pressable>
+      );
+    },
+    [value, handleSelect],
+  );
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -159,13 +202,12 @@ export function AppSelect({
 
       <BottomSheetModal
         ref={sheetRef}
-        enableDynamicSizing
-        maxDynamicContentSize={maxDynamicContentSize}
+        snapPoints={snapPoints}
+        enableDynamicSizing={false}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={styles.dragIndicator}
         backgroundStyle={styles.sheetBackground}
         onDismiss={handleDismiss}
-        onChange={handleSheetChange}
         keyboardBehavior={isWeb ? undefined : "extend"}
         keyboardBlurBehavior={isWeb ? "none" : "restore"}
         android_keyboardInputMode="adjustResize"
@@ -176,7 +218,7 @@ export function AppSelect({
               <Search size={16} color="#9ca3af" />
               <SheetInput
                 value={query}
-                onChangeText={setQuery}
+                onChangeText={handleQueryChange}
                 placeholder={searchPlaceholder}
                 placeholderTextColor="#9ca3af"
                 style={styles.searchInput}
@@ -184,7 +226,7 @@ export function AppSelect({
                 autoCapitalize="none"
               />
               {query.length > 0 && (
-                <Pressable onPress={() => setQuery("")} hitSlop={10}>
+                <Pressable onPress={() => handleQueryChange("")} hitSlop={10}>
                   <X size={16} color="#9ca3af" />
                 </Pressable>
               )}
@@ -197,13 +239,14 @@ export function AppSelect({
           keyExtractor={(item) => item.value}
           ref={listRef}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator
-          persistentScrollbar
-          indicatorStyle="black"
-          contentContainerStyle={[
-            styles.listContent,
-            { minHeight: minListHeight },
-          ]}
+          // Un solo objeto: en web la librería combina este estilo con
+          // StyleSheet.compose(), que falla si recibe más de 2 estilos.
+          contentContainerStyle={{
+            ...styles.listContent,
+            paddingBottom: LIST_PADDING + insets.bottom,
+          }}
+          initialNumToRender={15}
+          windowSize={7}
           ListEmptyComponent={
             <View style={styles.emptyBox}>
               <Text style={styles.emptyText}>
@@ -215,31 +258,7 @@ export function AppSelect({
               </Text>
             </View>
           }
-          renderItem={({ item }) => {
-            const isSelected = sameValue(item.value, value);
-            return (
-              <Pressable
-                onPress={() => {
-                  onChange(item.value);
-                  handleClose();
-                }}
-                style={({ pressed }) => [
-                  styles.item,
-                  isSelected && styles.itemSelected,
-                  pressed && styles.itemPressed,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.itemText,
-                    isSelected && styles.itemTextSelected,
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </Pressable>
-            );
-          }}
+          renderItem={renderItem}
         />
       </BottomSheetModal>
     </View>
@@ -333,7 +352,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   listContent: {
-    paddingBottom: 24,
     paddingHorizontal: 16,
   },
   emptyBox: {
@@ -346,6 +364,8 @@ const styles = StyleSheet.create({
   },
   item: {
     borderRadius: 8,
+    minHeight: ITEM_HEIGHT,
+    justifyContent: "center",
   },
   itemSelected: {
     backgroundColor: "#f3f4f6",
@@ -356,7 +376,7 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 15,
     color: "#000",
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 15,
   },
   itemTextSelected: {
