@@ -40,6 +40,8 @@ export const ENDPOINT = {
     info: "inventory-service/api/product",
     detail: (idTenant: string | number, type: string) =>
       `inventory-service/api/product?tenant_id=${idTenant}&type=${type}`,
+    byType: (idTenant: string | number, type: string) =>
+      `inventory-service/api/product?tenant_id=${idTenant}&type=${type}`,
   },
   user: {
     info: "user-service/api/user",
@@ -61,6 +63,21 @@ export const ENDPOINT = {
     adjustment: "inventory-service/api/inventory-adjustment",
     detail: (idTenant: string | number) =>
       `inventory-service/api/stock-entry?tenant_id=${idTenant}`,
+  },
+  stockTransfer: {
+    info: "inventory-service/api/stock-transfer",
+    list: (query: string) => `inventory-service/api/stock-transfer?${query}`,
+    incoming: (idTenant: string | number, idBranch: string | number) =>
+      `inventory-service/api/stock-transfer/incoming?tenant_id=${idTenant}&branch_id=${idBranch}`,
+    byID: (ID: number | string) => `inventory-service/api/stock-transfer/${ID}`,
+    reception: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/reception`,
+    dispatch: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/dispatch`,
+    receive: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/receive`,
+    cancel: (ID: number | string) =>
+      `inventory-service/api/stock-transfer/${ID}/cancel`,
   },
   menuItem: {
     info: "menu-service/api/menu-item/full",
@@ -187,5 +204,44 @@ export const ENDPOINT = {
   dashboard: {
     detail: (idTenant: number | string) =>
       `inventory-service/api/inventory-stock/low-stock?tenant_id=${idTenant}`,
+  },
+  packaging: {
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product?tenant_id=${idTenant}&is_modifier=true&type=${type}`,
+    info: `inventory-service/api/product`,
+  },
+  ingredient: {
+    info: "inventory-service/api/product",
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product?tenant_id=${idTenant}&type=${type}`,
+  },
+  serviceProduct: {
+    info: "inventory-service/api/product/full",
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+  },
+  recipe: {
+    info: "inventory-service/api/product/full",
+    detail: (idTenant: number | string, type: string) =>
+      `inventory-service/api/product/full?tenant_id=${idTenant}&type=${type}`,
+  },
+  kitchenTicket: {
+    board: (idBranch: string | number) =>
+      `payment-client-service/api/kitchen-ticket/board?branch_id=${idBranch}`,
+    status: (idTicket: string | number) =>
+      `payment-client-service/api/kitchen-ticket/${idTicket}/status`,
+  },
+  prepStation: {
+    info: "payment-client-service/api/prep-station/full",
+    detail: (idTenant: string | number) =>
+      `payment-client-service/api/prep-station/full?tenant_id=${idTenant}`,
+    update: (idPrepStation: string | number) =>
+      `payment-client-service/api/prep-station/full/${idPrepStation}`,
+    remove: (idPrepStation: string | number) =>
+      `payment-client-service/api/prep-station/${idPrepStation}`,
+    byId: (idPrepStation: string | number) =>
+      `payment-client-service/api/prep-station/full/${idPrepStation}`,
+    board: (idBranch: string | number, prepStationIds: string) =>
+      `payment-client-service/api/kitchen-ticket/board?branch_id=${idBranch}&prep_station_ids=${prepStationIds}`,
   },
 };

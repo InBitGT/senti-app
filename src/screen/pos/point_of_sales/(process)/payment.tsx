@@ -11,7 +11,7 @@ import { VStack } from "@/components/ui/vstack";
 import { usePaymentMethod } from "@/src/hooks/usePaymentsMethods/usePaymentsMethods";
 import { useVaucherStore } from "@/src/store/useVaucherStore/useVaucherStore";
 import { VaucherPayment } from "@/src/types/vaucher/vaucher";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   CheckCircle2,
   CreditCard,
@@ -32,6 +32,7 @@ function formatDate(iso: string) {
 }
 
 export const Payment: React.FC = () => {
+  const { from } = useLocalSearchParams<{ from?: string }>();
   const order = useVaucherStore((s) => s.order);
   const clearOrder = useVaucherStore((s) => s.clearOrder);
   const { data: paymentMethods } = usePaymentMethod();
@@ -46,7 +47,11 @@ export const Payment: React.FC = () => {
 
   function newSale() {
     clearOrder();
-    router.replace("/(drawer)/(pos)/point_of_sales");
+    router.replace(
+      from === "recipe_pos"
+        ? "/(drawer)/(pos)/recipe_pos"
+        : "/(drawer)/(pos)/point_of_sales",
+    );
   }
 
   if (!order) {

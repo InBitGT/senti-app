@@ -37,7 +37,6 @@ export async function rolesFn() {
 
 export async function PostUser(data: UserDetail) {
   const response = await post<Users>(ENDPOINT.user.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -47,7 +46,6 @@ export async function PostUser(data: UserDetail) {
 
 export async function PutUser({ id, data }: { id: number; data: UserDetail }) {
   const response = await put<Users>(ENDPOINT.user.info + "/" + id, data);
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -58,7 +56,6 @@ export async function PutUser({ id, data }: { id: number; data: UserDetail }) {
 
 export async function DeleteUser(IdUser: string | number) {
   const response = await remove<Users>(ENDPOINT.user.info + "/" + IdUser);
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -69,7 +66,6 @@ export async function DeleteUser(IdUser: string | number) {
 
 export async function PostAddress(data: Address) {
   const response = await post<Address>(ENDPOINT.address.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -79,7 +75,6 @@ export async function PostAddress(data: Address) {
 
 export async function PutAddress({ id, data }: { id: number; data: Address }) {
   const response = await put<Address>(ENDPOINT.address.info + "/" + id, data);
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -92,7 +87,6 @@ export async function DeleteAddress(idAddress: string | number) {
   const response = await remove<Address>(
     ENDPOINT.address.info + "/" + idAddress,
   );
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -103,7 +97,6 @@ export async function DeleteAddress(idAddress: string | number) {
 
 export async function PostUserBranch(data: UserBranchCreate) {
   const response = await post<UserBranchCreate>(ENDPOINT.userBranch.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }

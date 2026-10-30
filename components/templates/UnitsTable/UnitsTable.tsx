@@ -7,7 +7,7 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { SearchIcon } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { DataTable } from "react-native-paper";
 
@@ -18,7 +18,11 @@ const UOM_TYPE_LABELS: Record<string, string> = {
   length: "Longitud",
 };
 
-function TypeBadge({ type }: { type: string }) {
+interface TypeBadgeProps {
+  type: string;
+}
+
+function TypeBadge({ type }: TypeBadgeProps) {
   return (
     <View style={styles.typeBadge}>
       <Text style={styles.typeBadgeText}>{UOM_TYPE_LABELS[type] ?? type}</Text>
@@ -41,28 +45,40 @@ export function UnitsTable({
   button,
   actions,
 }: UnitsTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
 
-  const validData = useMemo(() => data.filter((r) => r?.name != null), [data]);
+  const hasActions = actions !== undefined && actions.length > 0;
 
-  const filtered = useMemo(() => {
+  // La búsqueda reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const validData = useMemo<UnitOfMeasure[]>(
+    () => data.filter((r) => r?.name != null),
+    [data],
+  );
+
+  const filtered = useMemo<UnitOfMeasure[]>(() => {
     if (!search.trim()) return validData;
     const term = search.toLowerCase();
     return validData.filter(
       (r) =>
         r.name.toLowerCase().includes(term) ||
         r.code.toLowerCase().includes(term) ||
-        r.uom_type.toLowerCase().includes(term),
+        r.uom_type.toLowerCase().includes(term) ||
+        (UOM_TYPE_LABELS[r.uom_type] ?? "").toLowerCase().includes(term),
     );
   }, [validData, search]);
 
-  React.useEffect(() => {
-    setPage(0);
-  }, [filtered.length]);
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian desde el padre y la página queda
+  // fuera de rango, se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filtered.length);
   const paginated = filtered.slice(from, to);
 
@@ -73,7 +89,7 @@ export function UnitsTable({
           <AppInput
             placeholder="Buscar unidad, código…"
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -105,7 +121,7 @@ export function UnitsTable({
           <DataTable.Title style={{ flex: 1.2, justifyContent: "center" }}>
             Tipo
           </DataTable.Title>
-          {actions && actions.length > 0 && (
+          {hasActions && (
             <DataTable.Title style={{ marginLeft: 10 }}>
               Acciones
             </DataTable.Title>
@@ -146,9 +162,9 @@ export function UnitsTable({
                 <TypeBadge type={row.uom_type} />
               </DataTable.Cell>
 
-              {actions && actions.length > 0 && (
+              {hasActions && (
                 <DataTable.Cell>
-                  <ActionsMenu row={row} actions={actions} />
+                  <ActionsMenu row={row} actions={actions ?? []} />
                 </DataTable.Cell>
               )}
             </DataTable.Row>
@@ -156,7 +172,7 @@ export function UnitsTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

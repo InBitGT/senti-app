@@ -12,7 +12,7 @@ import {
   FiscalDocument,
 } from "@/src/types/fiscal_document/fiscal_document";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { Checkbox, DataTable, Menu } from "react-native-paper";
 
@@ -26,10 +26,37 @@ interface BranchOption {
   label: string;
 }
 
-const formatCurrency = (value: number) =>
-  `Q${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+interface SelectOption {
+  label: string;
+  value: string;
+}
 
-const StatusBadge = ({ status }: { status: string }) => {
+type OptionalColumnKey = "type" | "issued_at";
+
+interface OptionalColumn {
+  key: OptionalColumnKey;
+  label: string;
+}
+
+type ColumnFlexKey =
+  | "document"
+  | "type"
+  | "customer"
+  | "status"
+  | "total"
+  | "issuedAt";
+
+const formatCurrency = (value: number): string =>
+  `Q${value.toLocaleString("es-GT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+interface StatusBadgeProps {
+  status: FiscalDocument["document_status"];
+}
+
+const StatusBadge = ({ status }: StatusBadgeProps) => {
   const isVoided = status === "voided";
   const isPending = status === "pending";
   const bg = isVoided ? "#fee2e2" : isPending ? "#fef9c3" : "#dcfce7";
@@ -51,15 +78,13 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-type OptionalColumnKey = "type" | "issued_at";
-
-const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
+const OPTIONAL_COLUMNS: OptionalColumn[] = [
   { key: "type", label: "Tipo" },
   { key: "issued_at", label: "Emitido" },
 ];
 
 // Flex relativo de cada columna para que ningún contenido se salga de la tabla.
-const COLUMN_FLEX = {
+const COLUMN_FLEX: Record<ColumnFlexKey, number> = {
   document: 1,
   type: 1,
   customer: 1.6,
@@ -68,10 +93,23 @@ const COLUMN_FLEX = {
   issuedAt: 1,
 };
 
-const STATUS_SELECT_OPTIONS = [
+const STATUS_SELECT_OPTIONS: SelectOption[] = [
   { label: "Todos los estados", value: "" },
   ...DOCUMENT_STATUS_OPTIONS.map((s) => ({ label: s.label, value: s.value })),
 ];
+
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  borderBottomColor: "#d4d4d4",
+};
 
 export function FiscalDocumentsTable({
   itemsPerPage = 5,
@@ -79,7 +117,7 @@ export function FiscalDocumentsTable({
 }: FiscalDocumentsTableProps) {
   const { claims } = useAuthStore();
 
-  const branchOptions: BranchOption[] = useMemo(() => {
+  const branchOptions = useMemo<BranchOption[]>(() => {
     if (!claims?.branches) return [];
     return claims.branches.map((b) => ({
       id: b.branch_id,
@@ -87,26 +125,16 @@ export function FiscalDocumentsTable({
     }));
   }, [claims]);
 
-  const branchSelectOptions = useMemo(
+  const branchSelectOptions = useMemo<SelectOption[]>(
     () => branchOptions.map((b) => ({ label: b.label, value: String(b.id) })),
     [branchOptions],
   );
 
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
-
-  // Si el usuario solo tiene una sucursal, se usa automáticamente sin mostrar el select.
-  React.useEffect(() => {
-    if (!selectedBranchId && branchOptions.length > 0) {
-      setSelectedBranchId(String(branchOptions[0].id));
-    }
-  }, [branchOptions, selectedBranchId]);
-
-  const { data, isLoading } = useFiscalDocument(selectedBranchId);
-
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
@@ -114,12 +142,42 @@ export function FiscalDocumentsTable({
     issued_at: false,
   });
 
-  const toggleColumn = (key: OptionalColumnKey) => {
+  // Sucursal efectiva derivada: si el usuario no ha elegido una (o la elegida
+  // ya no está en sus claims), se usa la primera disponible. Así no hace falta
+  // un efecto para "auto-seleccionar" la sucursal.
+  const effectiveBranchId = useMemo<string>(() => {
+    const isValidSelection = branchSelectOptions.some(
+      (o) => o.value === selectedBranchId,
+    );
+    if (selectedBranchId && isValidSelection) return selectedBranchId;
+    return branchSelectOptions[0]?.value ?? "";
+  }, [branchSelectOptions, selectedBranchId]);
+
+  const { data, isLoading } = useFiscalDocument(effectiveBranchId);
+
+  const toggleColumn = (key: OptionalColumnKey): void => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const filteredData = React.useMemo(() => {
-    let result = data ?? [];
+  // Cada cambio de filtro reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleBranchChange = (value: string): void => {
+    setSelectedBranchId(value);
+    setPage(0);
+  };
+
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const handleStatusChange = (value: string): void => {
+    setStatusFilter(value);
+    setPage(0);
+  };
+
+  const filteredData = useMemo<FiscalDocument[]>(() => {
+    let result: FiscalDocument[] = data ?? [];
 
     if (statusFilter) {
       result = result.filter((item) => item.document_status === statusFilter);
@@ -140,30 +198,12 @@ export function FiscalDocumentsTable({
   }, [data, search, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian y la página queda fuera de rango,
+  // se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search, statusFilter, selectedBranchId]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#d4d4d4",
-  };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
@@ -176,8 +216,8 @@ export function FiscalDocumentsTable({
                 placeholder="Selecciona una sucursal"
                 searchable={branchSelectOptions.length > 6}
                 options={branchSelectOptions}
-                value={selectedBranchId}
-                onChange={setSelectedBranchId}
+                value={effectiveBranchId}
+                onChange={handleBranchChange}
               />
             </View>
           </HStack>
@@ -188,7 +228,7 @@ export function FiscalDocumentsTable({
             <AppInput
               placeholder="Buscar documento, cliente o NIT..."
               value={search}
-              onChangeText={setSearch}
+              onChangeText={handleSearchChange}
               leftIcon={<SearchIcon size={16} color="#9ca3af" />}
               inputStyle={{ color: "#000" }}
             />
@@ -201,7 +241,7 @@ export function FiscalDocumentsTable({
                 searchable={false}
                 options={STATUS_SELECT_OPTIONS}
                 value={statusFilter}
-                onChange={setStatusFilter}
+                onChange={handleStatusChange}
               />
             </View>
 
@@ -244,7 +284,7 @@ export function FiscalDocumentsTable({
         </HStack>
       </VStack>
 
-      <DataTable style={defaultStyle}>
+      <DataTable style={tableStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title style={{ flex: COLUMN_FLEX.document }}>
             Documento
@@ -361,7 +401,7 @@ export function FiscalDocumentsTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

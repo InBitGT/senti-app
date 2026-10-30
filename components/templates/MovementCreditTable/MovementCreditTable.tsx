@@ -9,7 +9,7 @@ import {
   MOVEMENT_TYPE_OPTIONS,
 } from "@/src/types/movement_credit/movement_credit";
 import { SearchIcon, SlidersHorizontal } from "lucide-react-native";
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { Checkbox, DataTable, Menu } from "react-native-paper";
 
@@ -19,10 +19,31 @@ export interface CustomerCreditMovementsTableProps {
   onRowPress?: (row: CustomerCreditMovement) => void;
 }
 
-const formatCurrency = (value: number) =>
-  `Q${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+type CreditMovementType = CustomerCreditMovement["movement_type"];
 
-const MovementBadge = ({ type }: { type: string }) => {
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+type OptionalColumnKey = "balance_after" | "description" | "user";
+
+interface OptionalColumn {
+  key: OptionalColumnKey;
+  label: string;
+}
+
+const formatCurrency = (value: number): string =>
+  `Q${value.toLocaleString("es-GT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+interface MovementBadgeProps {
+  type: CreditMovementType;
+}
+
+const MovementBadge = ({ type }: MovementBadgeProps) => {
   const isCharge = type === "charge";
   const bg = isCharge ? "#fee2e2" : "#dcfce7";
   const color = isCharge ? "#dc2626" : "#16a34a";
@@ -50,30 +71,42 @@ const parseDateInput = (value: string): Date | null => {
   return isNaN(d.getTime()) ? null : d;
 };
 
-type OptionalColumnKey = "balance_after" | "description" | "user";
-
-const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
+const OPTIONAL_COLUMNS: OptionalColumn[] = [
   { key: "balance_after", label: "Saldo después" },
   { key: "description", label: "Descripción" },
   { key: "user", label: "Usuario" },
 ];
 
-const TYPE_SELECT_OPTIONS = [
+const TYPE_SELECT_OPTIONS: SelectOption[] = [
   { label: "Todos los tipos", value: "" },
   ...MOVEMENT_TYPE_OPTIONS.map((t) => ({ label: t.label, value: t.value })),
 ];
+
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  gap: 10,
+  borderBottomColor: "#d4d4d4",
+};
 
 export function CustomerCreditMovementsTable({
   data,
   itemsPerPage = 5,
   onRowPress,
 }: CustomerCreditMovementsTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
@@ -82,26 +115,48 @@ export function CustomerCreditMovementsTable({
     user: false,
   });
 
-  const toggleColumn = (key: OptionalColumnKey) => {
+  const toggleColumn = (key: OptionalColumnKey): void => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const filteredData = React.useMemo(() => {
+  // Cada cambio de filtro reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const handleTypeChange = (value: string): void => {
+    setTypeFilter(value);
+    setPage(0);
+  };
+
+  const handleDateFromChange = (text: string): void => {
+    setDateFrom(text);
+    setPage(0);
+  };
+
+  const handleDateToChange = (text: string): void => {
+    setDateTo(text);
+    setPage(0);
+  };
+
+  const filteredData = useMemo<CustomerCreditMovement[]>(() => {
     let result = data;
 
     if (typeFilter) {
       result = result.filter((item) => item.movement_type === typeFilter);
     }
 
-    const from = parseDateInput(dateFrom);
-    if (from) {
-      result = result.filter((item) => new Date(item.created_at) >= from);
+    const fromDate = parseDateInput(dateFrom);
+    if (fromDate) {
+      result = result.filter((item) => new Date(item.created_at) >= fromDate);
     }
 
-    const to = parseDateInput(dateTo);
-    if (to) {
+    const toDate = parseDateInput(dateTo);
+    if (toDate) {
       // Incluye todo el día "hasta" (23:59:59.999)
-      const toEndOfDay = new Date(to);
+      const toEndOfDay = new Date(toDate);
       toEndOfDay.setHours(23, 59, 59, 999);
       result = result.filter((item) => new Date(item.created_at) <= toEndOfDay);
     }
@@ -127,31 +182,12 @@ export function CustomerCreditMovementsTable({
   }, [data, search, typeFilter, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian y la página queda fuera de rango,
+  // se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search, typeFilter, dateFrom, dateTo]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    gap: 10,
-    borderBottomColor: "#d4d4d4",
-  };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
@@ -161,7 +197,7 @@ export function CustomerCreditMovementsTable({
             <AppInput
               placeholder="Buscar movimiento..."
               value={search}
-              onChangeText={setSearch}
+              onChangeText={handleSearchChange}
               leftIcon={<SearchIcon size={16} color="#9ca3af" />}
               inputStyle={{ color: "#000" }}
             />
@@ -174,7 +210,7 @@ export function CustomerCreditMovementsTable({
                 searchable={false}
                 options={TYPE_SELECT_OPTIONS}
                 value={typeFilter}
-                onChange={setTypeFilter}
+                onChange={handleTypeChange}
               />
             </View>
 
@@ -221,7 +257,7 @@ export function CustomerCreditMovementsTable({
             <AppInput
               placeholder="Desde (AAAA-MM-DD)"
               value={dateFrom}
-              onChangeText={setDateFrom}
+              onChangeText={handleDateFromChange}
               keyboardType="numbers-and-punctuation"
               inputStyle={{ color: "#000" }}
             />
@@ -231,7 +267,7 @@ export function CustomerCreditMovementsTable({
             <AppInput
               placeholder="Hasta (AAAA-MM-DD)"
               value={dateTo}
-              onChangeText={setDateTo}
+              onChangeText={handleDateToChange}
               keyboardType="numbers-and-punctuation"
               inputStyle={{ color: "#000" }}
             />
@@ -239,7 +275,7 @@ export function CustomerCreditMovementsTable({
         </HStack>
       </VStack>
 
-      <DataTable style={defaultStyle}>
+      <DataTable style={tableStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title>Fecha</DataTable.Title>
           <DataTable.Title>Cliente</DataTable.Title>
@@ -251,6 +287,7 @@ export function CustomerCreditMovementsTable({
           {visibleColumns.description && (
             <DataTable.Title>Descripción</DataTable.Title>
           )}
+          {visibleColumns.user && <DataTable.Title>Usuario</DataTable.Title>}
         </DataTable.Header>
 
         {paginatedData.length === 0 ? (
@@ -273,7 +310,9 @@ export function CustomerCreditMovementsTable({
               </DataTable.Cell>
 
               <DataTable.Cell>
-                <Text style={{ color: "#000000" }}>{item.customer.name}</Text>
+                <Text style={{ color: "#000000" }}>
+                  {item.customer?.name ?? "—"}
+                </Text>
               </DataTable.Cell>
 
               <DataTable.Cell>
@@ -312,12 +351,27 @@ export function CustomerCreditMovementsTable({
                   </Text>
                 </DataTable.Cell>
               )}
+
+              {visibleColumns.user && (
+                <DataTable.Cell>
+                  <Text
+                    style={{ color: "#000000" }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.user
+                      ? `${item.user.first_name ?? ""} ${item.user.last_name ?? ""}`.trim() ||
+                        "—"
+                      : "—"}
+                  </Text>
+                </DataTable.Cell>
+              )}
             </DataTable.Row>
           ))
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

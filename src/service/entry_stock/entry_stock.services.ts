@@ -26,7 +26,6 @@ export async function entryStockFn() {
 
 export async function PostEntry(data: InventoryDetail) {
   const response = await post<InventoryDetail>(ENDPOINT.stockEntry.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -39,7 +38,6 @@ export async function PostAdjustment(data: Adjustment) {
     ENDPOINT.stockEntry.adjustment,
     data,
   );
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }

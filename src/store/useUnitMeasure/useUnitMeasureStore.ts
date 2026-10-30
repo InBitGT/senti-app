@@ -12,7 +12,6 @@ interface States {
 export const useUnitStore = create<States>()((set, get) => ({
   data: null,
   setData: (data: UnitOfMeasure) => {
-    console.log(data, "data");
     set({ data: data });
   },
   getData: () => get().data,

@@ -20,7 +20,6 @@ export const useLogin = (): Props => {
     mutationFn: loginFn,
     onSuccess: async (data) => {
       if (!data?.access_token) {
-        console.log("No token received");
         return;
       }
       setClaims(data.access_token);

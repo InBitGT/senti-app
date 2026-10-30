@@ -1,3 +1,8 @@
+import type {
+  RecipeCatalogModifier,
+  RecipeCatalogVariant,
+} from "@/src/types/recipe_pos/recipe_pos";
+
 export interface ApiConversion {
   id: number;
   from_uom_id: number;
@@ -27,6 +32,8 @@ export interface ApiCatalogProduct {
   sku: string;
   picture: string | null;
   brand?: string;
+  // "finished_product" o "service".
+  type?: string;
   category_id: number;
   category_name: string;
   // El backend manda null cuando no hay categoría padre.
@@ -48,6 +55,9 @@ export interface ApiCatalogProduct {
   wholesale_discount_pct?: number;
   final_price: number;
   conversions: ApiConversion[];
+  // Solo los servicios usan variantes y modificadores en este POS.
+  variants?: RecipeCatalogVariant[];
+  modifiers?: RecipeCatalogModifier[];
 }
 
 export interface SellUnit {
@@ -76,6 +86,8 @@ export interface CatalogProduct {
   has_wholesale: boolean;
   wholesale_min_qty: number | null;
   wholesale_discount_pct: number;
+  // Los servicios no manejan inventario: no se limitan por stock.
+  isService: boolean;
 }
 
 export interface CheckoutItem {
@@ -83,6 +95,11 @@ export interface CheckoutItem {
   product_name: string;
   category_id: number;
   category_name: string;
+  // Solo se manda en servicios, como product_type: "recipe" en recetas.
+  product_type?: "service";
+  product_variant_id?: number;
+  modifier_product_ids?: number[];
+  notes?: string;
   quantity: number;
   unit_price: number;
 }

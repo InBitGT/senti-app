@@ -29,7 +29,7 @@ import {
   KeyRound,
   UserCheck,
 } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 
 type UserFlags = {
@@ -42,9 +42,18 @@ export default function OpenCashRegisterScreen() {
   const { openCashRegister } = useOpenCashRegister();
   const { tenantUsers } = useCashRegisterUsers();
   const { data: cashRegistersData } = useCashRegister();
-  const cashRegisters = cashRegistersData ?? [];
+  const cashRegisters = useMemo(
+    () => cashRegistersData ?? [],
+    [cashRegistersData],
+  );
 
-  const [cashRegisterId, setCashRegisterId] = useState<number | null>(null);
+  const [selectedCashRegisterId, setCashRegisterId] = useState<
+    number | null
+  >(null);
+  // Si solo hay una caja se usa automáticamente, sin guardarla en estado.
+  const cashRegisterId =
+    selectedCashRegisterId ??
+    (cashRegisters.length === 1 ? cashRegisters[0].id : null);
   const [openingAmount, setOpeningAmount] = useState("");
   const [userFlags, setUserFlags] = useState<Record<number, UserFlags>>({});
   const [authorizeOpen, setAuthorizeOpen] = useState(false);
@@ -52,12 +61,6 @@ export default function OpenCashRegisterScreen() {
   const otherUsers = (tenantUsers.data ?? []).filter(
     (u) => u.id !== claims?.sub,
   );
-
-  useEffect(() => {
-    if (cashRegisters.length === 1 && cashRegisterId == null) {
-      setCashRegisterId(cashRegisters[0].id);
-    }
-  }, [cashRegisters, cashRegisterId]);
 
   function toggleSelected(userId: number) {
     setUserFlags((prev) => {

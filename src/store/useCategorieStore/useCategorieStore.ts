@@ -12,7 +12,6 @@ interface States {
 export const useCategorieStore = create<States>()((set, get) => ({
   data: null,
   setData: (data: Category) => {
-    console.log(data, "data");
     set({ data: data });
   },
   getData: () => get().data,

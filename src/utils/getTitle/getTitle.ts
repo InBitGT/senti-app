@@ -19,6 +19,14 @@ const routeTitles: Record<string, Record<string, string>> = {
     wholesale: "Mayoreo",
     inventory: "Inventario",
     cashier: "Cajero",
+    packaging: "Material de empaque",
+    service: "Servicios",
+    stock_transfer: "Traslados entre bodegas",
+    new_stock_transfer: "Nuevo traslado",
+  },
+  "(kitchen)": {
+    ingredient: "Ingredientes",
+    recipes: "Recetas",
   },
   "(portfolio)": {
     client: "Clientes",
@@ -32,6 +40,7 @@ const routeTitles: Record<string, Record<string, string>> = {
     payment_methods: "Métodos de pago",
     point_of_sales: "Puntos de venta",
     cachier: "Cajero",
+    recipe_pos: "POS de recetas",
   },
   "(config)": {
     tenant: "Empresa",

@@ -1,3 +1,4 @@
+import { connectSockets, disconnectSockets } from "@/apis/socket";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useAuthStore } from "@/src/store/useAuthStore";
@@ -52,7 +53,13 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
   }, [isReady, claims, router]);
 
-  console.log("se renderiza");
+  useEffect(() => {
+    if (claims) {
+      connectSockets();
+    } else {
+      disconnectSockets();
+    }
+  }, [claims]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

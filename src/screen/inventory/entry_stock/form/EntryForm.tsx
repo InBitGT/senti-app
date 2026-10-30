@@ -19,6 +19,13 @@ import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { useFormDraft } from "@/src/store/useFormDraft/useFormDraft";
 import { InventoryDetail } from "@/src/types/entry_stock/entry_stock.types";
+import {
+  isStockProductType,
+  MenuIngredient,
+  STOCK_PRODUCT_TYPE_OPTIONS,
+  StockProductType,
+} from "@/src/types/product/product.types";
+import { SupplierDetail } from "@/src/types/supplier/supplier.types";
 import { UnitOfMeasure } from "@/src/types/unit_measure/unit_measure.types";
 import { useRouter } from "expo-router";
 import {
@@ -29,14 +36,22 @@ import {
   Trash2,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import {
+  Control,
+  Controller,
+  FieldErrors,
+  useFieldArray,
+  useForm,
+  UseFormSetValue,
+  useWatch,
+} from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
-  View,
   useWindowDimensions,
+  View,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
@@ -44,7 +59,17 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+// Ingrediente todavía no se ofrece en el ingreso de inventario.
+// Cambiar a true para volver a mostrarlo.
+const SHOW_INGREDIENT_OPTION = false;
+
+const PRODUCT_TYPE_OPTIONS = STOCK_PRODUCT_TYPE_OPTIONS.filter(
+  (option) => SHOW_INGREDIENT_OPTION || option.value !== "ingredient",
+);
+
 interface ItemFormValues {
+  /** Solo para la pantalla: decide qué lista de productos se busca. No se envía. */
+  product_type: StockProductType;
   product_id: string;
   quantity: string;
   unit: string;
@@ -67,6 +92,7 @@ interface FormValues {
 }
 
 const EMPTY_ITEM: ItemFormValues = {
+  product_type: "finished_product",
   product_id: "",
   quantity: "",
   unit: "",
@@ -93,19 +119,20 @@ function ItemRow({
   index,
   control,
   errors,
+  setValue,
   remove,
-  productData,
+  productsByType,
   unitData,
   isLarge,
 }: {
   index: number;
-  control: any;
-  errors: any;
+  control: Control<FormValues>;
+  errors: FieldErrors<FormValues>;
+  setValue: UseFormSetValue<FormValues>;
   remove: (i: number) => void;
-  productData: any[];
-  unitData: any[];
+  productsByType: Record<StockProductType, MenuIngredient[]>;
+  unitData: UnitOfMeasure[];
   isLarge: boolean;
-  units?: UnitOfMeasure[];
 }) {
   const row = isLarge ? { flexDirection: "row" as const, gap: 12 } : {};
   const half = isLarge ? { flex: 1, minWidth: 0 } : {};
@@ -114,8 +141,13 @@ function ItemRow({
   const quantity = useWatch({ control, name: `items.${index}.quantity` });
   const unit_cost = useWatch({ control, name: `items.${index}.unit_cost` });
   const product_id = useWatch({ control, name: `items.${index}.product_id` });
+  const productType = useWatch({
+    control,
+    name: `items.${index}.product_type`,
+  });
+  const productData = productsByType[productType] ?? [];
 
-  const selectedProduct = productData?.find((p) => String(p.id) === product_id);
+  const selectedProduct = productData.find((p) => String(p.id) === product_id);
   const requiresBatch = selectedProduct?.requires_batch ?? false;
 
   const subtotal = isNaN(parseFloat(quantity) * parseFloat(unit_cost))
@@ -155,6 +187,45 @@ function ItemRow({
       </HStack>
 
       <VStack space="md">
+        {/* Tipo de producto: decide en qué lista se busca */}
+        <Controller
+          control={control}
+          name={`items.${index}.product_type`}
+          render={({ field: { onChange, value } }) => (
+            <View style={styles.typeToggle}>
+              {PRODUCT_TYPE_OPTIONS.map((option) => {
+                const isActive = option.value === value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => {
+                      if (isActive) return;
+                      onChange(option.value);
+                      // El producto elegido pertenecía al otro tipo.
+                      setValue(`items.${index}.product_id`, "");
+                    }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isActive }}
+                    style={[
+                      styles.typeOption,
+                      isActive && styles.typeOptionActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.typeOptionText,
+                        isActive && styles.typeOptionTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        />
+
         {/* Producto — buscador con autocomplete */}
         <Controller
           control={control}
@@ -353,7 +424,15 @@ export default function InventoryForm() {
   const router = useRouter();
   const { claims } = useAuthStore();
   const { post } = useEntryStock();
-  const { data: productData } = useProduct();
+  const { data: finishedProducts } = useProduct("finished_product");
+  const { data: ingredientProducts } = useProduct("ingredient");
+  const productsByType = useMemo<Record<StockProductType, MenuIngredient[]>>(
+    () => ({
+      finished_product: finishedProducts ?? [],
+      ingredient: ingredientProducts ?? [],
+    }),
+    [finishedProducts, ingredientProducts],
+  );
   const { data: supplierData } = useSupplier();
   const { data: unitData } = useUnit();
   const { showToast } = useCustomToast();
@@ -372,7 +451,7 @@ export default function InventoryForm() {
   );
 
   // Refs y estado para el botón flotante
-  const scrollRef = useRef<any>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const addButtonRef = useRef<View>(null);
   const [showFab, setShowFab] = useState(false);
 
@@ -479,7 +558,20 @@ export default function InventoryForm() {
     if (draft.values.branch_id !== getValues("branch_id")) {
       skipWarehouseReset.current = true;
     }
-    reset(draft.values);
+    // Borradores viejos no tienen product_type: se asume producto final.
+    reset({
+      ...draft.values,
+      items: draft.values.items.map((item) => ({
+        ...item,
+        // Mientras ingrediente esté oculto, un borrador con ingrediente
+        // vuelve a producto final.
+        product_type:
+          isStockProductType(String(item.product_type)) &&
+          (SHOW_INGREDIENT_OPTION || item.product_type !== "ingredient")
+            ? item.product_type
+            : "finished_product",
+      })),
+    });
   }, [isLoaded, draft, reset, getValues]);
 
   const handleSaveDraft = async () => {
@@ -505,7 +597,7 @@ export default function InventoryForm() {
 
   const supplierOptions = useMemo(
     () =>
-      (supplierData ?? []).map((s: any) => ({
+      (supplierData ?? []).map((s: SupplierDetail) => ({
         label: s.name,
         value: String(s.id),
       })),
@@ -545,7 +637,7 @@ export default function InventoryForm() {
       await clearDraft();
       showToast({ message: "Ingreso creado correctamente", type: "success" });
       router.back();
-    } catch (error) {
+    } catch (error: unknown) {
       console.log(error);
       showToast({ message: "Error al guardar el ingreso", type: "error" });
     }
@@ -814,8 +906,9 @@ export default function InventoryForm() {
                     index={index}
                     control={control}
                     errors={errors}
+                    setValue={setValue}
                     remove={remove}
-                    productData={productData ?? []}
+                    productsByType={productsByType}
                     unitData={unitData ?? []}
                     isLarge={isLarge}
                   />
@@ -938,6 +1031,34 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     backgroundColor: "#fafafa",
+  },
+  typeToggle: {
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    padding: 3,
+    borderRadius: 10,
+    backgroundColor: "#f3f4f6",
+  },
+  typeOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  typeOptionActive: {
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  typeOptionText: {
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  typeOptionTextActive: {
+    color: "#111827",
+    fontWeight: "600",
   },
   removeBtn: {
     flexDirection: "row",

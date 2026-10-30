@@ -6,7 +6,7 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Users } from "@/src/types/user/user.types";
 import { Plus, SearchIcon, SlidersHorizontal } from "lucide-react-native";
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ViewStyle } from "react-native";
 import { Checkbox, DataTable, Menu } from "react-native-paper";
 
@@ -20,10 +20,31 @@ export interface UsersTableProps {
 
 type OptionalColumnKey = "username" | "role";
 
-const OPTIONAL_COLUMNS: { key: OptionalColumnKey; label: string }[] = [
+interface OptionalColumn {
+  key: OptionalColumnKey;
+  label: string;
+}
+
+const OPTIONAL_COLUMNS: OptionalColumn[] = [
   { key: "username", label: "Usuario" },
   { key: "role", label: "Rol" },
 ];
+
+const tableStyle: ViewStyle = {
+  backgroundColor: "#ffffff",
+  borderColor: "#d4d4d4",
+  borderWidth: 0.5,
+  borderRadius: 15,
+  marginTop: 15,
+};
+
+const rowBorder: ViewStyle = {
+  borderBottomWidth: 0.5,
+  borderBottomColor: "#d4d4d4",
+};
+
+const getFullName = (user: Users): string =>
+  `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "—";
 
 export function UsersTable({
   data,
@@ -32,9 +53,9 @@ export function UsersTable({
   onNewUser,
   onRowPress,
 }: UsersTableProps) {
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [page, setPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
+  const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<
     Record<OptionalColumnKey, boolean>
   >({
@@ -42,17 +63,27 @@ export function UsersTable({
     role: false,
   });
 
-  const toggleColumn = (key: OptionalColumnKey) => {
+  const hasActions = actions !== undefined && actions.length > 0;
+
+  const toggleColumn = (key: OptionalColumnKey): void => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const filteredData = React.useMemo(() => {
+  // La búsqueda reinicia la página en el mismo evento,
+  // en lugar de hacerlo dentro de un useEffect.
+  const handleSearchChange = (text: string): void => {
+    setSearch(text);
+    setPage(0);
+  };
+
+  const filteredData = useMemo<Users[]>(() => {
     if (!search.trim()) return data;
     const term = search.toLowerCase();
     return data.filter((user) =>
       [
         user.first_name,
         user.last_name,
+        getFullName(user),
         user.username,
         user.email,
         user.phone,
@@ -66,30 +97,12 @@ export function UsersTable({
   }, [data, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const from = page * itemsPerPage;
+  // Valor derivado: si los datos cambian y la página queda fuera de rango,
+  // se ajusta sin necesidad de un efecto.
+  const safePage = Math.min(page, totalPages - 1);
+  const from = safePage * itemsPerPage;
   const to = Math.min(from + itemsPerPage, filteredData.length);
   const paginatedData = filteredData.slice(from, to);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [search]);
-
-  React.useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filteredData.length, totalPages, page]);
-
-  const defaultStyle: ViewStyle = {
-    backgroundColor: "#ffffff",
-    borderColor: "#d4d4d4",
-    borderWidth: 0.5,
-    borderRadius: 15,
-    marginTop: 15,
-  };
-
-  const rowBorder: ViewStyle = {
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#d4d4d4",
-  };
 
   return (
     <VStack className="flex-1 px-4 py-6 md:px-10">
@@ -98,7 +111,7 @@ export function UsersTable({
           <AppInput
             placeholder="Buscar usuario..."
             value={search}
-            onChangeText={setSearch}
+            onChangeText={handleSearchChange}
             leftIcon={<SearchIcon size={16} color="#9ca3af" />}
             inputStyle={{ color: "#000" }}
           />
@@ -153,7 +166,7 @@ export function UsersTable({
         </HStack>
       </HStack>
 
-      <DataTable style={defaultStyle}>
+      <DataTable style={tableStyle}>
         <DataTable.Header style={rowBorder}>
           <DataTable.Title>Nombre</DataTable.Title>
           {visibleColumns.username && (
@@ -162,9 +175,7 @@ export function UsersTable({
           <DataTable.Title>Correo</DataTable.Title>
           <DataTable.Title>Teléfono</DataTable.Title>
           {visibleColumns.role && <DataTable.Title>Rol</DataTable.Title>}
-          {actions && actions.length > 0 && (
-            <DataTable.Title>Acciones</DataTable.Title>
-          )}
+          {hasActions && <DataTable.Title>Acciones</DataTable.Title>}
         </DataTable.Header>
 
         {paginatedData.length === 0 ? (
@@ -181,9 +192,7 @@ export function UsersTable({
               onPress={onRowPress ? () => onRowPress(user) : undefined}
             >
               <DataTable.Cell>
-                <Text
-                  style={{ color: "#000000" }}
-                >{`${user.first_name} ${user.last_name}`}</Text>
+                <Text style={{ color: "#000000" }}>{getFullName(user)}</Text>
               </DataTable.Cell>
 
               {visibleColumns.username && (
@@ -208,9 +217,9 @@ export function UsersTable({
                 </DataTable.Cell>
               )}
 
-              {actions && actions.length > 0 && (
+              {hasActions && (
                 <DataTable.Cell>
-                  <ActionsMenu row={user} actions={actions} />
+                  <ActionsMenu row={user} actions={actions ?? []} />
                 </DataTable.Cell>
               )}
             </DataTable.Row>
@@ -218,7 +227,7 @@ export function UsersTable({
         )}
 
         <DataTable.Pagination
-          page={page}
+          page={safePage}
           numberOfPages={totalPages}
           onPageChange={setPage}
           label={

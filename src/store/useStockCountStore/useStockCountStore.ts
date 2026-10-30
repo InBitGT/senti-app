@@ -12,7 +12,6 @@ interface States {
 export const useStockCountStore = create<States>()((set, get) => ({
   data: null,
   setData: (data: DataResponse) => {
-    console.log(data, "data");
     set({ data: data });
   },
   getData: () => get().data,
