@@ -1,4 +1,8 @@
 import { CatalogProduct, SellUnit } from "@/src/types/pos/pos";
+import {
+  RecipeCatalogModifier,
+  RecipeCatalogVariant,
+} from "@/src/types/recipe_pos/recipe_pos";
 import { create } from "zustand";
 
 export interface CartLine {
@@ -9,11 +13,42 @@ export interface CartLine {
   // cambia lo que significa `quantity`, cambia de cuánto en cuánto salta
   // cada +/- (el factor de esa unidad).
   quantity: number;
+  // Solo en servicios: lo elegido en el modal de variantes/modificadores.
+  variant?: RecipeCatalogVariant | null;
+  modifiers?: RecipeCatalogModifier[];
+  notes?: string;
+}
+
+export interface ServiceSelection {
+  variant: RecipeCatalogVariant | null;
+  modifiers: RecipeCatalogModifier[];
+  notes: string;
+  quantity: number;
+}
+
+function modifierKey(modifiers: RecipeCatalogModifier[] = []): string {
+  return modifiers
+    .map((m) => m.product_modifier_id)
+    .sort((a, b) => a - b)
+    .join(",");
+}
+
+// Dos líneas se juntan solo si tienen la misma unidad y la misma selección.
+function sameSelection(line: CartLine, selection?: ServiceSelection): boolean {
+  return (
+    (line.variant?.id ?? null) === (selection?.variant?.id ?? null) &&
+    modifierKey(line.modifiers) === modifierKey(selection?.modifiers) &&
+    (line.notes ?? "") === (selection?.notes ?? "")
+  );
 }
 
 interface CartState {
   cart: CartLine[];
-  addLine: (product: CatalogProduct, unit: SellUnit) => void;
+  addLine: (
+    product: CatalogProduct,
+    unit: SellUnit,
+    selection?: ServiceSelection,
+  ) => void;
   stepLine: (index: number, direction: 1 | -1) => void;
   setLineQty: (index: number, raw: string) => void;
   removeLine: (index: number) => void;
@@ -24,24 +59,38 @@ export const useCartStore = create<CartState>((set) => ({
   cart: [],
 
   // Añadir 1 "Caja" (factorToBase 10) suma 10 a la cantidad, no 1.
-  addLine: (product, unit) =>
+  addLine: (product, unit, selection) =>
     set((state) => {
+      const qty = (selection?.quantity ?? 1) * unit.factorToBase;
       const existing = state.cart.find(
         (l) =>
           l.product.product_id === product.product_id &&
-          l.unit.uom_id === unit.uom_id,
+          l.unit.uom_id === unit.uom_id &&
+          sameSelection(l, selection),
       );
       if (existing) {
         return {
           cart: state.cart.map((l) =>
-            l === existing
-              ? { ...l, quantity: l.quantity + unit.factorToBase }
-              : l,
+            l === existing ? { ...l, quantity: l.quantity + qty } : l,
           ),
         };
       }
       return {
-        cart: [...state.cart, { product, unit, quantity: unit.factorToBase }],
+        cart: [
+          ...state.cart,
+          {
+            product,
+            unit,
+            quantity: qty,
+            ...(selection
+              ? {
+                  variant: selection.variant,
+                  modifiers: selection.modifiers,
+                  notes: selection.notes,
+                }
+              : {}),
+          },
+        ],
       };
     }),
 

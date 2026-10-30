@@ -15,6 +15,8 @@ export interface RecipeModifiersSelectorProps {
   options: RecipeModifierOption[];
   value: number[];
   onChange: (value: number[]) => void;
+  /** Sin buscador ni filtros: para listas cortas, como los materiales de empaque. */
+  simple?: boolean;
 }
 
 /** Con más opciones que esto se muestra el buscador. */
@@ -35,6 +37,7 @@ export function RecipeModifiersSelector({
   options,
   value,
   onChange,
+  simple = false,
 }: RecipeModifiersSelectorProps) {
   const [search, setSearch] = React.useState<string>("");
   const [filter, setFilter] = React.useState<string>(FILTER_ALL);
@@ -47,6 +50,7 @@ export function RecipeModifiersSelector({
   );
 
   const visibleOptions = React.useMemo<RecipeModifierOption[]>(() => {
+    if (simple) return options;
     const query = normalize(search);
     return options.filter((option) => {
       if (filter === FILTER_SELECTED) {
@@ -56,7 +60,7 @@ export function RecipeModifiersSelector({
       }
       return query.length === 0 || normalize(option.name).includes(query);
     });
-  }, [options, search, filter, selectedIds]);
+  }, [options, search, filter, selectedIds, simple]);
 
   const toggle = (id: number): void => {
     if (selectedIds.has(id)) {
@@ -96,7 +100,7 @@ export function RecipeModifiersSelector({
         )}
       </HStack>
 
-      {options.length > SEARCH_THRESHOLD && (
+      {!simple && options.length > SEARCH_THRESHOLD && (
         <AppInput
           placeholder="Buscar modificador"
           value={search}
@@ -105,27 +109,29 @@ export function RecipeModifiersSelector({
         />
       )}
 
-      <View style={styles.pills}>
-        <FilterPill
-          label="Todos"
-          active={filter === FILTER_ALL}
-          onPress={() => setFilter(FILTER_ALL)}
-        />
-        {typeLabels.length > 1 &&
-          typeLabels.map((label) => (
-            <FilterPill
-              key={label}
-              label={label}
-              active={filter === label}
-              onPress={() => setFilter(label)}
-            />
-          ))}
-        <FilterPill
-          label={`Seleccionados (${value.length})`}
-          active={filter === FILTER_SELECTED}
-          onPress={() => setFilter(FILTER_SELECTED)}
-        />
-      </View>
+      {!simple && (
+        <View style={styles.pills}>
+          <FilterPill
+            label="Todos"
+            active={filter === FILTER_ALL}
+            onPress={() => setFilter(FILTER_ALL)}
+          />
+          {typeLabels.length > 1 &&
+            typeLabels.map((label) => (
+              <FilterPill
+                key={label}
+                label={label}
+                active={filter === label}
+                onPress={() => setFilter(label)}
+              />
+            ))}
+          <FilterPill
+            label={`Seleccionados (${value.length})`}
+            active={filter === FILTER_SELECTED}
+            onPress={() => setFilter(FILTER_SELECTED)}
+          />
+        </View>
+      )}
 
       {visibleOptions.length === 0 ? (
         <Text size="sm" className="text-typography-400">

@@ -17,7 +17,7 @@ export async function CatalogFn() {
     ENDPOINT.pos.detail(
       session.cash_register.warehouse_id,
       claims.tenant_id,
-      "finished_product",
+      "finished_product,service",
     ),
   );
 

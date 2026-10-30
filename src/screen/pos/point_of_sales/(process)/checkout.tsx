@@ -45,6 +45,7 @@ import {
 import React, { useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { withServiceAdjustment } from "@/src/utils/posService/posService";
 
 const CASH_ALIASES = ["efectivo", "cash", "contado"];
 const GENERIC_CHECKOUT_ERROR =
@@ -76,9 +77,12 @@ function isWholesaleActiveFor(cart: CartLine[], product: CatalogProduct) {
 }
 
 function unitPriceForLine(cart: CartLine[], line: CartLine): number {
-  return isWholesaleActiveFor(cart, line.product)
-    ? line.unit.wholesaleUnitPrice
-    : line.unit.unitPrice;
+  const wholesale = isWholesaleActiveFor(cart, line.product);
+  return withServiceAdjustment(
+    line,
+    wholesale ? line.unit.wholesaleUnitPrice : line.unit.unitPrice,
+    wholesale,
+  );
 }
 
 function basePriceForLine(cart: CartLine[], line: CartLine): number {
@@ -465,7 +469,12 @@ export const Checkout: React.FC = () => {
         stockByProduct.set(p.product_id, p.stock_qty),
       );
 
-      const cartProductIds = new Set(cart.map((l) => l.product.product_id));
+      // Los servicios no se bloquean por stock.
+      const cartProductIds = new Set(
+        cart
+          .filter((l) => !l.product.isService)
+          .map((l) => l.product.product_id),
+      );
 
       const nowBlocked = new Set<number>();
       cartProductIds.forEach((productId) => {
@@ -552,6 +561,20 @@ export const Checkout: React.FC = () => {
           product_name: l.product.name,
           category_id: l.product.category_id,
           category_name: l.product.category_name,
+          ...(l.product.isService
+            ? {
+                product_type: "service" as const,
+                ...(l.variant ? { product_variant_id: l.variant.id } : {}),
+                ...(l.modifiers?.length
+                  ? {
+                      modifier_product_ids: l.modifiers.map(
+                        (modifier) => modifier.modifier_product_id,
+                      ),
+                    }
+                  : {}),
+                ...(l.notes ? { notes: l.notes } : {}),
+              }
+            : {}),
           quantity: l.quantity,
           // Precio por unidad base que realmente se cobra: con o sin el
           // precio del tipo según lo que eligió el usuario, más conversión

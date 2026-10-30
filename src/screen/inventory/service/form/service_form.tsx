@@ -5,6 +5,7 @@ import {
   AppSelectOption,
 } from "@/components/atom/AppSelect/AppSelect";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { RecipeModifiersSelector } from "@/components/molecules/RecipeModifiersSelector/RecipeModifiersSelector";
 import { ServiceIngredientsFieldArray } from "@/components/molecules/ServiceIngredientsFieldArray/ServiceIngredientsFieldArray";
 import { ServicePricingFields } from "@/components/molecules/ServicePricingFields/ServicePricingFields";
 import { ServiceVariantsFieldArray } from "@/components/molecules/ServiceRecipeFieldArray/ServiceRecipeFieldArray";
@@ -19,7 +20,6 @@ import { VStack } from "@/components/ui/vstack";
 import { DESKTOP_BREAKPOINT } from "@/const/Dimensions";
 import { useCategorie } from "@/src/hooks";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
-import { useIngredient } from "@/src/hooks/useIngredient/useIngredient";
 import { useMerchandise } from "@/src/hooks/useMerchandise/useMerchandise";
 import { usePackaging } from "@/src/hooks/usePackaging/usePackaging";
 import { useServiceProduct } from "@/src/hooks/useServiceProduct/useServiceProduct";
@@ -27,10 +27,10 @@ import { useUnit } from "@/src/hooks/useUniitMeasure/useUniitMeasure";
 import { useAuthStore } from "@/src/store";
 import { useServiceProductStore } from "@/src/store/useServiceProductStore/useServiceProductStore";
 import { Category } from "@/src/types";
+import { RecipeModifierOption } from "@/src/types/recipe/recipe";
 import {
   isServiceAvailabilityStatus,
   SERVICE_AVAILABILITY_OPTIONS,
-  ServiceModifierOption,
 } from "@/src/types/service/service";
 import { validateDecimal } from "@/src/utils/form/formHelpers";
 import { useRouter } from "expo-router";
@@ -70,7 +70,6 @@ export default function ServiceForm() {
   const { post, put } = useServiceProduct();
   const { data: categorie } = useCategorie();
   const { data: units } = useUnit();
-  const { data: ingredients } = useIngredient();
   const { data: packagings } = usePackaging();
   const { data: merchandise } = useMerchandise();
   const data = useServiceProductStore((state) => state.data);
@@ -165,23 +164,19 @@ export default function ServiceForm() {
     [watchedVariants],
   );
 
-  const modifierOptions = React.useMemo<ServiceModifierOption[]>(() => {
-    const ingredientModifiers: ServiceModifierOption[] = (ingredients ?? [])
-      .filter((item) => item.is_modifier && item.product_modifier_id !== null)
-      .map((item) => ({
-        product_modifier_id: Number(item.product_modifier_id),
-        name: item.modifier_name || item.name,
-        price_adjustment: item.modifier_price_adjustment ?? 0,
-      }));
-    const packagingModifiers: ServiceModifierOption[] = (packagings ?? [])
-      .filter((item) => item.product_modifier_id !== null)
-      .map((item) => ({
-        product_modifier_id: item.product_modifier_id,
-        name: item.modifier_name || item.name,
-        price_adjustment: item.modifier_price_adjustment ?? 0,
-      }));
-    return [...ingredientModifiers, ...packagingModifiers];
-  }, [ingredients, packagings]);
+  // En servicios solo se permiten modificadores de material de empaque.
+  const modifierOptions = React.useMemo<RecipeModifierOption[]>(
+    () =>
+      (packagings ?? [])
+        .filter((item) => item.product_modifier_id !== null)
+        .map((item) => ({
+          product_modifier_id: item.product_modifier_id,
+          name: item.modifier_name || item.name,
+          price_adjustment: item.modifier_price_adjustment ?? 0,
+          type_label: "Empaque",
+        })),
+    [packagings],
+  );
 
   const handleBack = (): void => {
     clearData();
@@ -199,7 +194,19 @@ export default function ServiceForm() {
       return;
     }
 
-    const payload = toServiceProductPayload(values, claims.tenant_id);
+    // Un servicio guardado antes puede traer modificadores de otro tipo.
+    const packagingIds = new Set(
+      modifierOptions.map((option) => option.product_modifier_id),
+    );
+    const payload = toServiceProductPayload(
+      {
+        ...values,
+        product_modifier_ids: values.product_modifier_ids.filter((id) =>
+          packagingIds.has(id),
+        ),
+      },
+      claims.tenant_id,
+    );
 
     if (isEdit && data?.recipe && !values.has_recipe) {
       payload.recipe = { ingredients: [] };
@@ -535,6 +542,22 @@ export default function ServiceForm() {
                       variantOptions={variantOptions}
                     />
                   )}
+
+                  {/* ---------- Modificadores (solo material de empaque) ---------- */}
+                  <Divider className="my-2" />
+                  <Text style={styles.sectionLabel}>MODIFICADORES</Text>
+                  <Controller
+                    control={control}
+                    name="product_modifier_ids"
+                    render={({ field: { onChange, value } }) => (
+                      <RecipeModifiersSelector
+                        options={modifierOptions}
+                        value={value}
+                        onChange={onChange}
+                        simple
+                      />
+                    )}
+                  />
 
                   <View
                     style={[styles.actions, isLarge && styles.actionsLarge]}
