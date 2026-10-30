@@ -12,7 +12,6 @@ interface States {
 export const useWarehouseStore = create<States>()((set, get) => ({
   data: null,
   setData: (data: Warehouse) => {
-    console.log(data, "data");
     set({ data: data });
   },
   getData: () => get().data,

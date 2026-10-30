@@ -20,7 +20,6 @@ export async function SupplierFn() {
 
 export async function PostSupplier(data: SupplierDetail) {
   const response = await post<SupplierDetail>(ENDPOINT.supplier.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -39,7 +38,6 @@ export async function PutSupplier({
     ENDPOINT.supplier.info + "/" + id,
     data,
   );
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -52,7 +50,6 @@ export async function DeleteSupplier(IdCategorie: string | number) {
   const response = await remove<SupplierDetail>(
     ENDPOINT.supplier.info + "/" + IdCategorie,
   );
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);

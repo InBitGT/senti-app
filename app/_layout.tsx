@@ -61,6 +61,10 @@ export default function RootLayout() {
     }
   }, [claims]);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> c82f99e (chore: remove console logs)
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

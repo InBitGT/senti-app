@@ -26,7 +26,6 @@ export async function PostCustomerType(data: CreateCustomerType) {
     ENDPOINT.customerType.info,
     data,
   );
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -45,7 +44,6 @@ export async function PutCustomerType({
     ENDPOINT.customerType.info + "/" + id,
     data,
   );
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -58,7 +56,6 @@ export async function DeleteCustomerType(IdData: string | number) {
   const response = await remove<CustomerType>(
     ENDPOINT.customerType.info + "/" + IdData,
   );
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);

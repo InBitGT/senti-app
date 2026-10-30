@@ -39,7 +39,6 @@ export async function PostStockCountAdjustment(data: CreateAdjustmentCount) {
     data,
   );
 
-  console.log(response, "valores de respuesta");
 
   if (response.code !== "201") {
     throw new Error(response.message);
@@ -61,8 +60,6 @@ export async function ApprovedStockCountAdjustment(
     ENDPOINT.stock_count_adjustment.changesStatus(adjusmentCountId, status),
     data,
   );
-  console.log(data, adjusmentCountId, status);
-  console.log(response, "valores de respuesta");
 
   if (response.code !== "201") {
     throw new Error(response.message);

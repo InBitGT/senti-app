@@ -11,7 +11,6 @@ export async function PostLoanPayments(
     data,
   );
 
-  console.log(response, "post", data);
   if (response.code !== "200") {
     throw new Error(response.message);
   }

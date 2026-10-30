@@ -21,8 +21,6 @@ export async function CatalogFn() {
     ),
   );
 
-  console.log(response, "valores");
-
   if (response.code !== "200") {
     throw new Error(response.message);
   }
@@ -38,12 +36,10 @@ export async function CheckoutFn(
     throw new Error();
   }
 
-  // TODO: confirmar el endpoint real de checkout del POS.
   const response = await post<Vaucher, CheckoutPayload>(
     ENDPOINT.pos.checkout,
     payload,
   );
-  console.log(response, "valores", payload);
 
   if (response.code !== "200" && response.code !== "201") {
     throw new Error(response.message);

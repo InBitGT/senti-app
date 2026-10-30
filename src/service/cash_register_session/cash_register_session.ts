@@ -20,7 +20,6 @@ export async function CashRegisterSessionFn(): Promise<CashRegisterSession | nul
   const response = await get<CashRegisterSession[] | CashRegisterSession>(
     ENDPOINT.cash_register_session.detail(claims.sub),
   );
-  console.log(response);
 
   if (response.message === "CLOSED_REGISTER_CASH") {
     return null;
@@ -39,10 +38,6 @@ export async function OpenCashRegisterFn(payload: OpenCashRegisterPayload) {
     ENDPOINT.cash_register_session.info,
     payload,
   );
-  console.log("=================================");
-  console.log(payload, "data");
-  console.log(response, "reponse");
-
   if (response.code !== "201" && response.code !== "200") {
     throw new Error(response.message);
   }
@@ -54,21 +49,10 @@ export async function CloseCashRegisterFn(
   sessionId: number,
   payload: CloseCashRegisterPayload,
 ): Promise<CashVoucher> {
-  if (__DEV__) {
-    console.warn(
-      `[CloseCashRegisterFn] cerrando sesión ${sessionId} con payload:`,
-      payload,
-    );
-  }
-
   const response = await post<CashVoucher, CloseCashRegisterPayload>(
     ENDPOINT.cash_register.closed(sessionId),
     payload,
   );
-
-  if (__DEV__) {
-    console.warn("[CloseCashRegisterFn] respuesta del backend:", response);
-  }
 
   if (response.code !== "200" && response.code !== "201") {
     throw new Error(response.message ?? `Error ${response.code}`);
@@ -86,10 +70,6 @@ export async function CashMovementFn(payload: CashMovementPayload) {
     ENDPOINT.cash_register.movement,
     payload,
   );
-
-  if (__DEV__) {
-    console.warn("[CashMovementFn] respuesta del backend:", response);
-  }
 
   if (response.code !== "200" && response.code !== "201") {
     throw new Error(response.message ?? `Error ${response.code}`);

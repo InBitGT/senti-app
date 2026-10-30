@@ -50,7 +50,6 @@ export async function ProductStockCountFn(idWarehouse: string | number) {
   const response = await get<StockCountProduct[]>(
     ENDPOINT.stock_count.detailInfoProduct(claims.tenant_id, idWarehouse),
   );
-  console.log(JSON.stringify(claims), "claims");
 
   if (response.code !== "200") {
     throw new Error(response.message);

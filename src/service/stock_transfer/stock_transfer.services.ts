@@ -84,7 +84,6 @@ export async function createTransferFn(body: CreateTransferBody) {
     ENDPOINT.stockTransfer.info,
     body,
   );
-  console.log(JSON.stringify(body));
   if (response.code !== "201" && response.code !== "200") {
     throw new Error(response.message);
   }

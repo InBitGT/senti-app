@@ -25,7 +25,6 @@ export const Categorie: React.FC = () => {
 
   const handleEdit = (data: Category) => {
     setIsEdit(true);
-    console.log(data, "valores de la data");
     setData(data);
     router.navigate("/(drawer)/(inventory)/(form)/categorie_form");
   };

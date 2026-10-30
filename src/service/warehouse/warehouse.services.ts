@@ -23,7 +23,6 @@ export async function warehouseFn() {
 
 export async function PostWarehouse(data: WarehousePayload) {
   const response = await post<WarehousePayload>(ENDPOINT.warehouse.info, data);
-  console.log(response, "post");
   if (response.code !== "201") {
     throw new Error(response.message);
   }
@@ -42,7 +41,6 @@ export async function PutWarehouse({
     ENDPOINT.warehouse.info + "/" + id,
     data,
   );
-  console.log(response, "put");
 
   if (response.code !== "200") {
     throw new Error(response.message);
@@ -55,7 +53,6 @@ export async function DeleteWarehouse(IdCategorie: string | number) {
   const response = await remove<WarehousePayload>(
     ENDPOINT.warehouse.info + "/" + IdCategorie,
   );
-  console.log(response, "remove");
 
   if (response.code !== "200") {
     throw new Error(response.message);
