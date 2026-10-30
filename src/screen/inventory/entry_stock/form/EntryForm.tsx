@@ -36,7 +36,15 @@ import {
   Trash2,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import {
+  Control,
+  Controller,
+  FieldErrors,
+  useFieldArray,
+  useForm,
+  UseFormSetValue,
+  useWatch,
+} from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -898,8 +906,9 @@ export default function InventoryForm() {
                     index={index}
                     control={control}
                     errors={errors}
+                    setValue={setValue}
                     remove={remove}
-                    productData={productData ?? []}
+                    productsByType={productsByType}
                     unitData={unitData ?? []}
                     isLarge={isLarge}
                   />
