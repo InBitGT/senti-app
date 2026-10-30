@@ -132,6 +132,7 @@ export function mapApiProductToProduct(
     wholesale_min_qty: api.wholesale_min_qty ?? null,
     wholesale_discount_pct: api.wholesale_discount_pct ?? 0,
     brand: api.brand,
+    isService: api.type === "service",
   };
 }
 
@@ -172,8 +173,10 @@ function ProductCard({
   );
   const remainingStock = Math.max(0, product.stock_qty - qtyInCart);
 
-  const noStockAtAll = product.stock_qty <= 0;
-  const wouldExceedStock = !noStockAtAll && unit.factorToBase > remainingStock;
+  // Los servicios no tienen stock: nunca se marcan como agotados.
+  const noStockAtAll = !product.isService && product.stock_qty <= 0;
+  const wouldExceedStock =
+    !product.isService && !noStockAtAll && unit.factorToBase > remainingStock;
   const soldOut = noStockAtAll || wouldExceedStock;
   const isWholesaleActive =
     product.has_wholesale &&
@@ -211,11 +214,13 @@ function ProductCard({
             className={`shrink-0 rounded-full ${noStockAtAll ? "bg-red-500" : "bg-gray-400"}`}
           >
             <BadgeText className="text-white" numberOfLines={1}>
-              {noStockAtAll
-                ? "Agotado"
-                : qtyInCart > 0
-                  ? `${formatQty(remainingStock)} disp.`
-                  : formatQty(product.stock_qty)}
+              {product.isService
+                ? "Servicio"
+                : noStockAtAll
+                  ? "Agotado"
+                  : qtyInCart > 0
+                    ? `${formatQty(remainingStock)} disp.`
+                    : formatQty(product.stock_qty)}
             </BadgeText>
           </Badge>
         </HStack>
@@ -337,8 +342,8 @@ export function ProductCatalog({
     // índice como segundo argumento y lo tomaría como customerTypeId.
     const mapped = data.map((p) => mapApiProductToProduct(p));
     return [...mapped].sort((a, b) => {
-      const aOut = a.stock_qty <= 0 ? 1 : 0;
-      const bOut = b.stock_qty <= 0 ? 1 : 0;
+      const aOut = !a.isService && a.stock_qty <= 0 ? 1 : 0;
+      const bOut = !b.isService && b.stock_qty <= 0 ? 1 : 0;
       return aOut - bOut;
     });
   }, [data]);

@@ -49,6 +49,8 @@ export interface RecipeAddModalProps {
   getRemaining: (variant: RecipeCatalogVariant | null) => number;
   getModifierRemaining: (modifier: RecipeCatalogModifier) => number;
   onConfirm: (selection: RecipeAddSelection) => void;
+  /** En false oculta la nota para cocina (p. ej. servicios). */
+  allowNotes?: boolean;
 }
 
 const COLORS = {
@@ -194,6 +196,7 @@ export function RecipeAddModal({
   getRemaining,
   getModifierRemaining,
   onConfirm,
+  allowNotes = true,
 }: RecipeAddModalProps) {
   const hasVariants = product.variants.length > 0;
   const hasModifiers = product.modifiers.length > 0;
@@ -430,9 +433,11 @@ export function RecipeAddModal({
                             >
                               {isSoldOut
                                 ? "Agotado"
-                                : stock <= LOW_STOCK
-                                  ? `¡Quedan ${stock}!`
-                                  : `${stock} disponibles`}
+                                : !Number.isFinite(stock)
+                                  ? "Disponible"
+                                  : stock <= LOW_STOCK
+                                    ? `¡Quedan ${stock}!`
+                                    : `${stock} disponibles`}
                             </Text>
                           </Pressable>
                         );
@@ -571,7 +576,7 @@ export function RecipeAddModal({
                 )}
 
                 {/* ---------- Notas ---------- */}
-                {showNotes || notes.length > 0 ? (
+                {!allowNotes ? null : showNotes || notes.length > 0 ? (
                   <VStack style={{ gap: 10 }}>
                     <SectionHeader step={++step} title="Notas para cocina" />
                     <AppInput
@@ -625,7 +630,9 @@ export function RecipeAddModal({
                     ? "Elige una opción"
                     : outOfStock
                       ? "Sin existencias"
-                      : `${remaining} disponibles`}
+                      : Number.isFinite(remaining)
+                        ? `${remaining} disponibles`
+                        : "Sin límite de stock"}
                 </Text>
               </VStack>
 

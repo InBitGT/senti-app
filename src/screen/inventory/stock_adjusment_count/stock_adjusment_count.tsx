@@ -22,13 +22,9 @@ interface WarehouseOption {
   label: string;
 }
 
-// "approve" y "reject" comparten la MISMA mutation (approve.mutateAsync con distinto status),
-// así que approve.isPending es true para ambos. Usamos esto para saber cuál acción
-// disparó la mutation actualmente en curso y así no marcar el botón equivocado.
 type PendingAction = "approve" | "reject" | null;
 
 export const StockAdjustmentCountScreen: React.FC = () => {
-  // Si la pantalla se abre con /warehouse/[id]/adjustments, este id se usa como valor inicial del select.
   const { id: routeWarehouseId } = useLocalSearchParams<{ id: string }>();
   const { claims } = useAuthStore();
 
@@ -42,18 +38,15 @@ export const StockAdjustmentCountScreen: React.FC = () => {
     );
   }, [claims]);
 
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>(
+  const [pickedWarehouseId, setSelectedWarehouseId] = useState<string>(
     routeWarehouseId ? String(routeWarehouseId) : "",
   );
   const [selectedStatus, setSelectedStatus] =
     useState<StatusAdjustmentStockSelect>(StatusAdjustmentStockSelect.PENDING);
 
-  // Si aún no hay selección (ni por ruta) y ya cargaron las bodegas de claims, selecciona la primera.
-  React.useEffect(() => {
-    if (!selectedWarehouseId && warehouseOptions.length > 0) {
-      setSelectedWarehouseId(String(warehouseOptions[0].id));
-    }
-  }, [warehouseOptions, selectedWarehouseId]);
+  const selectedWarehouseId =
+    pickedWarehouseId ||
+    (warehouseOptions.length > 0 ? String(warehouseOptions[0].id) : "");
 
   const [showModalData, setShowModalData] = useState<boolean>(false);
   const [modalData, setModalData] = useState<StockAdjustmentModel | undefined>(

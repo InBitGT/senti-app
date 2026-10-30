@@ -7,6 +7,10 @@ import { CartSidePanel } from "@/components/molecules/CartSidePanel/CartSidePane
 import { CashMovementModal } from "@/components/molecules/CashMovementModal/CashMovementModal";
 import { CashSessionInfoModal } from "@/components/molecules/CashSessionInfoModal/CashSessionInfoModal";
 import { OpenCashRegisterModal } from "@/components/molecules/OpenCashRegisterModal/OpenCashRegisterModal";
+import {
+  RecipeAddModal,
+  RecipeAddSelection,
+} from "@/components/molecules/RecipeAddModal/RecipeAddModal";
 import { CashRegisterGate } from "@/components/templates/CashRegisterGate/CashRegisterGate";
 import {
   formatCurrency,
@@ -20,7 +24,10 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCashRegisterSession } from "@/src/hooks/useCashRegisterSession/useCashRegisterSession";
 import { useCatalog } from "@/src/hooks/usePos/usePos";
-import { useCartStore } from "@/src/store/useCartStore/useCartStore";
+import {
+  CartLine,
+  useCartStore,
+} from "@/src/store/useCartStore/useCartStore";
 import { useCashRegisterSessionStore } from "@/src/store/useCashRegisterSessionStore/useCashRegisterSessionStore";
 import { useStockAlertStore } from "@/src/store/useStockAlertStore/useStockAlertStore";
 import {
@@ -28,6 +35,12 @@ import {
   CatalogProduct,
   SellUnit,
 } from "@/src/types/pos/pos";
+import { ApiRecipeCatalogProduct } from "@/src/types/recipe_pos/recipe_pos";
+import {
+  serviceLineMax,
+  serviceModifierRemaining,
+  withServiceAdjustment,
+} from "@/src/utils/posService/posService";
 
 import { router } from "expo-router";
 import {
@@ -48,11 +61,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export interface CartLine {
-  product: CatalogProduct;
-  unit: SellUnit;
-  quantity: number;
-}
+// Mismo tipo que el store, con la variante/modificadores de los servicios.
+export type { CartLine } from "@/src/store/useCartStore/useCartStore";
 
 const DESKTOP_BREAKPOINT = 768;
 
@@ -91,6 +101,12 @@ export const Pos: React.FC = () => {
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
+  // Servicio con variantes o modificadores esperando a que se elijan en el modal.
+  const [pendingService, setPendingService] = useState<{
+    product: CatalogProduct;
+    unit: SellUnit;
+    api: ApiCatalogProduct;
+  } | null>(null);
 
   function qtyInOtherLines(productId: number, excludeIndex: number) {
     return cart.reduce((sum, l, i) => {
@@ -102,6 +118,7 @@ export const Pos: React.FC = () => {
   function maxQtyForLine(index: number) {
     const line = cart[index];
     if (!line) return 0;
+    if (line.product.isService) return serviceLineMax(cart, index);
     const otherQty = qtyInOtherLines(line.product.product_id, index);
     return Math.max(0, line.product.stock_qty - otherQty);
   }
@@ -132,9 +149,12 @@ export const Pos: React.FC = () => {
   }
 
   function unitPriceForLine(line: CartLine): number {
-    return isWholesaleActiveFor(line.product)
-      ? line.unit.wholesaleUnitPrice
-      : line.unit.unitPrice;
+    const wholesale = isWholesaleActiveFor(line.product);
+    return withServiceAdjustment(
+      line,
+      wholesale ? line.unit.wholesaleUnitPrice : line.unit.unitPrice,
+      wholesale,
+    );
   }
 
   function lineTotal(line: CartLine): number {
@@ -235,6 +255,22 @@ export const Pos: React.FC = () => {
   }, [catalog, query, categoryId, subcategoryId]);
 
   function handleAddToCart(product: CatalogProduct, unit: SellUnit) {
+    if (product.isService) {
+      // Con variantes o modificadores se pregunta qué quiere, como en recetas.
+      const api = (catalog ?? []).find(
+        (p) => p.product_id === product.product_id,
+      );
+      if (
+        api &&
+        ((api.variants?.length ?? 0) > 0 || (api.modifiers?.length ?? 0) > 0)
+      ) {
+        setPendingService({ product, unit, api });
+        return;
+      }
+      addLine(product, unit);
+      if (!isDesktop) setCartOpen(true);
+      return;
+    }
     const alreadyInCart = cart.reduce(
       (sum, l) =>
         l.product.product_id === product.product_id ? sum + l.quantity : sum,
@@ -244,6 +280,13 @@ export const Pos: React.FC = () => {
     if (unit.factorToBase > remaining) return;
 
     addLine(product, unit);
+    if (!isDesktop) setCartOpen(true);
+  }
+
+  function handleConfirmService(selection: RecipeAddSelection) {
+    if (!pendingService) return;
+    addLine(pendingService.product, pendingService.unit, selection);
+    setPendingService(null);
     if (!isDesktop) setCartOpen(true);
   }
 
@@ -499,6 +542,31 @@ export const Pos: React.FC = () => {
             />
           )}
         </HStack>
+
+        {pendingService && (
+          <RecipeAddModal
+            key={pendingService.product.product_id}
+            isOpen
+            onClose={() => setPendingService(null)}
+            product={
+              {
+                ...pendingService.api,
+                type: "service",
+                variants: pendingService.api.variants ?? [],
+                modifiers: pendingService.api.modifiers ?? [],
+                // El precio base es el mismo que muestra la tarjeta del catálogo.
+                base_price: pendingService.unit.unitPrice,
+                has_customer_type_price: false,
+              } as ApiRecipeCatalogProduct
+            }
+            getRemaining={() => Number.POSITIVE_INFINITY}
+            getModifierRemaining={(modifier) =>
+              serviceModifierRemaining(cart, modifier)
+            }
+            onConfirm={handleConfirmService}
+            allowNotes={false}
+          />
+        )}
 
         {session.data && (
           <CashSessionInfoModal

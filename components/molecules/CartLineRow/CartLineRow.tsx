@@ -48,6 +48,17 @@ export function CartLineRow({
               </Box>
             )}
           </HStack>
+          {/* Solo los servicios traen variante/modificadores elegidos. */}
+          {(line.variant || (line.modifiers?.length ?? 0) > 0) && (
+            <Text className="text-xs text-gray-500" numberOfLines={1}>
+              {[
+                line.variant?.name,
+                ...(line.modifiers ?? []).map((modifier) => modifier.name),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </Text>
+          )}
           <Text className="text-xs text-gray-400">
             {formatCurrency(unitPrice)}/{line.unit.code}
           </Text>
