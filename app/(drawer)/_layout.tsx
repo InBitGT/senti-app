@@ -44,6 +44,10 @@ export default function DrawerLayout() {
         <Drawer.Screen name="dashboard" options={{ title: "Dashboard" }} />
         <Drawer.Screen name="order" options={{ title: "Orden" }} />
         <Drawer.Screen
+          name="[...unmatched]"
+          options={{ title: "En mantenimiento" }}
+        />
+        <Drawer.Screen
           name="(inventory)"
           options={({ route }) => ({
             headerShown: !isForm,
