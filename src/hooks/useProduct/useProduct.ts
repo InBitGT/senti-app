@@ -16,7 +16,7 @@ const PRODUCT_KEY = "ingredient";
 export const useProduct = (type: StockProductType = "finished_product") => {
   const queryClient = useQueryClient();
 
-  // Invalida todas las listas (producto final e ingrediente).
+  // Invalida todas las listas (producto final, ingrediente y empaque).
   const invalidate = (): Promise<void> =>
     queryClient.invalidateQueries({ queryKey: [PRODUCT_KEY] });
 

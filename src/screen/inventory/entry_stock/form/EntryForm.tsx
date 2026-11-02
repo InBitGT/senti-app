@@ -426,12 +426,14 @@ export default function InventoryForm() {
   const { post } = useEntryStock();
   const { data: finishedProducts } = useProduct("finished_product");
   const { data: ingredientProducts } = useProduct("ingredient");
+  const { data: packagingProducts } = useProduct("packaging");
   const productsByType = useMemo<Record<StockProductType, MenuIngredient[]>>(
     () => ({
       finished_product: finishedProducts ?? [],
       ingredient: ingredientProducts ?? [],
+      packaging: packagingProducts ?? [],
     }),
-    [finishedProducts, ingredientProducts],
+    [finishedProducts, ingredientProducts, packagingProducts],
   );
   const { data: supplierData } = useSupplier();
   const { data: unitData } = useUnit();
