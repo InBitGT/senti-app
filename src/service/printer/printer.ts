@@ -22,6 +22,11 @@ async function ensurePermission(): Promise<void> {
   const result = await PermissionsAndroid.request(
     PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
   );
+  if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+    throw new Error(
+      "Permiso de Bluetooth bloqueado. Actívalo en Ajustes > Apps > Senti > Permisos > Dispositivos cercanos.",
+    );
+  }
   if (result !== PermissionsAndroid.RESULTS.GRANTED) {
     throw new Error("Permiso de Bluetooth denegado.");
   }
@@ -51,7 +56,10 @@ export async function PrintBytesFn(
     await native.print(address, toBase64(bytes));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "";
+    console.warn("[printer] print failed:", message);
     if (/apagado/i.test(message)) throw new Error("El Bluetooth está apagado.");
-    throw new Error("No se pudo conectar con la impresora");
+    throw new Error(
+      __DEV__ && message ? message : "No se pudo conectar con la impresora",
+    );
   }
 }

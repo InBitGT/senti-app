@@ -47,3 +47,4 @@ app-example
 .env
 
 modules/*/android/build/
+modules/*/android/.gradle/

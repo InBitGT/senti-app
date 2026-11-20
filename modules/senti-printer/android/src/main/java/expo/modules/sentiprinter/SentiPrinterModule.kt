@@ -2,7 +2,9 @@ package expo.modules.sentiprinter
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.util.Base64
 import expo.modules.kotlin.modules.Module
@@ -18,6 +20,33 @@ class SentiPrinterModule : Module() {
     return manager.adapter
   }
 
+  // Muchas impresoras térmicas rechazan el socket seguro: se prueba seguro,
+  // inseguro y finalmente el canal RFCOMM 1 por reflexión.
+  @SuppressLint("MissingPermission")
+  private fun connect(device: BluetoothDevice): BluetoothSocket {
+    val attempts = listOf<() -> BluetoothSocket>(
+      { device.createRfcommSocketToServiceRecord(sppUuid) },
+      { device.createInsecureRfcommSocketToServiceRecord(sppUuid) },
+      {
+        device.javaClass
+          .getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+          .invoke(device, 1) as BluetoothSocket
+      },
+    )
+    var last: Exception? = null
+    for (make in attempts) {
+      val socket = try { make() } catch (e: Exception) { last = e; continue }
+      try {
+        socket.connect()
+        return socket
+      } catch (e: Exception) {
+        last = e
+        runCatching { socket.close() }
+      }
+    }
+    throw Exception("No se pudo conectar: ${last?.message ?: "desconocido"}")
+  }
+
   @SuppressLint("MissingPermission")
   override fun definition() = ModuleDefinition {
     Name("SentiPrinter")
@@ -31,14 +60,13 @@ class SentiPrinterModule : Module() {
       val bt = adapter() ?: throw Exception("Bluetooth no disponible")
       if (!bt.isEnabled) throw Exception("El Bluetooth está apagado")
       runCatching { bt.cancelDiscovery() }
-      val socket = bt.getRemoteDevice(address).createRfcommSocketToServiceRecord(sppUuid)
+      val socket = connect(bt.getRemoteDevice(address))
       try {
-        socket.connect()
         socket.outputStream.write(Base64.decode(base64, Base64.DEFAULT))
         socket.outputStream.flush()
         Thread.sleep(300)
       } finally {
-        socket.close()
+        runCatching { socket.close() }
       }
     }
   }

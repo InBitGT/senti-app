@@ -17,12 +17,9 @@
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/senti_brand.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "senti.app",
       "permissions": [
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
       ],
       "softwareKeyboardLayoutMode": "resize"

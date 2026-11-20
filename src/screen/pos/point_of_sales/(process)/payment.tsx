@@ -46,8 +46,9 @@ export const Payment: React.FC = () => {
   const { printer, isPrinting, printOrder } = usePrintKitchenOrder();
   const [printerOpen, setPrinterOpen] = useState(false);
   const autoPrintedId = useRef<number | null>(null);
+  const printerSupported = isPrinterSupported();
   const canPrint =
-    isPrinterSupported() && !!order && order.kitchen_tickets.length > 0;
+    printerSupported && !!order && order.kitchen_tickets.length > 0;
 
   useEffect(() => {
     if (!order || !canPrint || !printer) return;
@@ -299,22 +300,26 @@ export const Payment: React.FC = () => {
         </ScrollView>
 
         <VStack className="border-t border-gray-200 bg-white p-4">
-          {canPrint && (
+          {printerSupported && (
             <HStack space="sm" className="mb-3">
-              <Box className="flex-1">
-                <AppButton
-                  label={
-                    isPrinting ? "Imprimiendo..." : "Reimprimir ticket de cocina"
-                  }
-                  variant="black"
-                  outline
-                  outlineBorderColor="#D1D5DB"
-                  outlineTextColor="#374151"
-                  icon={Printer}
-                  isDisabled={isPrinting}
-                  onPress={handleReprint}
-                />
-              </Box>
+              {canPrint && (
+                <Box className="flex-1">
+                  <AppButton
+                    label={
+                      isPrinting
+                        ? "Imprimiendo..."
+                        : "Reimprimir ticket de cocina"
+                    }
+                    variant="black"
+                    outline
+                    outlineBorderColor="#D1D5DB"
+                    outlineTextColor="#374151"
+                    icon={Printer}
+                    isDisabled={isPrinting}
+                    onPress={handleReprint}
+                  />
+                </Box>
+              )}
               <AppButton
                 label="Impresora"
                 variant="black"
@@ -322,8 +327,8 @@ export const Payment: React.FC = () => {
                 outlineBorderColor="#D1D5DB"
                 outlineTextColor="#374151"
                 icon={Settings}
-                fullWidth={false}
-                shrinkOnMobile
+                fullWidth={!canPrint}
+                shrinkOnMobile={canPrint}
                 onPress={() => setPrinterOpen(true)}
               />
             </HStack>
