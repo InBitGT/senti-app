@@ -4,6 +4,8 @@ import { storage } from "@/lib/storage/storage";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { useKitchenSocket } from "@/src/hooks/useKitchenSocket/useKitchenSocket";
 import { useKitchenTicket } from "@/src/hooks/useKitchenTicket/useKitchenTicket";
+import { usePrintTicket } from "@/src/hooks/usePrintTicket/usePrintTicket";
+import { kitchenTicketJob } from "@/src/service/printer";
 import { useAuthStore } from "@/src/store";
 import {
   getModifierLabel,
@@ -545,6 +547,33 @@ export function KitchenBoardScreen({
     ? (changeStatus.variables?.id ?? null)
     : null;
 
+  // Imprime el ticket en la térmica con los datos del tablero y, si sale,
+  // lo marca como "printed" (la mutation refresca el tablero y avisa).
+  const { supported: printerSupported, print } = usePrintTicket();
+  const [printingId, setPrintingId] = useState<number | null>(null);
+
+  const handlePrint = async (ticket: KitchenTicket): Promise<void> => {
+    // Sin impresora térmica (web / iOS) solo se registra como impreso.
+    if (!printerSupported) {
+      updateStatus(ticket, "printed");
+      return;
+    }
+    if (printingId !== null) return;
+    setPrintingId(ticket.id);
+    try {
+      const result = await print(
+        kitchenTicketJob(ticket, { markPrinted: false }),
+        {
+          success: false, // El toast lo muestra updateStatus.
+          empty: `El ticket #${ticket.id} no tiene productos`,
+        },
+      );
+      if (result === "printed") updateStatus(ticket, "printed");
+    } finally {
+      setPrintingId(null);
+    }
+  };
+
   // ---------- Usuario sin sucursales ----------
   if (branchId === null) {
     return (
@@ -693,9 +722,11 @@ export function KitchenBoardScreen({
                 ticket={ticket}
                 now={now}
                 isNew={newIds.has(ticket.id)}
-                isUpdating={updatingId === ticket.id}
+                isUpdating={
+                  updatingId === ticket.id || printingId === ticket.id
+                }
                 onAdvance={updateStatus}
-                onPrint={(item) => updateStatus(item, "printed")}
+                onPrint={handlePrint}
               />
             ))}
           </TicketGrid>

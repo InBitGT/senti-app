@@ -1,4 +1,5 @@
 import { requireOptionalNativeModule } from "expo";
+import { usePrinterStatusStore } from "@/src/store/usePrinterStatusStore/usePrinterStatusStore";
 import { PermissionsAndroid, Platform } from "react-native";
 
 export interface PairedPrinter {
@@ -9,6 +10,7 @@ export interface PairedPrinter {
 interface SentiPrinterNative {
   getPairedDevices(): Promise<PairedPrinter[]>;
   print(address: string, base64: string): Promise<void>;
+  checkConnection(address: string): Promise<void>;
 }
 
 const native = requireOptionalNativeModule<SentiPrinterNative>("SentiPrinter");
@@ -46,20 +48,51 @@ export async function PairedPrintersFn(): Promise<PairedPrinter[]> {
   return native.getPairedDevices();
 }
 
+function friendlyError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : "";
+  console.warn("[printer]", message);
+  if (/apagado/i.test(message)) return new Error("El Bluetooth está apagado.");
+  if (/emparejada/i.test(message)) {
+    return new Error("La impresora no está emparejada con este dispositivo.");
+  }
+  if (/permiso/i.test(message)) return error as Error;
+  return new Error(
+    __DEV__ && message ? message : "No se pudo conectar con la impresora.",
+  );
+}
+
+/**
+ * Comprueba que la impresora responde abriendo y cerrando una conexión.
+ * Actualiza `usePrinterStatusStore` con el resultado.
+ */
+export async function CheckPrinterFn(address: string): Promise<void> {
+  const status = usePrinterStatusStore.getState();
+  if (!native) throw new Error("Impresión disponible solo en Android.");
+  status.setChecking(address);
+  try {
+    await ensurePermission();
+    await native.checkConnection(address);
+    status.setConnected(address);
+  } catch (error: unknown) {
+    const friendly = friendlyError(error);
+    status.setError(address, friendly.message);
+    throw friendly;
+  }
+}
+
 export async function PrintBytesFn(
   address: string,
   bytes: Uint8Array,
 ): Promise<void> {
+  const status = usePrinterStatusStore.getState();
   if (!native) throw new Error("Impresión disponible solo en Android.");
-  await ensurePermission();
   try {
+    await ensurePermission();
     await native.print(address, toBase64(bytes));
+    status.setConnected(address);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "";
-    console.warn("[printer] print failed:", message);
-    if (/apagado/i.test(message)) throw new Error("El Bluetooth está apagado.");
-    throw new Error(
-      __DEV__ && message ? message : "No se pudo conectar con la impresora",
-    );
+    const friendly = friendlyError(error);
+    status.setError(address, friendly.message);
+    throw friendly;
   }
 }

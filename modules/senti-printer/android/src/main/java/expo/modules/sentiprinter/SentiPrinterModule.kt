@@ -47,6 +47,22 @@ class SentiPrinterModule : Module() {
     throw Exception("No se pudo conectar: ${last?.message ?: "desconocido"}")
   }
 
+  // Las térmicas aceptan una sola conexión: verificación e impresión no
+  // deben abrir sockets al mismo tiempo.
+  private val lock = Any()
+
+  @SuppressLint("MissingPermission")
+  private fun openSocket(address: String): BluetoothSocket {
+    val bt = adapter() ?: throw Exception("Bluetooth no disponible")
+    if (!bt.isEnabled) throw Exception("El Bluetooth está apagado")
+    val device = bt.getRemoteDevice(address)
+    if (device.bondState != BluetoothDevice.BOND_BONDED) {
+      throw Exception("La impresora no está emparejada")
+    }
+    runCatching { bt.cancelDiscovery() }
+    return connect(device)
+  }
+
   @SuppressLint("MissingPermission")
   override fun definition() = ModuleDefinition {
     Name("SentiPrinter")
@@ -56,17 +72,25 @@ class SentiPrinterModule : Module() {
       bt.bondedDevices.map { mapOf("name" to (it.name ?: ""), "address" to it.address) }
     }
 
-    AsyncFunction("print") { address: String, base64: String ->
-      val bt = adapter() ?: throw Exception("Bluetooth no disponible")
-      if (!bt.isEnabled) throw Exception("El Bluetooth está apagado")
-      runCatching { bt.cancelDiscovery() }
-      val socket = connect(bt.getRemoteDevice(address))
-      try {
-        socket.outputStream.write(Base64.decode(base64, Base64.DEFAULT))
-        socket.outputStream.flush()
-        Thread.sleep(300)
-      } finally {
+    // Abre y cierra un socket para comprobar que la impresora responde.
+    AsyncFunction("checkConnection") { address: String ->
+      synchronized(lock) {
+        val socket = openSocket(address)
         runCatching { socket.close() }
+        Unit
+      }
+    }
+
+    AsyncFunction("print") { address: String, base64: String ->
+      synchronized(lock) {
+        val socket = openSocket(address)
+        try {
+          socket.outputStream.write(Base64.decode(base64, Base64.DEFAULT))
+          socket.outputStream.flush()
+          Thread.sleep(300)
+        } finally {
+          runCatching { socket.close() }
+        }
       }
     }
   }

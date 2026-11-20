@@ -1,6 +1,5 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
-import { PrinterSettingsModal } from "@/components/molecules/PrinterSettingsModal/PrinterSettingsModal";
 import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -11,8 +10,9 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { usePaymentMethod } from "@/src/hooks/usePaymentsMethods/usePaymentsMethods";
-import { usePrintKitchenOrder } from "@/src/hooks/usePrintKitchenOrder/usePrintKitchenOrder";
-import { isPrinterSupported } from "@/src/service/printer/printer";
+import { usePrintTicket } from "@/src/hooks/usePrintTicket/usePrintTicket";
+import { saleJob } from "@/src/service/printer";
+import { usePrinterStatusStore } from "@/src/store/usePrinterStatusStore/usePrinterStatusStore";
 import { useVaucherStore } from "@/src/store/useVaucherStore/useVaucherStore";
 import { VaucherPayment } from "@/src/types/vaucher/vaucher";
 import { router, useLocalSearchParams } from "expo-router";
@@ -22,7 +22,6 @@ import {
   Plus,
   Printer,
   Receipt,
-  Settings,
   Wallet,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
@@ -43,51 +42,53 @@ export const Payment: React.FC = () => {
   const clearOrder = useVaucherStore((s) => s.clearOrder);
   const { data: paymentMethods } = usePaymentMethod();
   const { showToast } = useCustomToast();
-  const { printer, isPrinting, printOrder } = usePrintKitchenOrder();
-  const [printerOpen, setPrinterOpen] = useState(false);
-  const autoPrintedId = useRef<number | null>(null);
-  const printerSupported = isPrinterSupported();
-  const canPrint =
-    printerSupported && !!order && order.kitchen_tickets.length > 0;
+  const {
+    supported: printerSupported,
+    printMode,
+    isPrinting,
+    print,
+  } = usePrintTicket();
+  // Orden que ya se imprimió desde esta pantalla (cambia "Imprimir" a "Reimprimir").
+  const [printedOrderId, setPrintedOrderId] = useState<number | null>(null);
+  // Toda venta se puede imprimir (comprobante + cocina si aplica).
+  const canPrint = printerSupported && !!order;
 
+  // La impresión automática la dispara `printOnSale` al generarse el
+  // voucher (ver usePos / useRecipePos). Aquí solo se avisa el resultado.
+  const lastJob = usePrinterStatusStore((s) => s.lastJob);
+  const seenJobId = useRef(lastJob?.id ?? 0);
   useEffect(() => {
-    if (!order || !canPrint || !printer) return;
-    if (autoPrintedId.current === order.id) return;
-    autoPrintedId.current = order.id;
-    printOrder(order.id).catch((error: unknown) =>
+    if (!lastJob || !order || lastJob.id <= seenJobId.current) return;
+    seenJobId.current = lastJob.id;
+    if (isPrinting) return; // Los toasts del botón los maneja usePrintTicket.
+    if (lastJob.label !== saleJob(order).label) return;
+    if (lastJob.ok && lastJob.result === "printed") {
+      showToast({ message: "Orden impresa", type: "success" });
+    } else if (!lastJob.ok) {
       showToast({
-        message:
-          error instanceof Error
-            ? error.message
-            : "No se pudo imprimir el ticket de cocina",
+        message: lastJob.error ?? "No se pudo imprimir la orden",
         type: "error",
-      }),
-    );
-  }, [order, canPrint, printer, printOrder, showToast]);
+      });
+    }
+  }, [lastJob, order, isPrinting, showToast]);
 
-  async function handleReprint() {
+  // En modo automático siempre es "Reimprimir"; bajo pedido, "Imprimir"
+  // hasta que se imprima por primera vez.
+  const isReprint = printMode === "auto" || printedOrderId === order?.id;
+  const printLabel = isPrinting
+    ? "Imprimiendo..."
+    : isReprint
+      ? "Reimprimir orden"
+      : "Imprimir orden";
+
+  async function handlePrint() {
     if (!order) return;
-    if (!printer) {
-      setPrinterOpen(true);
-      return;
-    }
-    try {
-      const printed = await printOrder(order.id);
-      showToast({
-        message: printed
-          ? "Ticket de cocina impreso"
-          : "La orden no tiene productos de cocina",
-        type: printed ? "success" : "error",
-      });
-    } catch (error: unknown) {
-      showToast({
-        message:
-          error instanceof Error
-            ? error.message
-            : "No se pudo imprimir el ticket de cocina",
-        type: "error",
-      });
-    }
+    // Sin impresora, printTicket avisa con un toast que vaya a Configuración.
+    const result = await print(saleJob(order, { paymentMethods }), {
+      success: "Orden impresa",
+      empty: "La orden no tiene nada que imprimir",
+    });
+    if (result === "printed") setPrintedOrderId(order.id);
   }
 
   function methodName(payment: VaucherPayment) {
@@ -300,38 +301,21 @@ export const Payment: React.FC = () => {
         </ScrollView>
 
         <VStack className="border-t border-gray-200 bg-white p-4">
-          {printerSupported && (
-            <HStack space="sm" className="mb-3">
-              {canPrint && (
-                <Box className="flex-1">
-                  <AppButton
-                    label={
-                      isPrinting
-                        ? "Imprimiendo..."
-                        : "Reimprimir ticket de cocina"
-                    }
-                    variant="black"
-                    outline
-                    outlineBorderColor="#D1D5DB"
-                    outlineTextColor="#374151"
-                    icon={Printer}
-                    isDisabled={isPrinting}
-                    onPress={handleReprint}
-                  />
-                </Box>
-              )}
+          {/* Al hacer una venta → "Reimprimir orden"; bajo pedido → "Imprimir orden". */}
+          {canPrint && (
+            <Box className="mb-3">
               <AppButton
-                label="Impresora"
+                label={printLabel}
                 variant="black"
-                outline
+                outline={isReprint}
                 outlineBorderColor="#D1D5DB"
                 outlineTextColor="#374151"
-                icon={Settings}
-                fullWidth={!canPrint}
-                shrinkOnMobile={canPrint}
-                onPress={() => setPrinterOpen(true)}
+                icon={Printer}
+                isLoading={isPrinting}
+                isDisabled={isPrinting}
+                onPress={handlePrint}
               />
-            </HStack>
+            </Box>
           )}
           <AppButton
             label="Nueva venta"
@@ -341,10 +325,6 @@ export const Payment: React.FC = () => {
           />
         </VStack>
       </VStack>
-      <PrinterSettingsModal
-        isOpen={printerOpen}
-        onClose={() => setPrinterOpen(false)}
-      />
     </SafeAreaView>
   );
 };

@@ -1,27 +1,12 @@
 import {
   PairedPrinter,
   PairedPrintersFn,
-  PrintBytesFn,
-} from "@/src/service/printer/printer";
+  printTicket,
+  testTicketJob,
+} from "@/src/service/printer";
+import { usePrinterStatusStore } from "@/src/store/usePrinterStatusStore/usePrinterStatusStore";
 import { usePrinterStore } from "@/src/store/usePrinterStore/usePrinterStore";
-import { EscPosBuilder } from "@/src/utils/printer/escpos";
 import { useCallback, useEffect, useState } from "react";
-
-function testTicketBytes(): Uint8Array {
-  return new EscPosBuilder()
-    .init()
-    .align("center")
-    .bold(true)
-    .tall(true)
-    .line("SENTI")
-    .tall(false)
-    .bold(false)
-    .line("Prueba de impresión")
-    .line("áéíóú ñÑ ¿¡")
-    .separator()
-    .feed(4)
-    .build();
-}
 
 /**
  * Lógica compartida para elegir, probar y guardar la impresora térmica de
@@ -95,7 +80,7 @@ export function usePrinterSetup(active: boolean) {
     setIsBusy(true);
     setMessage(null);
     try {
-      await PrintBytesFn(selectedDevice.address, testTicketBytes());
+      await printTicket(testTicketJob(), { printer: selectedDevice });
       setMessage("Prueba enviada.");
       return true;
     } catch (e: unknown) {
@@ -119,6 +104,7 @@ export function usePrinterSetup(active: boolean) {
 
   function forget() {
     setPrinter(null);
+    usePrinterStatusStore.getState().reset();
     setChoice(null);
     setMessage("Se olvidó la impresora guardada.");
   }
