@@ -45,3 +45,5 @@ app-example
 
 #variables de entorno 
 .env
+
+modules/*/android/build/

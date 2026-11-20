@@ -1,5 +1,6 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
+import { PrinterSettingsModal } from "@/components/molecules/PrinterSettingsModal/PrinterSettingsModal";
 import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -8,7 +9,10 @@ import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { useCustomToast } from "@/src/hooks/useCustomToast";
 import { usePaymentMethod } from "@/src/hooks/usePaymentsMethods/usePaymentsMethods";
+import { usePrintKitchenOrder } from "@/src/hooks/usePrintKitchenOrder/usePrintKitchenOrder";
+import { isPrinterSupported } from "@/src/service/printer/printer";
 import { useVaucherStore } from "@/src/store/useVaucherStore/useVaucherStore";
 import { VaucherPayment } from "@/src/types/vaucher/vaucher";
 import { router, useLocalSearchParams } from "expo-router";
@@ -16,10 +20,12 @@ import {
   CheckCircle2,
   CreditCard,
   Plus,
+  Printer,
   Receipt,
+  Settings,
   Wallet,
 } from "lucide-react-native";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -36,6 +42,52 @@ export const Payment: React.FC = () => {
   const order = useVaucherStore((s) => s.order);
   const clearOrder = useVaucherStore((s) => s.clearOrder);
   const { data: paymentMethods } = usePaymentMethod();
+  const { showToast } = useCustomToast();
+  const { printer, isPrinting, printOrder } = usePrintKitchenOrder();
+  const [printerOpen, setPrinterOpen] = useState(false);
+  const autoPrintedId = useRef<number | null>(null);
+  const canPrint =
+    isPrinterSupported() && !!order && order.kitchen_tickets.length > 0;
+
+  useEffect(() => {
+    if (!order || !canPrint || !printer) return;
+    if (autoPrintedId.current === order.id) return;
+    autoPrintedId.current = order.id;
+    printOrder(order.id).catch((error: unknown) =>
+      showToast({
+        message:
+          error instanceof Error
+            ? error.message
+            : "No se pudo imprimir el ticket de cocina",
+        type: "error",
+      }),
+    );
+  }, [order, canPrint, printer, printOrder, showToast]);
+
+  async function handleReprint() {
+    if (!order) return;
+    if (!printer) {
+      setPrinterOpen(true);
+      return;
+    }
+    try {
+      const printed = await printOrder(order.id);
+      showToast({
+        message: printed
+          ? "Ticket de cocina impreso"
+          : "La orden no tiene productos de cocina",
+        type: printed ? "success" : "error",
+      });
+    } catch (error: unknown) {
+      showToast({
+        message:
+          error instanceof Error
+            ? error.message
+            : "No se pudo imprimir el ticket de cocina",
+        type: "error",
+      });
+    }
+  }
 
   function methodName(payment: VaucherPayment) {
     if (!payment.payment_method_id) return "Crédito";
@@ -247,6 +299,35 @@ export const Payment: React.FC = () => {
         </ScrollView>
 
         <VStack className="border-t border-gray-200 bg-white p-4">
+          {canPrint && (
+            <HStack space="sm" className="mb-3">
+              <Box className="flex-1">
+                <AppButton
+                  label={
+                    isPrinting ? "Imprimiendo..." : "Reimprimir ticket de cocina"
+                  }
+                  variant="black"
+                  outline
+                  outlineBorderColor="#D1D5DB"
+                  outlineTextColor="#374151"
+                  icon={Printer}
+                  isDisabled={isPrinting}
+                  onPress={handleReprint}
+                />
+              </Box>
+              <AppButton
+                label="Impresora"
+                variant="black"
+                outline
+                outlineBorderColor="#D1D5DB"
+                outlineTextColor="#374151"
+                icon={Settings}
+                fullWidth={false}
+                shrinkOnMobile
+                onPress={() => setPrinterOpen(true)}
+              />
+            </HStack>
+          )}
           <AppButton
             label="Nueva venta"
             variant="info"
@@ -255,6 +336,10 @@ export const Payment: React.FC = () => {
           />
         </VStack>
       </VStack>
+      <PrinterSettingsModal
+        isOpen={printerOpen}
+        onClose={() => setPrinterOpen(false)}
+      />
     </SafeAreaView>
   );
 };

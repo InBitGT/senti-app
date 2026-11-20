@@ -230,6 +230,8 @@ export const ENDPOINT = {
       `payment-client-service/api/kitchen-ticket/board?branch_id=${idBranch}`,
     status: (idTicket: string | number) =>
       `payment-client-service/api/kitchen-ticket/${idTicket}/status`,
+    orderPrint: (idOrder: string | number) =>
+      `payment-client-service/api/kitchen-ticket/order/${idOrder}/print`,
   },
   prepStation: {
     info: "payment-client-service/api/prep-station/full",

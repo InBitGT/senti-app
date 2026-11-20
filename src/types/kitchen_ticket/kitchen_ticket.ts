@@ -69,6 +69,31 @@ export interface KitchenTicketOtherStation {
   items: KitchenTicketOtherStationItem[];
 }
 
+export interface KitchenOrderPrintStation {
+  kitchen_ticket_id: number;
+  prep_station_id: number | null;
+  prep_station_name: string;
+  prep_station_code: string | null;
+  ticket_status: KitchenTicketStatus;
+  printed_at: string | null;
+  items: KitchenTicketItem[];
+}
+
+export interface KitchenOrderPrint {
+  order_id: number;
+  branch_id: number;
+  branch_name: string;
+  user_id: number;
+  user_first_name: string;
+  user_last_name: string;
+  customer_id: number | null;
+  customer_name: string | null;
+  channel: string;
+  created_at: string;
+  total_items: number;
+  stations: KitchenOrderPrintStation[];
+}
+
 export interface UpdateKitchenTicketStatusParams {
   id: number;
   ticket_status: KitchenTicketStatusUpdate;
