@@ -6,6 +6,7 @@ import {
 import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { SettingsNav } from "@/components/molecules/SettingNav";
 import { PersonalInfoSection } from "@/components/organisms/PersonalInfoSection";
+import { PrinterSection } from "@/components/organisms/PrinterSection";
 import { Box } from "@/components/ui/box";
 import { VStack } from "@/components/ui/vstack";
 import { useState } from "react";
@@ -25,6 +26,8 @@ export function ProfileScreen() {
         return <SecuritySection />;
       case "preferences":
         return <PreferencesSection />;
+      case "printer":
+        return <PrinterSection />;
       default:
         return <PersonalInfoSection />;
     }

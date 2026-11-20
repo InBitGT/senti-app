@@ -13,15 +13,8 @@ import {
   ModalHeader,
 } from "@/components/ui/modal";
 import { VStack } from "@/components/ui/vstack";
-import {
-  PairedPrinter,
-  PairedPrintersFn,
-  PrintBytesFn,
-} from "@/src/service/printer/printer";
-import { usePrinterStore } from "@/src/store/usePrinterStore/usePrinterStore";
-import { EscPosBuilder } from "@/src/utils/printer/escpos";
+import { usePrinterSetup } from "@/src/hooks/usePrinterSetup/usePrinterSetup";
 import { Printer, X } from "lucide-react-native";
-import { useEffect, useState } from "react";
 import { Text, TouchableOpacity } from "react-native";
 
 export function PrinterSettingsModal({
@@ -31,61 +24,19 @@ export function PrinterSettingsModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const printer = usePrinterStore((s) => s.printer);
-  const setPrinter = usePrinterStore((s) => s.setPrinter);
-  const [devices, setDevices] = useState<PairedPrinter[]>([]);
-  const [selected, setSelected] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setSelected(printer?.address ?? "");
-    setMessage(null);
-    PairedPrintersFn()
-      .then(setDevices)
-      .catch((e: unknown) =>
-        setMessage(
-          e instanceof Error ? e.message : "No se pudo leer el Bluetooth.",
-        ),
-      );
-  }, [isOpen, printer]);
-
-  const selectedDevice = devices.find((d) => d.address === selected) ?? null;
-
-  async function handleTest() {
-    if (!selectedDevice) {
-      setMessage("Selecciona una impresora.");
-      return;
-    }
-    setIsBusy(true);
-    setMessage(null);
-    try {
-      const bytes = new EscPosBuilder()
-        .init()
-        .align("center")
-        .bold(true)
-        .tall(true)
-        .line("SENTI")
-        .tall(false)
-        .bold(false)
-        .line("Prueba de impresión")
-        .line("áéíóú ñÑ ¿¡")
-        .separator()
-        .feed(4)
-        .build();
-      await PrintBytesFn(selectedDevice.address, bytes);
-      setMessage("Prueba enviada.");
-    } catch (e: unknown) {
-      setMessage(e instanceof Error ? e.message : "No se pudo imprimir.");
-    } finally {
-      setIsBusy(false);
-    }
-  }
+  const {
+    devices,
+    selected,
+    selectedDevice,
+    message,
+    isBusy,
+    select,
+    test,
+    save,
+  } = usePrinterSetup(isOpen);
 
   function handleSave() {
-    setPrinter(selectedDevice);
-    onClose();
+    if (save()) onClose();
   }
 
   return (
@@ -111,10 +62,7 @@ export function PrinterSettingsModal({
                 value: d.address,
               }))}
               value={selected}
-              onChange={(value) => {
-                setSelected(value);
-                setMessage(null);
-              }}
+              onChange={select}
             />
             <Text className="text-xs text-gray-400">
               Si no aparece, emparéjala primero en los ajustes de Bluetooth de
@@ -138,7 +86,7 @@ export function PrinterSettingsModal({
                 outlineTextColor="#374151"
                 icon={Printer}
                 isDisabled={isBusy || !selectedDevice}
-                onPress={handleTest}
+                onPress={test}
               />
             </Box>
             <Box className="flex-1">
