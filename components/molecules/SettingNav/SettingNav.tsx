@@ -2,7 +2,8 @@ import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopSc
 import { useLogin } from "@/src/hooks";
 import { useAuthStore } from "@/src/store";
 import { router } from "expo-router";
-import { LogOut, MapPin, User } from "lucide-react-native";
+import { isPrinterSupported } from "@/src/service/printer/printer";
+import { LogOut, MapPin, Printer, User } from "lucide-react-native";
 import {
   Platform,
   Pressable,
@@ -19,6 +20,10 @@ interface SettingsNavProps {
 const navItems = [
   { id: "personal", label: "Informacion Personal", icon: User },
   { id: "address", label: "Direccion", icon: MapPin },
+  // Solo en Android: la impresora térmica Bluetooth es nativa.
+  ...(isPrinterSupported()
+    ? [{ id: "printer", label: "Impresora", icon: Printer }]
+    : []),
   // { id: "security", label: "Seguridad", icon: Shield },
   // { id: "preferences", label: "Preferencias", icon: Bell },
 ];

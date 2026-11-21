@@ -1,3 +1,6 @@
+import { Customer } from "@/src/types/customer/customer";
+import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
+import { printOnSale } from "@/src/service/printer/printOnSale";
 import {
   RecipeCatalogFn,
   RecipeCheckoutFn,
@@ -32,6 +35,13 @@ export function useRecipeCatalog() {
     onSuccess: (data) => {
       if (!data) return;
       setOrder(data);
+      // Si el modo es "Al hacer una venta", imprime el ticket de cocina.
+      printOnSale(data, {
+        paymentMethods: queryClient.getQueryData<PaymentMethod[]>([
+          "payment-methods",
+        ]),
+        customers: queryClient.getQueryData<Customer[]>(["customers"]),
+      });
       [
         RECIPE_POS_CATALOG_KEY,
         ["credit"],

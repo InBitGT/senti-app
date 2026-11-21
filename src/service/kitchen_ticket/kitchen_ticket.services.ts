@@ -1,6 +1,7 @@
 import { get, put } from "@/apis";
 import { ENDPOINT } from "@/lib";
 import {
+  KitchenOrderPrint,
   KitchenTicket,
   UpdateKitchenTicketStatusParams,
 } from "@/src/types/kitchen_ticket/kitchen_ticket";
@@ -38,6 +39,20 @@ export async function updateKitchenTicketStatus({
   const response = await put<KitchenTicket>(ENDPOINT.kitchenTicket.status(id), {
     ticket_status,
   });
+
+  if (response.code !== "200") {
+    throw new Error(response.message);
+  }
+
+  return response.data;
+}
+
+export async function kitchenOrderPrintFn(
+  orderId: number,
+): Promise<KitchenOrderPrint | undefined> {
+  const response = await get<KitchenOrderPrint>(
+    ENDPOINT.kitchenTicket.orderPrint(orderId),
+  );
 
   if (response.code !== "200") {
     throw new Error(response.message);
