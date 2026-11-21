@@ -9,9 +9,10 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
+import { useCustomer } from "@/src/hooks/useCustomer/useCustomer";
 import { usePaymentMethod } from "@/src/hooks/usePaymentsMethods/usePaymentsMethods";
 import { usePrintTicket } from "@/src/hooks/usePrintTicket/usePrintTicket";
-import { saleJob } from "@/src/service/printer";
+import { customerLabel, saleJob } from "@/src/service/printer";
 import { usePrinterStatusStore } from "@/src/store/usePrinterStatusStore/usePrinterStatusStore";
 import { useVaucherStore } from "@/src/store/useVaucherStore/useVaucherStore";
 import { VaucherPayment } from "@/src/types/vaucher/vaucher";
@@ -41,17 +42,19 @@ export const Payment: React.FC = () => {
   const order = useVaucherStore((s) => s.order);
   const clearOrder = useVaucherStore((s) => s.clearOrder);
   const { data: paymentMethods } = usePaymentMethod();
+  const { data: customers } = useCustomer();
   const { showToast } = useCustomToast();
   const {
     supported: printerSupported,
+    printer,
     printMode,
     isPrinting,
     print,
   } = usePrintTicket();
   // Orden que ya se imprimió desde esta pantalla (cambia "Imprimir" a "Reimprimir").
   const [printedOrderId, setPrintedOrderId] = useState<number | null>(null);
-  // Toda venta se puede imprimir (comprobante + cocina si aplica).
-  const canPrint = printerSupported && !!order;
+  // Sin impresora configurada no se muestra nada de impresión.
+  const canPrint = printerSupported && !!printer && !!order;
 
   // La impresión automática la dispara `printOnSale` al generarse el
   // voucher (ver usePos / useRecipePos). Aquí solo se avisa el resultado.
@@ -84,7 +87,7 @@ export const Payment: React.FC = () => {
   async function handlePrint() {
     if (!order) return;
     // Sin impresora, printTicket avisa con un toast que vaya a Configuración.
-    const result = await print(saleJob(order, { paymentMethods }), {
+    const result = await print(saleJob(order, { paymentMethods, customers }), {
       success: "Orden impresa",
       empty: "La orden no tiene nada que imprimir",
     });
@@ -152,9 +155,8 @@ export const Payment: React.FC = () => {
                   <VStack>
                     <Text className="text-xs text-gray-400">Cliente</Text>
                     <Text className="text-sm font-medium text-gray-900">
-                      {order.customer_id
-                        ? `Cliente #${order.customer_id}`
-                        : "Público general"}
+                      {customerLabel(order.customer_id, customers) ??
+                        "Público general"}
                     </Text>
                   </VStack>
                   <VStack className="items-end">

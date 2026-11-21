@@ -36,8 +36,7 @@ const PRINT_MODES: {
   {
     value: "auto",
     title: "Al hacer una venta",
-    detail:
-      "Imprime el ticket de cocina automáticamente. Muestra “Reimprimir orden”.",
+    detail: "Imprime el ticket automáticamente. Muestra “Reimprimir orden”.",
     Icon: Zap,
   },
   {
@@ -137,8 +136,8 @@ export function PrinterSection() {
           </Heading>
         </HStack>
         <Text size="sm" className="text-gray-500">
-          Elige la impresora Bluetooth de confianza para los tickets de cocina.
-          Se guarda en este dispositivo.
+          Elige la impresora Bluetooth de confianza para imprimir tickets. Se
+          guarda en este dispositivo.
         </Text>
       </VStack>
 

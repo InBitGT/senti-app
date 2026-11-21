@@ -1,3 +1,4 @@
+import { Customer } from "@/src/types/customer/customer";
 import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
 import { printOnSale } from "@/src/service/printer/printOnSale";
 import {
@@ -39,6 +40,7 @@ export function useRecipeCatalog() {
         paymentMethods: queryClient.getQueryData<PaymentMethod[]>([
           "payment-methods",
         ]),
+        customers: queryClient.getQueryData<Customer[]>(["customers"]),
       });
       [
         RECIPE_POS_CATALOG_KEY,

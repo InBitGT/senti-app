@@ -1,3 +1,4 @@
+import { Customer } from "@/src/types/customer/customer";
 import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
 import { printOnSale } from "@/src/service/printer/printOnSale";
 import { CatalogFn, CheckoutFn } from "@/src/service/pos/pos";
@@ -30,6 +31,7 @@ export const useCatalog = () => {
           paymentMethods: queryClient.getQueryData<PaymentMethod[]>([
             "payment-methods",
           ]),
+          customers: queryClient.getQueryData<Customer[]>(["customers"]),
         });
         queryClient.invalidateQueries({
           queryKey: [

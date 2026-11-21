@@ -1,5 +1,6 @@
 import { createTicketJob } from "@/src/service/printer/jobs/createTicketJob";
 import { useAuthStore } from "@/src/store";
+import { Customer } from "@/src/types/customer/customer";
 import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
 import { Vaucher, VaucherPayment } from "@/src/types/vaucher/vaucher";
 import {
@@ -43,15 +44,32 @@ function businessInfo(branchId: number) {
   };
 }
 
+/** Nombre del cliente de la orden, o null si es público general. */
+export function customerLabel(
+  customerId: number | null,
+  customers?: Customer[],
+): string | null {
+  if (!customerId) return null;
+  return (
+    customers?.find((c) => c.id === customerId)?.name?.trim() ||
+    `Cliente #${customerId}`
+  );
+}
+
 /**
  * Comprobante de la venta (voucher) con los datos que devuelve el checkout.
  *
  * @param paymentMethods Catálogo de métodos de pago para mostrar el nombre
  *   en vez del id (opcional).
+ * @param customers Lista de clientes para mostrar el nombre en vez del id
+ *   (opcional; el voucher solo trae `customer_id`).
  */
 export function saleVoucherJob(
   order: Vaucher,
-  { paymentMethods }: { paymentMethods?: PaymentMethod[] } = {},
+  {
+    paymentMethods,
+    customers,
+  }: { paymentMethods?: PaymentMethod[]; customers?: Customer[] } = {},
 ) {
   return createTicketJob(`Comprobante de venta #${order.id}`, (b) => {
     const { company, branch } = businessInfo(order.branch_id);
@@ -64,11 +82,11 @@ export function saleVoucherJob(
     b.line("Comprobante de venta").align("left").separator();
 
     b.line(twoColumns(`Orden #${order.id}`, formatDate(order.created_at)));
-    b.line(
-      order.customer_id
-        ? `Cliente #${order.customer_id}`
-        : "Cliente: Público general",
-    );
+    const customer = customerLabel(order.customer_id, customers);
+    wrapText(
+      `Cliente: ${customer ?? "Público general"}`,
+      PAPER_COLUMNS,
+    ).forEach((line) => b.line(line));
     b.separator();
 
     order.items.forEach((item) => {

@@ -17,7 +17,7 @@ export function kitchenOrderJob(orderId: number): PrintJob {
   let ticket: KitchenOrderPrint | undefined;
 
   return {
-    label: `Ticket de cocina #${orderId}`,
+    label: `Ticket de la orden #${orderId}`,
     build: async () => {
       ticket = await kitchenOrderPrintFn(orderId);
       if (!ticket || ticket.stations.length === 0) return null;

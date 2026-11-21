@@ -4,16 +4,18 @@ import { saleVoucherJob } from "@/src/service/printer/jobs/saleVoucherJob";
 import { isPrinterSupported } from "@/src/service/printer/printer";
 import { PrintJob, printTicket } from "@/src/service/printer/printTicket";
 import { usePrinterStore } from "@/src/store/usePrinterStore/usePrinterStore";
+import { Customer } from "@/src/types/customer/customer";
 import { PaymentMethod } from "@/src/types/payment_methods/payment_methods";
 import { Vaucher } from "@/src/types/vaucher/vaucher";
 
 export interface SaleJobOptions {
   paymentMethods?: PaymentMethod[];
+  customers?: Customer[];
 }
 
 /**
  * Lo que se imprime por cada venta: el comprobante y, si la orden generó
- * tickets de cocina, el ticket de cocina. Lo usan la impresión automática
+ * tickets de preparación, ese ticket. Lo usan la impresión automática
  * y el botón "Imprimir / Reimprimir orden".
  */
 export function saleJob(

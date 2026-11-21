@@ -1,7 +1,6 @@
 import { usePrinterConnection } from "@/src/hooks/usePrinterConnection/usePrinterConnection";
 import { router } from "expo-router";
-import { AlertTriangle, PrinterIcon, RefreshCw, X } from "lucide-react-native";
-import { useState } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react-native";
 import {
   ActivityIndicator,
   Pressable,
@@ -12,53 +11,23 @@ import {
 
 const COLORS = {
   error: { bg: "#FEF2F2", border: "#FECACA", text: "#991B1B", icon: "#DC2626" },
-  warn: { bg: "#FFFBEB", border: "#FDE68A", text: "#92400E", icon: "#D97706" },
 };
 
 /**
- * Aviso en pantalla cuando la impresora térmica de confianza no responde
- * o no hay ninguna configurada. Solo se muestra en Android.
+ * Aviso en pantalla cuando la impresora térmica de confianza no responde.
+ * Si no hay impresora configurada no muestra nada. Solo en Android.
  */
 export function PrinterStatusBanner() {
   const { supported, hydrated, printer, status, error, isChecking, check } =
     usePrinterConnection();
-  const [dismissedNoPrinter, setDismissedNoPrinter] = useState(false);
 
-  if (!supported || !hydrated) return null;
+  if (!supported || !hydrated || !printer) return null;
 
   const openSettings = () =>
     router.push({
       pathname: "/(drawer)/profile",
       params: { section: "printer" },
     });
-
-  if (!printer) {
-    if (dismissedNoPrinter) return null;
-    return (
-      <Banner
-        tone="warn"
-        icon={<PrinterIcon size={18} color={COLORS.warn.icon} />}
-        title="No hay impresora configurada"
-        detail="Los tickets de cocina no se imprimirán."
-        actions={
-          <>
-            <BannerButton
-              tone="warn"
-              label="Configurar"
-              onPress={openSettings}
-            />
-            <Pressable
-              hitSlop={8}
-              onPress={() => setDismissedNoPrinter(true)}
-              accessibilityLabel="Cerrar aviso"
-            >
-              <X size={18} color={COLORS.warn.text} />
-            </Pressable>
-          </>
-        }
-      />
-    );
-  }
 
   // Mientras reintenta después de un error, se mantiene el aviso visible.
   const failed = status === "error" || (isChecking && !!error);

@@ -20,7 +20,7 @@ export function kitchenTicketJob(
   { markPrinted = true }: { markPrinted?: boolean } = {},
 ): PrintJob {
   return {
-    label: `Ticket de cocina #${ticket.id}`,
+    label: `Ticket #${ticket.id}`,
     build: () => {
       if (ticket.items.length === 0) return null;
       const printable = kitchenTicketToPrint(ticket);

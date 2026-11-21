@@ -549,12 +549,13 @@ export function KitchenBoardScreen({
 
   // Imprime el ticket en la térmica con los datos del tablero y, si sale,
   // lo marca como "printed" (la mutation refresca el tablero y avisa).
-  const { supported: printerSupported, print } = usePrintTicket();
+  const { supported: printerSupported, printer, print } = usePrintTicket();
   const [printingId, setPrintingId] = useState<number | null>(null);
 
   const handlePrint = async (ticket: KitchenTicket): Promise<void> => {
-    // Sin impresora térmica (web / iOS) solo se registra como impreso.
-    if (!printerSupported) {
+    // Sin impresora térmica configurada (o en web / iOS) solo se registra
+    // como impreso, sin avisos.
+    if (!printerSupported || !printer) {
       updateStatus(ticket, "printed");
       return;
     }
