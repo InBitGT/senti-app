@@ -1,11 +1,9 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { useLogin } from "@/src/hooks";
 import { useAuthStore } from "@/src/store";
 import { router } from "expo-router";
 import { isPrinterSupported } from "@/src/service/printer/printer";
 import { LogOut, MapPin, Printer, User } from "lucide-react-native";
 import {
-  Platform,
   Pressable,
   ScrollView,
   TouchableOpacity,
@@ -43,8 +41,6 @@ export function SettingsNav({
     router.replace("/(auth)/Login");
   };
 
-  // Contenido compartido entre la rama web (DesktopScrollView) y la
-  // rama nativa (ScrollView de RN), para no duplicar el JSX de los ítems.
   const navContent = (
     <>
       {navItems.map((item) => {
@@ -95,35 +91,6 @@ export function SettingsNav({
     </>
   );
 
-  // FIX: en web/Tauri, envolver DesktopScrollView (overflow-x + drag de
-  // mouse) DENTRO de un <ScrollView> de RN genera dos contenedores de
-  // scroll horizontal anidados peleándose entre sí. Acá además faltaba
-  // el prop `horizontal` en DesktopScrollView, que por defecto deja
-  // overflowX en "hidden" y recorta el contenido en vez de dejarlo
-  // scrollear — combinando ambos bugs, en desktop los ítems que no
-  // entraban en el ancho visible simplemente desaparecían.
-  if (Platform.OS === "web") {
-    return (
-      <View style={{ height: 60 }} className="bg-white rounded-xl">
-        <DesktopScrollView horizontal>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              paddingHorizontal: 8,
-              height: 60,
-            }}
-          >
-            {navContent}
-          </View>
-        </DesktopScrollView>
-      </View>
-    );
-  }
-
-  // En iOS/Android seguimos usando el ScrollView nativo de RN, que ahí sí
-  // funciona bien con touch.
   return (
     <ScrollView
       horizontal

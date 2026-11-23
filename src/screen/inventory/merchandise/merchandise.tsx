@@ -1,5 +1,4 @@
 import { Action, Buttons, ModalDelete } from "@/components";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalMerchandiseDetail } from "@/components/molecules/ModalMerchandise/ModalMerchandise";
 import { MerchandiseTable } from "@/components/templates/MerchandiseTable/MerchandiseTable";
@@ -11,6 +10,7 @@ import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
 import React, { useState } from "react";
 import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const MerchandiseScreen: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -67,8 +67,8 @@ export const MerchandiseScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1, margin: isDesktopWeb ? 20 : 0 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1, margin: isDesktopWeb ? 20 : 0 }}>
         <MerchandiseTable
           data={merchandise || []}
           itemsPerPage={8}
@@ -86,7 +86,7 @@ export const MerchandiseScreen: React.FC = () => {
           onClose={() => setShowModal(false)}
           onSuccess={handleDelete}
         />
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

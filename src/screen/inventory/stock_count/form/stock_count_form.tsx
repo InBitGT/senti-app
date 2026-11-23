@@ -1,6 +1,5 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -96,55 +95,53 @@ export default function StockCountDetail() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }}
         >
-          <DesktopScrollView>
-            <VStack>
-              <Text style={styles.title}>Diferencias encontradas</Text>
-              <Text style={styles.subtitle}>
-                Conteo #{stockCountResult.id} · {stockCountResult.count_status}
+          <VStack>
+            <Text style={styles.title}>Diferencias encontradas</Text>
+            <Text style={styles.subtitle}>
+              Conteo #{stockCountResult.id} · {stockCountResult.count_status}
+            </Text>
+          </VStack>
+
+          {differences.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={{ color: "#888" }}>
+                No se encontraron diferencias en este conteo.
               </Text>
-            </VStack>
-
-            {differences.length === 0 ? (
-              <View style={styles.emptyBox}>
-                <Text style={{ color: "#888" }}>
-                  No se encontraron diferencias en este conteo.
-                </Text>
-              </View>
-            ) : (
-              differences.map((d) => (
-                <View key={d.product_id} style={styles.row}>
-                  <HStack className="items-center justify-between">
-                    <VStack>
-                      <Text style={styles.productName}>{d.product_name}</Text>
-                      <Text style={styles.muted}>
-                        Sistema: {d.system_qty} · Contado: {d.counted_qty}
-                      </Text>
-                    </VStack>
-                    <Text
-                      style={{
-                        ...styles.diff,
-                        color: d.difference < 0 ? "#dc2626" : "#16a34a",
-                      }}
-                    >
-                      {d.difference > 0 ? "+" : ""}
-                      {d.difference}
+            </View>
+          ) : (
+            differences.map((d) => (
+              <View key={d.product_id} style={styles.row}>
+                <HStack className="items-center justify-between">
+                  <VStack>
+                    <Text style={styles.productName}>{d.product_name}</Text>
+                    <Text style={styles.muted}>
+                      Sistema: {d.system_qty} · Contado: {d.counted_qty}
                     </Text>
-                  </HStack>
-                </View>
-              ))
-            )}
+                  </VStack>
+                  <Text
+                    style={{
+                      ...styles.diff,
+                      color: d.difference < 0 ? "#dc2626" : "#16a34a",
+                    }}
+                  >
+                    {d.difference > 0 ? "+" : ""}
+                    {d.difference}
+                  </Text>
+                </HStack>
+              </View>
+            ))
+          )}
 
-            <VStack>
-              <AppInput
-                label="Notas del ajuste"
-                placeholder="Ej. Diferencia encontrada en conteo del 01/07"
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                textareaHeight={100}
-              />
-            </VStack>
-          </DesktopScrollView>
+          <VStack>
+            <AppInput
+              label="Notas del ajuste"
+              placeholder="Ej. Diferencia encontrada en conteo del 01/07"
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              textareaHeight={100}
+            />
+          </VStack>
         </ScrollView>
 
         <View style={styles.footer}>

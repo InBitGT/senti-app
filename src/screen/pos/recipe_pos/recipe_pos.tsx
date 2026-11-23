@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { CategoryPill } from "@/components/atom/CategoryPill/CategoryPill";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { SubcategoryPill } from "@/components/atom/SubcategoryPill/SubcategoryPill";
 import { CashMovementModal } from "@/components/molecules/CashMovementModal/CashMovementModal";
 import { CashSessionInfoModal } from "@/components/molecules/CashSessionInfoModal/CashSessionInfoModal";
@@ -43,7 +42,6 @@ import {
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Platform,
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
@@ -332,26 +330,17 @@ export const RecipePos: React.FC = () => {
                 )}
               </HStack>
 
-              {categories.length > 0 &&
-                (Platform.OS === "web" ? (
-                  <DesktopScrollView horizontal>{categoryPills}</DesktopScrollView>
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {categoryPills}
-                  </ScrollView>
-                ))}
+              {categories.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {categoryPills}
+                </ScrollView>
+              )}
 
-              {categoryId != null &&
-                subcategories.length > 0 &&
-                (Platform.OS === "web" ? (
-                  <DesktopScrollView horizontal>
-                    {subcategoryPills}
-                  </DesktopScrollView>
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {subcategoryPills}
-                  </ScrollView>
-                ))}
+              {categoryId != null && subcategories.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {subcategoryPills}
+                </ScrollView>
+              )}
             </VStack>
 
             <Box className="flex-1 px-1.5 pt-2">

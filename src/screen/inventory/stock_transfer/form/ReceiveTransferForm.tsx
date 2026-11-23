@@ -1,7 +1,6 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Button, ButtonIcon } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useCustomToast } from "@/src/hooks/useCustomToast";
@@ -214,142 +213,140 @@ export default function ReceiveTransferForm() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <DesktopScrollView>
-          <View style={styles.card}>
-            <Text style={styles.hint}>
-              {isReturn
-                ? "Un retorno solo se puede aceptar o declarar faltante."
-                : "Lo aceptado entra a la bodega destino, lo rechazado regresa al origen en un retorno automático y lo faltante queda como pérdida."}
-            </Text>
-            <View style={{ alignSelf: "flex-start", marginTop: 10 }}>
-              <AppButton
-                label="Aceptar todo"
-                icon={CheckCheck}
-                variant="black"
-                outline
-                fullWidth={false}
-                onPress={acceptAll}
-              />
-            </View>
+        <View style={styles.card}>
+          <Text style={styles.hint}>
+            {isReturn
+              ? "Un retorno solo se puede aceptar o declarar faltante."
+              : "Lo aceptado entra a la bodega destino, lo rechazado regresa al origen en un retorno automático y lo faltante queda como pérdida."}
+          </Text>
+          <View style={{ alignSelf: "flex-start", marginTop: 10 }}>
+            <AppButton
+              label="Aceptar todo"
+              icon={CheckCheck}
+              variant="black"
+              outline
+              fullWidth={false}
+              onPress={acceptAll}
+            />
           </View>
+        </View>
 
-          {data.items.map((item) => {
-            const line = lines[item.id];
-            if (!line) return null;
-            const rejected = toQty(line.rejected);
-            const missing = item.qty_sent - toQty(line.accepted) - rejected;
-            const error = lineError(item, line, isReturn);
-            return (
-              <View key={item.id} style={styles.card}>
-                <Text style={styles.itemName}>{item.snapshot.product_name}</Text>
-                <Text style={styles.itemMeta}>
-                  {[
-                    item.snapshot.product_sku,
-                    item.snapshot.batch_number
-                      ? `Lote ${item.snapshot.batch_number}`
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </Text>
-                <Text style={styles.sentText}>
-                  Enviado: {item.qty_sent} {item.snapshot.uom_code ?? ""}
-                </Text>
+        {data.items.map((item) => {
+          const line = lines[item.id];
+          if (!line) return null;
+          const rejected = toQty(line.rejected);
+          const missing = item.qty_sent - toQty(line.accepted) - rejected;
+          const error = lineError(item, line, isReturn);
+          return (
+            <View key={item.id} style={styles.card}>
+              <Text style={styles.itemName}>{item.snapshot.product_name}</Text>
+              <Text style={styles.itemMeta}>
+                {[
+                  item.snapshot.product_sku,
+                  item.snapshot.batch_number
+                    ? `Lote ${item.snapshot.batch_number}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </Text>
+              <Text style={styles.sentText}>
+                Enviado: {item.qty_sent} {item.snapshot.uom_code ?? ""}
+              </Text>
 
-                <View style={styles.qtyRow}>
+              <View style={styles.qtyRow}>
+                <View style={{ flex: 1 }}>
+                  <AppInput
+                    label="Aceptado"
+                    keyboardType="numeric"
+                    value={line.accepted}
+                    onChangeText={(v) => updateLine(item.id, { accepted: v })}
+                    inputStyle={{ color: "#000" }}
+                  />
+                </View>
+                {!isReturn && (
                   <View style={{ flex: 1 }}>
                     <AppInput
-                      label="Aceptado"
+                      label="Rechazado"
                       keyboardType="numeric"
-                      value={line.accepted}
-                      onChangeText={(v) => updateLine(item.id, { accepted: v })}
+                      value={line.rejected}
+                      onChangeText={(v) =>
+                        updateLine(item.id, { rejected: v })
+                      }
                       inputStyle={{ color: "#000" }}
                     />
                   </View>
-                  {!isReturn && (
-                    <View style={{ flex: 1 }}>
-                      <AppInput
-                        label="Rechazado"
-                        keyboardType="numeric"
-                        value={line.rejected}
-                        onChangeText={(v) =>
-                          updateLine(item.id, { rejected: v })
-                        }
-                        inputStyle={{ color: "#000" }}
-                      />
-                    </View>
-                  )}
-                  <View style={styles.missingBox}>
-                    <Text style={styles.missingLabel}>Faltante</Text>
-                    <Text
-                      style={[
-                        styles.missingValue,
-                        missing > 0 && { color: "#dc2626" },
-                      ]}
-                    >
-                      {missing}
-                    </Text>
-                  </View>
+                )}
+                <View style={styles.missingBox}>
+                  <Text style={styles.missingLabel}>Faltante</Text>
+                  <Text
+                    style={[
+                      styles.missingValue,
+                      missing > 0 && { color: "#dc2626" },
+                    ]}
+                  >
+                    {missing}
+                  </Text>
                 </View>
-
-                {rejected > 0 && !isReturn && (
-                  <AppSelect
-                    label="Motivo del rechazo"
-                    placeholder="Selecciona un motivo"
-                    options={REASON_OPTIONS}
-                    value={line.reason}
-                    onChange={(v) =>
-                      updateLine(item.id, { reason: v as RejectionReason })
-                    }
-                  />
-                )}
-
-                {(rejected > 0 || missing > 0) && (
-                  <AppInput
-                    label="Nota de la diferencia"
-                    value={line.notes}
-                    onChangeText={(v) => updateLine(item.id, { notes: v })}
-                    multiline
-                    textareaHeight={70}
-                    inputStyle={{ color: "#000" }}
-                  />
-                )}
-
-                {!!error && <Text style={styles.errorText}>{error}</Text>}
               </View>
-            );
-          })}
 
-          <View style={styles.card}>
-            <AppInput
-              label="Notas de la recepción (opcional)"
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              textareaHeight={80}
-              inputStyle={{ color: "#000" }}
-            />
-            <View style={styles.summary}>
-              <Text style={styles.summaryText}>Enviado {totals.sent}</Text>
-              <Text style={styles.summaryText}>
-                Aceptado {totals.accepted}
-              </Text>
-              {!isReturn && (
-                <Text style={styles.summaryText}>
-                  Rechazado {totals.rejected}
-                </Text>
+              {rejected > 0 && !isReturn && (
+                <AppSelect
+                  label="Motivo del rechazo"
+                  placeholder="Selecciona un motivo"
+                  options={REASON_OPTIONS}
+                  value={line.reason}
+                  onChange={(v) =>
+                    updateLine(item.id, { reason: v as RejectionReason })
+                  }
+                />
               )}
-              <Text style={styles.summaryText}>Faltante {totals.missing}</Text>
+
+              {(rejected > 0 || missing > 0) && (
+                <AppInput
+                  label="Nota de la diferencia"
+                  value={line.notes}
+                  onChangeText={(v) => updateLine(item.id, { notes: v })}
+                  multiline
+                  textareaHeight={70}
+                  inputStyle={{ color: "#000" }}
+                />
+              )}
+
+              {!!error && <Text style={styles.errorText}>{error}</Text>}
             </View>
-            <AppButton
-              label="Confirmar recepción"
-              icon={PackageCheck}
-              variant="black"
-              isLoading={receive.isPending}
-              onPress={handleSubmit}
-            />
+          );
+        })}
+
+        <View style={styles.card}>
+          <AppInput
+            label="Notas de la recepción (opcional)"
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            textareaHeight={80}
+            inputStyle={{ color: "#000" }}
+          />
+          <View style={styles.summary}>
+            <Text style={styles.summaryText}>Enviado {totals.sent}</Text>
+            <Text style={styles.summaryText}>
+              Aceptado {totals.accepted}
+            </Text>
+            {!isReturn && (
+              <Text style={styles.summaryText}>
+                Rechazado {totals.rejected}
+              </Text>
+            )}
+            <Text style={styles.summaryText}>Faltante {totals.missing}</Text>
           </View>
-        </DesktopScrollView>
+          <AppButton
+            label="Confirmar recepción"
+            icon={PackageCheck}
+            variant="black"
+            isLoading={receive.isPending}
+            onPress={handleSubmit}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

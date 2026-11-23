@@ -5,6 +5,7 @@ import { useMovementCredit } from "@/src/hooks/useMovementCredit/useMovementCred
 import { CustomerCreditMovement } from "@/src/types/movement_credit/movement_credit";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const CreditMovementScreen: React.FC = () => {
   const [showModalData, setShowModalData] = useState<boolean>(false);
@@ -23,17 +24,19 @@ export const CreditMovementScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomerCreditMovementsTable
-        data={movements || []}
-        itemsPerPage={5}
-        onRowPress={handleRowPress}
-      />
-      <ModalCustomerCreditMovementDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <CustomerCreditMovementsTable
+          data={movements || []}
+          itemsPerPage={5}
+          onRowPress={handleRowPress}
+        />
+        <ModalCustomerCreditMovementDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

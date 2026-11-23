@@ -4,7 +4,6 @@ import {
     AppSelect,
     AppSelectOption,
 } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Pill } from "@/components/atom/Pill/Pill";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
@@ -178,273 +177,271 @@ export default function PrepStationForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView useWindowHeight>
-            <Pressable
-              onPress={goBack}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={goBack}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Estación" : "Nueva Estación"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar la estación de preparación"
+                  : "Llena los campos para crear una estación de preparación"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Estación" : "Nueva Estación"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar la estación de preparación"
-                    : "Llena los campos para crear una estación de preparación"}
-                </Text>
+              <VStack space="lg">
+                <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
-                <VStack space="lg">
-                  <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
-
-                  <View style={[row, !isLarge && styles.stack]}>
-                    <View style={half}>
-                      {/* Nombre */}
-                      <Controller
-                        control={control}
-                        name="name"
-                        rules={{
-                          required: "El nombre es obligatorio.",
-                          minLength: {
-                            value: 2,
-                            message: "Mínimo 2 caracteres.",
-                          },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Nombre"
-                            placeholder="Ej. Heladería"
-                            value={value}
-                            onChangeText={(text) => {
-                              onChange(text);
-                            }}
-                            onBlur={onBlur}
-                            errorMessage={errors.name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      {/* Código */}
-                      <Controller
-                        control={control}
-                        name="code"
-                        rules={{
-                          required: "El código es obligatorio.",
-                          validate: (value) =>
-                            toCode(value).length > 0 || "Código inválido.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Código"
-                            placeholder="Ej. heladeria"
-                            autoCapitalize="none"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={() => {
-                              setValue("code", toCode(getValues("code")));
-                              onBlur();
-                            }}
-                            errorMessage={errors.code?.message}
-                          />
-                        )}
-                      />
-                    </View>
+                <View style={[row, !isLarge && styles.stack]}>
+                  <View style={half}>
+                    {/* Nombre */}
+                    <Controller
+                      control={control}
+                      name="name"
+                      rules={{
+                        required: "El nombre es obligatorio.",
+                        minLength: {
+                          value: 2,
+                          message: "Mínimo 2 caracteres.",
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Nombre"
+                          placeholder="Ej. Heladería"
+                          value={value}
+                          onChangeText={(text) => {
+                            onChange(text);
+                          }}
+                          onBlur={onBlur}
+                          errorMessage={errors.name?.message}
+                        />
+                      )}
+                    />
                   </View>
+                  <View style={half}>
+                    {/* Código */}
+                    <Controller
+                      control={control}
+                      name="code"
+                      rules={{
+                        required: "El código es obligatorio.",
+                        validate: (value) =>
+                          toCode(value).length > 0 || "Código inválido.",
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Código"
+                          placeholder="Ej. heladeria"
+                          autoCapitalize="none"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={() => {
+                            setValue("code", toCode(getValues("code")));
+                            onBlur();
+                          }}
+                          errorMessage={errors.code?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
 
-                  <Divider className="my-2" />
-                  <View style={[row, !isLarge && styles.stack]}>
-                    <View style={[half, styles.column]}>
-                      {/* Categorías */}
-                      <Text style={styles.sectionLabel}>
-                        CATEGORÍAS{" "}
-                        <Text size="xs" style={{ color: "#999" }}>
-                          (todos sus productos van a esta estación)
-                        </Text>
+                <Divider className="my-2" />
+                <View style={[row, !isLarge && styles.stack]}>
+                  <View style={[half, styles.column]}>
+                    {/* Categorías */}
+                    <Text style={styles.sectionLabel}>
+                      CATEGORÍAS{" "}
+                      <Text size="xs" style={{ color: "#999" }}>
+                        (todos sus productos van a esta estación)
                       </Text>
-                      <Controller
-                        control={control}
-                        name="category_ids"
-                        render={({ field: { onChange, value } }) => {
-                          const available = categoryOptions.filter(
-                            (o) => !value.includes(o.value),
-                          );
-                          const selected = categoryOptions.filter((o) =>
-                            value.includes(o.value),
-                          );
-                          return (
-                            <VStack space="sm">
-                              <AppSelect
-                                placeholder={
-                                  available.length
-                                    ? "Agregar categoría"
-                                    : "No hay más categorías"
-                                }
-                                searchPlaceholder="Buscar categoría..."
-                                options={available}
-                                value=""
-                                onChange={(id) => onChange([...value, id])}
-                                isDisabled={available.length === 0}
-                              />
-                              {selected.length === 0 ? (
-                                <Text style={styles.emptyText}>
-                                  No hay categorías asignadas.
-                                </Text>
-                              ) : (
-                                selected.map((option) => (
-                                  <View
-                                    key={option.value}
-                                    style={styles.itemRow}
+                    </Text>
+                    <Controller
+                      control={control}
+                      name="category_ids"
+                      render={({ field: { onChange, value } }) => {
+                        const available = categoryOptions.filter(
+                          (o) => !value.includes(o.value),
+                        );
+                        const selected = categoryOptions.filter((o) =>
+                          value.includes(o.value),
+                        );
+                        return (
+                          <VStack space="sm">
+                            <AppSelect
+                              placeholder={
+                                available.length
+                                  ? "Agregar categoría"
+                                  : "No hay más categorías"
+                              }
+                              searchPlaceholder="Buscar categoría..."
+                              options={available}
+                              value=""
+                              onChange={(id) => onChange([...value, id])}
+                              isDisabled={available.length === 0}
+                            />
+                            {selected.length === 0 ? (
+                              <Text style={styles.emptyText}>
+                                No hay categorías asignadas.
+                              </Text>
+                            ) : (
+                              selected.map((option) => (
+                                <View
+                                  key={option.value}
+                                  style={styles.itemRow}
+                                >
+                                  <Text style={styles.itemText}>
+                                    {option.label}
+                                  </Text>
+                                  <Pressable
+                                    onPress={() =>
+                                      onChange(
+                                        value.filter(
+                                          (id) => id !== option.value,
+                                        ),
+                                      )
+                                    }
+                                    style={styles.removeRowButton}
                                   >
-                                    <Text style={styles.itemText}>
+                                    <Icon
+                                      as={Trash2}
+                                      size="sm"
+                                      style={{ color: "#dc2626" }}
+                                    />
+                                  </Pressable>
+                                </View>
+                              ))
+                            )}
+                          </VStack>
+                        );
+                      }}
+                    />
+                  </View>
+                  {!isLarge && <Divider className="my-2" />}
+                  <View style={[half, styles.column]}>
+                    {/* Productos */}
+                    <Text style={styles.sectionLabel}>
+                      PRODUCTOS{" "}
+                      <Text size="xs" style={{ color: "#999" }}>
+                        (mercadería y recetas)
+                      </Text>
+                    </Text>
+                    <Controller
+                      control={control}
+                      name="product_ids"
+                      rules={{
+                        validate: (value) =>
+                          value.length > 0 ||
+                          getValues("category_ids").length > 0 ||
+                          "Selecciona al menos una categoría o un producto.",
+                      }}
+                      render={({ field: { onChange, value } }) => {
+                        const available = productOptions.filter(
+                          (o) => !value.includes(o.value),
+                        );
+                        const selected = productOptions.filter((o) =>
+                          value.includes(o.value),
+                        );
+                        return (
+                          <VStack space="sm">
+                            <AppSelect
+                              placeholder={
+                                available.length
+                                  ? "Agregar producto"
+                                  : "No hay más productos"
+                              }
+                              searchPlaceholder="Buscar producto..."
+                              options={available.map((o) => ({
+                                label: `${o.label} · ${SOURCE_LABEL[o.source]}`,
+                                value: o.value,
+                              }))}
+                              value=""
+                              onChange={(id) => onChange([...value, id])}
+                              isDisabled={available.length === 0}
+                              errorMessage={errors.product_ids?.message}
+                            />
+                            {selected.length === 0 ? (
+                              <Text style={styles.emptyText}>
+                                No hay productos asignados.
+                              </Text>
+                            ) : (
+                              selected.map((option) => (
+                                <View
+                                  key={option.value}
+                                  style={styles.itemRow}
+                                >
+                                  <View style={styles.itemInfo}>
+                                    <Text style={styles.itemLabel}>
                                       {option.label}
                                     </Text>
-                                    <Pressable
-                                      onPress={() =>
-                                        onChange(
-                                          value.filter(
-                                            (id) => id !== option.value,
-                                          ),
-                                        )
-                                      }
-                                      style={styles.removeRowButton}
-                                    >
-                                      <Icon
-                                        as={Trash2}
-                                        size="sm"
-                                        style={{ color: "#dc2626" }}
-                                      />
-                                    </Pressable>
+                                    <Pill
+                                      label={SOURCE_LABEL[option.source]}
+                                    />
                                   </View>
-                                ))
-                              )}
-                            </VStack>
-                          );
-                        }}
-                      />
-                    </View>
-                    {!isLarge && <Divider className="my-2" />}
-                    <View style={[half, styles.column]}>
-                      {/* Productos */}
-                      <Text style={styles.sectionLabel}>
-                        PRODUCTOS{" "}
-                        <Text size="xs" style={{ color: "#999" }}>
-                          (mercadería y recetas)
-                        </Text>
-                      </Text>
-                      <Controller
-                        control={control}
-                        name="product_ids"
-                        rules={{
-                          validate: (value) =>
-                            value.length > 0 ||
-                            getValues("category_ids").length > 0 ||
-                            "Selecciona al menos una categoría o un producto.",
-                        }}
-                        render={({ field: { onChange, value } }) => {
-                          const available = productOptions.filter(
-                            (o) => !value.includes(o.value),
-                          );
-                          const selected = productOptions.filter((o) =>
-                            value.includes(o.value),
-                          );
-                          return (
-                            <VStack space="sm">
-                              <AppSelect
-                                placeholder={
-                                  available.length
-                                    ? "Agregar producto"
-                                    : "No hay más productos"
-                                }
-                                searchPlaceholder="Buscar producto..."
-                                options={available.map((o) => ({
-                                  label: `${o.label} · ${SOURCE_LABEL[o.source]}`,
-                                  value: o.value,
-                                }))}
-                                value=""
-                                onChange={(id) => onChange([...value, id])}
-                                isDisabled={available.length === 0}
-                                errorMessage={errors.product_ids?.message}
-                              />
-                              {selected.length === 0 ? (
-                                <Text style={styles.emptyText}>
-                                  No hay productos asignados.
-                                </Text>
-                              ) : (
-                                selected.map((option) => (
-                                  <View
-                                    key={option.value}
-                                    style={styles.itemRow}
+                                  <Pressable
+                                    onPress={() =>
+                                      onChange(
+                                        value.filter(
+                                          (id) => id !== option.value,
+                                        ),
+                                      )
+                                    }
+                                    style={styles.removeRowButton}
                                   >
-                                    <View style={styles.itemInfo}>
-                                      <Text style={styles.itemLabel}>
-                                        {option.label}
-                                      </Text>
-                                      <Pill
-                                        label={SOURCE_LABEL[option.source]}
-                                      />
-                                    </View>
-                                    <Pressable
-                                      onPress={() =>
-                                        onChange(
-                                          value.filter(
-                                            (id) => id !== option.value,
-                                          ),
-                                        )
-                                      }
-                                      style={styles.removeRowButton}
-                                    >
-                                      <Icon
-                                        as={Trash2}
-                                        size="sm"
-                                        style={{ color: "#dc2626" }}
-                                      />
-                                    </Pressable>
-                                  </View>
-                                ))
-                              )}
-                            </VStack>
-                          );
-                        }}
-                      />
-                    </View>
+                                    <Icon
+                                      as={Trash2}
+                                      size="sm"
+                                      style={{ color: "#dc2626" }}
+                                    />
+                                  </Pressable>
+                                </View>
+                              ))
+                            )}
+                          </VStack>
+                        );
+                      }}
+                    />
                   </View>
+                </View>
 
+                <View
+                  style={[styles.actions, isLarge && styles.actionsLarge]}
+                >
                   <View
-                    style={[styles.actions, isLarge && styles.actionsLarge]}
+                    style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
                   >
-                    <View
-                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
-                    >
-                      <AppButton label="Cancelar" outline onPress={goBack} />
-                    </View>
-                    <View
-                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
-                    >
-                      <AppButton
-                        label={isPending ? "Guardando..." : "Guardar"}
-                        onPress={handleSubmit(onSubmit)}
-                        isDisabled={isPending}
-                      />
-                    </View>
+                    <AppButton label="Cancelar" outline onPress={goBack} />
                   </View>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                  <View
+                    style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
+                  >
+                    <AppButton
+                      label={isPending ? "Guardando..." : "Guardar"}
+                      onPress={handleSubmit(onSubmit)}
+                      isDisabled={isPending}
+                    />
+                  </View>
+                </View>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

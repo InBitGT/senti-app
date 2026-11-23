@@ -1,6 +1,5 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -9,7 +8,12 @@ import { useLogin } from "@/src/hooks";
 import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { KeyboardAvoidingView, Platform, Pressable } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "./Login.styles";
 
@@ -49,7 +53,8 @@ export const LoginScreen = () => {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <DesktopScrollView
+        <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
@@ -145,7 +150,7 @@ export const LoginScreen = () => {
               />
             </VStack>
           </Box>
-        </DesktopScrollView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

@@ -1,7 +1,6 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
@@ -397,545 +396,342 @@ export default function MerchandiseForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView useWindowHeight>
-            <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Producto" : "Nuevo Producto"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar el producto"
+                  : "Llena los campos para crear un producto"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Producto" : "Nuevo Producto"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar el producto"
-                    : "Llena los campos para crear un producto"}
-                </Text>
+              <VStack space="lg">
+                <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
-                <VStack space="lg">
-                  <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
-
-                  <Controller
-                    control={control}
-                    name="name"
-                    rules={{ required: "El nombre es obligatorio." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Nombre"
-                        placeholder="Ej. Lápiz b1"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.name?.message}
-                      />
-                    )}
-                  />
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="category_root_id"
-                        rules={{ required: "La categoría es obligatoria." }}
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Categoría"
-                            placeholder="Selecciona categoría"
-                            searchable={rootCategoryOptions.length > 6}
-                            options={rootCategoryOptions}
-                            value={value}
-                            onChange={(v) => {
-                              onChange(v);
-                              // Al cambiar de categoría se limpia la subcategoría
-                              setValue("subcategory_id", "");
-                            }}
-                            errorMessage={errors.category_root_id?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    {subcategoryOptions.length > 0 && (
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="subcategory_id"
-                          render={({ field: { onChange, value } }) => (
-                            <AppSelect
-                              label="Subcategoría (opcional)"
-                              placeholder="Selecciona subcategoría"
-                              searchable={subcategoryOptions.length > 6}
-                              options={subcategoryOptions}
-                              value={value}
-                              onChange={onChange}
-                            />
-                          )}
-                        />
-                      </View>
-                    )}
-                  </View>
-
-                  <Controller
-                    control={control}
-                    name="description"
-                    rules={{
-                      required: "La descripción es obligatoria.",
-                      minLength: { value: 3, message: "Mínimo 3 caracteres." },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Descripción"
-                        placeholder="Describe el producto..."
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        multiline
-                        textareaHeight={100}
-                        errorMessage={errors.description?.message}
-                      />
-                    )}
-                  />
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="sku"
-                        rules={{ required: "El SKU es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="SKU"
-                            placeholder="Ej. LAP-001"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.toUpperCase())
-                            }
-                            onBlur={onBlur}
-                            autoCapitalize="characters"
-                            errorMessage={errors.sku?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="barcode"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Código de barras (opcional)"
-                            placeholder="Ej. 123"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.toUpperCase())
-                            }
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="brand"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Marca (opcional)"
-                            placeholder="Ej. Del Monte"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="average_cost"
-                        rules={{ required: "El costo es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Costo promedio"
-                            placeholder="0.60"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9.-]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                            errorMessage={errors.average_cost?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="type"
-                        rules={{ required: "El tipo es obligatorio." }}
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Tipo"
-                            placeholder="Selecciona un tipo"
-                            searchable={false}
-                            options={PRODUCT_TYPES}
-                            value={value}
-                            onChange={onChange}
-                            errorMessage={errors.type?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="unit_of_measure_id"
-                        rules={{ required: "La unidad es obligatoria." }}
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Unidad de medida"
-                            placeholder="Selecciona unidad"
-                            searchable={unitOptions.length > 6}
-                            options={unitOptions}
-                            value={value}
-                            onChange={onChange}
-                            errorMessage={errors.unit_of_measure_id?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  <Divider className="my-2" />
-                  <Text style={styles.sectionLabel}>PRECIO</Text>
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="price_amount"
-                        rules={{ required: "El precio es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Precio de venta"
-                            placeholder="1.00"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9.-]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                            errorMessage={errors.price_amount?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="price_currency"
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Moneda"
-                            placeholder="Selecciona moneda"
-                            searchable={false}
-                            options={CURRENCIES}
-                            value={value}
-                            onChange={onChange}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  <Divider className="my-2" />
-                  <HStack
-                    style={{
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={styles.sectionLabel}>
-                      CONVERSIONES DE UNIDAD{" "}
-                      <Text size="xs" style={{ color: "#999" }}>
-                        (opcional)
-                      </Text>
-                    </Text>
-                    <Pressable
-                      onPress={() =>
-                        appendConversion({
-                          from_uom_id: "",
-                          to_uom_id: "",
-                          factor: "",
-                          has_price_per_uom: false,
-                          price_per_uom_amount: "",
-                          price_per_uom_currency: priceCurrency || "GTQ",
-                          price_per_uom_wholesale_min_qty: "",
-                          price_per_uom_wholesale_amount: "",
-                        })
-                      }
-                      style={styles.addRowButton}
-                    >
-                      <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                    </Pressable>
-                  </HStack>
-
-                  {conversionFields.length === 0 && (
-                    <Text style={{ color: "#9ca3af", fontSize: 12 }}>
-                      Este producto no tiene conversiones de unidad.
-                    </Text>
+                <Controller
+                  control={control}
+                  name="name"
+                  rules={{ required: "El nombre es obligatorio." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Nombre"
+                      placeholder="Ej. Lápiz b1"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      errorMessage={errors.name?.message}
+                    />
                   )}
+                />
 
-                  {conversionFields.map((field, index) => {
-                    const currentFromId =
-                      conversionsValue?.[index]?.from_uom_id;
-                    const toOptions = (units ?? []).filter(
-                      (u) => String(u.id) !== currentFromId,
-                    );
-                    const rowHasPrice =
-                      conversionsValue?.[index]?.has_price_per_uom;
-                    return (
-                      <View key={field.id} style={styles.dynamicRow}>
-                        <View style={row}>
-                          <View style={half}>
-                            <Controller
-                              control={control}
-                              name={`conversions.${index}.to_uom_id`}
-                              render={({ field: { onChange, value } }) => (
-                                <AppSelect
-                                  label="De la unidad (unidad estandar)"
-                                  placeholder="Unidad Origen"
-                                  searchable={toOptions.length > 6}
-                                  options={toOptions.map((u) => ({
-                                    label: `${u.name} (${u.code})`,
-                                    value: String(u.id),
-                                  }))}
-                                  value={value}
-                                  onChange={onChange}
-                                />
-                              )}
-                            />
-                          </View>
-
-                          <View style={half}>
-                            <Controller
-                              control={control}
-                              name={`conversions.${index}.from_uom_id`}
-                              render={({ field: { onChange, value } }) => (
-                                <AppSelect
-                                  label="A la unidad (unidad de cambio)"
-                                  placeholder="Unidad destino"
-                                  searchable={unitOptions.length > 6}
-                                  options={unitOptions}
-                                  value={value}
-                                  onChange={onChange}
-                                />
-                              )}
-                            />
-                          </View>
-                        </View>
-
-                        <Controller
-                          control={control}
-                          name={`conversions.${index}.factor`}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <AppInput
-                              label="Factor"
-                              placeholder="10"
-                              value={value}
-                              onChangeText={(text) =>
-                                onChange(text.replace(/[^0-9]/g, ""))
-                              }
-                              onBlur={onBlur}
-                              keyboardType="decimal-pad"
-                            />
-                          )}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="category_root_id"
+                      rules={{ required: "La categoría es obligatoria." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Categoría"
+                          placeholder="Selecciona categoría"
+                          searchable={rootCategoryOptions.length > 6}
+                          options={rootCategoryOptions}
+                          value={value}
+                          onChange={(v) => {
+                            onChange(v);
+                            // Al cambiar de categoría se limpia la subcategoría
+                            setValue("subcategory_id", "");
+                          }}
+                          errorMessage={errors.category_root_id?.message}
                         />
+                      )}
+                    />
+                  </View>
 
-                        <View style={styles.switchRow}>
-                          <Text style={{ color: "#000", fontSize: 13 }}>
-                            Definir precio para esta unidad
-                          </Text>
-                          <Controller
-                            control={control}
-                            name={`conversions.${index}.has_price_per_uom`}
-                            render={({ field: { onChange, value } }) => (
-                              <Switch value={value} onValueChange={onChange} />
-                            )}
+                  {subcategoryOptions.length > 0 && (
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="subcategory_id"
+                        render={({ field: { onChange, value } }) => (
+                          <AppSelect
+                            label="Subcategoría (opcional)"
+                            placeholder="Selecciona subcategoría"
+                            searchable={subcategoryOptions.length > 6}
+                            options={subcategoryOptions}
+                            value={value}
+                            onChange={onChange}
                           />
-                        </View>
-
-                        {rowHasPrice && (
-                          <>
-                            <View style={row}>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`conversions.${index}.price_per_uom_amount`}
-                                  render={({
-                                    field: { onChange, onBlur, value },
-                                  }) => (
-                                    <AppInput
-                                      label="Precio por unidad"
-                                      placeholder="8.00"
-                                      value={value}
-                                      onChangeText={(text) =>
-                                        onChange(text.replace(/[^0-9.-]/g, ""))
-                                      }
-                                      onBlur={onBlur}
-                                      keyboardType="decimal-pad"
-                                    />
-                                  )}
-                                />
-                              </View>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`conversions.${index}.price_per_uom_currency`}
-                                  render={({ field: { onChange, value } }) => (
-                                    <AppSelect
-                                      label="Moneda"
-                                      placeholder="Moneda"
-                                      searchable={false}
-                                      options={CURRENCIES}
-                                      value={value}
-                                      onChange={onChange}
-                                    />
-                                  )}
-                                />
-                              </View>
-                            </View>
-
-                            <View style={row}>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`conversions.${index}.price_per_uom_wholesale_min_qty`}
-                                  render={({
-                                    field: { onChange, onBlur, value },
-                                  }) => (
-                                    <AppInput
-                                      label="Cant. mínima mayoreo (opcional)"
-                                      placeholder="Ej. 5"
-                                      value={value}
-                                      onChangeText={onChange}
-                                      onBlur={onBlur}
-                                      keyboardType="number-pad"
-                                    />
-                                  )}
-                                />
-                              </View>
-                              <View style={half}>
-                                <Controller
-                                  control={control}
-                                  name={`conversions.${index}.price_per_uom_wholesale_amount`}
-                                  render={({
-                                    field: { onChange, onBlur, value },
-                                  }) => (
-                                    <AppInput
-                                      label="Precio mayoreo (opcional)"
-                                      placeholder="Ej. 7.50"
-                                      value={value}
-                                      onChangeText={onChange}
-                                      onBlur={onBlur}
-                                      keyboardType="decimal-pad"
-                                    />
-                                  )}
-                                />
-                              </View>
-                            </View>
-                          </>
                         )}
+                      />
+                    </View>
+                  )}
+                </View>
 
-                        <Pressable
-                          onPress={() => removeConversion(index)}
-                          style={styles.removeRowButtonFull}
-                        >
-                          <Icon
-                            as={Trash2}
-                            size="sm"
-                            style={{ color: "#7C1D1D" }}
-                          />
-                          <Text style={{ color: "#7C1D1D", fontSize: 12 }}>
-                            Quitar conversión
-                          </Text>
-                        </Pressable>
-                      </View>
-                    );
-                  })}
+                <Controller
+                  control={control}
+                  name="description"
+                  rules={{
+                    required: "La descripción es obligatoria.",
+                    minLength: { value: 3, message: "Mínimo 3 caracteres." },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Descripción"
+                      placeholder="Describe el producto..."
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      multiline
+                      textareaHeight={100}
+                      errorMessage={errors.description?.message}
+                    />
+                  )}
+                />
 
-                  <Divider className="my-2" />
-                  <HStack
-                    style={{
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={styles.sectionLabel}>
-                      PRECIOS POR TIPO DE CLIENTE{" "}
-                      <Text size="xs" style={{ color: "#999" }}>
-                        (opcional)
-                      </Text>
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="sku"
+                      rules={{ required: "El SKU es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="SKU"
+                          placeholder="Ej. LAP-001"
+                          value={value}
+                          onChangeText={(text) => onChange(text.toUpperCase())}
+                          onBlur={onBlur}
+                          autoCapitalize="characters"
+                          errorMessage={errors.sku?.message}
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="barcode"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Código de barras (opcional)"
+                          placeholder="Ej. 123"
+                          value={value}
+                          onChangeText={(text) => onChange(text.toUpperCase())}
+                          onBlur={onBlur}
+                          keyboardType="number-pad"
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="brand"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Marca (opcional)"
+                          placeholder="Ej. Del Monte"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="average_cost"
+                      rules={{ required: "El costo es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Costo promedio"
+                          placeholder="0.60"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.replace(/[^0-9.-]/g, ""))
+                          }
+                          onBlur={onBlur}
+                          keyboardType="decimal-pad"
+                          errorMessage={errors.average_cost?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="type"
+                      rules={{ required: "El tipo es obligatorio." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Tipo"
+                          placeholder="Selecciona un tipo"
+                          searchable={false}
+                          options={PRODUCT_TYPES}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.type?.message}
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="unit_of_measure_id"
+                      rules={{ required: "La unidad es obligatoria." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Unidad de medida"
+                          placeholder="Selecciona unidad"
+                          searchable={unitOptions.length > 6}
+                          options={unitOptions}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.unit_of_measure_id?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <Divider className="my-2" />
+                <Text style={styles.sectionLabel}>PRECIO</Text>
+
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="price_amount"
+                      rules={{ required: "El precio es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Precio de venta"
+                          placeholder="1.00"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.replace(/[^0-9.-]/g, ""))
+                          }
+                          onBlur={onBlur}
+                          keyboardType="decimal-pad"
+                          errorMessage={errors.price_amount?.message}
+                        />
+                      )}
+                    />
+                  </View>
+
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="price_currency"
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Moneda"
+                          placeholder="Selecciona moneda"
+                          searchable={false}
+                          options={CURRENCIES}
+                          value={value}
+                          onChange={onChange}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <Divider className="my-2" />
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    CONVERSIONES DE UNIDAD{" "}
+                    <Text size="xs" style={{ color: "#999" }}>
+                      (opcional)
                     </Text>
-                    <Pressable
-                      onPress={() =>
-                        appendCustomerPrice({
-                          customer_type_id: "",
-                          amount: "",
-                          currency: priceCurrency || "GTQ",
-                        })
-                      }
-                      style={styles.addRowButton}
-                    >
-                      <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
-                    </Pressable>
-                  </HStack>
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      appendConversion({
+                        from_uom_id: "",
+                        to_uom_id: "",
+                        factor: "",
+                        has_price_per_uom: false,
+                        price_per_uom_amount: "",
+                        price_per_uom_currency: priceCurrency || "GTQ",
+                        price_per_uom_wholesale_min_qty: "",
+                        price_per_uom_wholesale_amount: "",
+                      })
+                    }
+                    style={styles.addRowButton}
+                  >
+                    <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
+                  </Pressable>
+                </HStack>
 
-                  {customerPriceFields.map((field, index) => (
+                {conversionFields.length === 0 && (
+                  <Text style={{ color: "#9ca3af", fontSize: 12 }}>
+                    Este producto no tiene conversiones de unidad.
+                  </Text>
+                )}
+
+                {conversionFields.map((field, index) => {
+                  const currentFromId = conversionsValue?.[index]?.from_uom_id;
+                  const toOptions = (units ?? []).filter(
+                    (u) => String(u.id) !== currentFromId,
+                  );
+                  const rowHasPrice =
+                    conversionsValue?.[index]?.has_price_per_uom;
+                  return (
                     <View key={field.id} style={styles.dynamicRow}>
-                      <HStack style={{ gap: 10, alignItems: "flex-end" }}>
-                        <View style={{ flex: 2 }}>
+                      <View style={row}>
+                        <View style={half}>
                           <Controller
                             control={control}
-                            name={`customer_type_prices.${index}.customer_type_id`}
+                            name={`conversions.${index}.to_uom_id`}
                             render={({ field: { onChange, value } }) => (
                               <AppSelect
-                                label="Tipo de cliente"
-                                placeholder="Selecciona tipo"
-                                searchable={(customerTypes ?? []).length > 6}
-                                options={(customerTypes ?? []).map((c) => ({
-                                  label: c.name,
-                                  value: String(c.id),
+                                label="De la unidad (unidad estandar)"
+                                placeholder="Unidad Origen"
+                                searchable={toOptions.length > 6}
+                                options={toOptions.map((u) => ({
+                                  label: `${u.name} (${u.code})`,
+                                  value: String(u.id),
                                 }))}
                                 value={value}
                                 onChange={onChange}
@@ -944,148 +740,340 @@ export default function MerchandiseForm() {
                           />
                         </View>
 
-                        <View style={{ flex: 1.3 }}>
+                        <View style={half}>
                           <Controller
                             control={control}
-                            name={`customer_type_prices.${index}.amount`}
-                            render={({
-                              field: { onChange, onBlur, value },
-                            }) => (
-                              <AppInput
-                                label="Precio"
-                                placeholder="Ej. 177.76"
+                            name={`conversions.${index}.from_uom_id`}
+                            render={({ field: { onChange, value } }) => (
+                              <AppSelect
+                                label="A la unidad (unidad de cambio)"
+                                placeholder="Unidad destino"
+                                searchable={unitOptions.length > 6}
+                                options={unitOptions}
                                 value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                keyboardType="decimal-pad"
+                                onChange={onChange}
                               />
                             )}
                           />
                         </View>
+                      </View>
 
-                        <Pressable
-                          onPress={() => removeCustomerPrice(index)}
-                          style={[styles.removeRowButton, { marginBottom: 2 }]}
-                        >
-                          <Icon
-                            as={Trash2}
-                            size="sm"
-                            style={{ color: "#7C1D1D" }}
+                      <Controller
+                        control={control}
+                        name={`conversions.${index}.factor`}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Factor"
+                            placeholder="10"
+                            value={value}
+                            onChangeText={(text) =>
+                              onChange(text.replace(/[^0-9]/g, ""))
+                            }
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
                           />
-                        </Pressable>
-                      </HStack>
-                    </View>
-                  ))}
+                        )}
+                      />
 
-                  <Divider className="my-2" />
-                  <View style={styles.switchRow}>
-                    <Text style={{ color: "#000" }}>
-                      Aplica regla de mayoreo general
-                    </Text>
-                    <Controller
-                      control={control}
-                      name="has_wholesale_rule"
-                      render={({ field: { onChange, value } }) => (
-                        <Switch value={value} onValueChange={onChange} />
-                      )}
-                    />
-                  </View>
-
-                  {hasWholesaleRule && (
-                    <View style={row}>
-                      <View style={half}>
+                      <View style={styles.switchRow}>
+                        <Text style={{ color: "#000", fontSize: 13 }}>
+                          Definir precio para esta unidad
+                        </Text>
                         <Controller
                           control={control}
-                          name="wholesale_min_quantity"
-                          rules={{
-                            required: hasWholesaleRule
-                              ? "La cantidad mínima es obligatoria."
-                              : false,
-                          }}
-                          render={({ field: { onChange, onBlur, value } }) => (
-                            <AppInput
-                              label="Cantidad mínima"
-                              placeholder="Ej. 10"
+                          name={`conversions.${index}.has_price_per_uom`}
+                          render={({ field: { onChange, value } }) => (
+                            <Switch value={value} onValueChange={onChange} />
+                          )}
+                        />
+                      </View>
+
+                      {rowHasPrice && (
+                        <>
+                          <View style={row}>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_amount`}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <AppInput
+                                    label="Precio por unidad"
+                                    placeholder="8.00"
+                                    value={value}
+                                    onChangeText={(text) =>
+                                      onChange(text.replace(/[^0-9.-]/g, ""))
+                                    }
+                                    onBlur={onBlur}
+                                    keyboardType="decimal-pad"
+                                  />
+                                )}
+                              />
+                            </View>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_currency`}
+                                render={({ field: { onChange, value } }) => (
+                                  <AppSelect
+                                    label="Moneda"
+                                    placeholder="Moneda"
+                                    searchable={false}
+                                    options={CURRENCIES}
+                                    value={value}
+                                    onChange={onChange}
+                                  />
+                                )}
+                              />
+                            </View>
+                          </View>
+
+                          <View style={row}>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_wholesale_min_qty`}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <AppInput
+                                    label="Cant. mínima mayoreo (opcional)"
+                                    placeholder="Ej. 5"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="number-pad"
+                                  />
+                                )}
+                              />
+                            </View>
+                            <View style={half}>
+                              <Controller
+                                control={control}
+                                name={`conversions.${index}.price_per_uom_wholesale_amount`}
+                                render={({
+                                  field: { onChange, onBlur, value },
+                                }) => (
+                                  <AppInput
+                                    label="Precio mayoreo (opcional)"
+                                    placeholder="Ej. 7.50"
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    keyboardType="decimal-pad"
+                                  />
+                                )}
+                              />
+                            </View>
+                          </View>
+                        </>
+                      )}
+
+                      <Pressable
+                        onPress={() => removeConversion(index)}
+                        style={styles.removeRowButtonFull}
+                      >
+                        <Icon
+                          as={Trash2}
+                          size="sm"
+                          style={{ color: "#7C1D1D" }}
+                        />
+                        <Text style={{ color: "#7C1D1D", fontSize: 12 }}>
+                          Quitar conversión
+                        </Text>
+                      </Pressable>
+                    </View>
+                  );
+                })}
+
+                <Divider className="my-2" />
+                <HStack
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.sectionLabel}>
+                    PRECIOS POR TIPO DE CLIENTE{" "}
+                    <Text size="xs" style={{ color: "#999" }}>
+                      (opcional)
+                    </Text>
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      appendCustomerPrice({
+                        customer_type_id: "",
+                        amount: "",
+                        currency: priceCurrency || "GTQ",
+                      })
+                    }
+                    style={styles.addRowButton}
+                  >
+                    <Icon as={Plus} size="sm" style={{ color: "#0C447C" }} />
+                  </Pressable>
+                </HStack>
+
+                {customerPriceFields.map((field, index) => (
+                  <View key={field.id} style={styles.dynamicRow}>
+                    <HStack style={{ gap: 10, alignItems: "flex-end" }}>
+                      <View style={{ flex: 2 }}>
+                        <Controller
+                          control={control}
+                          name={`customer_type_prices.${index}.customer_type_id`}
+                          render={({ field: { onChange, value } }) => (
+                            <AppSelect
+                              label="Tipo de cliente"
+                              placeholder="Selecciona tipo"
+                              searchable={(customerTypes ?? []).length > 6}
+                              options={(customerTypes ?? []).map((c) => ({
+                                label: c.name,
+                                value: String(c.id),
+                              }))}
                               value={value}
-                              onChangeText={onChange}
-                              onBlur={onBlur}
-                              keyboardType="number-pad"
-                              errorMessage={
-                                errors.wholesale_min_quantity?.message
-                              }
+                              onChange={onChange}
                             />
                           )}
                         />
                       </View>
 
-                      <View style={half}>
+                      <View style={{ flex: 1.3 }}>
                         <Controller
                           control={control}
-                          name="wholesale_discount_percentage"
-                          rules={{
-                            required: hasWholesaleRule
-                              ? "El descuento es obligatorio."
-                              : false,
-                          }}
+                          name={`customer_type_prices.${index}.amount`}
                           render={({ field: { onChange, onBlur, value } }) => (
                             <AppInput
-                              label="Descuento (%)"
-                              placeholder="Ej. 10"
+                              label="Precio"
+                              placeholder="Ej. 177.76"
                               value={value}
                               onChangeText={onChange}
                               onBlur={onBlur}
                               keyboardType="decimal-pad"
-                              errorMessage={
-                                errors.wholesale_discount_percentage?.message
-                              }
                             />
                           )}
                         />
                       </View>
-                    </View>
-                  )}
 
-                  <View style={styles.switchRow}>
-                    <Text style={{ color: "#000" }}>Requiere lote</Text>
-                    <Controller
-                      control={control}
-                      name="requires_batch"
-                      render={({ field: { onChange, value } }) => (
-                        <Switch value={value} onValueChange={onChange} />
-                      )}
+                      <Pressable
+                        onPress={() => removeCustomerPrice(index)}
+                        style={[styles.removeRowButton, { marginBottom: 2 }]}
+                      >
+                        <Icon
+                          as={Trash2}
+                          size="sm"
+                          style={{ color: "#7C1D1D" }}
+                        />
+                      </Pressable>
+                    </HStack>
+                  </View>
+                ))}
+
+                <Divider className="my-2" />
+                <View style={styles.switchRow}>
+                  <Text style={{ color: "#000" }}>
+                    Aplica regla de mayoreo general
+                  </Text>
+                  <Controller
+                    control={control}
+                    name="has_wholesale_rule"
+                    render={({ field: { onChange, value } }) => (
+                      <Switch value={value} onValueChange={onChange} />
+                    )}
+                  />
+                </View>
+
+                {hasWholesaleRule && (
+                  <View style={row}>
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="wholesale_min_quantity"
+                        rules={{
+                          required: hasWholesaleRule
+                            ? "La cantidad mínima es obligatoria."
+                            : false,
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Cantidad mínima"
+                            placeholder="Ej. 10"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="number-pad"
+                            errorMessage={
+                              errors.wholesale_min_quantity?.message
+                            }
+                          />
+                        )}
+                      />
+                    </View>
+
+                    <View style={half}>
+                      <Controller
+                        control={control}
+                        name="wholesale_discount_percentage"
+                        rules={{
+                          required: hasWholesaleRule
+                            ? "El descuento es obligatorio."
+                            : false,
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                          <AppInput
+                            label="Descuento (%)"
+                            placeholder="Ej. 10"
+                            value={value}
+                            onChangeText={onChange}
+                            onBlur={onBlur}
+                            keyboardType="decimal-pad"
+                            errorMessage={
+                              errors.wholesale_discount_percentage?.message
+                            }
+                          />
+                        )}
+                      />
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.switchRow}>
+                  <Text style={{ color: "#000" }}>Requiere lote</Text>
+                  <Controller
+                    control={control}
+                    name="requires_batch"
+                    render={({ field: { onChange, value } }) => (
+                      <Switch value={value} onValueChange={onChange} />
+                    )}
+                  />
+                </View>
+
+                <View style={[styles.actions, isLarge && styles.actionsLarge]}>
+                  <View
+                    style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
+                  >
+                    <AppButton
+                      label="Cancelar"
+                      outline
+                      onPress={() => {
+                        clearData();
+                        setIsEdit(false);
+                        router.back();
+                      }}
                     />
                   </View>
-
                   <View
-                    style={[styles.actions, isLarge && styles.actionsLarge]}
+                    style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
                   >
-                    <View
-                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
-                    >
-                      <AppButton
-                        label="Cancelar"
-                        outline
-                        onPress={() => {
-                          clearData();
-                          setIsEdit(false);
-                          router.back();
-                        }}
-                      />
-                    </View>
-                    <View
-                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
-                    >
-                      <AppButton
-                        label={isPending ? "Guardando..." : "Guardar"}
-                        onPress={handleSubmit(onSubmit)}
-                        isDisabled={isSaveDisabled}
-                      />
-                    </View>
+                    <AppButton
+                      label={isPending ? "Guardando..." : "Guardar"}
+                      onPress={handleSubmit(onSubmit)}
+                      isDisabled={isSaveDisabled}
+                    />
                   </View>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                </View>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

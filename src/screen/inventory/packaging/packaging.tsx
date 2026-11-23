@@ -9,6 +9,7 @@ import { Packaging as PackagingModel } from "@/src/types/packaging/packaging";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const PackagingScreen: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
@@ -78,24 +79,26 @@ export const PackagingScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <PackagingTable
-        data={packagings ?? []}
-        itemsPerPage={5}
-        onNewPackaging={handleCreate}
-        onRowPress={handleDetail}
-        actions={actions}
-      />
-      <ModalPackagingDetail
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        data={detailData}
-      />
-      <ModalDelete
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <PackagingTable
+          data={packagings ?? []}
+          itemsPerPage={5}
+          onNewPackaging={handleCreate}
+          onRowPress={handleDetail}
+          actions={actions}
+        />
+        <ModalPackagingDetail
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          data={detailData}
+        />
+        <ModalDelete
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

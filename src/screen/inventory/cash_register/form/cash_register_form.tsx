@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -127,128 +126,126 @@ export default function CashRegisterForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
-            <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Caja" : "Nueva Caja"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar la caja"
+                  : "Llena los campos para crear una caja registradora"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Caja" : "Nueva Caja"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar la caja"
-                    : "Llena los campos para crear una caja registradora"}
-                </Text>
-
-                <VStack space="lg">
-                  {/* Nombre */}
-                  <Controller
-                    control={control}
-                    name="name"
-                    rules={{ required: "El nombre es obligatorio." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Nombre"
-                        placeholder="Ej. Caja Principal"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.name?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Código */}
-                  <Controller
-                    control={control}
-                    name="code"
-                    rules={{ required: "El código es obligatorio." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Código"
-                        placeholder="Ej. CAJA-01"
-                        value={value}
-                        onChangeText={(text) => onChange(text.toUpperCase())}
-                        onBlur={onBlur}
-                        autoCapitalize="characters"
-                        errorMessage={errors.code?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Bodega — solo se muestra si el usuario tiene acceso a más de una */}
-                  {!hideWarehouseInput && (
-                    <Controller
-                      control={control}
-                      name="warehouse_id"
-                      rules={{ required: "La bodega es obligatoria." }}
-                      render={({ field: { onChange, value } }) => (
-                        <AppSelect
-                          label="Bodega"
-                          placeholder="Selecciona una bodega"
-                          searchable={warehouseOptions.length > 6}
-                          searchPlaceholder="Buscar bodega..."
-                          options={warehouseOptions.map((w) => ({
-                            label: w.label,
-                            value: String(w.id),
-                          }))}
-                          value={value}
-                          onChange={onChange}
-                          errorMessage={errors.warehouse_id?.message}
-                        />
-                      )}
+              <VStack space="lg">
+                {/* Nombre */}
+                <Controller
+                  control={control}
+                  name="name"
+                  rules={{ required: "El nombre es obligatorio." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Nombre"
+                      placeholder="Ej. Caja Principal"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      errorMessage={errors.name?.message}
                     />
                   )}
+                />
 
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
-                      }}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                {/* Código */}
+                <Controller
+                  control={control}
+                  name="code"
+                  rules={{ required: "El código es obligatorio." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Código"
+                      placeholder="Ej. CAJA-01"
+                      value={value}
+                      onChangeText={(text) => onChange(text.toUpperCase())}
+                      onBlur={onBlur}
+                      autoCapitalize="characters"
+                      errorMessage={errors.code?.message}
+                    />
+                  )}
+                />
+
+                {/* Bodega — solo se muestra si el usuario tiene acceso a más de una */}
+                {!hideWarehouseInput && (
+                  <Controller
+                    control={control}
+                    name="warehouse_id"
+                    rules={{ required: "La bodega es obligatoria." }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Bodega"
+                        placeholder="Selecciona una bodega"
+                        searchable={warehouseOptions.length > 6}
+                        searchPlaceholder="Buscar bodega..."
+                        options={warehouseOptions.map((w) => ({
+                          label: w.label,
+                          value: String(w.id),
+                        }))}
+                        value={value}
+                        onChange={onChange}
+                        errorMessage={errors.warehouse_id?.message}
+                      />
+                    )}
+                  />
+                )}
+
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isPending}
+                  >
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

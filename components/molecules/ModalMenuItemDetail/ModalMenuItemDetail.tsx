@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
@@ -151,141 +150,139 @@ export const ModalMenuItemDetail: React.FC<Props> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1 }}
           >
-            <DesktopScrollView>
-              {/* Producto */}
-              <SectionTitle title="Producto" />
-              <InfoRow label="Descripción" value={data?.product?.description} />
-              <InfoRow label="Marca" value={data?.product?.brand} />
-              <InfoRow
-                label="Código de barras"
-                value={data?.product?.barcode}
-              />
-              <InfoRow label="Unidad" value={data?.product?.unit_of_measure} />
-              <InfoRow
-                label="Costo promedio"
-                value={`Q ${data?.product?.average_cost?.toFixed(2)}`}
-              />
-              <InfoRow
-                label="Requiere lote"
-                value={data?.product?.requires_batch}
-              />
+            {/* Producto */}
+            <SectionTitle title="Producto" />
+            <InfoRow label="Descripción" value={data?.product?.description} />
+            <InfoRow label="Marca" value={data?.product?.brand} />
+            <InfoRow
+              label="Código de barras"
+              value={data?.product?.barcode}
+            />
+            <InfoRow label="Unidad" value={data?.product?.unit_of_measure} />
+            <InfoRow
+              label="Costo promedio"
+              value={`Q ${data?.product?.average_cost?.toFixed(2)}`}
+            />
+            <InfoRow
+              label="Requiere lote"
+              value={data?.product?.requires_batch}
+            />
 
-              {/* Receta */}
-              <Divider />
-              <SectionTitle title="Receta" />
-              {hasRecipe ? (
-                <>
-                  <InfoRow label="Nombre" value={data?.recipe?.name} />
-                  <InfoRow label="Versión" value={data?.recipe?.version} />
+            {/* Receta */}
+            <Divider />
+            <SectionTitle title="Receta" />
+            {hasRecipe ? (
+              <>
+                <InfoRow label="Nombre" value={data?.recipe?.name} />
+                <InfoRow label="Versión" value={data?.recipe?.version} />
 
-                  <Text style={styles.subTitle}>
-                    Ingredientes ({data?.recipe?.ingredients?.length ?? 0})
-                  </Text>
+                <Text style={styles.subTitle}>
+                  Ingredientes ({data?.recipe?.ingredients?.length ?? 0})
+                </Text>
 
-                  {hasIngredients ? (
-                    data?.recipe?.ingredients.map((ing) => (
-                      <View key={ing.id} style={styles.cardRow}>
-                        <View style={styles.ingredientLeft}>
-                          <Text style={styles.cardLabel}>
-                            Ingrediente #{ing.ingredient_id}
-                          </Text>
-                          <Text style={styles.cardSub}>
-                            {ing.quantity} {ing.unit}
-                          </Text>
-                        </View>
-                        {ing.waste_factor > 0 && (
-                          <Pill
-                            label={`Factor: ${ing.waste_factor}`}
-                            color="#fef9c3"
-                            textColor="#ca8a04"
-                          />
-                        )}
-                      </View>
-                    ))
-                  ) : (
-                    <EmptyHint label="Sin ingredientes registrados" />
-                  )}
-                </>
-              ) : (
-                <EmptyHint label="Sin receta asignada" />
-              )}
-
-              {/* Variantes */}
-              <Divider />
-              <SectionTitle
-                title={`Variantes (${data?.variants?.length ?? 0})`}
-              />
-              {hasVariants ? (
-                data?.variants.map((v) => (
-                  <View key={v.id} style={styles.cardRow}>
-                    <Text style={styles.cardLabel}>{v.name}</Text>
-                    <View style={styles.cardRight}>
-                      <Text style={styles.cardValue}>
-                        {v.adjustment_type === "fixed"
-                          ? `+Q ${v.price_adjustment.toFixed(2)}`
-                          : `+${v.price_adjustment}%`}
-                      </Text>
-                      <Pill
-                        label={v.status ? "Activo" : "Inactivo"}
-                        color={v.status ? "#dcfce7" : "#fee2e2"}
-                        textColor={v.status ? "#16a34a" : "#dc2626"}
-                      />
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <EmptyHint label="Sin variantes" />
-              )}
-
-              {/* Modificadores */}
-              <Divider />
-              <SectionTitle
-                title={`Modificadores (${data?.modifiers?.length ?? 0})`}
-              />
-              {hasModifiers ? (
-                data?.modifiers.map((m) => (
-                  <View key={m.product_modifier_id} style={styles.modifierCard}>
-                    <View style={styles.modifierHeader}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.cardLabel}>{m.name}</Text>
+                {hasIngredients ? (
+                  data?.recipe?.ingredients.map((ing) => (
+                    <View key={ing.id} style={styles.cardRow}>
+                      <View style={styles.ingredientLeft}>
+                        <Text style={styles.cardLabel}>
+                          Ingrediente #{ing.ingredient_id}
+                        </Text>
                         <Text style={styles.cardSub}>
-                          {m.modifier_name} · Grupo: {m.modifier_group}
+                          {ing.quantity} {ing.unit}
                         </Text>
                       </View>
-                      <View style={styles.cardRight}>
-                        {m.price_adjustment > 0 && (
-                          <Text style={styles.cardValue}>
-                            +Q {m.price_adjustment.toFixed(2)}
-                          </Text>
-                        )}
-                        {m.is_default && (
-                          <Pill
-                            label="Default"
-                            color="#fef9c3"
-                            textColor="#ca8a04"
-                          />
-                        )}
-                      </View>
+                      {ing.waste_factor > 0 && (
+                        <Pill
+                          label={`Factor: ${ing.waste_factor}`}
+                          color="#fef9c3"
+                          textColor="#ca8a04"
+                        />
+                      )}
                     </View>
-                    <View style={styles.modifierFooter}>
-                      <Text style={styles.modifierMeta}>
-                        Cantidad: {m.quantity}
+                  ))
+                ) : (
+                  <EmptyHint label="Sin ingredientes registrados" />
+                )}
+              </>
+            ) : (
+              <EmptyHint label="Sin receta asignada" />
+            )}
+
+            {/* Variantes */}
+            <Divider />
+            <SectionTitle
+              title={`Variantes (${data?.variants?.length ?? 0})`}
+            />
+            {hasVariants ? (
+              data?.variants.map((v) => (
+                <View key={v.id} style={styles.cardRow}>
+                  <Text style={styles.cardLabel}>{v.name}</Text>
+                  <View style={styles.cardRight}>
+                    <Text style={styles.cardValue}>
+                      {v.adjustment_type === "fixed"
+                        ? `+Q ${v.price_adjustment.toFixed(2)}`
+                        : `+${v.price_adjustment}%`}
+                    </Text>
+                    <Pill
+                      label={v.status ? "Activo" : "Inactivo"}
+                      color={v.status ? "#dcfce7" : "#fee2e2"}
+                      textColor={v.status ? "#16a34a" : "#dc2626"}
+                    />
+                  </View>
+                </View>
+              ))
+            ) : (
+              <EmptyHint label="Sin variantes" />
+            )}
+
+            {/* Modificadores */}
+            <Divider />
+            <SectionTitle
+              title={`Modificadores (${data?.modifiers?.length ?? 0})`}
+            />
+            {hasModifiers ? (
+              data?.modifiers.map((m) => (
+                <View key={m.product_modifier_id} style={styles.modifierCard}>
+                  <View style={styles.modifierHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.cardLabel}>{m.name}</Text>
+                      <Text style={styles.cardSub}>
+                        {m.modifier_name} · Grupo: {m.modifier_group}
                       </Text>
-                      <Text style={styles.modifierMeta}>
-                        Selección: {m.min_selection}–{m.max_selection}
-                      </Text>
-                      <Pill
-                        label={m.status ? "Activo" : "Inactivo"}
-                        color={m.status ? "#dcfce7" : "#fee2e2"}
-                        textColor={m.status ? "#16a34a" : "#dc2626"}
-                      />
+                    </View>
+                    <View style={styles.cardRight}>
+                      {m.price_adjustment > 0 && (
+                        <Text style={styles.cardValue}>
+                          +Q {m.price_adjustment.toFixed(2)}
+                        </Text>
+                      )}
+                      {m.is_default && (
+                        <Pill
+                          label="Default"
+                          color="#fef9c3"
+                          textColor="#ca8a04"
+                        />
+                      )}
                     </View>
                   </View>
-                ))
-              ) : (
-                <EmptyHint label="Sin modificadores" />
-              )}
-            </DesktopScrollView>
+                  <View style={styles.modifierFooter}>
+                    <Text style={styles.modifierMeta}>
+                      Cantidad: {m.quantity}
+                    </Text>
+                    <Text style={styles.modifierMeta}>
+                      Selección: {m.min_selection}–{m.max_selection}
+                    </Text>
+                    <Pill
+                      label={m.status ? "Activo" : "Inactivo"}
+                      color={m.status ? "#dcfce7" : "#fee2e2"}
+                      textColor={m.status ? "#16a34a" : "#dc2626"}
+                    />
+                  </View>
+                </View>
+              ))
+            ) : (
+              <EmptyHint label="Sin modificadores" />
+            )}
           </ScrollView>
         </ModalBody>
 

@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { formatCurrency } from "@/components/templates/PosCatalog/PosCatalog";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -20,6 +19,7 @@ import {
 } from "lucide-react-native";
 import React from "react";
 import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function formatDate(iso: string) {
   if (!iso) return "—";
@@ -56,9 +56,9 @@ export const CashCloseVoucher: React.FC = () => {
   const differencePositive = voucher.difference > 0;
 
   return (
-    <VStack className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1 p-4">
-        <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <VStack className="flex-1 bg-gray-50">
+        <ScrollView className="flex-1 p-4">
           <VStack space="lg" className="mx-auto w-full max-w-md">
             {/* Encabezado */}
             <VStack className="items-center gap-2 py-4">
@@ -238,16 +238,16 @@ export const CashCloseVoucher: React.FC = () => {
               )}
             </VStack>
           </VStack>
-        </DesktopScrollView>
-      </ScrollView>
+        </ScrollView>
 
-      <VStack className="border-t border-gray-200 bg-white p-4">
-        <Button className="bg-blue-600" onPress={goToPos}>
-          <ButtonText className="text-white">
-            Volver al punto de venta
-          </ButtonText>
-        </Button>
+        <VStack className="border-t border-gray-200 bg-white p-4">
+          <Button className="bg-blue-600" onPress={goToPos}>
+            <ButtonText className="text-white">
+              Volver al punto de venta
+            </ButtonText>
+          </Button>
+        </VStack>
       </VStack>
-    </VStack>
+    </SafeAreaView>
   );
 };

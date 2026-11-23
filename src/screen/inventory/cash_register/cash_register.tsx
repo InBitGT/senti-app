@@ -8,6 +8,7 @@ import { CashRegister as CashRegisterModel } from "@/src/types/cash_register/cas
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const CashRegisterScreen: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -63,24 +64,26 @@ export const CashRegisterScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CashRegistersTable
-        data={cashRegisters || []}
-        itemsPerPage={5}
-        onNewCashRegister={handleCreate}
-        onRowPress={hadleModalData}
-        actions={actions}
-      />
-      <ModalCashRegisterDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <CashRegistersTable
+          data={cashRegisters || []}
+          itemsPerPage={5}
+          onNewCashRegister={handleCreate}
+          onRowPress={hadleModalData}
+          actions={actions}
+        />
+        <ModalCashRegisterDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

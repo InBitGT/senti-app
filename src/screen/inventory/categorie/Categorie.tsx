@@ -5,7 +5,6 @@ import {
   CustomTable,
   ModalDelete,
 } from "@/components";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalCategorieDetail } from "@/components/molecules/ModalCategorieDetail/ModalCategorieDetail";
 import { useCategorie } from "@/src/hooks";
@@ -14,6 +13,7 @@ import { Category } from "@/src/types";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const Categorie: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -78,8 +78,8 @@ export const Categorie: React.FC = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1 }}>
         <CustomTable<Category>
           columns={columns}
           data={categorie || []}
@@ -99,7 +99,7 @@ export const Categorie: React.FC = () => {
           onClose={() => setShowModal(false)}
           onSuccess={handleDelete}
         />
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -125,131 +124,129 @@ export default function CategoryForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView useWindowHeight>
-            <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Categoría" : "Nueva Categoría"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar la categoría"
+                  : "Llena los campos para crear una categoría"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Categoría" : "Nueva Categoría"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar la categoría"
-                    : "Llena los campos para crear una categoría"}
-                </Text>
+              <VStack space="lg">
+                {/* Nombre */}
+                <Controller
+                  control={control}
+                  name="name"
+                  rules={{
+                    required: "El nombre es obligatorio.",
+                    minLength: { value: 2, message: "Mínimo 2 caracteres." },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Nombre"
+                      placeholder="Ej. Electrónica"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      errorMessage={errors.name?.message}
+                    />
+                  )}
+                />
 
-                <VStack space="lg">
-                  {/* Nombre */}
-                  <Controller
-                    control={control}
-                    name="name"
-                    rules={{
-                      required: "El nombre es obligatorio.",
-                      minLength: { value: 2, message: "Mínimo 2 caracteres." },
+                {/* Descripción */}
+                <Controller
+                  control={control}
+                  name="description"
+                  rules={{
+                    required: "La descripción es obligatoria.",
+                    minLength: { value: 5, message: "Mínimo 5 caracteres." },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Descripción"
+                      placeholder="Describe la categoría..."
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      multiline
+                      textareaHeight={100}
+                      errorMessage={errors.description?.message}
+                    />
+                  )}
+                />
+
+                {/* Categoría Padre */}
+                <Controller
+                  control={control}
+                  name="parent_id"
+                  render={({ field: { onChange, value } }) => (
+                    <AppSelect
+                      label="Categoria Padre (opcional)"
+                      placeholder="Sin categoría padre"
+                      searchable={parentOptions.length > 6}
+                      searchPlaceholder="Buscar categoría..."
+                      options={parentOptions}
+                      value={value}
+                      onChange={onChange}
+                      errorMessage={errors.parent_id?.message}
+                    />
+                  )}
+                />
+
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
                     }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Nombre"
-                        placeholder="Ej. Electrónica"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.name?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Descripción */}
-                  <Controller
-                    control={control}
-                    name="description"
-                    rules={{
-                      required: "La descripción es obligatoria.",
-                      minLength: { value: 5, message: "Mínimo 5 caracteres." },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Descripción"
-                        placeholder="Describe la categoría..."
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        multiline
-                        textareaHeight={100}
-                        errorMessage={errors.description?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Categoría Padre */}
-                  <Controller
-                    control={control}
-                    name="parent_id"
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Categoria Padre (opcional)"
-                        placeholder="Sin categoría padre"
-                        searchable={parentOptions.length > 6}
-                        searchPlaceholder="Buscar categoría..."
-                        options={parentOptions}
-                        value={value}
-                        onChange={onChange}
-                        errorMessage={errors.parent_id?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
-                      }}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={post.isPending || put.isPending}
-                    >
-                      <ButtonText>
-                        {post.isPending || put.isPending
-                          ? "Guardando..."
-                          : "Guardar Categoría"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={post.isPending || put.isPending}
+                  >
+                    <ButtonText>
+                      {post.isPending || put.isPending
+                        ? "Guardando..."
+                        : "Guardar Categoría"}
+                    </ButtonText>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

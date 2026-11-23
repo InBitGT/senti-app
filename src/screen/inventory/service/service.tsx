@@ -9,6 +9,7 @@ import { ServiceProduct } from "@/src/types/service/service";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const ServiceScreen: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
@@ -81,24 +82,26 @@ export const ServiceScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ServiceProductTable
-        data={services ?? []}
-        itemsPerPage={5}
-        onNewService={handleCreate}
-        onRowPress={handleDetail}
-        actions={actions}
-      />
-      <ModalServiceDetail
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        data={detailData}
-      />
-      <ModalDelete
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <ServiceProductTable
+          data={services ?? []}
+          itemsPerPage={5}
+          onNewService={handleCreate}
+          onRowPress={handleDetail}
+          actions={actions}
+        />
+        <ModalServiceDetail
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          data={detailData}
+        />
+        <ModalDelete
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

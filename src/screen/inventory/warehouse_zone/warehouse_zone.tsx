@@ -22,6 +22,7 @@ import { WarehouseZone as WarehouseZoneModel } from "@/src/types/warehouse_zone/
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface WarehouseOption {
   id: number;
@@ -111,65 +112,67 @@ export const WarehouseZoneScreen: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      {warehouseOptions.length > 1 && (
-        <VStack className="px-4 pt-6 md:px-10">
-          <HStack className="items-center gap-2">
-            <View style={{ width: 260 }}>
-              <Select
-                selectedValue={selectedWarehouseId}
-                onValueChange={setSelectedWarehouseId}
-              >
-                <SelectTrigger>
-                  <SelectInput
-                    style={{ color: "#000" }}
-                    placeholder="Selecciona una bodega"
-                    value={selectedWarehouseLabel}
-                  />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    {warehouseOptions.map((w) => (
-                      <SelectItem
-                        key={w.id}
-                        label={w.label}
-                        value={String(w.id)}
-                      />
-                    ))}
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
-            </View>
-          </HStack>
-        </VStack>
-      )}
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        {warehouseOptions.length > 1 && (
+          <VStack className="px-4 pt-6 md:px-10">
+            <HStack className="items-center gap-2">
+              <View style={{ width: 260 }}>
+                <Select
+                  selectedValue={selectedWarehouseId}
+                  onValueChange={setSelectedWarehouseId}
+                >
+                  <SelectTrigger>
+                    <SelectInput
+                      style={{ color: "#000" }}
+                      placeholder="Selecciona una bodega"
+                      value={selectedWarehouseLabel}
+                    />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
+                      {warehouseOptions.map((w) => (
+                        <SelectItem
+                          key={w.id}
+                          label={w.label}
+                          value={String(w.id)}
+                        />
+                      ))}
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </View>
+            </HStack>
+          </VStack>
+        )}
 
-      {isLoading ? (
-        <TableSkeleton />
-      ) : (
-        <WarehouseZonesTable
-          data={zones || []}
-          itemsPerPage={5}
-          onNewZone={handleCreate}
-          onRowPress={hadleModalData}
-          actions={actions}
+        {isLoading ? (
+          <TableSkeleton />
+        ) : (
+          <WarehouseZonesTable
+            data={zones || []}
+            itemsPerPage={5}
+            onNewZone={handleCreate}
+            onRowPress={hadleModalData}
+            actions={actions}
+          />
+        )}
+
+        <ModalWarehouseZoneDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
         />
-      )}
-
-      <ModalWarehouseZoneDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

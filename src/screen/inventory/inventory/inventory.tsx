@@ -1,5 +1,4 @@
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalInventoryStockDetail } from "@/components/molecules/ModalInventory/ModalInventory";
 import { InventoryStockTable } from "@/components/templates/InventoryStockTable/InventoryStockTable";
@@ -10,6 +9,7 @@ import { useAuthStore } from "@/src/store";
 import { InventoryStockItem } from "@/src/types/inventory/inventory";
 import React, { useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const InventoryStockScreen: React.FC = () => {
   const { claims } = useAuthStore();
@@ -95,8 +95,8 @@ export const InventoryStockScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1 }}>
         {!hideBranchWarehouseSelects && (
           <VStack className="px-4 pt-6 md:px-10 gap-2">
             <HStack className="items-center gap-2">
@@ -144,7 +144,7 @@ export const InventoryStockScreen: React.FC = () => {
           onClose={() => setShowModalData(false)}
           data={modalData}
         />
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

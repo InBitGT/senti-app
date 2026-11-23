@@ -9,6 +9,7 @@ import { Recipe as RecipeModel } from "@/src/types/recipe/recipe";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const RecipeScreen: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
@@ -81,24 +82,26 @@ export const RecipeScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <RecipeTable
-        data={recipes ?? []}
-        itemsPerPage={5}
-        onNewRecipe={handleCreate}
-        onRowPress={handleDetail}
-        actions={actions}
-      />
-      <ModalRecipeDetail
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        data={detailData}
-      />
-      <ModalDelete
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <RecipeTable
+          data={recipes ?? []}
+          itemsPerPage={5}
+          onNewRecipe={handleCreate}
+          onRowPress={handleDetail}
+          actions={actions}
+        />
+        <ModalRecipeDetail
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          data={detailData}
+        />
+        <ModalDelete
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { StockTransferTable } from "@/components/templates/StockTransferTable/StockTransferTable";
 import {
   useIncomingTransfer,
@@ -14,6 +13,7 @@ import { useDimensions } from "@/src/utils/dimentions/dimentions";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const PAGE_SIZE = 10;
 
@@ -98,8 +98,8 @@ export const StockTransfer = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1, margin: isDesktopWeb ? 20 : 5 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1, margin: isDesktopWeb ? 20 : 5 }}>
         {view === "incoming" ? (
           <StockTransferTable
             {...commonProps}
@@ -120,7 +120,7 @@ export const StockTransfer = () => {
             onStatusChange={handleStatusChange}
           />
         )}
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

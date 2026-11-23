@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
@@ -51,47 +50,45 @@ export const ModalInventoryStockDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <DesktopScrollView>
-              {data && (
-                <>
-                  <SectionTitle title="Existencias" />
-                  <View style={styles.statsRow}>
-                    <StatBox
-                      label="En existencia"
-                      value={data.total_qty_on_hand}
-                      color="#111827"
-                    />
-                    <StatBox
-                      label="Reservado"
-                      value={data.total_qty_reserved}
-                      color="#6b7280"
-                    />
-                    <StatBox
-                      label="Disponible"
-                      value={data.available_qty}
-                      color="#16a34a"
-                    />
-                  </View>
-
-                  <InfoRow
-                    label="Unidad de medida"
-                    value={data.unit_of_measure || "—"}
+            {data && (
+              <>
+                <SectionTitle title="Existencias" />
+                <View style={styles.statsRow}>
+                  <StatBox
+                    label="En existencia"
+                    value={data.total_qty_on_hand}
+                    color="#111827"
                   />
-                  <InfoRow
-                    label="Costo promedio"
-                    value={formatCurrency(data.average_cost)}
+                  <StatBox
+                    label="Reservado"
+                    value={data.total_qty_reserved}
+                    color="#6b7280"
                   />
-                  <InfoRow label="Líneas de lote" value={data.batch_lines} />
+                  <StatBox
+                    label="Disponible"
+                    value={data.available_qty}
+                    color="#16a34a"
+                  />
+                </View>
 
-                  <Divider />
+                <InfoRow
+                  label="Unidad de medida"
+                  value={data.unit_of_measure || "—"}
+                />
+                <InfoRow
+                  label="Costo promedio"
+                  value={formatCurrency(data.average_cost)}
+                />
+                <InfoRow label="Líneas de lote" value={data.batch_lines} />
 
-                  <SectionTitle title="Bodega" />
-                  <InfoRow label="Nombre" value={data.warehouse_name} />
-                  <InfoRow label="ID de bodega" value={data.warehouse_id} />
-                  <InfoRow label="ID de producto" value={data.product_id} />
-                </>
-              )}
-            </DesktopScrollView>
+                <Divider />
+
+                <SectionTitle title="Bodega" />
+                <InfoRow label="Nombre" value={data.warehouse_name} />
+                <InfoRow label="ID de bodega" value={data.warehouse_id} />
+                <InfoRow label="ID de producto" value={data.product_id} />
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 

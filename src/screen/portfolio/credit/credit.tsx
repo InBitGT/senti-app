@@ -8,6 +8,7 @@ import { CustomerCredit } from "@/src/types/credit/credit";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const CustomerCreditScreen: React.FC = () => {
   const [showModalData, setShowModalData] = useState<boolean>(false);
@@ -48,20 +49,22 @@ export const CustomerCreditScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomerCreditsTable
-        data={customerCredits || []}
-        itemsPerPage={5}
-        onNewCustomerCredit={handleCreate}
-        onRowPress={hadleModalData}
-        actions={actions}
-        onCreditPrevious={handlePreviousCredit}
-      />
-      <ModalCustomerCreditDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <CustomerCreditsTable
+          data={customerCredits || []}
+          itemsPerPage={5}
+          onNewCustomerCredit={handleCreate}
+          onRowPress={hadleModalData}
+          actions={actions}
+          onCreditPrevious={handlePreviousCredit}
+        />
+        <ModalCustomerCreditDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

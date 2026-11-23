@@ -1,7 +1,6 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
@@ -249,376 +248,374 @@ export default function UserForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
-            <Pressable
-              onPress={goBack}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={goBack}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Usuario" : "Nuevo Usuario"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar el usuario"
+                  : "Llena los campos para crear un usuario"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Usuario" : "Nuevo Usuario"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar el usuario"
-                    : "Llena los campos para crear un usuario"}
-                </Text>
+              <VStack space="lg">
+                <Text style={styles.sectionTitle}>DATOS DEL USUARIO</Text>
 
-                <VStack space="lg">
-                  <Text style={styles.sectionTitle}>DATOS DEL USUARIO</Text>
-
-                  {/* Nombre + Apellido */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="first_name"
-                        rules={{ required: "El nombre es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Nombre"
-                            placeholder="Ej. Camilo"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.first_name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="last_name"
-                        rules={{ required: "El apellido es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Apellido"
-                            placeholder="Ej. Suarez"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.last_name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Username + Teléfono */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="username"
-                        rules={{ required: "El username es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Username"
-                            placeholder="Ej. smejia"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            autoCapitalize="none"
-                            errorMessage={errors.username?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="phone"
-                        rules={{ required: "El teléfono es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Teléfono"
-                            placeholder="Ej. +50211222211"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="phone-pad"
-                            errorMessage={errors.phone?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Email */}
-                  <Controller
-                    control={control}
-                    name="email"
-                    rules={{
-                      required: "El email es obligatorio.",
-                      pattern: {
-                        value: /\S+@\S+\.\S+/,
-                        message: "Email inválido.",
-                      },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Email"
-                        placeholder="Ej. usuario@gmail.com"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        errorMessage={errors.email?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Contraseña + Confirmar — en fila en pantallas grandes */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="password"
-                        rules={
-                          !isEdit
-                            ? {
-                                required: "La contraseña es obligatoria.",
-                                minLength: {
-                                  value: 6,
-                                  message: "Mínimo 6 caracteres.",
-                                },
-                              }
-                            : {
-                                minLength: {
-                                  value: 6,
-                                  message: "Mínimo 6 caracteres.",
-                                },
-                              }
-                        }
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label={
-                              isEdit
-                                ? "Contraseña (vacío = sin cambio)"
-                                : "Contraseña"
-                            }
-                            placeholder={isEdit ? "••••••" : "Contraseña"}
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            secureTextEntry={!showPassword}
-                            autoCapitalize="none"
-                            clearable={false}
-                            errorMessage={errors.password?.message}
-                            rightIcon={
-                              <PasswordToggle
-                                visible={showPassword}
-                                onToggle={() => setShowPassword((p) => !p)}
-                              />
-                            }
-                          />
-                        )}
-                      />
-                    </View>
-
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="confirm_password"
-                        rules={{
-                          // Solo requerido si se está escribiendo una contraseña
-                          validate: (val) => {
-                            if (!passwordValue && isEdit) return true; // edición sin cambio de pass
-                            if (!val) return "Confirma la contraseña.";
-                            if (val !== passwordValue)
-                              return "Las contraseñas no coinciden.";
-                            return true;
-                          },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Confirmar contraseña"
-                            placeholder="Repite la contraseña"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            secureTextEntry={!showConfirm}
-                            autoCapitalize="none"
-                            clearable={false}
-                            errorMessage={errors.confirm_password?.message}
-                            rightIcon={
-                              <PasswordToggle
-                                visible={showConfirm}
-                                onToggle={() => setShowConfirm((p) => !p)}
-                              />
-                            }
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Rol */}
-                  <Controller
-                    control={control}
-                    name="role_id"
-                    rules={{ required: "El rol es obligatorio." }}
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Rol"
-                        placeholder="Selecciona un rol"
-                        options={roleOptions}
-                        value={value}
-                        onChange={onChange}
-                        isLoading={isLoadingData}
-                        searchable={roleOptions.length > 6}
-                        errorMessage={errors.role_id?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Sucursal (solo si el usuario que crea tiene más de una) */}
-                  {!isEdit && hasMultipleBranches && (
+                {/* Nombre + Apellido */}
+                <View style={row}>
+                  <View style={half}>
                     <Controller
                       control={control}
-                      name="branch_id"
-                      rules={{ required: "La sucursal es obligatoria." }}
-                      render={({ field: { onChange, value } }) => (
-                        <AppSelect
-                          label="Sucursal"
-                          placeholder="Selecciona una sucursal"
-                          options={branchOptions}
+                      name="first_name"
+                      rules={{ required: "El nombre es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Nombre"
+                          placeholder="Ej. Camilo"
                           value={value}
-                          onChange={onChange}
-                          searchable={branchOptions.length > 6}
-                          errorMessage={errors.branch_id?.message}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.first_name?.message}
                         />
                       )}
                     />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="last_name"
+                      rules={{ required: "El apellido es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Apellido"
+                          placeholder="Ej. Suarez"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.last_name?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Username + Teléfono */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="username"
+                      rules={{ required: "El username es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Username"
+                          placeholder="Ej. smejia"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          autoCapitalize="none"
+                          errorMessage={errors.username?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="phone"
+                      rules={{ required: "El teléfono es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Teléfono"
+                          placeholder="Ej. +50211222211"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="phone-pad"
+                          errorMessage={errors.phone?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Email */}
+                <Controller
+                  control={control}
+                  name="email"
+                  rules={{
+                    required: "El email es obligatorio.",
+                    pattern: {
+                      value: /\S+@\S+\.\S+/,
+                      message: "Email inválido.",
+                    },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Email"
+                      placeholder="Ej. usuario@gmail.com"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      errorMessage={errors.email?.message}
+                    />
                   )}
+                />
 
-                  <Divider className="my-2" />
-
-                  {/* ── Dirección ── */}
-                  <Text style={styles.sectionTitle}>DIRECCIÓN</Text>
-
-                  {/* Línea 1 */}
-                  <Controller
-                    control={control}
-                    name="line1"
-                    rules={{ required: "La dirección es obligatoria." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Dirección"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.line1?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Línea 2 */}
-                  <Controller
-                    control={control}
-                    name="line2"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Dirección (opcional)"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                      />
-                    )}
-                  />
-
-                  {/* Ciudad + Departamento */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="city"
-                        rules={{ required: "La ciudad es obligatoria." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Ciudad"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.city?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="state"
-                        rules={{ required: "El departamento es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Departamento"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.state?.message}
-                          />
-                        )}
-                      />
-                    </View>
+                {/* Contraseña + Confirmar — en fila en pantallas grandes */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="password"
+                      rules={
+                        !isEdit
+                          ? {
+                              required: "La contraseña es obligatoria.",
+                              minLength: {
+                                value: 6,
+                                message: "Mínimo 6 caracteres.",
+                              },
+                            }
+                          : {
+                              minLength: {
+                                value: 6,
+                                message: "Mínimo 6 caracteres.",
+                              },
+                            }
+                      }
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label={
+                            isEdit
+                              ? "Contraseña (vacío = sin cambio)"
+                              : "Contraseña"
+                          }
+                          placeholder={isEdit ? "••••••" : "Contraseña"}
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          secureTextEntry={!showPassword}
+                          autoCapitalize="none"
+                          clearable={false}
+                          errorMessage={errors.password?.message}
+                          rightIcon={
+                            <PasswordToggle
+                              visible={showPassword}
+                              onToggle={() => setShowPassword((p) => !p)}
+                            />
+                          }
+                        />
+                      )}
+                    />
                   </View>
 
-                  {/* Código Postal */}
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="confirm_password"
+                      rules={{
+                        // Solo requerido si se está escribiendo una contraseña
+                        validate: (val) => {
+                          if (!passwordValue && isEdit) return true; // edición sin cambio de pass
+                          if (!val) return "Confirma la contraseña.";
+                          if (val !== passwordValue)
+                            return "Las contraseñas no coinciden.";
+                          return true;
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Confirmar contraseña"
+                          placeholder="Repite la contraseña"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          secureTextEntry={!showConfirm}
+                          autoCapitalize="none"
+                          clearable={false}
+                          errorMessage={errors.confirm_password?.message}
+                          rightIcon={
+                            <PasswordToggle
+                              visible={showConfirm}
+                              onToggle={() => setShowConfirm((p) => !p)}
+                            />
+                          }
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Rol */}
+                <Controller
+                  control={control}
+                  name="role_id"
+                  rules={{ required: "El rol es obligatorio." }}
+                  render={({ field: { onChange, value } }) => (
+                    <AppSelect
+                      label="Rol"
+                      placeholder="Selecciona un rol"
+                      options={roleOptions}
+                      value={value}
+                      onChange={onChange}
+                      isLoading={isLoadingData}
+                      searchable={roleOptions.length > 6}
+                      errorMessage={errors.role_id?.message}
+                    />
+                  )}
+                />
+
+                {/* Sucursal (solo si el usuario que crea tiene más de una) */}
+                {!isEdit && hasMultipleBranches && (
                   <Controller
                     control={control}
-                    name="postal_code"
-                    rules={{ required: "El código postal es obligatorio." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Código Postal"
-                        placeholder="Ej. 01001"
+                    name="branch_id"
+                    rules={{ required: "La sucursal es obligatoria." }}
+                    render={({ field: { onChange, value } }) => (
+                      <AppSelect
+                        label="Sucursal"
+                        placeholder="Selecciona una sucursal"
+                        options={branchOptions}
                         value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="number-pad"
-                        errorMessage={errors.postal_code?.message}
+                        onChange={onChange}
+                        searchable={branchOptions.length > 6}
+                        errorMessage={errors.branch_id?.message}
                       />
                     )}
                   />
+                )}
 
-                  {/* Botones */}
-                  <HStack style={styles.actions}>
-                    <AppButton
-                      label="Cancelar"
-                      variant="black"
-                      outline
-                      fullWidth={false}
-                      isDisabled={isPending}
-                      onPress={goBack}
+                <Divider className="my-2" />
+
+                {/* ── Dirección ── */}
+                <Text style={styles.sectionTitle}>DIRECCIÓN</Text>
+
+                {/* Línea 1 */}
+                <Controller
+                  control={control}
+                  name="line1"
+                  rules={{ required: "La dirección es obligatoria." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Dirección"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      errorMessage={errors.line1?.message}
                     />
-                    <AppButton
-                      label="Guardar"
-                      variant="black"
-                      fullWidth={false}
-                      isLoading={isPending}
-                      onPress={handleSubmit(onSubmit)}
+                  )}
+                />
+
+                {/* Línea 2 */}
+                <Controller
+                  control={control}
+                  name="line2"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Dirección (opcional)"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
                     />
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                  )}
+                />
+
+                {/* Ciudad + Departamento */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="city"
+                      rules={{ required: "La ciudad es obligatoria." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Ciudad"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.city?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="state"
+                      rules={{ required: "El departamento es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Departamento"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.state?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Código Postal */}
+                <Controller
+                  control={control}
+                  name="postal_code"
+                  rules={{ required: "El código postal es obligatorio." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Código Postal"
+                      placeholder="Ej. 01001"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="number-pad"
+                      errorMessage={errors.postal_code?.message}
+                    />
+                  )}
+                />
+
+                {/* Botones */}
+                <HStack style={styles.actions}>
+                  <AppButton
+                    label="Cancelar"
+                    variant="black"
+                    outline
+                    fullWidth={false}
+                    isDisabled={isPending}
+                    onPress={goBack}
+                  />
+                  <AppButton
+                    label="Guardar"
+                    variant="black"
+                    fullWidth={false}
+                    isLoading={isPending}
+                    onPress={handleSubmit(onSubmit)}
+                  />
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

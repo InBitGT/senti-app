@@ -1,6 +1,5 @@
 import { Avatar } from "@/components/atom/Avatar/Avatar";
 import { Badge } from "@/components/atom/Badge/Badge";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { DueDateBadge } from "@/components/atom/DueDateBadge/DueDateBadge";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
@@ -57,83 +56,81 @@ export const ModalCustomerCreditDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <DesktopScrollView>
-              {data && (
-                <>
-                  <SectionTitle title="Crédito" />
+            {data && (
+              <>
+                <SectionTitle title="Crédito" />
 
-                  <View style={styles.statsRow}>
-                    <StatBox
-                      label="Límite"
-                      value={formatCurrency(data.credit_limit)}
-                      color="#111827"
-                    />
-                    <StatBox
-                      label="Disponible"
-                      value={formatCurrency(data.credit_available)}
-                      color="#16a34a"
-                    />
-                    <StatBox
-                      label="Usado"
-                      value={formatCurrency(data.credit_used)}
-                      color="#dc2626"
-                    />
-                  </View>
-
-                  <UsageBar used={data.credit_used} limit={data.credit_limit} />
-
-                  <Divider />
-
-                  <SectionTitle title="Plazo de pago" />
-                  <InfoRow
-                    label="Días de plazo"
-                    value={data.payment_term_days}
+                <View style={styles.statsRow}>
+                  <StatBox
+                    label="Límite"
+                    value={formatCurrency(data.credit_limit)}
+                    color="#111827"
                   />
-                  {hasDueDate && (
-                    <>
-                      <InfoRow
-                        label="Fecha límite"
-                        value={new Date(
-                          data.credit_due_date as string,
-                        ).toLocaleDateString("es-GT")}
+                  <StatBox
+                    label="Disponible"
+                    value={formatCurrency(data.credit_available)}
+                    color="#16a34a"
+                  />
+                  <StatBox
+                    label="Usado"
+                    value={formatCurrency(data.credit_used)}
+                    color="#dc2626"
+                  />
+                </View>
+
+                <UsageBar used={data.credit_used} limit={data.credit_limit} />
+
+                <Divider />
+
+                <SectionTitle title="Plazo de pago" />
+                <InfoRow
+                  label="Días de plazo"
+                  value={data.payment_term_days}
+                />
+                {hasDueDate && (
+                  <>
+                    <InfoRow
+                      label="Fecha límite"
+                      value={new Date(
+                        data.credit_due_date as string,
+                      ).toLocaleDateString("es-GT")}
+                    />
+                    <View style={{ marginTop: 6 }}>
+                      <DueDateBadge
+                        dueDate={data.credit_due_date as string}
                       />
-                      <View style={{ marginTop: 6 }}>
-                        <DueDateBadge
-                          dueDate={data.credit_due_date as string}
-                        />
-                      </View>
-                    </>
-                  )}
+                    </View>
+                  </>
+                )}
 
-                  <Divider />
+                <Divider />
 
-                  <SectionTitle title="Cliente" />
-                  <InfoRow label="Nombre" value={data.customer?.name} />
-                  <InfoRow
-                    label="Documento"
-                    value={
-                      data.customer
-                        ? `${data.customer.document_type} ${data.customer.document_number}`
-                        : "—"
-                    }
-                  />
-                  <InfoRow label="Teléfono" value={data.customer?.phone} />
-                  <InfoRow label="Email" value={data.customer?.email} />
+                <SectionTitle title="Cliente" />
+                <InfoRow label="Nombre" value={data.customer?.name} />
+                <InfoRow
+                  label="Documento"
+                  value={
+                    data.customer
+                      ? `${data.customer.document_type} ${data.customer.document_number}`
+                      : "—"
+                  }
+                />
+                <InfoRow label="Teléfono" value={data.customer?.phone} />
+                <InfoRow label="Email" value={data.customer?.email} />
 
-                  <Divider />
+                <Divider />
 
-                  <SectionTitle title="Registro" />
-                  <InfoRow
-                    label="Creado"
-                    value={new Date(data.created_at).toLocaleString("es-GT")}
-                  />
-                  <InfoRow
-                    label="Actualizado"
-                    value={new Date(data.update_at).toLocaleString("es-GT")}
-                  />
-                </>
-              )}
-            </DesktopScrollView>
+                <SectionTitle title="Registro" />
+                <InfoRow
+                  label="Creado"
+                  value={new Date(data.created_at).toLocaleString("es-GT")}
+                />
+                <InfoRow
+                  label="Actualizado"
+                  value={new Date(data.update_at).toLocaleString("es-GT")}
+                />
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 

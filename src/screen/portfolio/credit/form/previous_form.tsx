@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -101,128 +100,126 @@ export default function PreviousCreditForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
-            <Pressable
-              onPress={() => router.back()}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => router.back()}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                Adjuntar préstamo previo
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                Registra un préstamo/crédito existente y adjúntalo al usuario
+                correspondiente.
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  Adjuntar préstamo previo
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  Registra un préstamo/crédito existente y adjúntalo al usuario
-                  correspondiente.
-                </Text>
+              <VStack space="lg">
+                {/* Usuario al que se le adjunta el préstamo */}
+                <Controller
+                  control={control}
+                  name="user_id"
+                  rules={{ required: "Selecciona el usuario." }}
+                  render={({ field: { onChange, value } }) => (
+                    <AppSelect
+                      label="Usuario"
+                      placeholder="Selecciona un usuario"
+                      searchPlaceholder="Buscar por nombre..."
+                      options={users.map((u) => ({
+                        label: u.name,
+                        value: String(u.id),
+                      }))}
+                      value={value}
+                      onChange={onChange}
+                      isLoading={isLoadingUsers}
+                      errorMessage={errors.user_id?.message}
+                    />
+                  )}
+                />
 
-                <VStack space="lg">
-                  {/* Usuario al que se le adjunta el préstamo */}
-                  <Controller
-                    control={control}
-                    name="user_id"
-                    rules={{ required: "Selecciona el usuario." }}
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Usuario"
-                        placeholder="Selecciona un usuario"
-                        searchPlaceholder="Buscar por nombre..."
-                        options={users.map((u) => ({
-                          label: u.name,
-                          value: String(u.id),
-                        }))}
-                        value={value}
-                        onChange={onChange}
-                        isLoading={isLoadingUsers}
-                        errorMessage={errors.user_id?.message}
-                      />
+                {/* Monto */}
+                <Controller
+                  control={control}
+                  name="amount"
+                  rules={{
+                    required: "El monto es obligatorio.",
+                    validate: (v) =>
+                      (Number.isFinite(parseFloat(v)) && parseFloat(v) > 0) ||
+                      "Ingresa un monto válido mayor a 0.",
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Monto"
+                      placeholder="Ej. 100.00"
+                      value={value}
+                      onChangeText={(text) =>
+                        onChange(text.replace(/[^0-9.]/g, ""))
+                      }
+                      onBlur={onBlur}
+                      keyboardType="decimal-pad"
+                      errorMessage={errors.amount?.message}
+                    />
+                  )}
+                />
+
+                {/* Descripción */}
+                <Controller
+                  control={control}
+                  name="description"
+                  rules={{ required: "La descripción es obligatoria." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Descripción"
+                      placeholder="Ej. Corrección de abono ingresado por error"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      multiline
+                      textareaHeight={100}
+                      errorMessage={errors.description?.message}
+                    />
+                  )}
+                />
+
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => router.back()}
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <ButtonText>Guardar</ButtonText>
                     )}
-                  />
-
-                  {/* Monto */}
-                  <Controller
-                    control={control}
-                    name="amount"
-                    rules={{
-                      required: "El monto es obligatorio.",
-                      validate: (v) =>
-                        (Number.isFinite(parseFloat(v)) && parseFloat(v) > 0) ||
-                        "Ingresa un monto válido mayor a 0.",
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Monto"
-                        placeholder="Ej. 100.00"
-                        value={value}
-                        onChangeText={(text) =>
-                          onChange(text.replace(/[^0-9.]/g, ""))
-                        }
-                        onBlur={onBlur}
-                        keyboardType="decimal-pad"
-                        errorMessage={errors.amount?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Descripción */}
-                  <Controller
-                    control={control}
-                    name="description"
-                    rules={{ required: "La descripción es obligatoria." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Descripción"
-                        placeholder="Ej. Corrección de abono ingresado por error"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        multiline
-                        textareaHeight={100}
-                        errorMessage={errors.description?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => router.back()}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
-                    >
-                      {isPending ? (
-                        <ActivityIndicator color="#fff" />
-                      ) : (
-                        <ButtonText>Guardar</ButtonText>
-                      )}
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

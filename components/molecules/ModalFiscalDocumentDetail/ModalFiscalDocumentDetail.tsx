@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
@@ -80,118 +79,116 @@ export const ModalFiscalDocumentDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <DesktopScrollView>
-              {data && (
-                <>
-                  <SectionTitle title="Totales" />
-                  <View style={styles.statsRow}>
-                    <View style={styles.statBox}>
-                      <Text style={styles.statLabel}>Subtotal</Text>
-                      <Text style={styles.statValue}>
-                        {formatCurrency(data.subtotal)}
-                      </Text>
-                    </View>
-                    <View style={styles.statBox}>
-                      <Text style={styles.statLabel}>IVA</Text>
-                      <Text style={styles.statValue}>
-                        {formatCurrency(data.iva)}
-                      </Text>
-                    </View>
-                    <View style={styles.statBox}>
-                      <Text style={styles.statLabel}>Total</Text>
-                      <Text style={[styles.statValue, { color: "#16a34a" }]}>
-                        {formatCurrency(data.total)}
-                      </Text>
-                    </View>
+            {data && (
+              <>
+                <SectionTitle title="Totales" />
+                <View style={styles.statsRow}>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>Subtotal</Text>
+                    <Text style={styles.statValue}>
+                      {formatCurrency(data.subtotal)}
+                    </Text>
                   </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>IVA</Text>
+                    <Text style={styles.statValue}>
+                      {formatCurrency(data.iva)}
+                    </Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>Total</Text>
+                    <Text style={[styles.statValue, { color: "#16a34a" }]}>
+                      {formatCurrency(data.total)}
+                    </Text>
+                  </View>
+                </View>
 
-                  <Divider />
+                <Divider />
 
-                  <SectionTitle title="Cliente" />
-                  <InfoRow label="Nombre" value={data.customer_name} />
-                  <InfoRow label="NIT" value={data.customer_nit} />
+                <SectionTitle title="Cliente" />
+                <InfoRow label="Nombre" value={data.customer_name} />
+                <InfoRow label="NIT" value={data.customer_nit} />
 
-                  <Divider />
+                <Divider />
 
-                  <SectionTitle title="Documento" />
-                  <InfoRow label="Serie" value={data.series} />
-                  <InfoRow label="Número" value={data.number} />
-                  <InfoRow label="Orden asociada" value={data.order_id} />
+                <SectionTitle title="Documento" />
+                <InfoRow label="Serie" value={data.series} />
+                <InfoRow label="Número" value={data.number} />
+                <InfoRow label="Orden asociada" value={data.order_id} />
+                <InfoRow
+                  label="Emitido"
+                  value={new Date(data.issued_at).toLocaleString("es-GT")}
+                />
+                {data.document_status === "voided" && (
                   <InfoRow
-                    label="Emitido"
-                    value={new Date(data.issued_at).toLocaleString("es-GT")}
+                    label="Anulado"
+                    value={
+                      data.voided_at
+                        ? new Date(data.voided_at).toLocaleString("es-GT")
+                        : "—"
+                    }
                   />
-                  {data.document_status === "voided" && (
-                    <InfoRow
-                      label="Anulado"
-                      value={
-                        data.voided_at
-                          ? new Date(data.voided_at).toLocaleString("es-GT")
-                          : "—"
-                      }
-                    />
-                  )}
-                  <InfoRow
-                    label="Registro activo"
-                    value={data.status ? "Sí" : "No"}
-                  />
+                )}
+                <InfoRow
+                  label="Registro activo"
+                  value={data.status ? "Sí" : "No"}
+                />
 
-                  <Divider />
+                <Divider />
 
-                  <SectionTitle title="Emisión" />
-                  <InfoRow label="Sucursal" value={data.branch_name || "—"} />
-                  <InfoRow label="Emitido por" value={userFullName} />
+                <SectionTitle title="Emisión" />
+                <InfoRow label="Sucursal" value={data.branch_name || "—"} />
+                <InfoRow label="Emitido por" value={userFullName} />
 
-                  {data.items && data.items.length > 0 && (
-                    <>
-                      <Divider />
+                {data.items && data.items.length > 0 && (
+                  <>
+                    <Divider />
 
-                      <SectionTitle title={`Ítems (${data.items.length})`} />
-                      {data.items.map((item, index) => (
-                        <View
-                          key={`${item.product_id}-${index}`}
-                          style={[
-                            styles.itemRow,
-                            index === data.items!.length - 1 && {
-                              borderBottomWidth: 0,
-                            },
-                          ]}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.itemName}>
-                              {item.product_name}
-                              {item.variant_name
-                                ? ` · ${item.variant_name}`
-                                : ""}
-                            </Text>
-                            {item.category_name && (
-                              <Text style={styles.itemCategory}>
-                                {item.category_name}
-                              </Text>
-                            )}
-                            <Text style={styles.itemMeta}>
-                              {item.quantity} x{" "}
-                              {formatCurrency(item.unit_price)}
-                            </Text>
-                            {item.discount > 0 && (
-                              <Text style={styles.itemDiscount}>
-                                Descuento: -{formatCurrency(item.discount)}
-                              </Text>
-                            )}
-                            {item.notes && (
-                              <Text style={styles.itemNotes}>{item.notes}</Text>
-                            )}
-                          </View>
-                          <Text style={styles.itemTotal}>
-                            {formatCurrency(item.subtotal)}
+                    <SectionTitle title={`Ítems (${data.items.length})`} />
+                    {data.items.map((item, index) => (
+                      <View
+                        key={`${item.product_id}-${index}`}
+                        style={[
+                          styles.itemRow,
+                          index === data.items!.length - 1 && {
+                            borderBottomWidth: 0,
+                          },
+                        ]}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.itemName}>
+                            {item.product_name}
+                            {item.variant_name
+                              ? ` · ${item.variant_name}`
+                              : ""}
                           </Text>
+                          {item.category_name && (
+                            <Text style={styles.itemCategory}>
+                              {item.category_name}
+                            </Text>
+                          )}
+                          <Text style={styles.itemMeta}>
+                            {item.quantity} x{" "}
+                            {formatCurrency(item.unit_price)}
+                          </Text>
+                          {item.discount > 0 && (
+                            <Text style={styles.itemDiscount}>
+                              Descuento: -{formatCurrency(item.discount)}
+                            </Text>
+                          )}
+                          {item.notes && (
+                            <Text style={styles.itemNotes}>{item.notes}</Text>
+                          )}
                         </View>
-                      ))}
-                    </>
-                  )}
-                </>
-              )}
-            </DesktopScrollView>
+                        <Text style={styles.itemTotal}>
+                          {formatCurrency(item.subtotal)}
+                        </Text>
+                      </View>
+                    ))}
+                  </>
+                )}
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 

@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -145,209 +144,207 @@ export default function CustomerCreditForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
-            <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Crédito" : "Asignar Crédito"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica las condiciones de crédito del cliente"
+                  : "Asigna condiciones de crédito a un cliente"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Crédito" : "Asignar Crédito"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica las condiciones de crédito del cliente"
-                    : "Asigna condiciones de crédito a un cliente"}
-                </Text>
+              <VStack space="lg">
+                {/* Cliente */}
+                <Controller
+                  control={control}
+                  name="customer_id"
+                  rules={{ required: "El cliente es obligatorio." }}
+                  render={({ field: { onChange, value } }) => (
+                    <AppSelect
+                      label="Cliente"
+                      placeholder="Selecciona un cliente"
+                      searchPlaceholder="Buscar por nombre..."
+                      options={customerOptions}
+                      value={value}
+                      onChange={onChange}
+                      isDisabled={isEdit}
+                      isLoading={isLoadingCustomerOptions}
+                      errorMessage={errors.customer_id?.message}
+                    />
+                  )}
+                />
 
-                <VStack space="lg">
-                  {/* Cliente */}
-                  <Controller
-                    control={control}
-                    name="customer_id"
-                    rules={{ required: "El cliente es obligatorio." }}
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Cliente"
-                        placeholder="Selecciona un cliente"
-                        searchPlaceholder="Buscar por nombre..."
-                        options={customerOptions}
-                        value={value}
-                        onChange={onChange}
-                        isDisabled={isEdit}
-                        isLoading={isLoadingCustomerOptions}
-                        errorMessage={errors.customer_id?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Tiene crédito */}
-                  {/* <Controller
-                    control={control}
-                    name="has_credit"
-                    render={({ field: { onChange, value } }) => (
-                      <FormControl>
-                        <HStack
-                          style={{
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <FormControlLabelText style={{ color: "#000" }}>
-                            Habilitar crédito
-                          </FormControlLabelText>
-                          <Switch value={value} onValueChange={onChange} />
-                        </HStack>
-                      </FormControl>
-                    )}
-                  /> */}
-
-                  {/* Límite + Plazo */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="credit_limit"
-                        rules={{
-                          required: "El límite de crédito es obligatorio.",
-                          validate: (v) =>
-                            !isNaN(parseFloat(v)) ||
-                            "Debe ser un número válido.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Límite de crédito (Q)"
-                            placeholder="Ej. 500"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                            editable={hasCreditValue}
-                            errorMessage={errors.credit_limit?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="payment_term_days"
-                        rules={{
-                          required: "El plazo de pago es obligatorio.",
-                          validate: (v) =>
-                            !isNaN(parseInt(v)) || "Debe ser un número entero.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Plazo de pago (días)"
-                            placeholder="Ej. 30"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                            editable={hasCreditValue}
-                            errorMessage={errors.payment_term_days?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Info de solo lectura al editar: disponible / usado los calcula el servidor */}
-                  {isEdit && data && (
-                    <View style={styles.readonlyBox}>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: "#6b7280",
-                          marginBottom: 4,
-                        }}
-                      >
-                        Calculado por el sistema (no editable aquí)
-                      </Text>
-                      <HStack style={{ justifyContent: "space-between" }}>
-                        <Text style={{ fontSize: 13, color: "#111827" }}>
-                          Disponible
-                        </Text>
-                        <Text
-                          style={{
-                            fontSize: 13,
-                            color: "#16a34a",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {formatCurrency(data.credit_available)}
-                        </Text>
-                      </HStack>
+                {/* Tiene crédito */}
+                {/* <Controller
+                  control={control}
+                  name="has_credit"
+                  render={({ field: { onChange, value } }) => (
+                    <FormControl>
                       <HStack
                         style={{
                           justifyContent: "space-between",
-                          marginTop: 4,
+                          alignItems: "center",
                         }}
                       >
-                        <Text style={{ fontSize: 13, color: "#111827" }}>
-                          Usado
-                        </Text>
-                        <Text
-                          style={{
-                            fontSize: 13,
-                            color: "#dc2626",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {formatCurrency(data.credit_used)}
-                        </Text>
+                        <FormControlLabelText style={{ color: "#000" }}>
+                          Habilitar crédito
+                        </FormControlLabelText>
+                        <Switch value={value} onValueChange={onChange} />
                       </HStack>
-                    </View>
+                    </FormControl>
                   )}
+                /> */}
 
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
+                {/* Límite + Plazo */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="credit_limit"
+                      rules={{
+                        required: "El límite de crédito es obligatorio.",
+                        validate: (v) =>
+                          !isNaN(parseFloat(v)) ||
+                          "Debe ser un número válido.",
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Límite de crédito (Q)"
+                          placeholder="Ej. 500"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="decimal-pad"
+                          editable={hasCreditValue}
+                          errorMessage={errors.credit_limit?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="payment_term_days"
+                      rules={{
+                        required: "El plazo de pago es obligatorio.",
+                        validate: (v) =>
+                          !isNaN(parseInt(v)) || "Debe ser un número entero.",
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Plazo de pago (días)"
+                          placeholder="Ej. 30"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="number-pad"
+                          editable={hasCreditValue}
+                          errorMessage={errors.payment_term_days?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Info de solo lectura al editar: disponible / usado los calcula el servidor */}
+                {isEdit && data && (
+                  <View style={styles.readonlyBox}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#6b7280",
+                        marginBottom: 4,
                       }}
                     >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
+                      Calculado por el sistema (no editable aquí)
+                    </Text>
+                    <HStack style={{ justifyContent: "space-between" }}>
+                      <Text style={{ fontSize: 13, color: "#111827" }}>
+                        Disponible
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: "#16a34a",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {formatCurrency(data.credit_available)}
+                      </Text>
+                    </HStack>
+                    <HStack
+                      style={{
+                        justifyContent: "space-between",
+                        marginTop: 4,
+                      }}
                     >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                      <Text style={{ fontSize: 13, color: "#111827" }}>
+                        Usado
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: "#dc2626",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {formatCurrency(data.credit_used)}
+                      </Text>
+                    </HStack>
+                  </View>
+                )}
+
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isPending}
+                  >
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

@@ -6,6 +6,7 @@ import { useInventoryStock } from "@/src/hooks/useInventoryStock/useInventorySto
 import { InventoryStockDetail } from "@/src/types/inventory_stock/inventory_stock.types";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MOVEMENT_LABELS: Record<string, string> = {
   entry: "Entrada",
@@ -94,33 +95,35 @@ export const InventoryStock: React.FC = () => {
   if (isLoading) return <TableSkeleton />;
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomTable<InventoryStockDetail>
-        columns={columns}
-        data={stockData || []}
-        keyExtractor={(row) => row.id}
-        itemsPerPage={5}
-        onRowPress={hadleModal}
-        getSearchableText={(row) =>
-          [
-            row.product?.name,
-            row.product?.modifier_name,
-            row.product?.sku,
-            row.warehouse?.name,
-            row.reference_number,
-            row.reason,
-            row.batch?.batch_number,
-          ]
-            .filter(Boolean)
-            .join(" ")
-        }
-      />
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <CustomTable<InventoryStockDetail>
+          columns={columns}
+          data={stockData || []}
+          keyExtractor={(row) => row.id}
+          itemsPerPage={5}
+          onRowPress={hadleModal}
+          getSearchableText={(row) =>
+            [
+              row.product?.name,
+              row.product?.modifier_name,
+              row.product?.sku,
+              row.warehouse?.name,
+              row.reference_number,
+              row.reason,
+              row.batch?.batch_number,
+            ]
+              .filter(Boolean)
+              .join(" ")
+          }
+        />
 
-      <ModalInventoryStockDetail
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        data={modal}
-      />
-    </View>
+        <ModalInventoryStockDetail
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          data={modal}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

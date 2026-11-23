@@ -1,5 +1,4 @@
 import { Buttons } from "@/components";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import {
   EntryDetail,
   ModalEntryDetail,
@@ -13,6 +12,7 @@ import { router } from "expo-router";
 import { ClipboardEdit, PackagePlus } from "lucide-react-native";
 import React, { useState } from "react";
 import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const Entry_stock = () => {
   const { data: entries, isLoading } = useEntryStock();
@@ -55,8 +55,8 @@ export const Entry_stock = () => {
   if (isLoading) return null;
 
   return (
-    <ScrollView style={{ flex: 1, margin: isDesktopWeb ? 20 : 0 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1, margin: isDesktopWeb ? 20 : 0 }}>
         <StockEntryTable
           data={entries || []}
           itemsPerPage={8}
@@ -70,7 +70,7 @@ export const Entry_stock = () => {
           data={modalData}
           onViewDetail={handleViewDetail}
         />
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

@@ -13,6 +13,7 @@ import { SupplierDetail } from "@/src/types/supplier/supplier.types";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const Supplier: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -81,26 +82,28 @@ export const Supplier: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomTable<SupplierDetail>
-        columns={columns}
-        data={supplier || []}
-        keyExtractor={(row) => row.id ?? 0}
-        actions={actions}
-        itemsPerPage={5}
-        button={dataButton}
-        onRowPress={hadleModalData}
-      />
-      <ModalSupplierDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <CustomTable<SupplierDetail>
+          columns={columns}
+          data={supplier || []}
+          keyExtractor={(row) => row.id ?? 0}
+          actions={actions}
+          itemsPerPage={5}
+          button={dataButton}
+          onRowPress={hadleModalData}
+        />
+        <ModalSupplierDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

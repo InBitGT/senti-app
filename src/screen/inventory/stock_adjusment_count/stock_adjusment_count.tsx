@@ -16,6 +16,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface WarehouseOption {
   id: number;
@@ -127,29 +128,31 @@ export const StockAdjustmentCountScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <WarehouseSelect
-        options={warehouseOptions}
-        selectedValue={selectedWarehouseId}
-        onValueChange={setSelectedWarehouseId}
-      />
-      <StockAdjustmentsTable
-        data={adjustments || []}
-        itemsPerPage={5}
-        onRowPress={handleRowPress}
-        statusFilter={selectedStatus}
-        onStatusFilterChange={setSelectedStatus}
-      />
-      <ModalStockAdjustmentDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        isApproving={approve.isPending && pendingAction === "approve"}
-        isRejecting={approve.isPending && pendingAction === "reject"}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <WarehouseSelect
+          options={warehouseOptions}
+          selectedValue={selectedWarehouseId}
+          onValueChange={setSelectedWarehouseId}
+        />
+        <StockAdjustmentsTable
+          data={adjustments || []}
+          itemsPerPage={5}
+          onRowPress={handleRowPress}
+          statusFilter={selectedStatus}
+          onStatusFilterChange={setSelectedStatus}
+        />
+        <ModalStockAdjustmentDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          isApproving={approve.isPending && pendingAction === "approve"}
+          isRejecting={approve.isPending && pendingAction === "reject"}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 

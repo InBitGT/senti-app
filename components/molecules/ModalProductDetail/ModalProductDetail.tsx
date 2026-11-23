@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
@@ -104,45 +103,43 @@ export const ModalProductDetail: React.FC<Props> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1 }}
           >
-            <DesktopScrollView>
-              <SectionTitle title="General" />
-              <InfoRow label="Descripción" value={data?.description} />
-              <InfoRow label="Marca" value={data?.brand} />
-              <InfoRow label="Código de barras" value={data?.barcode} />
-              <InfoRow label="Unidad de medida" value={data?.unit_of_measure} />
-              <InfoRow
-                label="Costo promedio"
-                value={`Q ${data?.average_cost?.toFixed(2)}`}
-              />
-              <InfoRow label="Requiere lote" value={data?.requires_batch} />
+            <SectionTitle title="General" />
+            <InfoRow label="Descripción" value={data?.description} />
+            <InfoRow label="Marca" value={data?.brand} />
+            <InfoRow label="Código de barras" value={data?.barcode} />
+            <InfoRow label="Unidad de medida" value={data?.unit_of_measure} />
+            <InfoRow
+              label="Costo promedio"
+              value={`Q ${data?.average_cost?.toFixed(2)}`}
+            />
+            <InfoRow label="Requiere lote" value={data?.requires_batch} />
 
-              {data?.is_modifier && (
-                <>
-                  <Divider />
-                  <SectionTitle title="Modificador" />
-                  <InfoRow label="Es modificador" value={data?.is_modifier} />
-                  <InfoRow label="Grupo" value={data?.modifier_group} />
-                  <InfoRow label="Nombre" value={data?.modifier_name} />
-                  <InfoRow label="Cantidad" value={data?.modifier_quantity} />
-                  <InfoRow
-                    label="Selec. mínima"
-                    value={data?.modifier_min_selection}
-                  />
-                  <InfoRow
-                    label="Selec. máxima"
-                    value={data?.modifier_max_selection}
-                  />
-                  <InfoRow
-                    label="Ajuste de precio"
-                    value={`Q ${data?.modifier_price_adjustment?.toFixed(2)}`}
-                  />
-                  <InfoRow
-                    label="Por defecto"
-                    value={data?.modifier_is_default}
-                  />
-                </>
-              )}
-            </DesktopScrollView>
+            {data?.is_modifier && (
+              <>
+                <Divider />
+                <SectionTitle title="Modificador" />
+                <InfoRow label="Es modificador" value={data?.is_modifier} />
+                <InfoRow label="Grupo" value={data?.modifier_group} />
+                <InfoRow label="Nombre" value={data?.modifier_name} />
+                <InfoRow label="Cantidad" value={data?.modifier_quantity} />
+                <InfoRow
+                  label="Selec. mínima"
+                  value={data?.modifier_min_selection}
+                />
+                <InfoRow
+                  label="Selec. máxima"
+                  value={data?.modifier_max_selection}
+                />
+                <InfoRow
+                  label="Ajuste de precio"
+                  value={`Q ${data?.modifier_price_adjustment?.toFixed(2)}`}
+                />
+                <InfoRow
+                  label="Por defecto"
+                  value={data?.modifier_is_default}
+                />
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 

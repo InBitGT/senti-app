@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalMovementDetail } from "@/components/molecules/ModalMovementDetail/ModalMovementDetail";
 import { MovementsTable } from "@/components/templates/MovementsTable/MovementsTable";
@@ -6,6 +5,7 @@ import { useMovement } from "@/src/hooks/useMovement/useMovement";
 import { InventoryMovement } from "@/src/types/movement/movement.types";
 import { useState } from "react";
 import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function InventoryMovementsScreen() {
   const [selected, setSelected] = useState<InventoryMovement | null>(null);
@@ -15,8 +15,8 @@ export default function InventoryMovementsScreen() {
   if (isLoading) return <TableSkeleton />;
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1 }}>
         <MovementsTable
           data={movement || []}
           itemsPerPage={8}
@@ -30,7 +30,7 @@ export default function InventoryMovementsScreen() {
           onClose={() => setSelected(null)}
           data={selected ?? undefined}
         />
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

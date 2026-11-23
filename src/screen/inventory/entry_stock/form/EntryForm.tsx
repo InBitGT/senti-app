@@ -61,7 +61,7 @@ import {
 
 // Ingrediente todavía no se ofrece en el ingreso de inventario.
 // Cambiar a true para volver a mostrarlo.
-const SHOW_INGREDIENT_OPTION = false;
+const SHOW_INGREDIENT_OPTION = true;
 
 const PRODUCT_TYPE_OPTIONS = STOCK_PRODUCT_TYPE_OPTIONS.filter(
   (option) => SHOW_INGREDIENT_OPTION || option.value !== "ingredient",

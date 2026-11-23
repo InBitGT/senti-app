@@ -8,6 +8,7 @@ import { CustomerType as CustomerTypeModel } from "@/src/types/customer_type/cus
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MAX_CUSTOMER_TYPES = 5;
 
@@ -70,24 +71,26 @@ export const CustomerType: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomerTypesTable
-        data={customerTypes || []}
-        itemsPerPage={5}
-        onNewCustomerType={canCreate ? handleCreate : undefined}
-        onRowPress={hadleModalData}
-        actions={actions}
-      />
-      <ModalCustomerTypeDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <CustomerTypesTable
+          data={customerTypes || []}
+          itemsPerPage={5}
+          onNewCustomerType={canCreate ? handleCreate : undefined}
+          onRowPress={hadleModalData}
+          actions={actions}
+        />
+        <ModalCustomerTypeDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

@@ -1,5 +1,4 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { EmptyHint } from "@/components/atom/EmptyHint/EmptyHint";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
@@ -59,24 +58,22 @@ export function RecipeCartSidePanel({
         </View>
       ) : (
         <ScrollView className="flex-1 px-4 pt-3">
-          <DesktopScrollView>
-            <VStack space="md">
-              {cart.map((line, index) => (
-                <RecipeCartLineRow
-                  key={`${line.product.product_id}-${index}`}
-                  line={line}
-                  index={index}
-                  maxQuantity={maxQuantities[index] ?? 0}
-                  unitPrice={lineUnitPrices[index] ?? 0}
-                  total={lineTotals[index] ?? 0}
-                  isWholesale={lineIsWholesale[index] ?? false}
-                  onStepLine={onStepLine}
-                  onSetQty={onSetQty}
-                  onRemoveLine={onRemoveLine}
-                />
-              ))}
-            </VStack>
-          </DesktopScrollView>
+          <VStack space="md">
+            {cart.map((line, index) => (
+              <RecipeCartLineRow
+                key={`${line.product.product_id}-${index}`}
+                line={line}
+                index={index}
+                maxQuantity={maxQuantities[index] ?? 0}
+                unitPrice={lineUnitPrices[index] ?? 0}
+                total={lineTotals[index] ?? 0}
+                isWholesale={lineIsWholesale[index] ?? false}
+                onStepLine={onStepLine}
+                onSetQty={onSetQty}
+                onRemoveLine={onRemoveLine}
+              />
+            ))}
+          </VStack>
         </ScrollView>
       )}
 

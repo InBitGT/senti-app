@@ -4,7 +4,6 @@ import {
   AppSelect,
   AppSelectOption,
 } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { RecipeIngredientsFieldArray } from "@/components/molecules/RecipeIngredientsFieldArray/RecipeIngredientsFieldArray";
 import { RecipeModifiersSelector } from "@/components/molecules/RecipeModifiersSelector/RecipeModifiersSelector";
 import { RecipeVariantsFieldArray } from "@/components/molecules/RecipeVariantsFieldArray/RecipeVariantsFieldArray";
@@ -240,305 +239,299 @@ export default function RecipeForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView useWindowHeight>
-            <Pressable onPress={handleBack} style={styles.backButton}>
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+          <Pressable onPress={handleBack} style={styles.backButton}>
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Receta" : "Nueva Receta"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar la receta"
+                  : "Llena los campos para crear una receta"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Receta" : "Nueva Receta"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar la receta"
-                    : "Llena los campos para crear una receta"}
-                </Text>
+              <VStack space="lg">
+                {/* ---------- Información general ---------- */}
+                <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
 
-                <VStack space="lg">
-                  {/* ---------- Información general ---------- */}
-                  <Text style={styles.sectionLabel}>INFORMACIÓN GENERAL</Text>
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="name"
-                        rules={{ required: "El nombre es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Nombre"
-                            placeholder="Ej. Hamburguesa clásica"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="sku"
-                        rules={{ required: "El SKU es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="SKU"
-                            placeholder="Ej. REC-001"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.toUpperCase())
-                            }
-                            onBlur={onBlur}
-                            autoCapitalize="characters"
-                            errorMessage={errors.sku?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  <Controller
-                    control={control}
-                    name="description"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Descripción (opcional)"
-                        placeholder="Ej. Pan, carne, queso y vegetales"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        multiline
-                        textareaHeight={80}
-                      />
-                    )}
-                  />
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="category_root_id"
-                        rules={{ required: "La categoría es obligatoria." }}
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Categoría"
-                            placeholder="Selecciona categoría"
-                            searchable={rootCategoryOptions.length > 6}
-                            options={rootCategoryOptions}
-                            value={value}
-                            onChange={(selected: string) => {
-                              onChange(selected);
-                              setValue("subcategory_id", "");
-                            }}
-                            errorMessage={errors.category_root_id?.message}
-                          />
-                        )}
-                      />
-                    </View>
-
-                    {subcategoryOptions.length > 0 && (
-                      <View style={half}>
-                        <Controller
-                          control={control}
-                          name="subcategory_id"
-                          render={({ field: { onChange, value } }) => (
-                            <AppSelect
-                              label="Subcategoría (opcional)"
-                              placeholder="Selecciona subcategoría"
-                              searchable={subcategoryOptions.length > 6}
-                              options={subcategoryOptions}
-                              value={value}
-                              onChange={onChange}
-                            />
-                          )}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="name"
+                      rules={{ required: "El nombre es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Nombre"
+                          placeholder="Ej. Hamburguesa clásica"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.name?.message}
                         />
-                      </View>
-                    )}
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="sku"
+                      rules={{ required: "El SKU es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="SKU"
+                          placeholder="Ej. REC-001"
+                          value={value}
+                          onChangeText={(text) => onChange(text.toUpperCase())}
+                          onBlur={onBlur}
+                          autoCapitalize="characters"
+                          errorMessage={errors.sku?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Descripción (opcional)"
+                      placeholder="Ej. Pan, carne, queso y vegetales"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      multiline
+                      textareaHeight={80}
+                    />
+                  )}
+                />
+
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="category_root_id"
+                      rules={{ required: "La categoría es obligatoria." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Categoría"
+                          placeholder="Selecciona categoría"
+                          searchable={rootCategoryOptions.length > 6}
+                          options={rootCategoryOptions}
+                          value={value}
+                          onChange={(selected: string) => {
+                            onChange(selected);
+                            setValue("subcategory_id", "");
+                          }}
+                          errorMessage={errors.category_root_id?.message}
+                        />
+                      )}
+                    />
                   </View>
 
-                  <View style={row}>
+                  {subcategoryOptions.length > 0 && (
                     <View style={half}>
                       <Controller
                         control={control}
-                        name="availability_status"
+                        name="subcategory_id"
                         render={({ field: { onChange, value } }) => (
                           <AppSelect
-                            label="Disponibilidad"
-                            placeholder="Selecciona una opción"
-                            searchable={false}
-                            options={RECIPE_AVAILABILITY_OPTIONS}
+                            label="Subcategoría (opcional)"
+                            placeholder="Selecciona subcategoría"
+                            searchable={subcategoryOptions.length > 6}
+                            options={subcategoryOptions}
                             value={value}
-                            onChange={(selected: string) => {
-                              if (isRecipeAvailabilityStatus(selected)) {
-                                onChange(selected);
-                              }
-                            }}
+                            onChange={onChange}
                           />
                         )}
                       />
                     </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="barcode"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Código de barras (opcional)"
-                            placeholder="Ej. 7401234567890"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                          />
-                        )}
-                      />
-                    </View>
+                  )}
+                </View>
+
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="availability_status"
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Disponibilidad"
+                          placeholder="Selecciona una opción"
+                          searchable={false}
+                          options={RECIPE_AVAILABILITY_OPTIONS}
+                          value={value}
+                          onChange={(selected: string) => {
+                            if (isRecipeAvailabilityStatus(selected)) {
+                              onChange(selected);
+                            }
+                          }}
+                        />
+                      )}
+                    />
                   </View>
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="recipe_version"
-                        rules={{
-                          validate: (value: string) =>
-                            value.trim().length === 0 || validateInteger(value),
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Versión de la receta (opcional)"
-                            placeholder="Ej. 1"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                            errorMessage={errors.recipe_version?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    {isLarge && <View style={half} />}
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="barcode"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Código de barras (opcional)"
+                          placeholder="Ej. 7401234567890"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                        />
+                      )}
+                    />
                   </View>
+                </View>
 
-                  {/* ---------- Ingredientes ---------- */}
-                  <Divider className="my-2" />
-                  <RecipeIngredientsFieldArray
-                    title="INGREDIENTES"
-                    control={control}
-                    errors={errors}
-                    ingredientOptions={ingredientOptions}
-                    ingredientUnits={ingredientUnits}
-                    variantOptions={variantOptions}
-                  />
-
-                  {/* ---------- Costo y precio ---------- */}
-                  <Divider className="my-2" />
-                  <Text style={styles.sectionLabel}>COSTO Y PRECIO</Text>
-
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="average_cost"
-                        rules={{
-                          required: "El costo es obligatorio.",
-                          validate: validateDecimal,
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Costo promedio"
-                            placeholder="Ej. 15.00"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                            errorMessage={errors.average_cost?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="price_amount"
-                        rules={{
-                          required: "El precio es obligatorio.",
-                          validate: validateDecimal,
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Precio de venta"
-                            placeholder="Ej. 45.00"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="decimal-pad"
-                            errorMessage={errors.price_amount?.message}
-                          />
-                        )}
-                      />
-                    </View>
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="recipe_version"
+                      rules={{
+                        validate: (value: string) =>
+                          value.trim().length === 0 || validateInteger(value),
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Versión de la receta (opcional)"
+                          placeholder="Ej. 1"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="number-pad"
+                          errorMessage={errors.recipe_version?.message}
+                        />
+                      )}
+                    />
                   </View>
+                  {isLarge && <View style={half} />}
+                </View>
 
-                  {/* ---------- Variantes ---------- */}
-                  <Divider className="my-2" />
-                  <RecipeVariantsFieldArray
-                    title="VARIANTES"
-                    control={control}
-                    errors={errors}
-                  />
+                {/* ---------- Ingredientes ---------- */}
+                <Divider className="my-2" />
+                <RecipeIngredientsFieldArray
+                  title="INGREDIENTES"
+                  control={control}
+                  errors={errors}
+                  ingredientOptions={ingredientOptions}
+                  ingredientUnits={ingredientUnits}
+                  variantOptions={variantOptions}
+                />
 
-                  {/* ---------- Modificadores ---------- */}
-                  <Divider className="my-2" />
-                  <Text style={styles.sectionLabel}>MODIFICADORES</Text>
-                  <Controller
-                    control={control}
-                    name="product_modifier_ids"
-                    render={({ field: { onChange, value } }) => (
-                      <RecipeModifiersSelector
-                        options={modifierOptions}
-                        value={value}
-                        onChange={onChange}
-                      />
-                    )}
-                  />
+                {/* ---------- Costo y precio ---------- */}
+                <Divider className="my-2" />
+                <Text style={styles.sectionLabel}>COSTO Y PRECIO</Text>
 
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="average_cost"
+                      rules={{
+                        required: "El costo es obligatorio.",
+                        validate: validateDecimal,
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Costo promedio"
+                          placeholder="Ej. 15.00"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="decimal-pad"
+                          errorMessage={errors.average_cost?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="price_amount"
+                      rules={{
+                        required: "El precio es obligatorio.",
+                        validate: validateDecimal,
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Precio de venta"
+                          placeholder="Ej. 45.00"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="decimal-pad"
+                          errorMessage={errors.price_amount?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* ---------- Variantes ---------- */}
+                <Divider className="my-2" />
+                <RecipeVariantsFieldArray
+                  title="VARIANTES"
+                  control={control}
+                  errors={errors}
+                />
+
+                {/* ---------- Modificadores ---------- */}
+                <Divider className="my-2" />
+                <Text style={styles.sectionLabel}>MODIFICADORES</Text>
+                <Controller
+                  control={control}
+                  name="product_modifier_ids"
+                  render={({ field: { onChange, value } }) => (
+                    <RecipeModifiersSelector
+                      options={modifierOptions}
+                      value={value}
+                      onChange={onChange}
+                    />
+                  )}
+                />
+
+                <View style={[styles.actions, isLarge && styles.actionsLarge]}>
                   <View
-                    style={[styles.actions, isLarge && styles.actionsLarge]}
+                    style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
                   >
-                    <View
-                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
-                    >
-                      <AppButton
-                        label="Cancelar"
-                        variant="black"
-                        outline
-                        onPress={handleBack}
-                      />
-                    </View>
-                    <View
-                      style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
-                    >
-                      <AppButton
-                        label="Guardar"
-                        variant="black"
-                        isLoading={isPending}
-                        onPress={handleSubmit(onSubmit)}
-                      />
-                    </View>
+                    <AppButton
+                      label="Cancelar"
+                      variant="black"
+                      outline
+                      onPress={handleBack}
+                    />
                   </View>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                  <View
+                    style={isLarge ? styles.actionBtnLarge : styles.actionBtn}
+                  >
+                    <AppButton
+                      label="Guardar"
+                      variant="black"
+                      isLoading={isPending}
+                      onPress={handleSubmit(onSubmit)}
+                    />
+                  </View>
+                </View>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

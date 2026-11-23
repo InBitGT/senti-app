@@ -1,5 +1,4 @@
 import { Badge } from "@/components/atom/Badge/Badge";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
@@ -104,58 +103,56 @@ export const ModalWarehouseDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <DesktopScrollView>
-              <SectionTitle title="Información generalu" />
-              <InfoRow label="Código" value={data?.code ?? "—"} />
-              <InfoRow label="Nombre" value={data?.name} />
-              <InfoRow label="Tipo" value={data?.type} />
-              <InfoRow label="Descripción" value={data?.description} />
+            <SectionTitle title="Información generalu" />
+            <InfoRow label="Código" value={data?.code ?? "—"} />
+            <InfoRow label="Nombre" value={data?.name} />
+            <InfoRow label="Tipo" value={data?.type} />
+            <InfoRow label="Descripción" value={data?.description} />
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Sucursal" />
-              <InfoRow label="Nombre" value={data?.branch?.name} />
-              <InfoRow label="Descripción" value={data?.branch?.description} />
-              {data?.branch?.address && (
-                <InfoRow
-                  label="Dirección"
-                  value={[
-                    data.branch.address.line1,
-                    data.branch.address.line2,
-                    data.branch.address.city,
-                    data.branch.address.state,
-                    data.branch.address.country,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                />
-              )}
+            <SectionTitle title="Sucursal" />
+            <InfoRow label="Nombre" value={data?.branch?.name} />
+            <InfoRow label="Descripción" value={data?.branch?.description} />
+            {data?.branch?.address && (
+              <InfoRow
+                label="Dirección"
+                value={[
+                  data.branch.address.line1,
+                  data.branch.address.line2,
+                  data.branch.address.city,
+                  data.branch.address.state,
+                  data.branch.address.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              />
+            )}
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Configuración" />
-              <InfoRow label="Por defecto" value={data?.is_default} />
-              <InfoRow label="Usa zonas" value={data?.uses_zones} />
+            <SectionTitle title="Configuración" />
+            <InfoRow label="Por defecto" value={data?.is_default} />
+            <InfoRow label="Usa zonas" value={data?.uses_zones} />
 
-              {data?.uses_zones && (
-                <>
-                  <Divider />
-                  <SectionTitle title={`Zonas (${data.zones?.length ?? 0})`} />
-                  {zoneRows.length === 0 ? (
-                    <Text style={{ color: "#9ca3af", fontSize: 13 }}>
-                      Esta bodega usa zonas pero aún no tiene ninguna
-                      registrada.
-                    </Text>
-                  ) : (
-                    <View style={styles.zoneList}>
-                      {zoneRows.map(({ zone, depth }) => (
-                        <ZoneRow key={zone.id} zone={zone} depth={depth} />
-                      ))}
-                    </View>
-                  )}
-                </>
-              )}
-            </DesktopScrollView>
+            {data?.uses_zones && (
+              <>
+                <Divider />
+                <SectionTitle title={`Zonas (${data.zones?.length ?? 0})`} />
+                {zoneRows.length === 0 ? (
+                  <Text style={{ color: "#9ca3af", fontSize: 13 }}>
+                    Esta bodega usa zonas pero aún no tiene ninguna
+                    registrada.
+                  </Text>
+                ) : (
+                  <View style={styles.zoneList}>
+                    {zoneRows.map(({ zone, depth }) => (
+                      <ZoneRow key={zone.id} zone={zone} depth={depth} />
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 

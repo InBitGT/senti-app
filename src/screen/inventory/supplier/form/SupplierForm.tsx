@@ -1,5 +1,4 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -118,220 +117,218 @@ export default function SupplierForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
-            {/* Botón regresar */}
-            <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          {/* Botón regresar */}
+          <Pressable
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar el proveedor"
+                  : "Llena los campos para crear un proveedor"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar el proveedor"
-                    : "Llena los campos para crear un proveedor"}
-                </Text>
-
-                <VStack space="lg">
-                  <View style={row}>
-                    <View style={half}>
-                      {/* Nombre */}
-                      <Controller
-                        control={control}
-                        name="name"
-                        rules={{
-                          required: "El nombre es obligatorio.",
-                          minLength: {
-                            value: 2,
-                            message: "Mínimo 2 caracteres.",
-                          },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Nombre"
-                            placeholder="Distribuidora ABC"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      {/* NIT */}
-                      <Controller
-                        control={control}
-                        name="nit"
-                        rules={{
-                          required: "El NIT es obligatorio.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="NIT"
-                            placeholder="123456-7"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.toUpperCase())
-                            }
-                            onBlur={onBlur}
-                            maxLength={10}
-                            errorMessage={errors.nit?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={row}>
-                    <View style={half}>
-                      {/* Teléfono */}
-                      <Controller
-                        control={control}
-                        name="phone"
-                        rules={{
-                          required: "El teléfono es obligatorio.",
-                          minLength: { value: 8, message: "Mínimo 8 dígitos." },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Teléfono"
-                            placeholder="55551234"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9-]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="phone-pad"
-                            maxLength={8}
-                            errorMessage={errors.phone?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      {/* Email */}
-                      <Controller
-                        control={control}
-                        name="email"
-                        rules={{
-                          pattern: {
-                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                            message: "Correo no válido.",
-                          },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Correo electrónico"
-                            placeholder="proveedor@email.com"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            errorMessage={errors.email?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={row}>
-                    <View style={half}>
-                      {/* Nombre de contacto */}
-                      <Controller
-                        control={control}
-                        name="contact_name"
-                        rules={{
-                          required: "El nombre de contacto es obligatorio.",
-                          minLength: {
-                            value: 2,
-                            message: "Mínimo 2 caracteres.",
-                          },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Nombre de contacto"
-                            placeholder="Juan Pérez"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.contact_name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      {/* Descripción */}
-                      <Controller
-                        control={control}
-                        name="description"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Descripción (opcional)"
-                            placeholder="Información adicional del proveedor..."
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            multiline
-                            textareaHeight={100}
-                            errorMessage={errors.description?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
+              <VStack space="lg">
+                <View style={row}>
+                  <View style={half}>
+                    {/* Nombre */}
+                    <Controller
+                      control={control}
+                      name="name"
+                      rules={{
+                        required: "El nombre es obligatorio.",
+                        minLength: {
+                          value: 2,
+                          message: "Mínimo 2 caracteres.",
+                        },
                       }}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={post.isPending || put.isPending}
-                    >
-                      <ButtonText>
-                        {post.isPending || put.isPending
-                          ? "Guardando..."
-                          : "Guardar Proveedor"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Nombre"
+                          placeholder="Distribuidora ABC"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.name?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    {/* NIT */}
+                    <Controller
+                      control={control}
+                      name="nit"
+                      rules={{
+                        required: "El NIT es obligatorio.",
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="NIT"
+                          placeholder="123456-7"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.toUpperCase())
+                          }
+                          onBlur={onBlur}
+                          maxLength={10}
+                          errorMessage={errors.nit?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <View style={row}>
+                  <View style={half}>
+                    {/* Teléfono */}
+                    <Controller
+                      control={control}
+                      name="phone"
+                      rules={{
+                        required: "El teléfono es obligatorio.",
+                        minLength: { value: 8, message: "Mínimo 8 dígitos." },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Teléfono"
+                          placeholder="55551234"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.replace(/[^0-9-]/g, ""))
+                          }
+                          onBlur={onBlur}
+                          keyboardType="phone-pad"
+                          maxLength={8}
+                          errorMessage={errors.phone?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    {/* Email */}
+                    <Controller
+                      control={control}
+                      name="email"
+                      rules={{
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Correo no válido.",
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Correo electrónico"
+                          placeholder="proveedor@email.com"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          errorMessage={errors.email?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                <View style={row}>
+                  <View style={half}>
+                    {/* Nombre de contacto */}
+                    <Controller
+                      control={control}
+                      name="contact_name"
+                      rules={{
+                        required: "El nombre de contacto es obligatorio.",
+                        minLength: {
+                          value: 2,
+                          message: "Mínimo 2 caracteres.",
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Nombre de contacto"
+                          placeholder="Juan Pérez"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.contact_name?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    {/* Descripción */}
+                    <Controller
+                      control={control}
+                      name="description"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Descripción (opcional)"
+                          placeholder="Información adicional del proveedor..."
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          multiline
+                          textareaHeight={100}
+                          errorMessage={errors.description?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={post.isPending || put.isPending}
+                  >
+                    <ButtonText>
+                      {post.isPending || put.isPending
+                        ? "Guardando..."
+                        : "Guardar Proveedor"}
+                    </ButtonText>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

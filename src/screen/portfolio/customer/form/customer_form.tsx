@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -137,226 +136,224 @@ export default function CustomerForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView useWindowHeight>
-            <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
-            >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
-              </Text>
-            </Pressable>
+          <Pressable
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Cliente" : "Nuevo Cliente"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar el cliente"
-                    : "Llena los campos para crear un cliente"}
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Cliente" : "Nuevo Cliente"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar el cliente"
+                  : "Llena los campos para crear un cliente"}
+              </Text>
+
+              <VStack space="lg">
+                <Text
+                  style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
+                >
+                  DATOS DEL CLIENTE
                 </Text>
 
-                <VStack space="lg">
-                  <Text
-                    style={{ fontWeight: "bold", color: "#555", fontSize: 13 }}
-                  >
-                    DATOS DEL CLIENTE
-                  </Text>
+                {/* Nombre */}
+                <Controller
+                  control={control}
+                  name="name"
+                  rules={{ required: "El nombre es obligatorio." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Nombre"
+                      placeholder="Juan Pérez"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      errorMessage={errors.name?.message}
+                    />
+                  )}
+                />
 
-                  {/* Nombre */}
-                  <Controller
-                    control={control}
-                    name="name"
-                    rules={{ required: "El nombre es obligatorio." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Nombre"
-                        placeholder="Juan Pérez"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.name?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Tipo de documento + Número */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="document_type"
-                        rules={{
-                          required: "El tipo de documento es obligatorio.",
-                        }}
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Tipo de documento"
-                            placeholder="Selecciona un tipo"
-                            searchable={false}
-                            options={DOCUMENT_TYPE_OPTIONS}
-                            value={value}
-                            onChange={onChange}
-                            errorMessage={errors.document_type?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="document_number"
-                        rules={{
-                          required: "El número de documento es obligatorio.",
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Número de documento"
-                            placeholder="1234567890101"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9A-Z-]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="number-pad"
-                            errorMessage={errors.document_number?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Teléfono + Email */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="phone"
-                        rules={{ required: "El teléfono es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Teléfono"
-                            placeholder="12345678"
-                            value={value}
-                            onChangeText={(text) =>
-                              onChange(text.replace(/[^0-9.-]/g, ""))
-                            }
-                            onBlur={onBlur}
-                            keyboardType="phone-pad"
-                            maxLength={9}
-                            errorMessage={errors.phone?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="email"
-                        rules={{
-                          pattern: {
-                            value: /\S+@\S+\.\S+/,
-                            message: "Email inválido.",
-                          },
-                        }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Email"
-                            placeholder="Ej. juan.perez@example.com"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            errorMessage={errors.email?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Dirección */}
-                  <Controller
-                    control={control}
-                    name="address"
-                    rules={{ required: "La dirección es obligatoria." }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Dirección"
-                        placeholder="Ej. Zona 10, Ciudad de Guatemala"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        errorMessage={errors.address?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Tipo de cliente */}
-                  <Controller
-                    control={control}
-                    name="customer_type_id"
-                    rules={{ required: "El tipo de cliente es obligatorio." }}
-                    render={({ field: { onChange, value } }) => (
-                      <AppSelect
-                        label="Tipo de cliente"
-                        placeholder="Selecciona un tipo de cliente"
-                        searchable={false}
-                        options={(customerTypeData ?? []).map((c) => ({
-                          label: c.name,
-                          value: String(c.id),
-                        }))}
-                        value={value}
-                        onChange={onChange}
-                        isLoading={isLoadingCustomerType}
-                        errorMessage={errors.customer_type_id?.message}
-                      />
-                    )}
-                  />
-
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
+                {/* Tipo de documento + Número */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="document_type"
+                      rules={{
+                        required: "El tipo de documento es obligatorio.",
                       }}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Tipo de documento"
+                          placeholder="Selecciona un tipo"
+                          searchable={false}
+                          options={DOCUMENT_TYPE_OPTIONS}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.document_type?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="document_number"
+                      rules={{
+                        required: "El número de documento es obligatorio.",
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Número de documento"
+                          placeholder="1234567890101"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.replace(/[^0-9A-Z-]/g, ""))
+                          }
+                          onBlur={onBlur}
+                          keyboardType="number-pad"
+                          errorMessage={errors.document_number?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Teléfono + Email */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="phone"
+                      rules={{ required: "El teléfono es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Teléfono"
+                          placeholder="12345678"
+                          value={value}
+                          onChangeText={(text) =>
+                            onChange(text.replace(/[^0-9.-]/g, ""))
+                          }
+                          onBlur={onBlur}
+                          keyboardType="phone-pad"
+                          maxLength={9}
+                          errorMessage={errors.phone?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="email"
+                      rules={{
+                        pattern: {
+                          value: /\S+@\S+\.\S+/,
+                          message: "Email inválido.",
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Email"
+                          placeholder="Ej. juan.perez@example.com"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          errorMessage={errors.email?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Dirección */}
+                <Controller
+                  control={control}
+                  name="address"
+                  rules={{ required: "La dirección es obligatoria." }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Dirección"
+                      placeholder="Ej. Zona 10, Ciudad de Guatemala"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      errorMessage={errors.address?.message}
+                    />
+                  )}
+                />
+
+                {/* Tipo de cliente */}
+                <Controller
+                  control={control}
+                  name="customer_type_id"
+                  rules={{ required: "El tipo de cliente es obligatorio." }}
+                  render={({ field: { onChange, value } }) => (
+                    <AppSelect
+                      label="Tipo de cliente"
+                      placeholder="Selecciona un tipo de cliente"
+                      searchable={false}
+                      options={(customerTypeData ?? []).map((c) => ({
+                        label: c.name,
+                        value: String(c.id),
+                      }))}
+                      value={value}
+                      onChange={onChange}
+                      isLoading={isLoadingCustomerType}
+                      errorMessage={errors.customer_type_id?.message}
+                    />
+                  )}
+                />
+
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isPending}
+                  >
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

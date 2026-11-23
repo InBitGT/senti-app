@@ -8,6 +8,7 @@ import { ProductWholesaleRule as ProductWholesaleModel } from "@/src/types/whole
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const ProductWholesale: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -65,24 +66,26 @@ export const ProductWholesale: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ProductWholesaleTable
-        data={rules || []}
-        itemsPerPage={5}
-        onNewRule={handleCreate}
-        onRowPress={hadleModalData}
-        actions={actions}
-      />
-      <ModalProductWholesaleDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <ProductWholesaleTable
+          data={rules || []}
+          itemsPerPage={5}
+          onNewRule={handleCreate}
+          onRowPress={hadleModalData}
+          actions={actions}
+        />
+        <ModalProductWholesaleDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

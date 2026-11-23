@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -31,6 +30,7 @@ import {
 } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type UserFlags = {
   selected: boolean;
@@ -151,83 +151,83 @@ export default function OpenCashRegisterScreen() {
   );
 
   return (
-    <VStack className="flex-1 bg-white">
-      <HStack className="items-center border-b border-gray-100 px-4 py-3">
-        <TouchableOpacity onPress={() => router.back()} className="pr-2">
-          <Icon as={ChevronLeft} size="sm" className="text-gray-600" />
-        </TouchableOpacity>
-        <Heading size="md" className="text-gray-900">
-          Abrir caja
-        </Heading>
-      </HStack>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <VStack className="flex-1 bg-white">
+        <HStack className="items-center border-b border-gray-100 px-4 py-3">
+          <TouchableOpacity onPress={() => router.back()} className="pr-2">
+            <Icon as={ChevronLeft} size="sm" className="text-gray-600" />
+          </TouchableOpacity>
+          <Heading size="md" className="text-gray-900">
+            Abrir caja
+          </Heading>
+        </HStack>
 
-      <ScrollView contentContainerClassName="p-4" className="flex-1">
-        <VStack space="md">
-          <Text className="text-sm text-gray-500">
-            Elegí con qué caja vas a trabajar e ingresá el monto inicial para
-            empezar a vender.
-          </Text>
-
-          {cashRegisters.length > 1 && (
-            <AppSelect
-              label="Caja"
-              placeholder="Selecciona una caja"
-              searchable={cashRegisterOptions.length > 6}
-              options={cashRegisterOptions}
-              value={cashRegisterId != null ? String(cashRegisterId) : ""}
-              onChange={(v) => setCashRegisterId(v ? Number(v) : null)}
-            />
-          )}
-
-          {cashRegisters.length === 1 && (
-            <HStack className="items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-              <Text className="text-xs text-gray-500">Caja</Text>
-              <Text className="text-sm font-medium text-gray-900">
-                {cashRegisters[0].name} · {cashRegisters[0].code}
-              </Text>
-            </HStack>
-          )}
-
-          {cashRegisters.length === 0 && (
-            <Text className="text-sm font-medium text-red-600">
-              No hay cajas registradas para esta sucursal.
-            </Text>
-          )}
-
-          <AppInput
-            label="Monto de apertura"
-            placeholder="0.00"
-            value={openingAmount}
-            onChangeText={(v) => setOpeningAmount(sanitizeDecimal(v))}
-            keyboardType="decimal-pad"
-          />
-
-          <VStack space="xs" className="border-t border-gray-100 pt-3">
-            <Text className="text-xs font-medium text-gray-500">
-              Usuarios adicionales en esta sesión
-            </Text>
-            <Text className="text-[11px] text-gray-400">
-              Solo las personas que marques como &quot;Asociar&quot; quedarán
-              vinculadas a esta caja. El permiso de cierre es aparte.
+        <ScrollView contentContainerClassName="p-4" className="flex-1">
+          <VStack space="md">
+            <Text className="text-sm text-gray-500">
+              Elegí con qué caja vas a trabajar e ingresá el monto inicial para
+              empezar a vender.
             </Text>
 
-            {tenantUsers.isLoading && (
-              <HStack space="xs" className="items-center py-2">
-                <Spinner size="small" />
-                <Text className="text-xs text-gray-400">
-                  Cargando usuarios...
+            {cashRegisters.length > 1 && (
+              <AppSelect
+                label="Caja"
+                placeholder="Selecciona una caja"
+                searchable={cashRegisterOptions.length > 6}
+                options={cashRegisterOptions}
+                value={cashRegisterId != null ? String(cashRegisterId) : ""}
+                onChange={(v) => setCashRegisterId(v ? Number(v) : null)}
+              />
+            )}
+
+            {cashRegisters.length === 1 && (
+              <HStack className="items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                <Text className="text-xs text-gray-500">Caja</Text>
+                <Text className="text-sm font-medium text-gray-900">
+                  {cashRegisters[0].name} · {cashRegisters[0].code}
                 </Text>
               </HStack>
             )}
 
-            {!tenantUsers.isLoading && otherUsers.length === 0 && (
-              <Text className="text-xs text-gray-400">
-                No hay otros usuarios en el tenant.
+            {cashRegisters.length === 0 && (
+              <Text className="text-sm font-medium text-red-600">
+                No hay cajas registradas para esta sucursal.
               </Text>
             )}
 
-            {otherUsers.length > 0 && (
-              <DesktopScrollView>
+            <AppInput
+              label="Monto de apertura"
+              placeholder="0.00"
+              value={openingAmount}
+              onChangeText={(v) => setOpeningAmount(sanitizeDecimal(v))}
+              keyboardType="decimal-pad"
+            />
+
+            <VStack space="xs" className="border-t border-gray-100 pt-3">
+              <Text className="text-xs font-medium text-gray-500">
+                Usuarios adicionales en esta sesión
+              </Text>
+              <Text className="text-[11px] text-gray-400">
+                Solo las personas que marques como &quot;Asociar&quot; quedarán
+                vinculadas a esta caja. El permiso de cierre es aparte.
+              </Text>
+
+              {tenantUsers.isLoading && (
+                <HStack space="xs" className="items-center py-2">
+                  <Spinner size="small" />
+                  <Text className="text-xs text-gray-400">
+                    Cargando usuarios...
+                  </Text>
+                </HStack>
+              )}
+
+              {!tenantUsers.isLoading && otherUsers.length === 0 && (
+                <Text className="text-xs text-gray-400">
+                  No hay otros usuarios en el tenant.
+                </Text>
+              )}
+
+              {otherUsers.length > 0 && (
                 <VStack space="xs">
                   {otherUsers.map((u) => {
                     const flags = userFlags[u.id] ?? {
@@ -301,104 +301,104 @@ export default function OpenCashRegisterScreen() {
                     );
                   })}
                 </VStack>
-              </DesktopScrollView>
-            )}
-          </VStack>
-
-          {openCashRegister.isError && !authorizeOpen && (
-            <Text className="text-sm font-medium text-red-600">
-              {openCashRegister.error?.message ?? "No se pudo abrir la caja."}
-            </Text>
-          )}
-        </VStack>
-      </ScrollView>
-
-      <VStack space="sm" className="border-t border-gray-100 p-4">
-        <Button
-          className={blocked ? "bg-gray-300" : "bg-blue-600"}
-          isDisabled={blocked}
-          onPress={handlePressOpen}
-        >
-          <ButtonText className="text-white">Abrir caja</ButtonText>
-        </Button>
-      </VStack>
-
-      <Modal isOpen={authorizeOpen} onClose={() => setAuthorizeOpen(false)}>
-        <ModalBackdrop />
-        <ModalContent className="bg-white">
-          <ModalHeader className="items-center justify-between">
-            <HStack space="xs" className="items-center">
-              <Icon as={AlertTriangle} size="sm" className="text-amber-600" />
-              <Heading size="md" className="text-gray-900">
-                Autorizar permiso de cierre
-              </Heading>
-            </HStack>
-          </ModalHeader>
-
-          <ModalBody>
-            <VStack space="md">
-              <Text className="text-sm text-gray-700">
-                Estás por darle permiso para{" "}
-                <Text className="font-semibold text-gray-900">
-                  cerrar esta caja
-                </Text>{" "}
-                (contar el efectivo y finalizar la sesión) a:
-              </Text>
-
-              <VStack
-                space="xs"
-                className="rounded-lg border border-gray-100 p-3"
-              >
-                {usersWithCloseAccess.map((u) => (
-                  <HStack key={u.id} space="xs" className="items-center">
-                    <Icon as={UserCheck} size="xs" className="text-amber-600" />
-                    <Text className="text-sm text-gray-900">
-                      {u.first_name}
-                    </Text>
-                  </HStack>
-                ))}
-              </VStack>
-
-              <Text className="text-xs text-gray-500">
-                Confirmá que reconocés y autorizás este acceso antes de abrir la
-                caja.
-              </Text>
-
-              {openCashRegister.isError && (
-                <Text className="text-sm font-medium text-red-600">
-                  {openCashRegister.error?.message ??
-                    "No se pudo abrir la caja."}
-                </Text>
               )}
             </VStack>
-          </ModalBody>
 
-          <ModalFooter className="gap-2">
-            <Box className="flex-1">
-              <Button
-                variant="outline"
-                onPress={() => setAuthorizeOpen(false)}
-                isDisabled={openCashRegister.isPending}
-              >
-                <ButtonText className="text-gray-700">Revisar</ButtonText>
-              </Button>
-            </Box>
-            <Box className="flex-1">
-              <Button
-                className="bg-amber-600"
-                onPress={handleSubmit}
-                isDisabled={openCashRegister.isPending}
-              >
-                <ButtonText className="text-white">
-                  {openCashRegister.isPending
-                    ? "Abriendo..."
-                    : "Autorizar y abrir"}
-                </ButtonText>
-              </Button>
-            </Box>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </VStack>
+            {openCashRegister.isError && !authorizeOpen && (
+              <Text className="text-sm font-medium text-red-600">
+                {openCashRegister.error?.message ?? "No se pudo abrir la caja."}
+              </Text>
+            )}
+          </VStack>
+        </ScrollView>
+
+        <VStack space="sm" className="border-t border-gray-100 p-4">
+          <Button
+            className={blocked ? "bg-gray-300" : "bg-blue-600"}
+            isDisabled={blocked}
+            onPress={handlePressOpen}
+          >
+            <ButtonText className="text-white">Abrir caja</ButtonText>
+          </Button>
+        </VStack>
+
+        <Modal isOpen={authorizeOpen} onClose={() => setAuthorizeOpen(false)}>
+          <ModalBackdrop />
+          <ModalContent className="bg-white">
+            <ModalHeader className="items-center justify-between">
+              <HStack space="xs" className="items-center">
+                <Icon as={AlertTriangle} size="sm" className="text-amber-600" />
+                <Heading size="md" className="text-gray-900">
+                  Autorizar permiso de cierre
+                </Heading>
+              </HStack>
+            </ModalHeader>
+
+            <ModalBody>
+              <VStack space="md">
+                <Text className="text-sm text-gray-700">
+                  Estás por darle permiso para{" "}
+                  <Text className="font-semibold text-gray-900">
+                    cerrar esta caja
+                  </Text>{" "}
+                  (contar el efectivo y finalizar la sesión) a:
+                </Text>
+
+                <VStack
+                  space="xs"
+                  className="rounded-lg border border-gray-100 p-3"
+                >
+                  {usersWithCloseAccess.map((u) => (
+                    <HStack key={u.id} space="xs" className="items-center">
+                      <Icon as={UserCheck} size="xs" className="text-amber-600" />
+                      <Text className="text-sm text-gray-900">
+                        {u.first_name}
+                      </Text>
+                    </HStack>
+                  ))}
+                </VStack>
+
+                <Text className="text-xs text-gray-500">
+                  Confirmá que reconocés y autorizás este acceso antes de abrir la
+                  caja.
+                </Text>
+
+                {openCashRegister.isError && (
+                  <Text className="text-sm font-medium text-red-600">
+                    {openCashRegister.error?.message ??
+                      "No se pudo abrir la caja."}
+                  </Text>
+                )}
+              </VStack>
+            </ModalBody>
+
+            <ModalFooter className="gap-2">
+              <Box className="flex-1">
+                <Button
+                  variant="outline"
+                  onPress={() => setAuthorizeOpen(false)}
+                  isDisabled={openCashRegister.isPending}
+                >
+                  <ButtonText className="text-gray-700">Revisar</ButtonText>
+                </Button>
+              </Box>
+              <Box className="flex-1">
+                <Button
+                  className="bg-amber-600"
+                  onPress={handleSubmit}
+                  isDisabled={openCashRegister.isPending}
+                >
+                  <ButtonText className="text-white">
+                    {openCashRegister.isPending
+                      ? "Abriendo..."
+                      : "Autorizar y abrir"}
+                  </ButtonText>
+                </Button>
+              </Box>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </VStack>
+    </SafeAreaView>
   );
 }

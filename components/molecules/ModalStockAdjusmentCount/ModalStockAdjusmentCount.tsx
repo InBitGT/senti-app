@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
@@ -77,46 +76,44 @@ export const ModalStockAdjustmentDetail: React.FC<Props> = ({
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <DesktopScrollView>
-              <SectionTitle title="Información general" />
-              <InfoRow label="Bodega" value={data?.warehouse?.name} />
-              <InfoRow label="Conteo #" value={data?.stock_count_id} />
-              <InfoRow label="Notas" value={data?.notes} />
+            <SectionTitle title="Información general" />
+            <InfoRow label="Bodega" value={data?.warehouse?.name} />
+            <InfoRow label="Conteo #" value={data?.stock_count_id} />
+            <InfoRow label="Notas" value={data?.notes} />
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Aprobación" />
-              <InfoRow label="Solicitado por" value={data?.requested_by_name} />
-              <InfoRow label="Aprobado por" value={data?.approved_by ?? "—"} />
-              <InfoRow
-                label="Fecha de ajuste"
-                value={
-                  data?.adjustment_date
-                    ? new Date(data.adjustment_date).toLocaleString("es-GT")
-                    : "—"
-                }
-              />
+            <SectionTitle title="Aprobación" />
+            <InfoRow label="Solicitado por" value={data?.requested_by_name} />
+            <InfoRow label="Aprobado por" value={data?.approved_by ?? "—"} />
+            <InfoRow
+              label="Fecha de ajuste"
+              value={
+                data?.adjustment_date
+                  ? new Date(data.adjustment_date).toLocaleString("es-GT")
+                  : "—"
+              }
+            />
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Registro" />
-              <InfoRow
-                label="Creado"
-                value={
-                  data?.created_at
-                    ? new Date(data.created_at).toLocaleString("es-GT")
-                    : "—"
-                }
-              />
-              <InfoRow
-                label="Actualizado"
-                value={
-                  data?.update_at
-                    ? new Date(data.update_at).toLocaleString("es-GT")
-                    : "—"
-                }
-              />
-            </DesktopScrollView>
+            <SectionTitle title="Registro" />
+            <InfoRow
+              label="Creado"
+              value={
+                data?.created_at
+                  ? new Date(data.created_at).toLocaleString("es-GT")
+                  : "—"
+              }
+            />
+            <InfoRow
+              label="Actualizado"
+              value={
+                data?.update_at
+                  ? new Date(data.update_at).toLocaleString("es-GT")
+                  : "—"
+              }
+            />
           </ScrollView>
         </ModalBody>
 

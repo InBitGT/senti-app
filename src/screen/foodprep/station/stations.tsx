@@ -1,5 +1,4 @@
 import { AppButton } from "@/components/atom/AppButton/AppButton";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { ResponsiveCardGrid } from "@/components/atom/ResponsiveCardGrid/ResponsiveCardGrid";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -23,6 +22,7 @@ import {
     StyleSheet,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BOARD_ROUTE = "/(drawer)/(foodprep)/station_board";
 /** prep_station_ids=0 → productos sin estación (General). */
@@ -141,8 +141,8 @@ export function StationsScreen() {
   const hasStations = activeStations.length > 0;
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1 }}>
         <View style={styles.container}>
           <View>
             <Text style={styles.title}>Estaciones de trabajo</Text>
@@ -215,8 +215,8 @@ export function StationsScreen() {
             </View>
           )}
         </View>
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

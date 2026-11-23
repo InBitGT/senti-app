@@ -1,5 +1,4 @@
 import { Action, Buttons, ModalDelete } from "@/components";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { TableSkeleton } from "@/components/atom/TableSkeleton/TableSkeleton";
 import { ModalUnitDetail } from "@/components/molecules/ModalUnitDetail/ModalUnitDetail";
 import { UnitsTable } from "@/components/templates/UnitsTable/UnitsTable";
@@ -10,6 +9,7 @@ import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
 import React, { useState } from "react";
 import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const Unit: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -62,8 +62,8 @@ export const Unit: React.FC = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <DesktopScrollView>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <ScrollView style={{ flex: 1 }}>
         <UnitsTable
           data={units || []}
           itemsPerPage={8}
@@ -81,7 +81,7 @@ export const Unit: React.FC = () => {
           onClose={() => setShowModal(false)}
           onSuccess={handleDelete}
         />
-      </DesktopScrollView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { CategoryPill } from "@/components/atom/CategoryPill/CategoryPill";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { SubcategoryPill } from "@/components/atom/SubcategoryPill/SubcategoryPill";
 import { CartModal } from "@/components/molecules/CartModal/CartModal";
 import { CartSidePanel } from "@/components/molecules/CartSidePanel/CartSidePanel";
@@ -54,7 +53,6 @@ import {
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Platform,
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
@@ -390,84 +388,45 @@ export const Pos: React.FC = () => {
                 )}
               </HStack>
 
-              {categories.length > 0 &&
-                (Platform.OS === "web" ? (
-                  <DesktopScrollView horizontal>
-                    <HStack space="xs">
+              {categories.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <HStack space="xs">
+                    <CategoryPill
+                      label="Todas"
+                      active={categoryId === null}
+                      onPress={() => pickCategory(null)}
+                    />
+                    {categories.map((c) => (
                       <CategoryPill
-                        label="Todas"
-                        active={categoryId === null}
-                        onPress={() => pickCategory(null)}
+                        key={c.id}
+                        label={c.name}
+                        active={categoryId === c.id}
+                        onPress={() => pickCategory(c.id)}
                       />
-                      {categories.map((c) => (
-                        <CategoryPill
-                          key={c.id}
-                          label={c.name}
-                          active={categoryId === c.id}
-                          onPress={() => pickCategory(c.id)}
-                        />
-                      ))}
-                    </HStack>
-                  </DesktopScrollView>
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <HStack space="xs">
-                      <CategoryPill
-                        label="Todas"
-                        active={categoryId === null}
-                        onPress={() => pickCategory(null)}
-                      />
-                      {categories.map((c) => (
-                        <CategoryPill
-                          key={c.id}
-                          label={c.name}
-                          active={categoryId === c.id}
-                          onPress={() => pickCategory(c.id)}
-                        />
-                      ))}
-                    </HStack>
-                  </ScrollView>
-                ))}
+                    ))}
+                  </HStack>
+                </ScrollView>
+              )}
 
-              {categoryId != null &&
-                subcategories.length > 0 &&
-                (Platform.OS === "web" ? (
-                  <DesktopScrollView horizontal>
-                    <HStack space="xs">
+              {categoryId != null && subcategories.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <HStack space="xs">
+                    <SubcategoryPill
+                      label="Todo"
+                      active={subcategoryId === null}
+                      onPress={() => setSubcategoryId(null)}
+                    />
+                    {subcategories.map((s) => (
                       <SubcategoryPill
-                        label="Todo"
-                        active={subcategoryId === null}
-                        onPress={() => setSubcategoryId(null)}
+                        key={s.id}
+                        label={s.name}
+                        active={subcategoryId === s.id}
+                        onPress={() => setSubcategoryId(s.id)}
                       />
-                      {subcategories.map((s) => (
-                        <SubcategoryPill
-                          key={s.id}
-                          label={s.name}
-                          active={subcategoryId === s.id}
-                          onPress={() => setSubcategoryId(s.id)}
-                        />
-                      ))}
-                    </HStack>
-                  </DesktopScrollView>
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <HStack space="xs">
-                      <SubcategoryPill
-                        label="Todo"
-                        active={subcategoryId === null}
-                        onPress={() => setSubcategoryId(null)}
-                      />
-                      {subcategories.map((s) => (
-                        <SubcategoryPill
-                          key={s.id}
-                          label={s.name}
-                          active={subcategoryId === s.id}
-                          onPress={() => setSubcategoryId(s.id)}
-                        />
-                      ))}
-                    </HStack>
-                  </ScrollView>
-                ))}
+                    ))}
+                  </HStack>
+                </ScrollView>
+              )}
             </VStack>
 
             <Box className="flex-1 px-1.5 pt-2">

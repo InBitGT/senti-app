@@ -15,6 +15,7 @@ import { PrepStation } from "@/src/types/prep_station/prep_station.types";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MAX_PREP_STATIONS = 3;
 
@@ -108,27 +109,29 @@ export const PrepStationScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <CustomTable<PrepStation>
-        columns={columns}
-        data={stations ?? []}
-        keyExtractor={(row) => row.id}
-        actions={actions}
-        itemsPerPage={5}
-        button={dataButton}
-        searchKeys={["name", "code"]}
-        onRowPress={handleModalData}
-      />
-      <ModalPrepStationDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <CustomTable<PrepStation>
+          columns={columns}
+          data={stations ?? []}
+          keyExtractor={(row) => row.id}
+          actions={actions}
+          itemsPerPage={5}
+          button={dataButton}
+          searchKeys={["name", "code"]}
+          onRowPress={handleModalData}
+        />
+        <ModalPrepStationDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

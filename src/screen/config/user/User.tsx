@@ -8,6 +8,7 @@ import { Users } from "@/src/types/user/user.types";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const User: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -61,24 +62,26 @@ export const User: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <UsersTable
-        data={users || []}
-        itemsPerPage={5}
-        onNewUser={handleCreate}
-        onRowPress={hadleModalData}
-        actions={actions}
-      />
-      <ModalUserDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-      />
-      <ModalDelete
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleDelete}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <UsersTable
+          data={users || []}
+          itemsPerPage={5}
+          onNewUser={handleCreate}
+          onRowPress={hadleModalData}
+          actions={actions}
+        />
+        <ModalUserDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+        />
+        <ModalDelete
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleDelete}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

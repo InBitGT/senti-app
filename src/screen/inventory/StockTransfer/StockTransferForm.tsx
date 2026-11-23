@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { ProductCountList } from "@/components/molecules/ProductCountList/ProductCountList";
 import { ProductPicker } from "@/components/molecules/ProductPicker/ProductPicker";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
@@ -247,101 +246,99 @@ export default function StockTransferForm() {
         style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 20 }}
         contentContainerStyle={{ gap: 20, paddingBottom: 100 }}
       >
-        <DesktopScrollView>
-          <HStack className="items-center gap-3">
-            <View style={styles.headerIcon}>
-              <ArrowLeftRight size={18} color="#fff" />
-            </View>
-            <VStack>
-              <Text style={styles.headerTitle}>Nuevo traslado</Text>
-              <Text style={styles.headerSubtitle}>
-                Se guarda como borrador; el stock se mueve al despacharlo.
-              </Text>
-            </VStack>
+        <HStack className="items-center gap-3">
+          <View style={styles.headerIcon}>
+            <ArrowLeftRight size={18} color="#fff" />
+          </View>
+          <VStack>
+            <Text style={styles.headerTitle}>Nuevo traslado</Text>
+            <Text style={styles.headerSubtitle}>
+              Se guarda como borrador; el stock se mueve al despacharlo.
+            </Text>
+          </VStack>
+        </HStack>
+
+        <VStack style={styles.card}>
+          {hasMultipleBranches && (
+            <AppSelect
+              label="Sucursal de origen"
+              placeholder="Selecciona una sucursal"
+              searchable={branches.length > 6}
+              options={branches.map((b) => ({
+                label: b.branch_name,
+                value: String(b.branch_id),
+              }))}
+              value={branchId}
+              onChange={handleBranchChange}
+            />
+          )}
+
+          {branchId && originWarehouses.length > 1 && (
+            <AppSelect
+              label="Bodega de origen"
+              placeholder="Selecciona una bodega"
+              searchable={originWarehouses.length > 6}
+              options={originWarehouses.map((w) => ({
+                label: w.warehouse_name,
+                value: String(w.warehouse_id),
+              }))}
+              value={originId}
+              onChange={handleOriginChange}
+            />
+          )}
+
+          <AppSelect
+            label="Bodega de destino"
+            placeholder="Selecciona una bodega"
+            searchable={destinationOptions.length > 6}
+            isLoading={isLoadingWarehouses}
+            options={destinationOptions}
+            value={destinationId}
+            onChange={setDestinationId}
+          />
+
+          <AppInput
+            label="Notas"
+            placeholder="Ej. Reposición de papelería"
+            value={notes}
+            onChangeText={setNotes}
+          />
+        </VStack>
+
+        <VStack style={styles.card}>
+          <HStack className="items-center justify-between mb-4">
+            <Text style={styles.cardTitle}>Artículos a trasladar</Text>
+            <ProductPicker
+              products={products}
+              selectedIds={new Set(selectedIds)}
+              onConfirm={handleConfirmSelection}
+            />
           </HStack>
 
-          <VStack style={styles.card}>
-            {hasMultipleBranches && (
-              <AppSelect
-                label="Sucursal de origen"
-                placeholder="Selecciona una sucursal"
-                searchable={branches.length > 6}
-                options={branches.map((b) => ({
-                  label: b.branch_name,
-                  value: String(b.branch_id),
-                }))}
-                value={branchId}
-                onChange={handleBranchChange}
-              />
-            )}
-
-            {branchId && originWarehouses.length > 1 && (
-              <AppSelect
-                label="Bodega de origen"
-                placeholder="Selecciona una bodega"
-                searchable={originWarehouses.length > 6}
-                options={originWarehouses.map((w) => ({
-                  label: w.warehouse_name,
-                  value: String(w.warehouse_id),
-                }))}
-                value={originId}
-                onChange={handleOriginChange}
-              />
-            )}
-
-            <AppSelect
-              label="Bodega de destino"
-              placeholder="Selecciona una bodega"
-              searchable={destinationOptions.length > 6}
-              isLoading={isLoadingWarehouses}
-              options={destinationOptions}
-              value={destinationId}
-              onChange={setDestinationId}
+          {!originId ? (
+            <View style={styles.loadingBox}>
+              <Text style={styles.loadingText}>
+                {hasMultipleBranches && !branchId
+                  ? "Selecciona una sucursal para continuar."
+                  : "Selecciona la bodega de origen para continuar."}
+              </Text>
+            </View>
+          ) : isLoadingProduct ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator />
+              <Text style={styles.loadingText}>Cargando artículos…</Text>
+            </View>
+          ) : (
+            <ProductCountList
+              selected={selectedProducts}
+              lines={lines}
+              onStep={handleStep}
+              onSet={handleSet}
+              onRemove={handleRemove}
+              mode="transfer"
             />
-
-            <AppInput
-              label="Notas"
-              placeholder="Ej. Reposición de papelería"
-              value={notes}
-              onChangeText={setNotes}
-            />
-          </VStack>
-
-          <VStack style={styles.card}>
-            <HStack className="items-center justify-between mb-4">
-              <Text style={styles.cardTitle}>Artículos a trasladar</Text>
-              <ProductPicker
-                products={products}
-                selectedIds={new Set(selectedIds)}
-                onConfirm={handleConfirmSelection}
-              />
-            </HStack>
-
-            {!originId ? (
-              <View style={styles.loadingBox}>
-                <Text style={styles.loadingText}>
-                  {hasMultipleBranches && !branchId
-                    ? "Selecciona una sucursal para continuar."
-                    : "Selecciona la bodega de origen para continuar."}
-                </Text>
-              </View>
-            ) : isLoadingProduct ? (
-              <View style={styles.loadingBox}>
-                <ActivityIndicator />
-                <Text style={styles.loadingText}>Cargando artículos…</Text>
-              </View>
-            ) : (
-              <ProductCountList
-                selected={selectedProducts}
-                lines={lines}
-                onStep={handleStep}
-                onSet={handleSet}
-                onRemove={handleRemove}
-                mode="transfer"
-              />
-            )}
-          </VStack>
-        </DesktopScrollView>
+          )}
+        </VStack>
       </ScrollView>
 
       <HStack style={styles.footerBar}>

@@ -1,6 +1,5 @@
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -164,146 +163,144 @@ export default function WarehouseZoneForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView>
-            <Pressable
-              onPress={() => {
-                clearData();
-                setIsEdit(false);
-                router.back();
-              }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
+          <Pressable
+            onPress={() => {
+              clearData();
+              setIsEdit(false);
+              router.back();
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
+            <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
+              Regresar
+            </Text>
+          </Pressable>
+
+          <Center>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
             >
-              <Icon as={ArrowLeftIcon} size="xl" style={{ color: "#000" }} />
-              <Text style={{ color: "#000", marginLeft: 8, fontSize: 16 }}>
-                Regresar
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                {isEdit ? "Editar Zona" : "Nueva Zona"}
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                {isEdit
+                  ? "Modifica los campos para editar la zona"
+                  : "Llena los campos para crear una zona en esta bodega"}
               </Text>
-            </Pressable>
 
-            <Center>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  {isEdit ? "Editar Zona" : "Nueva Zona"}
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  {isEdit
-                    ? "Modifica los campos para editar la zona"
-                    : "Llena los campos para crear una zona en esta bodega"}
-                </Text>
-
-                <VStack space="lg">
-                  {/* Nombre + Código */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="name"
-                        rules={{ required: "El nombre es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Nombre"
-                            placeholder="Ej. Zona A"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            errorMessage={errors.name?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="code"
-                        rules={{ required: "El código es obligatorio." }}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            label="Código"
-                            placeholder="Ej. ZA"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            autoCapitalize="characters"
-                            errorMessage={errors.code?.message}
-                          />
-                        )}
-                      />
-                    </View>
+              <VStack space="lg">
+                {/* Nombre + Código */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="name"
+                      rules={{ required: "El nombre es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Nombre"
+                          placeholder="Ej. Zona A"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          errorMessage={errors.name?.message}
+                        />
+                      )}
+                    />
                   </View>
-
-                  {/* Tipo + Zona padre */}
-                  <View style={row}>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="zone_type"
-                        rules={{ required: "El tipo es obligatorio." }}
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Tipo"
-                            placeholder="Selecciona un tipo"
-                            searchable={ZONE_TYPE_OPTIONS.length > 6}
-                            options={ZONE_TYPE_OPTIONS}
-                            value={value}
-                            onChange={onChange}
-                            errorMessage={errors.zone_type?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={half}>
-                      <Controller
-                        control={control}
-                        name="parent_zone_id"
-                        render={({ field: { onChange, value } }) => (
-                          <AppSelect
-                            label="Zona padre (opcional)"
-                            placeholder="Ninguna (zona raíz)"
-                            searchable={parentZoneOptions.length > 6}
-                            options={parentZoneOptions}
-                            value={value}
-                            onChange={onChange}
-                          />
-                        )}
-                      />
-                    </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="code"
+                      rules={{ required: "El código es obligatorio." }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          label="Código"
+                          placeholder="Ej. ZA"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          autoCapitalize="characters"
+                          errorMessage={errors.code?.message}
+                        />
+                      )}
+                    />
                   </View>
+                </View>
 
-                  {/* Botones */}
-                  <HStack style={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="lg"
-                      className="mt-4"
-                      onPress={() => {
-                        clearData();
-                        setIsEdit(false);
-                        router.back();
-                      }}
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      style={{ marginLeft: 10 }}
-                      size="lg"
-                      className="mt-4"
-                      onPress={handleSubmit(onSubmit)}
-                      disabled={isPending}
-                    >
-                      <ButtonText>
-                        {isPending ? "Guardando..." : "Guardar"}
-                      </ButtonText>
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            </Center>
-          </DesktopScrollView>
+                {/* Tipo + Zona padre */}
+                <View style={row}>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="zone_type"
+                      rules={{ required: "El tipo es obligatorio." }}
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Tipo"
+                          placeholder="Selecciona un tipo"
+                          searchable={ZONE_TYPE_OPTIONS.length > 6}
+                          options={ZONE_TYPE_OPTIONS}
+                          value={value}
+                          onChange={onChange}
+                          errorMessage={errors.zone_type?.message}
+                        />
+                      )}
+                    />
+                  </View>
+                  <View style={half}>
+                    <Controller
+                      control={control}
+                      name="parent_zone_id"
+                      render={({ field: { onChange, value } }) => (
+                        <AppSelect
+                          label="Zona padre (opcional)"
+                          placeholder="Ninguna (zona raíz)"
+                          searchable={parentZoneOptions.length > 6}
+                          options={parentZoneOptions}
+                          value={value}
+                          onChange={onChange}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+
+                {/* Botones */}
+                <HStack style={{ justifyContent: "flex-end" }}>
+                  <Button
+                    size="lg"
+                    className="mt-4"
+                    onPress={() => {
+                      clearData();
+                      setIsEdit(false);
+                      router.back();
+                    }}
+                  >
+                    <ButtonText>Cancelar</ButtonText>
+                  </Button>
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    size="lg"
+                    className="mt-4"
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isPending}
+                  >
+                    <ButtonText>
+                      {isPending ? "Guardando..." : "Guardar"}
+                    </ButtonText>
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </Center>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

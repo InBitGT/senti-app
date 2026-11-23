@@ -1,7 +1,6 @@
 // payment_form.tsx
 import { AppInput } from "@/components/atom/AppInput/AppInput";
 import { AppSelect } from "@/components/atom/AppSelect/AppSelect";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
@@ -130,76 +129,74 @@ export default function LoanPaymentForm() {
       >
         <SafeAreaView className="flex-1" edges={["top"]} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }}>
-            <DesktopScrollView>
-              <Center style={{ flex: 1 }}>
-                <Box
-                  style={styles.card}
-                  className="w-full bg-white rounded-[20px] py-8 px-7"
-                >
-                  <Center>
-                    <View style={styles.successIcon}>
-                      <CheckCircle2 size={28} color="#16a34a" />
-                    </View>
-                    <Heading
-                      style={{ color: "#000" }}
-                      size="lg"
-                      className="mb-1"
-                    >
-                      Abono registrado
-                    </Heading>
-                    <Text size="sm" className="text-typography-400 mb-6">
-                      Referencia {result.reference || "—"}
-                    </Text>
-                  </Center>
-
-                  <VStack space="sm" style={{ width: "100%" }}>
-                    <HStack style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Monto abonado</Text>
-                      <Text style={styles.summaryValue}>
-                        {formatCurrency(result.payment.amount)}
-                      </Text>
-                    </HStack>
-                    <HStack style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Cliente</Text>
-                      <Text style={styles.summaryValue}>
-                        {result.clientName ?? `#${result.payment.user_id}`}
-                      </Text>
-                    </HStack>
-                    <HStack
-                      style={{ ...styles.summaryRow, borderBottomWidth: 0 }}
-                    >
-                      <Text style={styles.summaryLabel}>Nuevo plazo</Text>
-                      <Text style={styles.summaryValue}>
-                        {result.payment.payment_term_days} días
-                      </Text>
-                    </HStack>
-                    {!!result.payment.description && (
-                      <VStack style={{ marginTop: 8 }}>
-                        <Text style={styles.summaryLabel}>Descripción</Text>
-                        <Text
-                          style={{
-                            color: "#171717",
-                            fontSize: 14,
-                            marginTop: 2,
-                          }}
-                        >
-                          {result.payment.description}
-                        </Text>
-                      </VStack>
-                    )}
-                  </VStack>
-
-                  <Button
-                    variant="outline"
+            <Center style={{ flex: 1 }}>
+              <Box
+                style={styles.card}
+                className="w-full bg-white rounded-[20px] py-8 px-7"
+              >
+                <Center>
+                  <View style={styles.successIcon}>
+                    <CheckCircle2 size={28} color="#16a34a" />
+                  </View>
+                  <Heading
+                    style={{ color: "#000" }}
                     size="lg"
-                    className="mt-6 w-full"
-                    onPress={handleRegisterAnother}
+                    className="mb-1"
                   >
-                    <ButtonText>Registrar otro abono</ButtonText>
-                  </Button>
-                </Box>
-              </Center>
-            </DesktopScrollView>
+                    Abono registrado
+                  </Heading>
+                  <Text size="sm" className="text-typography-400 mb-6">
+                    Referencia {result.reference || "—"}
+                  </Text>
+                </Center>
+
+                <VStack space="sm" style={{ width: "100%" }}>
+                  <HStack style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Monto abonado</Text>
+                    <Text style={styles.summaryValue}>
+                      {formatCurrency(result.payment.amount)}
+                    </Text>
+                  </HStack>
+                  <HStack style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Cliente</Text>
+                    <Text style={styles.summaryValue}>
+                      {result.clientName ?? `#${result.payment.user_id}`}
+                    </Text>
+                  </HStack>
+                  <HStack
+                    style={{ ...styles.summaryRow, borderBottomWidth: 0 }}
+                  >
+                    <Text style={styles.summaryLabel}>Nuevo plazo</Text>
+                    <Text style={styles.summaryValue}>
+                      {result.payment.payment_term_days} días
+                    </Text>
+                  </HStack>
+                  {!!result.payment.description && (
+                    <VStack style={{ marginTop: 8 }}>
+                      <Text style={styles.summaryLabel}>Descripción</Text>
+                      <Text
+                        style={{
+                          color: "#171717",
+                          fontSize: 14,
+                          marginTop: 2,
+                        }}
+                      >
+                        {result.payment.description}
+                      </Text>
+                    </VStack>
+                  )}
+                </VStack>
+
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="mt-6 w-full"
+                  onPress={handleRegisterAnother}
+                >
+                  <ButtonText>Registrar otro abono</ButtonText>
+                </Button>
+              </Box>
+            </Center>
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -217,155 +214,153 @@ export default function LoanPaymentForm() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
-          <DesktopScrollView useWindowHeight>
-            <VStack>
-              <Box
-                style={styles.card}
-                className="w-full bg-white rounded-[20px] py-8 px-7"
-              >
-                <Heading style={{ color: "#000" }} size="xl" className="mb-1">
-                  Abonar a mi crédito
-                </Heading>
-                <Text size="sm" className="text-typography-400 mb-6">
-                  Completa los datos para registrar un abono a tu crédito.
-                </Text>
+          <VStack>
+            <Box
+              style={styles.card}
+              className="w-full bg-white rounded-[20px] py-8 px-7"
+            >
+              <Heading style={{ color: "#000" }} size="xl" className="mb-1">
+                Abonar a mi crédito
+              </Heading>
+              <Text size="sm" className="text-typography-400 mb-6">
+                Completa los datos para registrar un abono a tu crédito.
+              </Text>
 
-                <VStack space="lg">
-                  {/* Cliente (get a useCredit) */}
-                  <Controller
-                    control={control}
-                    name="user_id"
-                    rules={{ required: "Selecciona un cliente." }}
-                    render={({ field: { onChange, value } }) => (
-                      <View>
-                        <AppSelect
-                          label="Cliente"
-                          placeholder="Selecciona un cliente"
-                          searchPlaceholder="Buscar por nombre..."
-                          options={clientOptions}
-                          value={value}
-                          onChange={onChange}
-                          isLoading={isLoadingClients}
-                          errorMessage={errors.user_id?.message}
-                        />
-                        {selectedClient && (
-                          <HStack
+              <VStack space="lg">
+                {/* Cliente (get a useCredit) */}
+                <Controller
+                  control={control}
+                  name="user_id"
+                  rules={{ required: "Selecciona un cliente." }}
+                  render={({ field: { onChange, value } }) => (
+                    <View>
+                      <AppSelect
+                        label="Cliente"
+                        placeholder="Selecciona un cliente"
+                        searchPlaceholder="Buscar por nombre..."
+                        options={clientOptions}
+                        value={value}
+                        onChange={onChange}
+                        isLoading={isLoadingClients}
+                        errorMessage={errors.user_id?.message}
+                      />
+                      {selectedClient && (
+                        <HStack
+                          style={{
+                            ...styles.debtBox,
+                            ...(hasNoPendingDebt && styles.debtBoxOk),
+                          }}
+                        >
+                          <Text
                             style={{
-                              ...styles.debtBox,
-                              ...(hasNoPendingDebt && styles.debtBoxOk),
+                              ...styles.debtLabel,
+                              ...(hasNoPendingDebt && styles.debtLabelOk),
+                              ...(desktop ? { margin: 10 } : { margin: 3 }),
                             }}
                           >
-                            <Text
-                              style={{
-                                ...styles.debtLabel,
-                                ...(hasNoPendingDebt && styles.debtLabelOk),
-                                ...(desktop ? { margin: 10 } : { margin: 3 }),
-                              }}
-                            >
-                              {hasNoPendingDebt
-                                ? "Este cliente no tiene saldo pendiente"
-                                : "Saldo pendiente"}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.debtValue,
-                                hasNoPendingDebt && styles.debtLabelOk,
-                                { margin: desktop ? 10 : 3 },
-                              ]}
-                            >
-                              {formatCurrency(selectedClient.credit_used)}
-                            </Text>
-                          </HStack>
-                        )}
-                      </View>
-                    )}
-                  />
+                            {hasNoPendingDebt
+                              ? "Este cliente no tiene saldo pendiente"
+                              : "Saldo pendiente"}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.debtValue,
+                              hasNoPendingDebt && styles.debtLabelOk,
+                              { margin: desktop ? 10 : 3 },
+                            ]}
+                          >
+                            {formatCurrency(selectedClient.credit_used)}
+                          </Text>
+                        </HStack>
+                      )}
+                    </View>
+                  )}
+                />
 
-                  {/* Monto */}
-                  <Controller
-                    control={control}
-                    name="amount"
-                    rules={{
-                      required: "El monto es obligatorio.",
-                      validate: (v) =>
-                        (Number.isFinite(parseFloat(v)) && parseFloat(v) > 0) ||
-                        "Ingresa un monto válido mayor a 0.",
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Monto a abonar"
-                        placeholder="Ej. 300.00"
-                        value={value}
-                        onChangeText={(t) =>
-                          onChange(t.replace(/[^0-9.]/g, ""))
-                        }
-                        onBlur={onBlur}
-                        keyboardType="decimal-pad"
-                        errorMessage={errors.amount?.message}
-                      />
-                    )}
-                  />
+                {/* Monto */}
+                <Controller
+                  control={control}
+                  name="amount"
+                  rules={{
+                    required: "El monto es obligatorio.",
+                    validate: (v) =>
+                      (Number.isFinite(parseFloat(v)) && parseFloat(v) > 0) ||
+                      "Ingresa un monto válido mayor a 0.",
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Monto a abonar"
+                      placeholder="Ej. 300.00"
+                      value={value}
+                      onChangeText={(t) =>
+                        onChange(t.replace(/[^0-9.]/g, ""))
+                      }
+                      onBlur={onBlur}
+                      keyboardType="decimal-pad"
+                      errorMessage={errors.amount?.message}
+                    />
+                  )}
+                />
 
-                  {/* Plazo en días */}
-                  <Controller
-                    control={control}
-                    name="payment_term_days"
-                    rules={{
-                      required: "El plazo es obligatorio.",
-                      validate: (v) =>
-                        (Number.isInteger(parseInt(v)) && parseInt(v) >= 0) ||
-                        "Ingresa un plazo en días válido.",
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Aplazar el tiempo de pago (días)"
-                        placeholder="Ej. 15"
-                        value={value}
-                        onChangeText={(t) => onChange(t.replace(/[^0-9]/g, ""))}
-                        onBlur={onBlur}
-                        keyboardType="number-pad"
-                        errorMessage={errors.payment_term_days?.message}
-                      />
-                    )}
-                  />
+                {/* Plazo en días */}
+                <Controller
+                  control={control}
+                  name="payment_term_days"
+                  rules={{
+                    required: "El plazo es obligatorio.",
+                    validate: (v) =>
+                      (Number.isInteger(parseInt(v)) && parseInt(v) >= 0) ||
+                      "Ingresa un plazo en días válido.",
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Aplazar el tiempo de pago (días)"
+                      placeholder="Ej. 15"
+                      value={value}
+                      onChangeText={(t) => onChange(t.replace(/[^0-9]/g, ""))}
+                      onBlur={onBlur}
+                      keyboardType="number-pad"
+                      errorMessage={errors.payment_term_days?.message}
+                    />
+                  )}
+                />
 
-                  {/* Descripción */}
-                  <Controller
-                    control={control}
-                    name="description"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        label="Descripción (opcional)"
-                        placeholder="Ej. Pago parcial, nuevo plazo acordado"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        multiline
-                        textareaHeight={90}
-                      />
-                    )}
-                  />
+                {/* Descripción */}
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      label="Descripción (opcional)"
+                      placeholder="Ej. Pago parcial, nuevo plazo acordado"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      multiline
+                      textareaHeight={90}
+                    />
+                  )}
+                />
 
-                  <Button
-                    size="lg"
-                    className="mt-2 w-full mb-6"
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={post.isPending || hasNoPendingDebt}
-                  >
-                    {post.isPending ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <ButtonText>
-                        {hasNoPendingDebt
-                          ? "Sin saldo pendiente"
-                          : "Confirmar abono"}
-                      </ButtonText>
-                    )}
-                  </Button>
-                </VStack>
-              </Box>
-            </VStack>
-          </DesktopScrollView>
+                <Button
+                  size="lg"
+                  className="mt-2 w-full mb-6"
+                  onPress={handleSubmit(onSubmit)}
+                  disabled={post.isPending || hasNoPendingDebt}
+                >
+                  {post.isPending ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <ButtonText>
+                      {hasNoPendingDebt
+                        ? "Sin saldo pendiente"
+                        : "Confirmar abono"}
+                    </ButtonText>
+                  )}
+                </Button>
+              </VStack>
+            </Box>
+          </VStack>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

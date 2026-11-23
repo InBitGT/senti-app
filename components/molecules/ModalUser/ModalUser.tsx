@@ -1,6 +1,5 @@
 import { Avatar } from "@/components/atom/Avatar/Avatar";
 import { Badge } from "@/components/atom/Badge/Badge";
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { Divider } from "@/components/atom/Divider/Divider";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { SectionTitle } from "@/components/atom/SectionTitle/SectionTitle";
@@ -74,55 +73,53 @@ export const ModalUserDetail: React.FC<Props> = ({ isOpen, onClose, data }) => {
 
         <ModalBody>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <DesktopScrollView>
-              <SectionTitle title="Información personal" />
-              <InfoRow label="Nombre" value={fullName} />
-              <InfoRow label="Usuario" value={data?.username} />
-              <InfoRow label="Email" value={data?.email} />
-              <InfoRow label="Teléfono" value={data?.phone} />
+            <SectionTitle title="Información personal" />
+            <InfoRow label="Nombre" value={fullName} />
+            <InfoRow label="Usuario" value={data?.username} />
+            <InfoRow label="Email" value={data?.email} />
+            <InfoRow label="Teléfono" value={data?.phone} />
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Rol" />
-              <InfoRow label="Nombre" value={data?.role?.name} />
-              <InfoRow label="Descripción" value={data?.role?.description} />
+            <SectionTitle title="Rol" />
+            <InfoRow label="Nombre" value={data?.role?.name} />
+            <InfoRow label="Descripción" value={data?.role?.description} />
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Dirección" />
-              <InfoRow label="Línea 1" value={data?.address?.line1} />
-              <InfoRow label="Línea 2" value={data?.address?.line2} />
-              <InfoRow label="Ciudad" value={data?.address?.city} />
-              <InfoRow label="Depto." value={data?.address?.state} />
-              <InfoRow label="País" value={data?.address?.country} />
-              <InfoRow label="C. Postal" value={data?.address?.postal_code} />
+            <SectionTitle title="Dirección" />
+            <InfoRow label="Línea 1" value={data?.address?.line1} />
+            <InfoRow label="Línea 2" value={data?.address?.line2} />
+            <InfoRow label="Ciudad" value={data?.address?.city} />
+            <InfoRow label="Depto." value={data?.address?.state} />
+            <InfoRow label="País" value={data?.address?.country} />
+            <InfoRow label="C. Postal" value={data?.address?.postal_code} />
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Seguridad" />
-              <InfoRow label="2FA habilitado" value={data?.two_fa_enabled} />
-              <InfoRow label="Cuenta activa" value={data?.is_active} />
+            <SectionTitle title="Seguridad" />
+            <InfoRow label="2FA habilitado" value={data?.two_fa_enabled} />
+            <InfoRow label="Cuenta activa" value={data?.is_active} />
 
-              <Divider />
+            <Divider />
 
-              <SectionTitle title="Registro" />
-              <InfoRow
-                label="Creado"
-                value={
-                  data?.created_at
-                    ? new Date(data.created_at).toLocaleString("es-GT")
-                    : "—"
-                }
-              />
-              <InfoRow
-                label="Actualizado"
-                value={
-                  data?.updated_at
-                    ? new Date(data.updated_at).toLocaleString("es-GT")
-                    : "—"
-                }
-              />
-            </DesktopScrollView>
+            <SectionTitle title="Registro" />
+            <InfoRow
+              label="Creado"
+              value={
+                data?.created_at
+                  ? new Date(data.created_at).toLocaleString("es-GT")
+                  : "—"
+              }
+            />
+            <InfoRow
+              label="Actualizado"
+              value={
+                data?.updated_at
+                  ? new Date(data.updated_at).toLocaleString("es-GT")
+                  : "—"
+              }
+            />
           </ScrollView>
         </ModalBody>
 

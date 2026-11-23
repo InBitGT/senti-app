@@ -6,6 +6,7 @@ import { FiscalDocument as FiscalDocumentModel } from "@/src/types/fiscal_docume
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const FiscalDocumentScreen: React.FC = () => {
   const [showModalData, setShowModalData] = useState<boolean>(false);
@@ -27,14 +28,16 @@ export const FiscalDocumentScreen: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <FiscalDocumentsTable itemsPerPage={5} onRowPress={handleRowPress} />
-      <ModalFiscalDocumentDetail
-        isOpen={showModalData}
-        onClose={() => setShowModalData(false)}
-        data={modalData}
-        onViewDetail={handleViewDetail}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <View style={{ flex: 1 }}>
+        <FiscalDocumentsTable itemsPerPage={5} onRowPress={handleRowPress} />
+        <ModalFiscalDocumentDetail
+          isOpen={showModalData}
+          onClose={() => setShowModalData(false)}
+          data={modalData}
+          onViewDetail={handleViewDetail}
+        />
+      </View>
+    </SafeAreaView>
   );
 };

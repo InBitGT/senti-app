@@ -1,4 +1,3 @@
-import { DesktopScrollView } from "@/components/atom/DesktopScrollView/DesktopScrollView";
 import { InfoRow } from "@/components/atom/InfoRow/InfoRow";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -42,97 +41,95 @@ export const ModalInventoryStockDetail: React.FC<Props> = ({
 
         <ModalBody style={{ maxHeight: SCREEN_HEIGHT * 0.55 }}>
           <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-            <DesktopScrollView>
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Bodega</Text>
-                <InfoRow label="Nombre" value={data?.warehouse?.name} />
-                <InfoRow label="Código" value={data?.warehouse?.code} />
-                <InfoRow label="Tipo" value={data?.warehouse?.type} />
-                <InfoRow
-                  label="Descripción"
-                  value={data?.warehouse?.description}
-                />
-                <InfoRow
-                  label="Por defecto"
-                  value={data?.warehouse?.is_default}
-                />
-                <InfoRow
-                  label="Usa zonas"
-                  value={data?.warehouse?.uses_zones}
-                />
-              </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Bodega</Text>
+              <InfoRow label="Nombre" value={data?.warehouse?.name} />
+              <InfoRow label="Código" value={data?.warehouse?.code} />
+              <InfoRow label="Tipo" value={data?.warehouse?.type} />
+              <InfoRow
+                label="Descripción"
+                value={data?.warehouse?.description}
+              />
+              <InfoRow
+                label="Por defecto"
+                value={data?.warehouse?.is_default}
+              />
+              <InfoRow
+                label="Usa zonas"
+                value={data?.warehouse?.uses_zones}
+              />
+            </View>
 
-              <View style={styles.divider} />
+            <View style={styles.divider} />
 
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Producto</Text>
-                <InfoRow label="Nombre" value={data?.product?.name} />
-                <InfoRow label="SKU" value={data?.product?.sku} />
-                <InfoRow label="Cód. barras" value={data?.product?.barcode} />
-                <InfoRow label="Marca" value={data?.product?.brand} />
-                <InfoRow label="Tipo" value={data?.product?.type} />
-                <InfoRow
-                  label="Requiere lote"
-                  value={data?.product?.requires_batch}
-                />
-                <InfoRow
-                  label="Disponibilidad"
-                  value={data?.product?.availability_status}
-                />
-                {data?.product?.is_modifier && (
-                  <>
-                    <InfoRow
-                      label="Grupo modificador"
-                      value={data.product.modifier_group}
-                    />
-                    <InfoRow
-                      label="Nombre modificador"
-                      value={data.product.modifier_name}
-                    />
-                  </>
-                )}
-              </View>
-
-              <View style={styles.divider} />
-
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Movimiento</Text>
-                <InfoRow label="Tipo" value={data?.movement_type} />
-                <InfoRow label="Razón" value={data?.reason} />
-                <InfoRow label="Cantidad" value={data?.qty} />
-                <InfoRow
-                  label="Costo unit."
-                  value={
-                    data?.unit_cost != null
-                      ? `Q${data.unit_cost.toFixed(2)}`
-                      : undefined
-                  }
-                />
-                <InfoRow
-                  label="Total"
-                  value={
-                    data?.qty != null && data?.unit_cost != null
-                      ? `Q${(data.qty * data.unit_cost).toFixed(2)}`
-                      : undefined
-                  }
-                />
-                <InfoRow label="Referencia" value={data?.reference_number} />
-                {!!data?.notes && <InfoRow label="Notas" value={data.notes} />}
-              </View>
-
-              {data?.batch && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Producto</Text>
+              <InfoRow label="Nombre" value={data?.product?.name} />
+              <InfoRow label="SKU" value={data?.product?.sku} />
+              <InfoRow label="Cód. barras" value={data?.product?.barcode} />
+              <InfoRow label="Marca" value={data?.product?.brand} />
+              <InfoRow label="Tipo" value={data?.product?.type} />
+              <InfoRow
+                label="Requiere lote"
+                value={data?.product?.requires_batch}
+              />
+              <InfoRow
+                label="Disponibilidad"
+                value={data?.product?.availability_status}
+              />
+              {data?.product?.is_modifier && (
                 <>
-                  <View style={styles.divider} />
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Lote</Text>
-                    <InfoRow
-                      label="Número de lote"
-                      value={data.batch.batch_number}
-                    />
-                  </View>
+                  <InfoRow
+                    label="Grupo modificador"
+                    value={data.product.modifier_group}
+                  />
+                  <InfoRow
+                    label="Nombre modificador"
+                    value={data.product.modifier_name}
+                  />
                 </>
               )}
-            </DesktopScrollView>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Movimiento</Text>
+              <InfoRow label="Tipo" value={data?.movement_type} />
+              <InfoRow label="Razón" value={data?.reason} />
+              <InfoRow label="Cantidad" value={data?.qty} />
+              <InfoRow
+                label="Costo unit."
+                value={
+                  data?.unit_cost != null
+                    ? `Q${data.unit_cost.toFixed(2)}`
+                    : undefined
+                }
+              />
+              <InfoRow
+                label="Total"
+                value={
+                  data?.qty != null && data?.unit_cost != null
+                    ? `Q${(data.qty * data.unit_cost).toFixed(2)}`
+                    : undefined
+                }
+              />
+              <InfoRow label="Referencia" value={data?.reference_number} />
+              {!!data?.notes && <InfoRow label="Notas" value={data.notes} />}
+            </View>
+
+            {data?.batch && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Lote</Text>
+                  <InfoRow
+                    label="Número de lote"
+                    value={data.batch.batch_number}
+                  />
+                </View>
+              </>
+            )}
           </ScrollView>
         </ModalBody>
 
